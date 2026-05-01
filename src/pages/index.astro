@@ -208,6 +208,45 @@ const services = [
     </div>
   </section>
 
+  {isPaschal && (
+    <!-- ==================== PASCHAL ANASTASIS + TROPARION (Pascha only) ====================
+         Renders only when getLiturgicalSeason returns pascha-day, bright-week,
+         or paschal-season. The Anastasis icon's home — full proportions, not
+         cropped, framed in sacred-gold — paired with the Paschal troparion in
+         ceremonial type. Two columns on desktop (icon left, troparion right);
+         stacked on mobile (icon top, troparion below).
+    -->
+    <section id="paschal-anastasis" class="bg-cream-bg">
+      <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
+        <div class="grid items-center gap-10 md:grid-cols-2 md:gap-12">
+          <figure class="m-0">
+            <img
+              src="/images/icons/anastasis.jpg"
+              alt="The Anastasis — Christ harrowing Hades, raising Adam and Eve from death"
+              class="block w-full border-2 border-sacred-gold shadow-md"
+              width="1351"
+              height="588"
+              loading="eager"
+            />
+            <figcaption class="mt-3 text-center text-sm italic text-text-secondary">
+              The Anastasis — Christ harrowing Hades, raising Adam and Eve from death.
+            </figcaption>
+          </figure>
+
+          <blockquote class="m-0">
+            <p class="font-display text-xl leading-relaxed text-text-primary md:text-2xl lg:text-3xl">
+              Christ is risen from the dead, trampling down death by death,
+              and upon those in the tombs bestowing life.
+            </p>
+            <footer class="mt-4 text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+              The Paschal Troparion
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- ==================== JUMP LINKS (homepage only) ==================== -->
   <nav class="border-b border-border-soft bg-cream-bg" aria-label="On this page">
     <div class="mx-auto max-w-6xl px-4 py-3 md:px-6">
