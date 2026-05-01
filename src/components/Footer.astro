@@ -33,6 +33,11 @@ const jurisdictionLinks = [
   { href: "https://ipckatakomb.ru", label: "IPC Katakomb (Russia)" },
   { href: "https://nftu.net", label: "NFTU" },
 ];
+
+const siteInfoLinks = [
+  { href: "/iconography/", label: "Iconography" },
+  { href: "/colophon/", label: "Colophon" },
+];
 ---
 
 <footer class="mt-24 border-t-2 border-liturgical-current bg-cream-card text-text-primary">
@@ -81,6 +86,19 @@ const jurisdictionLinks = [
               class="text-text-secondary no-underline hover:text-brand-blue hover:underline"
             >
               {link.label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="mt-8 border-t border-border-soft pt-6">
+      <h3 class="font-display text-sm uppercase tracking-widest text-brand-tan-dark">Site Information</h3>
+      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        {siteInfoLinks.map((link) => (
+          <li>
+            <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue hover:underline">
+              {link.label}
             </a>
           </li>
         ))}
