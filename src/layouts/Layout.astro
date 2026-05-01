@@ -134,6 +134,8 @@ const liturgicalRootStyle =
        */
       import { getLiturgicalSeason } from "../lib/liturgical.ts";
 
+      const PASCHAL_KEYS = new Set(["pascha-day", "bright-week", "paschal-season"]);
+
       const root = document.documentElement;
       const builtSeason = root.dataset.buildSeason;
       const today = getLiturgicalSeason(new Date());
@@ -152,6 +154,26 @@ const liturgicalRootStyle =
           if (sublineEl) sublineEl.textContent = today.bannerSubline;
           if (labelEl) labelEl.textContent = `${today.label} — ${today.vestmentName} vestments`;
           banner.dataset.seasonKey = today.seasonKey;
+
+          // Toggle paschal-specific styling: background image (Anastasis icon),
+          // sacred-gold + paschal-headline on the headline, paschal-label on the
+          // label. Keeps the banner correct when the user's local date has
+          // rolled into / out of a paschal season post-build.
+          const isPaschalNow = PASCHAL_KEYS.has(today.seasonKey);
+
+          banner.classList.toggle("paschal-banner-bg", isPaschalNow);
+          banner.classList.toggle("bg-liturgical-current", !isPaschalNow);
+
+          if (headlineEl) {
+            headlineEl.classList.toggle("text-sacred-gold", isPaschalNow);
+            headlineEl.classList.toggle("paschal-headline", isPaschalNow);
+          }
+          if (labelEl) {
+            labelEl.classList.toggle("text-base", isPaschalNow);
+            labelEl.classList.toggle("paschal-label", isPaschalNow);
+            labelEl.classList.toggle("text-xs", !isPaschalNow);
+            labelEl.classList.toggle("opacity-70", !isPaschalNow);
+          }
         }
       }
     </script>
