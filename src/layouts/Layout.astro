@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { getLiturgicalSeason } from "../lib/liturgical.ts";
 
 interface Props {
   title: string;
@@ -21,10 +22,19 @@ const {
 } = Astro.props;
 
 const ogImageUrl = ogImage.startsWith("http") ? ogImage : SITE_URL + ogImage;
+
+// Compute today's liturgical season at build time. The page renders with
+// the right colors and (homepage) banner content baked in for non-JS users
+// and for the build day. The client script below re-evaluates with the
+// user's actual local date and updates if it differs.
+const buildDaySeason = getLiturgicalSeason(new Date());
+const liturgicalRootStyle =
+  `--liturgical-current: ${buildDaySeason.colorHex};`
+  + `--liturgical-current-text: ${buildDaySeason.textColorHex};`;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-build-season={buildDaySeason.seasonKey} style={liturgicalRootStyle}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -63,10 +73,48 @@ const ogImageUrl = ogImage.startsWith("http") ? ogImage : SITE_URL + ogImage;
     <slot name="head" />
   </head>
   <body class="flex min-h-screen flex-col">
+    <!-- Liturgical accent stripe — full-width 4px line at the top of the page. -->
+    <div class="h-1 w-full bg-liturgical-current" aria-hidden="true"></div>
+
     <Header />
     <main class="flex-1">
       <slot />
     </main>
     <Footer />
+
+    <script>
+      /**
+       * Liturgical season hydration.
+       *
+       * The build-day season is baked into <html style="..."> by SSR, so a
+       * non-JS user always sees a sensible color. This script re-runs
+       * getLiturgicalSeason() with the user's local date — if their date
+       * has rolled past the build date into a new season (e.g. they
+       * loaded a build from yesterday into the morning of Pascha), the
+       * colors and homepage banner update without a flash.
+       */
+      import { getLiturgicalSeason } from "../lib/liturgical.ts";
+
+      const root = document.documentElement;
+      const builtSeason = root.dataset.buildSeason;
+      const today = getLiturgicalSeason(new Date());
+
+      if (today.seasonKey !== builtSeason) {
+        root.style.setProperty("--liturgical-current", today.colorHex);
+        root.style.setProperty("--liturgical-current-text", today.textColorHex);
+        root.dataset.buildSeason = today.seasonKey;
+
+        const banner = document.getElementById("liturgical-banner");
+        if (banner) {
+          const headlineEl = banner.querySelector<HTMLElement>("[data-banner-headline]");
+          const sublineEl = banner.querySelector<HTMLElement>("[data-banner-subline]");
+          const labelEl = banner.querySelector<HTMLElement>("[data-banner-label]");
+          if (headlineEl) headlineEl.textContent = today.bannerHeadline;
+          if (sublineEl) sublineEl.textContent = today.bannerSubline;
+          if (labelEl) labelEl.textContent = `${today.label} — ${today.vestmentName} vestments`;
+          banner.dataset.seasonKey = today.seasonKey;
+        }
+      }
+    </script>
   </body>
 </html>
