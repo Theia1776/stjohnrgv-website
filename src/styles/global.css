@@ -68,6 +68,7 @@ html {
   font-family: var(--font-body);
   background-color: var(--color-cream-bg);
   color: var(--color-text-primary);
+  font-weight: 500;            /* Body text: 500 minimum for older-reader legibility */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
@@ -80,8 +81,15 @@ html {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+  font-weight: 600;            /* Headings: 600 in Cinzel, ensures crisp rendering */
   letter-spacing: 0.01em;
   color: var(--color-text-primary);
+}
+
+/* Bold semantics: <strong>, <b>, and font-bold all render at true 700,
+   never at the 600-ish weight some defaults inherit to. */
+strong, b {
+  font-weight: 700;
 }
 
 /* Subtle focus ring matching the live liturgical accent */
@@ -98,6 +106,7 @@ h1, h2, h3, h4, h5, h6 {
    ============================================================================ */
 a {
   color: var(--color-brand-blue);
+  font-weight: 500;            /* Links: 500 minimum, distinct from body weight + color */
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
