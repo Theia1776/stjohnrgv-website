@@ -70,6 +70,12 @@ html {
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

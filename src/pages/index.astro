@@ -197,8 +197,36 @@ const services = [
     </div>
   </section>
 
+  <!-- ==================== JUMP LINKS (homepage only) ==================== -->
+  <nav class="border-b border-border-soft bg-cream-bg" aria-label="On this page">
+    <div class="mx-auto max-w-6xl px-4 py-3 md:px-6">
+      <ul class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs uppercase tracking-widest">
+        <li>
+          <a href="#schedule" class="text-text-secondary no-underline hover:text-brand-blue transition-colors">
+            Schedule
+          </a>
+        </li>
+        <li>
+          <a href="#readings" class="text-text-secondary no-underline hover:text-brand-blue transition-colors">
+            Readings
+          </a>
+        </li>
+        <li>
+          <a href="#visit" class="text-text-secondary no-underline hover:text-brand-blue transition-colors">
+            Visit Us
+          </a>
+        </li>
+        <li>
+          <a href="#about" class="text-text-secondary no-underline hover:text-brand-blue transition-colors">
+            About
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
   <!-- ==================== WELCOME ==================== -->
-  <section class="bg-cream-bg">
+  <section id="about" class="bg-cream-bg scroll-mt-20">
     <div class="mx-auto max-w-3xl px-4 py-20 text-center md:px-6">
       <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Welcome</p>
       <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">A Living Tradition in the Rio Grande Valley</h2>
@@ -219,7 +247,7 @@ const services = [
   <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
 
   <!-- ==================== SERVICE TIMES ==================== -->
-  <section class="bg-brand-blue-pale">
+  <section id="schedule" class="bg-brand-blue-pale scroll-mt-20">
     <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
       <div class="text-center">
         <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Divine Services</p>
@@ -249,7 +277,7 @@ const services = [
   <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
 
   <!-- ==================== TODAY'S READINGS (placeholder) ==================== -->
-  <section class="bg-cream-bg">
+  <section id="readings" class="bg-cream-bg scroll-mt-20">
     <div class="mx-auto max-w-3xl px-4 py-20 md:px-6">
       <div class="border border-border-soft bg-cream-card p-8 shadow-sm md:p-10">
         <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Today's Readings</p>
@@ -329,7 +357,7 @@ const services = [
   <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
 
   <!-- ==================== CONTACT / LOCATION STRIP ==================== -->
-  <section class="bg-brand-blue-pale">
+  <section id="visit" class="bg-brand-blue-pale scroll-mt-20">
     <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
       <div class="text-center">
         <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Visit Us</p>
