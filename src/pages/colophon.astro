@@ -1,0 +1,99 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+interface ColophonRow {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+const builtWith: ColophonRow[] = [
+  { label: "Framework", value: "Astro", href: "https://astro.build" },
+  { label: "Styling", value: "Tailwind CSS", href: "https://tailwindcss.com" },
+  { label: "Display type", value: "Cinzel", href: "https://fonts.google.com/specimen/Cinzel" },
+  { label: "Body type", value: "Crimson Pro", href: "https://fonts.google.com/specimen/Crimson+Pro" },
+  { label: "Hosting", value: "Cloudflare Pages", href: "https://pages.cloudflare.com" },
+  { label: "Source", value: "GitHub", href: "https://github.com/Theia1776/stjohnrgv-website" },
+];
+
+const credits: ColophonRow[] = [
+  {
+    label: "Design & build",
+    value: "Philothei “Theia” Goodner",
+    href: "https://www.linkedin.com/in/goodnertheia/",
+  },
+];
+---
+
+<Layout
+  title="Colophon | St. John of Kronstadt Orthodox Mission"
+  description="A note on how this website was built — typefaces, framework, hosting, and credits."
+>
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-20 md:px-6 md:py-24">
+      <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Site Information</p>
+      <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Colophon</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+      <p class="mt-8 text-lg leading-relaxed text-text-primary/85">
+        A short note on how this website was built — the typefaces, tools, and people
+        behind it. Following the old printers' tradition of placing a colophon at the
+        end of the book.
+      </p>
+    </div>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== BUILT WITH ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6">
+      <h2 class="font-display text-3xl text-text-primary md:text-4xl">Built With</h2>
+      <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+      <dl class="mt-8 divide-y divide-border-soft border-y border-border-soft">
+        {builtWith.map((row) => (
+          <div class="grid grid-cols-3 gap-4 py-4 md:grid-cols-4">
+            <dt class="text-xs font-semibold uppercase tracking-wider text-brand-tan-dark md:col-span-1">
+              {row.label}
+            </dt>
+            <dd class="col-span-2 text-text-primary md:col-span-3">
+              {row.href ? (
+                <a href={row.href} rel="noopener external">{row.value} ↗</a>
+              ) : (
+                row.value
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== CREDITS ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6">
+      <h2 class="font-display text-3xl text-text-primary md:text-4xl">Credits</h2>
+      <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+      <dl class="mt-8 divide-y divide-border-soft border-y border-border-soft">
+        {credits.map((row) => (
+          <div class="grid grid-cols-3 gap-4 py-4 md:grid-cols-4">
+            <dt class="text-xs font-semibold uppercase tracking-wider text-brand-tan-dark md:col-span-1">
+              {row.label}
+            </dt>
+            <dd class="col-span-2 text-text-primary md:col-span-3">
+              {row.href ? (
+                <a href={row.href} target="_blank" rel="noopener noreferrer">{row.value} ↗</a>
+              ) : (
+                row.value
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+</Layout>
