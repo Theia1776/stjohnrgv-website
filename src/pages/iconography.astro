@@ -1,5 +1,36 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+/**
+ * Icon catalog. Add new entries as imagery is sourced and placed on the site.
+ *
+ * For entries still being researched/sourced, set sourcing: true and the
+ * card renders a "Sourcing in progress" placeholder in place of the
+ * thumbnail. All other fields can also be set to "Sourcing in progress"
+ * as a stand-in.
+ */
+interface IconEntry {
+  name: string;
+  thumbnail?: string;        // /public path; required when sourcing is false
+  tradition: string;
+  iconographer: string;      // iconographer name OR archive/collection source
+  location: string;          // human description, e.g. "Paschal banner"
+  locationHref?: string;     // optional link to where it appears
+  note?: string;             // optional 1–2 sentence theological note
+  sourcing?: boolean;
+}
+
+const icons: IconEntry[] = [
+  {
+    name: "Anastasis — The Resurrection of Christ",
+    tradition: "Sourcing in progress",
+    iconographer: "Sourcing in progress",
+    location: "Paschal banner (planned)",
+    note:
+      "The Anastasis icon depicts Christ trampling down the gates of Hades and raising Adam and Eve from the dead — a central image of the Paschal mystery.",
+    sourcing: true,
+  },
+];
 ---
 
 <Layout
@@ -81,6 +112,90 @@ import Layout from "../layouts/Layout.astro";
         of Great Lent, commemorating this restoration. What you see in our churches
         today is the inheritance of that defense.
       </p>
+    </div>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== ICONS ON THIS SITE (catalog) ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-5xl px-4 py-16 md:px-6">
+      <h2 class="font-display text-3xl text-text-primary md:text-4xl">Icons on This Site</h2>
+      <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+      <p class="mt-8 text-lg italic leading-relaxed text-text-primary/85">
+        The icons used throughout this website are written in the Orthodox tradition and
+        presented here with respect for their iconographers and the parishes and archives
+        that have shared them. This catalog lists every icon you'll find on the site,
+        where it appears, and who created it where known.
+      </p>
+
+      {icons.length === 0 ? (
+        <p class="mt-10 text-text-secondary italic">
+          No icons sourced yet. Entries will appear here as imagery is placed on the site.
+        </p>
+      ) : (
+        <div class="mt-12 grid gap-6 md:grid-cols-2">
+          {icons.map((entry) => (
+            <article class="border border-border-soft bg-cream-card p-6 shadow-sm">
+              {/* Thumbnail */}
+              <div class="aspect-square w-full">
+                {entry.sourcing || !entry.thumbnail ? (
+                  <div class="flex h-full w-full flex-col items-center justify-center border-2 border-brand-tan/40 bg-cream-bg text-center">
+                    <span aria-hidden="true" class="text-4xl text-brand-tan-dark">☩</span>
+                    <span class="mt-3 font-display text-sm uppercase tracking-widest text-brand-tan-dark">
+                      Sourcing
+                    </span>
+                    <span class="text-xs italic text-text-secondary">in progress</span>
+                  </div>
+                ) : (
+                  <img
+                    src={entry.thumbnail}
+                    alt={entry.name}
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+
+              <h3 class="mt-5 font-display text-xl text-text-primary">{entry.name}</h3>
+
+              <dl class="mt-4 space-y-1.5 text-sm text-text-primary/80">
+                <div>
+                  <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                    Tradition:
+                  </dt>{" "}
+                  <dd class="inline">{entry.tradition}</dd>
+                </div>
+                <div>
+                  <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                    Source:
+                  </dt>{" "}
+                  <dd class="inline">{entry.iconographer}</dd>
+                </div>
+                <div>
+                  <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                    Appears on:
+                  </dt>{" "}
+                  <dd class="inline">
+                    {entry.locationHref ? (
+                      <a href={entry.locationHref}>{entry.location}</a>
+                    ) : (
+                      entry.location
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              {entry.note && (
+                <p class="mt-5 border-t border-border-soft pt-4 text-sm italic leading-relaxed text-text-primary/75">
+                  {entry.note}
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   </section>
 
