@@ -102,3 +102,89 @@ a:hover {
 a[href^="tel:"] {
   text-decoration: none;
 }
+
+/* ============================================================================
+   Button system — site-wide contrast SOP
+   ----------------------------------------------------------------------------
+   THE RULE (do not break, do not roll your own):
+     - Dark filled background  → light text (cream-card)
+     - Light filled background → dark text (text-primary)
+     - Transparent background  → dark text (text-primary or brand-tan-dark)
+
+   To enforce the rule automatically, every button in the codebase uses one
+   of the named .btn variants below. The bg/text pairs are baked in here,
+   so a developer adding a new button cannot pick a contrast-failing combo
+   without explicitly fighting the system.
+
+   Variants:
+     .btn-primary    — solid brand-blue, cream text          (dark bg / light fg)
+     .btn-secondary  — transparent w/ tan border, tan text   (transparent / dark fg)
+                       on hover, fills tan-dark with cream text
+     .btn-ghost      — transparent, text-primary, no border  (transparent / dark fg)
+     .btn-floating   — circular, brand-blue + cream          (dark bg / light fg)
+
+   Sizes:
+     .btn            — default (px-4 py-2 visual equivalent)
+     .btn-lg         — large hero CTAs (px-6 py-3 visual equivalent)
+   ============================================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.125rem;
+  border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+}
+
+/* Primary: dark filled background → light text. */
+.btn-primary {
+  background-color: var(--color-brand-blue);
+  color: var(--color-cream-card);
+  border-color: var(--color-brand-blue);
+}
+.btn-primary:hover {
+  background-color: var(--color-brand-blue-dark);
+  border-color: var(--color-brand-blue-dark);
+  color: var(--color-cream-card);
+}
+
+/* Secondary: transparent → dark text and matching border.
+   On hover, becomes a dark filled bg with cream text — contrast rule still holds. */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-brand-tan-dark);
+  border-color: var(--color-brand-tan-dark);
+}
+.btn-secondary:hover {
+  background-color: var(--color-brand-tan-dark);
+  color: var(--color-cream-card);
+  border-color: var(--color-brand-tan-dark);
+}
+
+/* Ghost: transparent, text-only, dark text. For inline-style CTAs. */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: transparent;
+}
+.btn-ghost:hover {
+  color: var(--color-brand-blue);
+}
