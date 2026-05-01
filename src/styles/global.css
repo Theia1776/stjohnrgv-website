@@ -263,3 +263,12 @@ a[href^="tel:"] {
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
+
+/* Paschal banner small-caps LABEL ("Paschal Season — Paschal Red vestments")
+   needs more weight than its inherited cream-bg color provides on the vivid
+   red banner. Pure white + a lighter sibling of the headline shadow keeps it
+   legible without competing with the sacred-gold headline above. */
+.paschal-label {
+  color: var(--color-cream-card);              /* pure white, not the inherited cream tint */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);   /* lighter than the headline's 0 2px 4px / .4 */
+}

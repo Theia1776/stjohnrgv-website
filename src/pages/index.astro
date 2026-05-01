@@ -191,7 +191,15 @@ const services = [
           {season.bannerSubline}
         </p>
       )}
-      <p data-banner-label class="mt-4 text-xs font-semibold uppercase tracking-widest opacity-70">
+      <p
+        data-banner-label
+        class:list={[
+          "mt-4 font-semibold uppercase tracking-widest",
+          isPaschal
+            ? "text-base paschal-label"               /* +30% size, pure white, light shadow */
+            : "text-xs opacity-70",                    /* default size for non-paschal seasons */
+        ]}
+      >
         {seasonLabel}
       </p>
     </div>
