@@ -1,0 +1,327 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getSeasonByKey, type SeasonKey, type LiturgicalSeason } from "../lib/liturgical.ts";
+
+/**
+ * Cycle order — chronological through the Orthodox liturgical year, starting
+ * at Pascha. Each entry maps to a SeasonKey in liturgical.ts plus an optional
+ * displayName override (e.g. "Sundays After Pentecost" instead of the more
+ * generic "Ordinary Time" stored on the season).
+ *
+ * This page is intentionally not in the main nav. Reachable by direct URL,
+ * useful for synod demos / interview demos / verifying seasonal rendering
+ * without waiting for actual feast days.
+ */
+interface PreviewEntry {
+  key: SeasonKey;
+  displayName: string;
+}
+
+const cycle: PreviewEntry[] = [
+  { key: "pascha-day",         displayName: "Pascha — The Resurrection" },
+  { key: "bright-week",        displayName: "Bright Week" },
+  { key: "paschal-season",     displayName: "Paschal Season" },
+  { key: "pentecost",          displayName: "Pentecost" },
+  { key: "apostles-fast",      displayName: "Apostles' Fast" },
+  { key: "ordinary",           displayName: "Sundays After Pentecost" },
+  { key: "nativity-fast",      displayName: "Nativity Fast" },
+  { key: "nativity-season",    displayName: "Christmas to Theophany" },
+  { key: "lent-weekday",       displayName: "Great Lent (Weekday)" },
+  { key: "lent-weekend",       displayName: "Great Lent (Weekend)" },
+  { key: "holy-week",          displayName: "Holy Week" },
+  { key: "dormition",          displayName: "Dormition of the Theotokos" },
+  { key: "cross-feast",        displayName: "Elevation of the Cross" },
+  { key: "theophany",          displayName: "Theophany" },
+  { key: "transfiguration",    displayName: "Transfiguration" },
+];
+
+// Resolve the full LiturgicalSeason for each cycle entry at SSR time.
+const seasons: LiturgicalSeason[] = cycle.map((e) => getSeasonByKey(e.key));
+
+// Initial state baked into the SSR markup so the page renders fully even
+// before the client script runs (or for non-JS readers).
+const initial = seasons[0];
+const initialDisplayName = cycle[0].displayName;
+const initialIsPaschal = ["pascha-day", "bright-week", "paschal-season"].includes(initial.seasonKey);
+
+// Inline data the client script consumes. Combine each season with its
+// displayName from the cycle definition.
+const seasonsForClient = seasons.map((s, i) => ({
+  ...s,
+  displayName: cycle[i].displayName,
+}));
+---
+
+<Layout
+  title="Liturgical Season Preview | St. John of Kronstadt Orthodox Mission"
+  description="A demonstration of how the seasonal accent color of the website shifts throughout the Orthodox liturgical year."
+>
+  <!-- ==================== INTRO ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 pt-12 pb-6 md:px-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Demonstration</p>
+      <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Liturgical Season Preview</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+      <p class="mt-6 text-text-primary/85 leading-relaxed">
+        This page demonstrates how the seasonal accent color shifts throughout the
+        Orthodox liturgical year. Each season is shown for a few seconds. The actual
+        website automatically displays the correct season for today's date.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== THE BANNER ====================
+       Mirrors the structure of the homepage's #liturgical-banner so the
+       same .paschal-banner-bg / .paschal-headline / .paschal-label classes
+       work here unchanged. The client script swaps inline styles + classes
+       on each cycle tick.
+  -->
+  <section
+    id="preview-banner"
+    data-season-key={initial.seasonKey}
+    class:list={[
+      "flex min-h-[50vh] items-center justify-center transition-colors duration-500 md:min-h-[55vh]",
+      initialIsPaschal ? "paschal-banner-bg" : "",
+    ]}
+    style={`background-color: ${initial.colorHex}; color: ${initial.textColorHex};`}
+  >
+    <div class="mx-auto max-w-4xl px-4 py-16 text-center md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Current Season</p>
+      <p
+        data-preview-headline
+        class:list={[
+          "mt-3 font-display text-3xl md:text-4xl lg:text-5xl",
+          initialIsPaschal ? "text-sacred-gold paschal-headline" : "",
+        ]}
+      >
+        {initial.bannerHeadline}
+      </p>
+      {initial.bannerSubline && (
+        <p data-preview-subline class="mt-3 italic text-lg md:text-xl">
+          {initial.bannerSubline}
+        </p>
+      )}
+      <p
+        data-preview-label
+        class:list={[
+          "mt-6 font-semibold uppercase tracking-widest",
+          initialIsPaschal ? "text-base paschal-label" : "text-xs opacity-70",
+        ]}
+      >
+        {initialDisplayName} — {initial.vestmentName} vestments
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== INFO + CONTROLS ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-4xl px-4 py-12 md:px-6">
+      <!-- Season info -->
+      <div class="text-center">
+        <p data-info-name class="font-display text-2xl text-text-primary">{initialDisplayName}</p>
+        <p class="mt-2 text-sm text-text-secondary">
+          Vestment:
+          <span data-info-vestment class="font-semibold text-text-primary">{initial.vestmentName}</span>
+        </p>
+        <p data-info-description class="mx-auto mt-4 max-w-2xl text-text-primary/85 leading-relaxed">
+          {initial.description}
+        </p>
+      </div>
+
+      <!-- Prev / Play / Next -->
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <button id="preview-prev" type="button" class="btn btn-secondary" aria-label="Previous season">
+          ← Prev
+        </button>
+        <button id="preview-playpause" type="button" class="btn btn-primary" aria-label="Pause cycle">
+          Pause
+        </button>
+        <button id="preview-next" type="button" class="btn btn-secondary" aria-label="Next season">
+          Next →
+        </button>
+      </div>
+
+      <!-- Speed selector -->
+      <div class="mt-6 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-widest">
+        <span class="text-text-secondary">Speed:</span>
+        <button data-speed="1000" type="button" class="speed-btn rounded-sm border border-border-soft px-3 py-1 text-text-secondary transition-colors hover:border-brand-blue-dark hover:text-brand-blue-dark">
+          Fast
+        </button>
+        <button data-speed="3000" type="button" class="speed-btn rounded-sm border-2 border-brand-blue-dark px-3 py-1 text-brand-blue-dark transition-colors" aria-current="true">
+          Normal
+        </button>
+        <button data-speed="5000" type="button" class="speed-btn rounded-sm border border-border-soft px-3 py-1 text-text-secondary transition-colors hover:border-brand-blue-dark hover:text-brand-blue-dark">
+          Slow
+        </button>
+      </div>
+
+      <!-- Progress dots — clickable to jump -->
+      <ol id="preview-progress" class="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Season progress">
+        {seasons.map((_, i) => (
+          <li>
+            <button
+              type="button"
+              data-jump={i}
+              aria-label={`Jump to season ${i + 1} of ${seasons.length}`}
+              class:list={[
+                "block h-2.5 w-2.5 rounded-full transition-colors",
+                i === 0 ? "bg-brand-blue-dark" : "bg-border-soft hover:bg-brand-tan-dark",
+              ]}
+            ></button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <script define:vars={{ seasonsData: seasonsForClient }}>
+    /**
+     * Seasons preview controller. Cycles through the inlined seasonsData array,
+     * updating the banner element and the info panel on each tick. Mirrors the
+     * homepage banner's class conventions so paschal-only treatments
+     * (.paschal-banner-bg, .paschal-headline, .paschal-label) keep working.
+     */
+    const PASCHAL_KEYS = new Set(["pascha-day", "bright-week", "paschal-season"]);
+
+    const banner = document.getElementById("preview-banner");
+    const headlineEl = document.querySelector("[data-preview-headline]");
+    const sublineEl = document.querySelector("[data-preview-subline]");
+    const labelEl = document.querySelector("[data-preview-label]");
+    const infoName = document.querySelector("[data-info-name]");
+    const infoVestment = document.querySelector("[data-info-vestment]");
+    const infoDescription = document.querySelector("[data-info-description]");
+    const playPauseBtn = document.getElementById("preview-playpause");
+    const prevBtn = document.getElementById("preview-prev");
+    const nextBtn = document.getElementById("preview-next");
+    const progressDots = document.querySelectorAll("[data-jump]");
+    const speedBtns = document.querySelectorAll(".speed-btn");
+
+    let currentIndex = 0;
+    let intervalMs = 3000;
+    let isPlaying = true;
+    let timer = null;
+
+    function render(idx) {
+      const s = seasonsData[idx];
+      const isPaschal = PASCHAL_KEYS.has(s.seasonKey);
+
+      if (banner) {
+        banner.style.backgroundColor = s.colorHex;
+        banner.style.color = s.textColorHex;
+        banner.dataset.seasonKey = s.seasonKey;
+        banner.classList.toggle("paschal-banner-bg", isPaschal);
+      }
+
+      if (headlineEl) {
+        headlineEl.textContent = s.bannerHeadline;
+        headlineEl.classList.toggle("text-sacred-gold", isPaschal);
+        headlineEl.classList.toggle("paschal-headline", isPaschal);
+      }
+      if (sublineEl) {
+        sublineEl.textContent = s.bannerSubline;
+        sublineEl.style.display = s.bannerSubline ? "" : "none";
+      }
+      if (labelEl) {
+        labelEl.textContent = s.displayName + " — " + s.vestmentName + " vestments";
+        labelEl.classList.toggle("text-base", isPaschal);
+        labelEl.classList.toggle("paschal-label", isPaschal);
+        labelEl.classList.toggle("text-xs", !isPaschal);
+        labelEl.classList.toggle("opacity-70", !isPaschal);
+      }
+
+      if (infoName) infoName.textContent = s.displayName;
+      if (infoVestment) infoVestment.textContent = s.vestmentName;
+      if (infoDescription) infoDescription.textContent = s.description;
+
+      // Progress dots
+      progressDots.forEach((dot, i) => {
+        if (i === idx) {
+          dot.classList.add("bg-brand-blue-dark");
+          dot.classList.remove("bg-border-soft", "hover:bg-brand-tan-dark");
+        } else {
+          dot.classList.remove("bg-brand-blue-dark");
+          dot.classList.add("bg-border-soft", "hover:bg-brand-tan-dark");
+        }
+      });
+    }
+
+    function next() {
+      currentIndex = (currentIndex + 1) % seasonsData.length;
+      render(currentIndex);
+    }
+    function prev() {
+      currentIndex = (currentIndex - 1 + seasonsData.length) % seasonsData.length;
+      render(currentIndex);
+    }
+
+    function startTimer() {
+      stopTimer();
+      timer = setInterval(next, intervalMs);
+    }
+    function stopTimer() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function setPlaying(playing) {
+      isPlaying = playing;
+      if (playPauseBtn) {
+        playPauseBtn.textContent = playing ? "Pause" : "Play";
+        playPauseBtn.setAttribute("aria-label", playing ? "Pause cycle" : "Resume cycle");
+      }
+      if (playing) startTimer();
+      else stopTimer();
+    }
+
+    function setSpeed(ms) {
+      intervalMs = ms;
+      speedBtns.forEach((btn) => {
+        const isCurrent = Number(btn.dataset.speed) === ms;
+        if (isCurrent) {
+          btn.classList.remove("border", "border-border-soft", "text-text-secondary", "hover:border-brand-blue-dark", "hover:text-brand-blue-dark");
+          btn.classList.add("border-2", "border-brand-blue-dark", "text-brand-blue-dark");
+          btn.setAttribute("aria-current", "true");
+        } else {
+          btn.classList.remove("border-2", "border-brand-blue-dark", "text-brand-blue-dark");
+          btn.classList.add("border", "border-border-soft", "text-text-secondary", "hover:border-brand-blue-dark", "hover:text-brand-blue-dark");
+          btn.removeAttribute("aria-current");
+        }
+      });
+      if (isPlaying) startTimer();
+    }
+
+    // Wire up controls
+    playPauseBtn?.addEventListener("click", () => setPlaying(!isPlaying));
+    prevBtn?.addEventListener("click", () => {
+      setPlaying(false);
+      prev();
+    });
+    nextBtn?.addEventListener("click", () => {
+      setPlaying(false);
+      next();
+    });
+    speedBtns.forEach((btn) => {
+      btn.addEventListener("click", () => setSpeed(Number(btn.dataset.speed)));
+    });
+    progressDots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        const idx = Number(dot.dataset.jump);
+        setPlaying(false);
+        currentIndex = idx;
+        render(idx);
+      });
+    });
+
+    // Pause when the tab is hidden — courteous and saves the cycle from
+    // racing while the user is elsewhere.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopTimer();
+      else if (isPlaying) startTimer();
+    });
+
+    // Begin
+    startTimer();
+  </script>
+</Layout>

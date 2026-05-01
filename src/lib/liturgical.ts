@@ -451,6 +451,15 @@ export function getLiturgicalSeason(input: Date): LiturgicalSeason {
   }
 }
 
+/**
+ * Build a LiturgicalSeason record for an explicit season key, bypassing the
+ * date-based decision tree. Useful for previews, demos, and tests where you
+ * want a specific season's metadata regardless of today's date.
+ */
+export function getSeasonByKey(key: SeasonKey): LiturgicalSeason {
+  return buildSeason(key);
+}
+
 // ============================================================================
 // Internal — build a full LiturgicalSeason from a key
 // ============================================================================
