@@ -153,6 +153,7 @@ a[href^="tel:"] {
   border: 1px solid transparent;
   font-family: var(--font-display);
   font-size: 0.875rem;
+  font-weight: 600;            /* Crisp button text — overrides body default of 500 */
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-decoration: none;
@@ -183,17 +184,21 @@ a[href^="tel:"] {
   color: var(--color-cream-card);
 }
 
-/* Secondary: transparent → dark text and matching border.
+/* Secondary: transparent → dark text and 2px matching border.
+   Border / text both use brand-blue-dark for stronger contrast against
+   cream backgrounds (was brand-tan-dark — too close in luminance to
+   the cream and disappeared at glance). 2px border thickness also
+   reads more clearly than 1px at small sizes.
    On hover, becomes a dark filled bg with cream text — contrast rule still holds. */
 .btn-secondary {
   background-color: transparent;
-  color: var(--color-brand-tan-dark);
-  border-color: var(--color-brand-tan-dark);
+  color: var(--color-brand-blue-dark);
+  border: 2px solid var(--color-brand-blue-dark);
 }
 .btn-secondary:hover {
-  background-color: var(--color-brand-tan-dark);
+  background-color: var(--color-brand-blue-dark);
   color: var(--color-cream-card);
-  border-color: var(--color-brand-tan-dark);
+  border-color: var(--color-brand-blue-dark);
 }
 
 /* Ghost: transparent, text-only, dark text. For inline-style CTAs. */
