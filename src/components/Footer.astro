@@ -1,0 +1,97 @@
+---
+const year = new Date().getFullYear();
+
+const footerColumns = [
+  {
+    heading: "Visit",
+    links: [
+      { href: "/schedule/", label: "Service Schedule" },
+      { href: "/calendar/", label: "Julian Calendar" },
+      { href: "/contact/", label: "Contact" },
+    ],
+  },
+  {
+    heading: "Learn",
+    links: [
+      { href: "/about/", label: "About the Mission" },
+      { href: "/learn/", label: "What is Orthodoxy?" },
+      { href: "/communion/", label: "Our Communion" },
+    ],
+  },
+  {
+    heading: "Support",
+    links: [
+      { href: "/donate/", label: "Donate" },
+      { href: "/contact/", label: "Prayer Requests" },
+    ],
+  },
+];
+
+const jurisdictionLinks = [
+  { href: "https://orthodoxmetropolia.org", label: "Orthodox Metropolia" },
+  { href: "https://avlonasynodusa.com", label: "Avlona Synod USA" },
+  { href: "https://ipckatakomb.ru", label: "IPC Katakomb (Russia)" },
+  { href: "https://nftu.net", label: "NFTU" },
+];
+---
+
+<footer class="mt-24 border-t-2 border-gold/40 bg-deep text-parchment">
+  <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
+    <div class="grid gap-10 md:grid-cols-4">
+      <div class="md:col-span-1">
+        <div class="flex items-center gap-2">
+          <span aria-hidden="true" class="text-3xl text-gold">☩</span>
+          <span class="font-display text-lg leading-tight">St. John of<br />Kronstadt</span>
+        </div>
+        <p class="mt-4 text-sm text-text-mid">
+          A True Orthodox mission serving the Rio Grande Valley on the
+          traditional Julian Calendar.
+        </p>
+        <address class="mt-4 not-italic text-sm leading-relaxed text-parchment-dark">
+          39737 Palm Drive<br />
+          Bayview, TX 78566<br />
+          <a href="tel:+19564346874" class="text-gold hover:text-gold-light transition-colors">
+            (956) 434-6874
+          </a>
+        </address>
+      </div>
+
+      {footerColumns.map((col) => (
+        <div>
+          <h3 class="font-display text-sm uppercase tracking-widest text-gold">{col.heading}</h3>
+          <ul class="mt-4 space-y-2 text-sm">
+            {col.links.map((link) => (
+              <li>
+                <a href={link.href} class="text-parchment-dark hover:text-gold-light transition-colors">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 border-t border-gold/20 pt-8">
+      <h3 class="font-display text-sm uppercase tracking-widest text-gold">In Communion With</h3>
+      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        {jurisdictionLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              rel="noopener external"
+              class="text-parchment-dark hover:text-gold-light transition-colors"
+            >
+              {link.label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="mt-10 flex flex-col gap-2 border-t border-gold/20 pt-6 text-xs text-text-mid md:flex-row md:items-center md:justify-between">
+      <p>© {year} St. John of Kronstadt Orthodox Mission. All rights reserved.</p>
+      <p class="font-display tracking-wider text-gold-dim">Anchored in Ancient Faith</p>
+    </div>
+  </div>
+</footer>
