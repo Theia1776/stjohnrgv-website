@@ -13,7 +13,8 @@ interface IconEntry {
   name: string;
   thumbnail?: string;        // /public path; required when sourcing is false
   tradition: string;
-  iconographer: string;      // iconographer name OR archive/collection source
+  iconographer: string;      // named artist, or "Unknown"
+  source?: string;           // optional — archive, collection, or provenance note
   location: string;          // human description, e.g. "Paschal banner"
   locationHref?: string;     // optional link to where it appears
   note?: string;             // optional 1–2 sentence theological note
@@ -22,13 +23,15 @@ interface IconEntry {
 
 const icons: IconEntry[] = [
   {
-    name: "Anastasis — The Resurrection of Christ",
-    tradition: "Sourcing in progress",
-    iconographer: "Sourcing in progress",
-    location: "Paschal banner (planned)",
+    name: "The Anastasis (Resurrection of Christ)",
+    thumbnail: "/images/icons/anastasis.jpg",
+    tradition: "Modern Greek revival, 20th–21st century",
+    iconographer: "Unknown",
+    source: "Widely circulated in Orthodox parish use; specific provenance unverified",
+    location: "Paschal banner (Pascha through Pentecost)",
+    locationHref: "/#liturgical-banner",
     note:
-      "The Anastasis icon depicts Christ trampling down the gates of Hades and raising Adam and Eve from the dead — a central image of the Paschal mystery.",
-    sourcing: true,
+      "A canonical depiction of Christ harrowing Hades and raising Adam and Eve. The visual companion to the Paschal troparion: “Christ is risen from the dead, trampling down death by death, and upon those in the tombs bestowing life.”",
   },
 ];
 ---
@@ -169,10 +172,18 @@ const icons: IconEntry[] = [
                 </div>
                 <div>
                   <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
-                    Source:
+                    Iconographer:
                   </dt>{" "}
                   <dd class="inline">{entry.iconographer}</dd>
                 </div>
+                {entry.source && (
+                  <div>
+                    <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                      Source:
+                    </dt>{" "}
+                    <dd class="inline">{entry.source}</dd>
+                  </div>
+                )}
                 <div>
                   <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
                     Appears on:
