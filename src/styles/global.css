@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+@theme {
+  /* Brand colors — canonical */
+  --color-gold: #C9A84C;
+  --color-burgundy: #6B1A2E;
+  --color-parchment: #F5F0E8;
+  --color-ink: #1A1A1A;
+
+  /* Gold scale */
+  --color-gold-light: #E8C97A;
+  --color-gold-dim: #8B6E2F;
+
+  /* Parchment / text scale */
+  --color-parchment-dark: #E8D9B8;
+  --color-text-mid: #C8B88A;
+
+  /* Dark backgrounds (for icon-inspired Byzantine sections) */
+  --color-deep: #0D0A05;
+  --color-dark: #1A140A;
+  --color-incense: #2C1F0E;
+
+  /* Accent */
+  --color-crimson: #8B1A1A;
+
+  /* Typography */
+  --font-display: "Cinzel", "Times New Roman", serif;
+  --font-body: "IM Fell English", Georgia, serif;
+}
+
+/* Base typography defaults */
+html {
+  font-family: var(--font-body);
+  background-color: var(--color-parchment);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+/* Subtle focus ring matching brand palette */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
