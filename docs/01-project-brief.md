@@ -16,7 +16,7 @@
 | **Short Name** | St. John RGV |
 | **Location** | 39737 Palm Drive, Bayview, TX 78566 |
 | **Region** | Rio Grande Valley, South Texas |
-| **Phone** | 956-434-6874 |
+| **Phone** | 956-449-0225 |
 | **Priest** | Fr. Antonios Altermatt |
 | **Jurisdiction** | Orthodox Metropolia · Avlona Synod (USA) |
 | **Sister Synod** | Истинно-Православная Церковь (IPC Katakomb, Russia) — ipckatakomb.ru |
