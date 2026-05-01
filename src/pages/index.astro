@@ -1,13 +1,257 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+const services = [
+  { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
+  { name: "Vespers", when: "Saturday · 6:00 PM", note: "Eve of the Lord's Day" },
+  { name: "Great Feast Days", when: "Per Julian Calendar", note: "See calendar for upcoming feasts" },
+  { name: "Confession", when: "By Appointment", note: "Speak with Fr. Antonios" },
+];
+
+const upcomingFeasts = [
+  {
+    name: "Great and Holy Pascha",
+    osDate: "April 19 OS",
+    nsDate: "May 2 NS",
+    note: "The Resurrection of Our Lord",
+  },
+  {
+    name: "Bright Week",
+    osDate: "April 20–25 OS",
+    nsDate: "May 3–8 NS",
+    note: "Daily Paschal services",
+  },
+  {
+    name: "Mid-Pentecost",
+    osDate: "May 6 OS",
+    nsDate: "May 19 NS",
+    note: "The middle of the Paschal season",
+  },
+  {
+    name: "Ascension of Our Lord",
+    osDate: "May 28 OS",
+    nsDate: "June 10 NS",
+    note: "Forty days after Pascha",
+  },
+];
 ---
 
 <Layout
-  title="St. John of Kronstadt Orthodox Mission"
-  description="Orthodox Christian mission serving the Rio Grande Valley."
+  title="St. John of Kronstadt Orthodox Mission | Orthodox Church Rio Grande Valley, TX"
+  description="Orthodox Christian church serving the Rio Grande Valley in Bayview, TX. Traditional Julian Calendar services, weekly Divine Liturgy, and a welcoming parish. Fr. Antonios Altermatt. Call (956) 434-6874."
 >
-  <section class="mx-auto max-w-3xl px-4 py-24 text-center">
-    <h1 class="font-display text-4xl text-ink">St. John of Kronstadt Orthodox Mission</h1>
-    <p class="mt-4 text-text-mid">Layout scaffold in place — full homepage to follow.</p>
+  <!-- ==================== HERO ==================== -->
+  <section class="relative overflow-hidden bg-deep text-parchment">
+    <div class="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-16 md:px-6 md:py-28">
+      <div>
+        <p class="text-xs uppercase tracking-[0.25em] text-gold">Rio Grande Valley, Texas</p>
+        <h1 class="mt-4 font-display text-4xl leading-tight text-parchment md:text-5xl lg:text-6xl">
+          St. John of Kronstadt<br />
+          <span class="text-gold-light">Orthodox Mission</span>
+        </h1>
+        <div class="mt-6 h-px w-24 bg-gold"></div>
+        <p class="mt-6 font-display italic text-lg text-parchment-dark md:text-xl">
+          Anchored in Ancient Faith · Welcoming All Seekers
+        </p>
+        <p class="mt-6 max-w-xl text-text-mid leading-relaxed">
+          A True Orthodox parish serving the Rio Grande Valley from Bayview, Texas, on
+          the traditional Julian Calendar — preserving the unbroken liturgical life of
+          the Apostles and Church Fathers.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <a
+            href="/schedule/"
+            class="inline-block rounded-sm border border-gold bg-gold px-6 py-3 font-display text-sm uppercase tracking-widest text-deep hover:bg-gold-light transition-colors"
+          >
+            Service Schedule
+          </a>
+          <a
+            href="/contact/"
+            class="inline-block rounded-sm border border-gold/60 px-6 py-3 font-display text-sm uppercase tracking-widest text-parchment hover:border-gold hover:text-gold-light transition-colors"
+          >
+            Plan Your Visit
+          </a>
+        </div>
+      </div>
+
+      <!-- Icon placeholder for St. John of Kronstadt -->
+      <div class="flex justify-center md:justify-end">
+        <div
+          class="flex aspect-[3/4] w-full max-w-sm flex-col items-center justify-center border-2 border-gold/40 bg-dark text-center"
+          aria-label="Placeholder for icon of St. John of Kronstadt"
+        >
+          <span aria-hidden="true" class="text-6xl text-gold">☩</span>
+          <p class="mt-4 font-display text-lg text-gold-light">St. John of Kronstadt</p>
+          <p class="mt-1 text-xs uppercase tracking-widest text-text-mid">1829 — 1908</p>
+          <p class="mt-6 px-6 text-xs italic text-text-mid">Icon image to be added</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CURRENT SEASON BANNER ====================
+       This banner is a manually-edited zone. Update it weekly/seasonally
+       as the liturgical year progresses (e.g. "Christ is Risen!" during
+       Bright Week, "Apostles Fast" in summer, etc.).
+  -->
+  <section class="bg-burgundy text-parchment">
+    <div class="mx-auto max-w-6xl px-4 py-6 text-center md:px-6 md:py-8">
+      <p class="text-xs uppercase tracking-[0.3em] text-gold-light">Current Season</p>
+      <p class="mt-2 font-display text-2xl md:text-3xl">Holy Week — Pascha approaches May 2nd</p>
+    </div>
+  </section>
+
+  <!-- ==================== WELCOME ==================== -->
+  <section class="bg-parchment">
+    <div class="mx-auto max-w-3xl px-4 py-20 text-center md:px-6">
+      <p class="text-xs uppercase tracking-widest text-gold-dim">Welcome</p>
+      <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">A Living Tradition in the Rio Grande Valley</h2>
+      <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+      <p class="mt-8 text-lg leading-relaxed text-ink/80">
+        St. John of Kronstadt Orthodox Mission gathers each Lord's Day to celebrate the
+        Divine Liturgy of St. John Chrysostom according to the traditional Julian
+        Calendar, the ancient liturgical reckoning of the Orthodox Church.
+      </p>
+      <p class="mt-6 leading-relaxed text-ink/75">
+        Whether you are an inquirer encountering Orthodoxy for the first time, a
+        catechumen preparing for baptism or chrismation, or an Orthodox Christian
+        visiting the Valley, you are warmly welcome to come and pray with us.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== SERVICE TIMES ==================== -->
+  <section class="bg-incense text-parchment">
+    <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
+      <div class="text-center">
+        <p class="text-xs uppercase tracking-widest text-gold">Divine Services</p>
+        <h2 class="mt-2 font-display text-3xl text-parchment md:text-4xl">Weekly Schedule</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {services.map((s) => (
+          <div class="border border-gold/30 bg-dark p-6 transition-colors hover:border-gold">
+            <div class="text-2xl text-gold" aria-hidden="true">☩</div>
+            <h3 class="mt-3 font-display text-xl text-parchment">{s.name}</h3>
+            <p class="mt-2 text-gold-light">{s.when}</p>
+            <p class="mt-2 text-sm text-text-mid">{s.note}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="mt-10 text-center">
+        <a href="/schedule/" class="font-display text-sm uppercase tracking-widest text-gold-light hover:text-gold transition-colors">
+          Full schedule and feast days →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TODAY'S READINGS (placeholder) ==================== -->
+  <section class="bg-parchment">
+    <div class="mx-auto max-w-3xl px-4 py-20 md:px-6">
+      <div class="border-2 border-gold/30 bg-parchment-dark/30 p-8 md:p-10">
+        <p class="text-xs uppercase tracking-widest text-gold-dim">Today's Readings</p>
+        <h2 class="mt-2 font-display text-2xl text-ink md:text-3xl">Daily Scripture from the Julian Calendar</h2>
+        <div class="mt-4 h-px w-16 bg-gold"></div>
+        <p class="mt-6 text-ink/80">
+          Daily readings will appear here, drawn from the Julian Calendar via
+          <a href="https://orthocal.info" rel="noopener external" class="text-burgundy underline hover:text-ink">orthocal.info</a>.
+        </p>
+        <p class="mt-3 italic text-ink/60">Coming soon.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== UPCOMING EVENTS / FEASTS ==================== -->
+  <section class="bg-parchment-dark/40">
+    <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
+      <div class="text-center">
+        <p class="text-xs uppercase tracking-widest text-gold-dim">Liturgical Year</p>
+        <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">Upcoming Feast Days</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-2">
+        {upcomingFeasts.map((f) => (
+          <article class="border border-gold/30 bg-parchment p-6 transition-colors hover:border-burgundy">
+            <h3 class="font-display text-xl text-ink">{f.name}</h3>
+            <p class="mt-2 text-sm text-burgundy">
+              <span class="font-display">{f.osDate}</span>
+              <span class="mx-2 text-gold-dim">·</span>
+              <span class="font-display">{f.nsDate}</span>
+            </p>
+            <p class="mt-3 text-sm text-ink/70">{f.note}</p>
+          </article>
+        ))}
+      </div>
+
+      <div class="mt-10 text-center">
+        <a href="/calendar/" class="font-display text-sm uppercase tracking-widest text-burgundy hover:text-ink transition-colors">
+          Full Julian Calendar →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PARISH PRIEST ==================== -->
+  <section class="bg-parchment">
+    <div class="mx-auto grid max-w-5xl gap-10 px-4 py-20 md:grid-cols-[auto,1fr] md:items-center md:px-6">
+      <div
+        class="mx-auto flex aspect-square w-48 items-center justify-center border-2 border-gold/40 bg-incense text-parchment md:mx-0"
+        aria-label="Placeholder for photograph of Fr. Antonios Altermatt"
+      >
+        <span aria-hidden="true" class="text-5xl text-gold">☩</span>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-widest text-gold-dim">Our Pastor</p>
+        <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">Fr. Antonios Altermatt</h2>
+        <div class="mt-4 h-px w-16 bg-gold"></div>
+        <p class="mt-6 text-ink/80 leading-relaxed">
+          Fr. Antonios serves as priest of St. John of Kronstadt Orthodox Mission, leading the
+          parish's liturgical life and offering pastoral counsel to inquirers, catechumens, and
+          parishioners across the Rio Grande Valley.
+        </p>
+        <p class="mt-4 text-ink/75">
+          To speak with Fr. Antonios, please call
+          <a href="tel:+19564346874" class="text-burgundy underline hover:text-ink">(956) 434-6874</a>
+          or <a href="/contact/" class="text-burgundy underline hover:text-ink">send a message</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTACT / LOCATION STRIP ==================== -->
+  <section class="bg-incense text-parchment">
+    <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
+      <div class="text-center">
+        <p class="text-xs uppercase tracking-widest text-gold">Visit Us</p>
+        <h2 class="mt-2 font-display text-3xl text-parchment md:text-4xl">Find the Parish</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+      </div>
+
+      <div class="mt-12 grid gap-8 md:grid-cols-3">
+        <div class="border border-gold/30 p-6 text-center">
+          <p class="text-xs uppercase tracking-widest text-gold-light">Address</p>
+          <address class="mt-3 not-italic font-display text-lg text-parchment">
+            39737 Palm Drive<br />
+            Bayview, TX 78566
+          </address>
+        </div>
+        <div class="border border-gold/30 p-6 text-center">
+          <p class="text-xs uppercase tracking-widest text-gold-light">Phone</p>
+          <p class="mt-3 font-display text-lg">
+            <a href="tel:+19564346874" class="text-parchment hover:text-gold-light transition-colors">
+              (956) 434-6874
+            </a>
+          </p>
+        </div>
+        <div class="border border-gold/30 p-6 text-center">
+          <p class="text-xs uppercase tracking-widest text-gold-light">Pastor</p>
+          <p class="mt-3 font-display text-lg text-parchment">Fr. Antonios Altermatt</p>
+        </div>
+      </div>
+    </div>
   </section>
 </Layout>
