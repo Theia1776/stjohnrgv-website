@@ -23,7 +23,7 @@
  * failure) it falls back to ORDINARY/GOLD and emits a console.warn.
  */
 
-import { ORTHODOX_PASCHA, PASCHA_YEAR_MIN, PASCHA_YEAR_MAX } from "./pascha-dates";
+import { ORTHODOX_PASCHA, PASCHA_YEAR_MIN, PASCHA_YEAR_MAX } from "./pascha-dates.ts";
 
 // ============================================================================
 // Types
