@@ -22,22 +22,22 @@ function d(iso: string): Date {
 }
 
 describe("spec test cases (2026 Paschal cycle)", () => {
-  it("2026-04-12 → pascha-day, red", () => {
+  it("2026-04-12 → pascha-day, Paschal Red", () => {
     const s = getLiturgicalSeason(d("2026-04-12"));
     assert.equal(s.seasonKey, "pascha-day");
-    assert.equal(s.vestmentName, "Red");
+    assert.equal(s.vestmentName, "Paschal Red");
   });
 
-  it("2026-04-15 → bright-week, white", () => {
+  it("2026-04-15 → bright-week, Paschal Red", () => {
     const s = getLiturgicalSeason(d("2026-04-15"));
     assert.equal(s.seasonKey, "bright-week");
-    assert.equal(s.vestmentName, "White");
+    assert.equal(s.vestmentName, "Paschal Red");
   });
 
-  it("2026-05-01 → paschal-season, white  (today)", () => {
+  it("2026-05-01 → paschal-season, Paschal Red  (today)", () => {
     const s = getLiturgicalSeason(d("2026-05-01"));
     assert.equal(s.seasonKey, "paschal-season");
-    assert.equal(s.vestmentName, "White");
+    assert.equal(s.vestmentName, "Paschal Red");
   });
 
   it("2026-05-31 → pentecost, green", () => {

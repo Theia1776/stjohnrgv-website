@@ -85,6 +85,9 @@ export type SeasonKey =
 const VESTMENT = {
   white: { hex: "#F5F0E8", textHex: "#2C3E50", textVar: "var(--color-text-primary)", name: "White" },
   gold: { hex: "#C9A84C", textHex: "#2C3E50", textVar: "var(--color-text-primary)", name: "Gold" },
+  // Paschal red: warm, festal — used for Pascha day, Bright Week, Paschal season.
+  // Distinct from the somber oxblood `red` used for Apostles' Fast / Cross / martyrs.
+  paschalRed: { hex: "#B33A3A", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Paschal Red" },
   red: { hex: "#8B2C2C", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Red" },
   green: { hex: "#5B7A4A", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Green" },
   blue: { hex: "#4A6B8A", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Blue" },
@@ -98,6 +101,7 @@ type VestmentKey = keyof typeof VESTMENT;
 const VESTMENT_VAR: Record<VestmentKey, string> = {
   white: "var(--color-liturgical-white)",
   gold: "var(--color-liturgical-gold)",
+  paschalRed: "var(--color-liturgical-paschal-red)",
   red: "var(--color-liturgical-red)",
   green: "var(--color-liturgical-green)",
   blue: "var(--color-liturgical-blue)",
@@ -120,21 +124,21 @@ interface SeasonTemplate {
 const SEASONS: Record<SeasonKey, SeasonTemplate> = {
   "pascha-day": {
     label: "Pascha — The Holy Resurrection",
-    vestment: "red",
+    vestment: "paschalRed",
     description: "The Feast of Feasts. The Resurrection of Our Lord, God and Savior Jesus Christ.",
     bannerHeadline: "Christ is Risen! Indeed He is Risen!",
     bannerSubline: "Today is the day the Lord has made.",
   },
   "bright-week": {
     label: "Bright Week",
-    vestment: "white",
+    vestment: "paschalRed",
     description: "The first week of Pascha — every day is celebrated as Pascha itself.",
     bannerHeadline: "Christ is Risen! Indeed He is Risen!",
     bannerSubline: "Bright Week — every day is Pascha.",
   },
   "paschal-season": {
     label: "Paschal Season",
-    vestment: "white",
+    vestment: "paschalRed",
     description: "The forty days from Pascha to Ascension, when the Paschal greeting is exchanged.",
     bannerHeadline: "Christ is Risen! Indeed He is Risen!",
     bannerSubline: "We rejoice in the Paschal season.",

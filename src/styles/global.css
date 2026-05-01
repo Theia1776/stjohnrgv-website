@@ -25,14 +25,15 @@
      UI elements should reference --color-liturgical-current rather than
      these tokens directly so they update automatically with the season.
      ======================================================================== */
-  --color-liturgical-white:   #F5F0E8;  /* Paschal season, Theophany, Transfiguration, funerals */
-  --color-liturgical-gold:    #C9A84C;  /* Christmas season, ordinary Sundays, default */
-  --color-liturgical-red:     #8B2C2C;  /* Pascha (Moscow), Cross feasts, martyrs, Apostles' Fast */
-  --color-liturgical-green:   #5B7A4A;  /* Pentecost to Apostles' Fast, Palm Sunday, monastic saints */
-  --color-liturgical-blue:    #4A6B8A;  /* Theotokos feasts, Annunciation, Dormition */
-  --color-liturgical-purple:  #5B3A5C;  /* Great Lent weekends */
-  --color-liturgical-black:   #2C2828;  /* Great Lent weekdays, Holy Week */
-  --color-liturgical-orange:  #A85F2C;  /* Some Ukrainian usage, Apostles' Fast variant */
+  --color-liturgical-white:        #F5F0E8;  /* Theophany, Transfiguration, funerals */
+  --color-liturgical-gold:         #C9A84C;  /* Christmas season, ordinary Sundays, default */
+  --color-liturgical-paschal-red:  #B33A3A;  /* Pascha day, Bright Week, Paschal season — warm festal red, Moscow tradition */
+  --color-liturgical-red:          #8B2C2C;  /* Apostles' Fast, Cross feasts, martyrs — somber oxblood, NOT festal */
+  --color-liturgical-green:        #5B7A4A;  /* Pentecost to Apostles' Fast, Palm Sunday, monastic saints */
+  --color-liturgical-blue:         #4A6B8A;  /* Theotokos feasts, Annunciation, Dormition */
+  --color-liturgical-purple:       #5B3A5C;  /* Great Lent weekends */
+  --color-liturgical-black:        #2C2828;  /* Great Lent weekdays, Holy Week */
+  --color-liturgical-orange:       #A85F2C;  /* Some Ukrainian usage, Apostles' Fast variant */
 
   /* Dynamic accent tokens — values are reassigned on :root by the client
      script (see Layout.astro). Tailwind generates bg-liturgical-current,
