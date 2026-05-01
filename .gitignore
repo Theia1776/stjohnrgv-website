@@ -1,3 +1,11 @@
+# Private project notes (never commit)
+*-journal.md
+*-summary.md
+05-project-journal.md
+
+# Local tool settings
+.claude/
+
 # Logs
 logs
 *.log
