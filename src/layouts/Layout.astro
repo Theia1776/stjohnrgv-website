@@ -73,8 +73,9 @@ const liturgicalRootStyle =
     <slot name="head" />
   </head>
   <body class="flex min-h-screen flex-col">
-    <!-- Liturgical accent stripe — full-width 4px line at the top of the page. -->
-    <div class="h-1 w-full bg-liturgical-current" aria-hidden="true"></div>
+    <!-- Liturgical accent stripe — sticks at the very top, visible at all
+         times. The signature seasonal-color element on every page. -->
+    <div class="sticky top-0 z-50 h-1 w-full bg-liturgical-current" aria-hidden="true"></div>
 
     <Header />
     <main class="flex-1">
