@@ -1,38 +1,64 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors — canonical */
-  --color-gold: #C9A84C;
-  --color-burgundy: #6B1A2E;
-  --color-parchment: #F5F0E8;
-  --color-ink: #1A1A1A;
+  /* ========================================================================
+     COASTAL LIGHT — base palette
+     Year-round identity; replaces the prior Byzantine gold/burgundy theme.
+     Generates Tailwind utilities like bg-cream-bg, text-text-primary,
+     text-brand-blue, border-border-soft, etc.
+     ======================================================================== */
+  --color-cream-bg:        #FAF7F0;  /* page background; warm off-white */
+  --color-cream-card:      #FFFFFF;  /* card surfaces; pure white */
+  --color-text-primary:    #2C3E50;  /* body text; deep slate, never pure black */
+  --color-text-secondary:  #5C6B7A;  /* captions, meta text */
+  --color-brand-blue:      #3B7BA8;  /* Mediterranean blue; primary accent */
+  --color-brand-blue-dark: #2A5E84;  /* hover state for blue elements */
+  --color-brand-blue-pale: #E8F1F8;  /* subtle hover backgrounds, dividers */
+  --color-brand-tan:       #C9A87A;  /* sandstone; secondary accent */
+  --color-brand-tan-dark:  #A88758;  /* hover for tan elements */
+  --color-sacred-gold:     #C9A84C;  /* RESERVED — sacred elements only */
+  --color-border-soft:     #E5DFD3;  /* subtle borders, dividers */
 
-  /* Gold scale */
-  --color-gold-light: #E8C97A;
-  --color-gold-dim: #8B6E2F;
+  /* ========================================================================
+     LITURGICAL COLORS — vestment palette
+     The active liturgical color rotates with the Russian/Slavic typikon.
+     UI elements should reference --liturgical-current rather than these
+     tokens directly so they update automatically with the season.
+     ======================================================================== */
+  --color-liturgical-white:   #F5F0E8;  /* Paschal season, Theophany, Transfiguration, funerals */
+  --color-liturgical-gold:    #C9A84C;  /* Christmas season, ordinary Sundays, default */
+  --color-liturgical-red:     #8B2C2C;  /* Pascha (Moscow), Cross feasts, martyrs, Apostles' Fast */
+  --color-liturgical-green:   #5B7A4A;  /* Pentecost to Apostles' Fast, Palm Sunday, monastic saints */
+  --color-liturgical-blue:    #4A6B8A;  /* Theotokos feasts, Annunciation, Dormition */
+  --color-liturgical-purple:  #5B3A5C;  /* Great Lent weekends */
+  --color-liturgical-black:   #2C2828;  /* Great Lent weekdays, Holy Week */
+  --color-liturgical-orange:  #A85F2C;  /* Some Ukrainian usage, Apostles' Fast variant */
 
-  /* Parchment / text scale */
-  --color-parchment-dark: #E8D9B8;
-  --color-text-mid: #C8B88A;
-
-  /* Dark backgrounds (for icon-inspired Byzantine sections) */
-  --color-deep: #0D0A05;
-  --color-dark: #1A140A;
-  --color-incense: #2C1F0E;
-
-  /* Accent */
-  --color-crimson: #8B1A1A;
-
-  /* Typography */
+  /* ========================================================================
+     TYPOGRAPHY
+     ======================================================================== */
   --font-display: "Cinzel", "Times New Roman", serif;
   --font-body: "IM Fell English", Georgia, serif;
 }
 
-/* Base typography defaults */
+/* ============================================================================
+   :root — defaults for the dynamic liturgical accent
+   These are overridden at runtime by /src/lib/liturgical.ts based on the
+   current date. SSR builds set them inline in <head> so non-JS users
+   still see the right color for the build day.
+   ============================================================================ */
+:root {
+  --liturgical-current: var(--color-liturgical-gold);
+  --liturgical-current-text: var(--color-text-primary);
+}
+
+/* ============================================================================
+   Base typography & document defaults
+   ============================================================================ */
 html {
   font-family: var(--font-body);
-  background-color: var(--color-parchment);
-  color: var(--color-ink);
+  background-color: var(--color-cream-bg);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -40,10 +66,31 @@ html {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   letter-spacing: 0.01em;
+  color: var(--color-text-primary);
 }
 
-/* Subtle focus ring matching brand palette */
+/* Subtle focus ring matching the live liturgical accent */
 :focus-visible {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--liturgical-current);
   outline-offset: 2px;
+}
+
+/* ============================================================================
+   Link styling — under the new palette
+   - Default: thin underline, generous offset, brand-blue, dark-blue on hover
+   - Phone (tel:) links: NO underline (clearly clickable from context)
+   - Inside buttons / nav: opt-out of underline locally with `no-underline`
+   ============================================================================ */
+a {
+  color: var(--color-brand-blue);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color 150ms ease;
+}
+a:hover {
+  color: var(--color-brand-blue-dark);
+}
+a[href^="tel:"] {
+  text-decoration: none;
 }
