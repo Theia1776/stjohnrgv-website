@@ -27,7 +27,7 @@
      ======================================================================== */
   --color-liturgical-white:        #F5F0E8;  /* Theophany, Transfiguration, funerals */
   --color-liturgical-gold:         #C9A84C;  /* Christmas season, ordinary Sundays, default */
-  --color-liturgical-paschal-red:  #B33A3A;  /* Pascha day, Bright Week, Paschal season — warm festal red, Moscow tradition */
+  --color-liturgical-paschal-red:  #F00808;  /* Pascha day, Bright Week, Paschal season — vivid pure red, Moscow tradition */
   --color-liturgical-red:          #8B2C2C;  /* Apostles' Fast, Cross feasts, martyrs — somber oxblood, NOT festal */
   --color-liturgical-green:        #5B7A4A;  /* Pentecost to Apostles' Fast, Palm Sunday, monastic saints */
   --color-liturgical-blue:         #4A6B8A;  /* Theotokos feasts, Annunciation, Dormition */
@@ -231,4 +231,20 @@ a[href^="tel:"] {
   background-color: var(--color-brand-blue-dark);
   border-color: var(--color-brand-blue-dark);
   color: var(--color-cream-card);
+}
+
+/* ============================================================================
+   Paschal banner headline — contrast aid
+   ----------------------------------------------------------------------------
+   Sacred-gold (#C9A84C) on the vivid Paschal red (#F00808) computes as a
+   ~1.7:1 contrast ratio — below WCAG even for large text. The token tone
+   is intentionally retained (it's also the icon-border / cross-glyph color),
+   so contrast is supplemented locally on the headline only:
+     - bumps weight to 700 (heavier strokes survive on saturated bg)
+     - adds a dark text-shadow for depth and edge separation
+   Applied via class:list in index.astro only when the season is paschal.
+   ============================================================================ */
+.paschal-headline {
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
