@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { getLiturgicalSeason } from "../lib/liturgical.ts";
 
 const parishSchema = {
   "@context": "https://schema.org",
@@ -64,38 +65,47 @@ const parishSchema = {
   ],
 };
 
+// Compute today's liturgical season for the banner. Layout.astro also
+// computes it (for the dynamic CSS vars); the calls return identical values
+// within a single render. Banner content updates via the client script in
+// Layout if the user's local date crosses a season boundary post-build.
+const season = getLiturgicalSeason(new Date());
+const isPaschal = ["pascha-day", "bright-week", "paschal-season"].includes(season.seasonKey);
+const seasonLabel = `${season.label} — ${season.vestmentName} vestments`;
+
+// Upcoming feasts — corrected for Pascha 2026 = April 12 NS (= March 30 OS).
+const upcomingFeasts = [
+  {
+    name: "Great and Holy Pascha",
+    osDate: "March 30 OS",
+    nsDate: "April 12 NS",
+    note: "The Resurrection of Our Lord",
+  },
+  {
+    name: "Bright Week",
+    osDate: "March 31 – April 5 OS",
+    nsDate: "April 13 – 18 NS",
+    note: "Daily Paschal services",
+  },
+  {
+    name: "Mid-Pentecost",
+    osDate: "April 23 OS",
+    nsDate: "May 6 NS",
+    note: "The middle of the Paschal season",
+  },
+  {
+    name: "Ascension of Our Lord",
+    osDate: "May 8 OS",
+    nsDate: "May 21 NS",
+    note: "Forty days after Pascha",
+  },
+];
+
 const services = [
   { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
   { name: "Vespers", when: "Saturday · 6:00 PM", note: "Eve of the Lord's Day" },
   { name: "Great Feast Days", when: "Per Julian Calendar", note: "See calendar for upcoming feasts" },
   { name: "Confession", when: "By Appointment", note: "Speak with Fr. Antonios" },
-];
-
-const upcomingFeasts = [
-  {
-    name: "Great and Holy Pascha",
-    osDate: "April 19 OS",
-    nsDate: "May 2 NS",
-    note: "The Resurrection of Our Lord",
-  },
-  {
-    name: "Bright Week",
-    osDate: "April 20–25 OS",
-    nsDate: "May 3–8 NS",
-    note: "Daily Paschal services",
-  },
-  {
-    name: "Mid-Pentecost",
-    osDate: "May 6 OS",
-    nsDate: "May 19 NS",
-    note: "The middle of the Paschal season",
-  },
-  {
-    name: "Ascension of Our Lord",
-    osDate: "May 28 OS",
-    nsDate: "June 10 NS",
-    note: "Forty days after Pascha",
-  },
 ];
 ---
 
@@ -111,19 +121,19 @@ const upcomingFeasts = [
   />
 
   <!-- ==================== HERO ==================== -->
-  <section class="relative overflow-hidden bg-deep text-parchment">
+  <section class="bg-cream-bg">
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-16 md:px-6 md:py-28">
       <div>
-        <p class="text-xs uppercase tracking-[0.25em] text-gold">Rio Grande Valley, Texas</p>
-        <h1 class="mt-4 font-display text-4xl leading-tight text-parchment md:text-5xl lg:text-6xl">
+        <p class="text-xs uppercase tracking-[0.25em] text-brand-tan-dark">Rio Grande Valley, Texas</p>
+        <h1 class="mt-4 font-display text-4xl leading-tight text-text-primary md:text-5xl lg:text-6xl">
           St. John of Kronstadt<br />
-          <span class="text-gold-light">Orthodox Mission</span>
+          <span class="text-brand-blue">Orthodox Mission</span>
         </h1>
-        <div class="mt-6 h-px w-24 bg-gold"></div>
-        <p class="mt-6 font-display italic text-lg text-parchment-dark md:text-xl">
+        <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+        <p class="mt-6 font-display italic text-lg text-text-primary/80 md:text-xl">
           Anchored in Ancient Faith · Welcoming All Seekers
         </p>
-        <p class="mt-6 max-w-xl text-text-mid leading-relaxed">
+        <p class="mt-6 max-w-xl text-text-secondary leading-relaxed">
           A True Orthodox parish serving the Rio Grande Valley from Bayview, Texas, on
           the traditional Julian Calendar — preserving the unbroken liturgical life of
           the Apostles and Church Fathers.
@@ -131,13 +141,13 @@ const upcomingFeasts = [
         <div class="mt-8 flex flex-wrap gap-4">
           <a
             href="/schedule/"
-            class="inline-block rounded-sm border border-gold bg-gold px-6 py-3 font-display text-sm uppercase tracking-widest text-deep hover:bg-gold-light transition-colors"
+            class="inline-block rounded-sm bg-brand-blue px-6 py-3 font-display text-sm uppercase tracking-widest text-cream-card no-underline hover:bg-brand-blue-dark transition-colors"
           >
             Service Schedule
           </a>
           <a
             href="/contact/"
-            class="inline-block rounded-sm border border-gold/60 px-6 py-3 font-display text-sm uppercase tracking-widest text-parchment hover:border-gold hover:text-gold-light transition-colors"
+            class="inline-block rounded-sm border border-brand-tan-dark px-6 py-3 font-display text-sm uppercase tracking-widest text-brand-tan-dark no-underline hover:bg-brand-tan-dark hover:text-cream-card transition-colors"
           >
             Plan Your Visit
           </a>
@@ -147,42 +157,64 @@ const upcomingFeasts = [
       <!-- Icon placeholder for St. John of Kronstadt -->
       <div class="flex justify-center md:justify-end">
         <div
-          class="flex aspect-[3/4] w-full max-w-sm flex-col items-center justify-center border-2 border-gold/40 bg-dark text-center"
+          class="flex aspect-[3/4] w-full max-w-sm flex-col items-center justify-center border-2 border-sacred-gold bg-cream-card text-center shadow-sm"
           aria-label="Placeholder for icon of St. John of Kronstadt"
         >
-          <span aria-hidden="true" class="text-6xl text-gold">☩</span>
-          <p class="mt-4 font-display text-lg text-gold-light">St. John of Kronstadt</p>
-          <p class="mt-1 text-xs uppercase tracking-widest text-text-mid">1829 — 1908</p>
-          <p class="mt-6 px-6 text-xs italic text-text-mid">Icon image to be added</p>
+          <span aria-hidden="true" class="text-6xl text-sacred-gold">☩</span>
+          <p class="mt-4 font-display text-lg text-text-primary">St. John of Kronstadt</p>
+          <p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">1829 — 1908</p>
+          <p class="mt-6 px-6 text-xs italic text-text-secondary">Icon image to be added</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ==================== CURRENT SEASON BANNER ====================
-       This banner is a manually-edited zone. Update it weekly/seasonally
-       as the liturgical year progresses (e.g. "Christ is Risen!" during
-       Bright Week, "Apostles Fast" in summer, etc.).
+       Background and text colors track the active liturgical season via
+       --liturgical-current. Headline / subline / label all carry data
+       attributes so the client hydration script in Layout.astro can swap
+       their text content if the user's local date is in a different season
+       than the build day.
   -->
-  <section class="bg-burgundy text-parchment">
-    <div class="mx-auto max-w-6xl px-4 py-6 text-center md:px-6 md:py-8">
-      <p class="text-xs uppercase tracking-[0.3em] text-gold-light">Current Season</p>
-      <p class="mt-2 font-display text-2xl md:text-3xl">Holy Week — Pascha approaches May 2nd</p>
+  <section
+    id="liturgical-banner"
+    data-season-key={season.seasonKey}
+    class="bg-liturgical-current text-[var(--color-liturgical-current-text)]"
+  >
+    <div class="mx-auto max-w-6xl px-4 py-8 text-center md:px-6 md:py-10">
+      <p class="text-xs uppercase tracking-[0.3em] opacity-70">Current Season</p>
+      <p
+        data-banner-headline
+        class:list={[
+          "mt-3 font-display text-2xl md:text-3xl",
+          isPaschal ? "text-sacred-gold" : "",
+        ]}
+      >
+        {season.bannerHeadline}
+      </p>
+      {season.bannerSubline && (
+        <p data-banner-subline class="mt-2 italic text-base md:text-lg">
+          {season.bannerSubline}
+        </p>
+      )}
+      <p data-banner-label class="mt-4 text-xs uppercase tracking-widest opacity-70">
+        {seasonLabel}
+      </p>
     </div>
   </section>
 
   <!-- ==================== WELCOME ==================== -->
-  <section class="bg-parchment">
+  <section class="bg-cream-bg">
     <div class="mx-auto max-w-3xl px-4 py-20 text-center md:px-6">
-      <p class="text-xs uppercase tracking-widest text-gold-dim">Welcome</p>
-      <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">A Living Tradition in the Rio Grande Valley</h2>
-      <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
-      <p class="mt-8 text-lg leading-relaxed text-ink/80">
+      <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Welcome</p>
+      <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">A Living Tradition in the Rio Grande Valley</h2>
+      <div class="mx-auto mt-6 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-8 text-lg leading-relaxed text-text-primary/85">
         St. John of Kronstadt Orthodox Mission gathers each Lord's Day to celebrate the
         Divine Liturgy of St. John Chrysostom according to the traditional Julian
         Calendar, the ancient liturgical reckoning of the Orthodox Church.
       </p>
-      <p class="mt-6 leading-relaxed text-ink/75">
+      <p class="mt-6 leading-relaxed text-text-primary/75">
         Whether you are an inquirer encountering Orthodoxy for the first time, a
         catechumen preparing for baptism or chrismation, or an Orthodox Christian
         visiting the Valley, you are warmly welcome to come and pray with us.
@@ -190,136 +222,146 @@ const upcomingFeasts = [
     </div>
   </section>
 
+  <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
+
   <!-- ==================== SERVICE TIMES ==================== -->
-  <section class="bg-incense text-parchment">
+  <section class="bg-brand-blue-pale">
     <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
       <div class="text-center">
-        <p class="text-xs uppercase tracking-widest text-gold">Divine Services</p>
-        <h2 class="mt-2 font-display text-3xl text-parchment md:text-4xl">Weekly Schedule</h2>
-        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+        <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Divine Services</p>
+        <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Weekly Schedule</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-liturgical-current"></div>
       </div>
 
       <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {services.map((s) => (
-          <div class="border border-gold/30 bg-dark p-6 transition-colors hover:border-gold">
-            <div class="text-2xl text-gold" aria-hidden="true">☩</div>
-            <h3 class="mt-3 font-display text-xl text-parchment">{s.name}</h3>
-            <p class="mt-2 text-gold-light">{s.when}</p>
-            <p class="mt-2 text-sm text-text-mid">{s.note}</p>
+          <div class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-tan">
+            <div class="text-2xl text-sacred-gold" aria-hidden="true">☩</div>
+            <h3 class="mt-3 font-display text-xl text-text-primary">{s.name}</h3>
+            <p class="mt-2 text-brand-blue">{s.when}</p>
+            <p class="mt-2 text-sm text-text-secondary">{s.note}</p>
           </div>
         ))}
       </div>
 
       <div class="mt-10 text-center">
-        <a href="/schedule/" class="font-display text-sm uppercase tracking-widest text-gold-light hover:text-gold transition-colors">
+        <a href="/schedule/" class="font-display text-sm uppercase tracking-widest text-brand-blue no-underline hover:text-brand-blue-dark transition-colors">
           Full schedule and feast days →
         </a>
       </div>
     </div>
   </section>
 
+  <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
+
   <!-- ==================== TODAY'S READINGS (placeholder) ==================== -->
-  <section class="bg-parchment">
+  <section class="bg-cream-bg">
     <div class="mx-auto max-w-3xl px-4 py-20 md:px-6">
-      <div class="border-2 border-gold/30 bg-parchment-dark/30 p-8 md:p-10">
-        <p class="text-xs uppercase tracking-widest text-gold-dim">Today's Readings</p>
-        <h2 class="mt-2 font-display text-2xl text-ink md:text-3xl">Daily Scripture from the Julian Calendar</h2>
-        <div class="mt-4 h-px w-16 bg-gold"></div>
-        <p class="mt-6 text-ink/80">
+      <div class="border border-border-soft bg-cream-card p-8 shadow-sm md:p-10">
+        <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Today's Readings</p>
+        <h2 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">Daily Scripture from the Julian Calendar</h2>
+        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+        <p class="mt-6 text-text-primary/85">
           Daily readings will appear here, drawn from the Julian Calendar via
-          <a href="https://orthocal.info" rel="noopener external" class="text-burgundy underline hover:text-ink">orthocal.info</a>.
+          <a href="https://orthocal.info" rel="noopener external">orthocal.info</a>.
         </p>
-        <p class="mt-3 italic text-ink/60">Coming soon.</p>
+        <p class="mt-3 italic text-text-secondary">Coming soon.</p>
       </div>
     </div>
   </section>
 
-  <!-- ==================== UPCOMING EVENTS / FEASTS ==================== -->
-  <section class="bg-parchment-dark/40">
+  <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== UPCOMING FEASTS ==================== -->
+  <section class="bg-cream-bg">
     <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
       <div class="text-center">
-        <p class="text-xs uppercase tracking-widest text-gold-dim">Liturgical Year</p>
-        <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">Upcoming Feast Days</h2>
-        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+        <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Liturgical Year</p>
+        <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Upcoming Feast Days</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-liturgical-current"></div>
       </div>
 
       <div class="mt-12 grid gap-6 sm:grid-cols-2">
         {upcomingFeasts.map((f) => (
-          <article class="border border-gold/30 bg-parchment p-6 transition-colors hover:border-burgundy">
-            <h3 class="font-display text-xl text-ink">{f.name}</h3>
-            <p class="mt-2 text-sm text-burgundy">
+          <article class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-blue">
+            <h3 class="font-display text-xl text-text-primary">{f.name}</h3>
+            <p class="mt-2 text-sm text-brand-blue">
               <span class="font-display">{f.osDate}</span>
-              <span class="mx-2 text-gold-dim">·</span>
+              <span class="mx-2 text-brand-tan-dark">·</span>
               <span class="font-display">{f.nsDate}</span>
             </p>
-            <p class="mt-3 text-sm text-ink/70">{f.note}</p>
+            <p class="mt-3 text-sm text-text-secondary">{f.note}</p>
           </article>
         ))}
       </div>
 
       <div class="mt-10 text-center">
-        <a href="/calendar/" class="font-display text-sm uppercase tracking-widest text-burgundy hover:text-ink transition-colors">
+        <a href="/calendar/" class="font-display text-sm uppercase tracking-widest text-brand-blue no-underline hover:text-brand-blue-dark transition-colors">
           Full Julian Calendar →
         </a>
       </div>
     </div>
   </section>
 
+  <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
+
   <!-- ==================== PARISH PRIEST ==================== -->
-  <section class="bg-parchment">
+  <section class="bg-cream-bg">
     <div class="mx-auto grid max-w-5xl gap-10 px-4 py-20 md:grid-cols-[auto,1fr] md:items-center md:px-6">
       <div
-        class="mx-auto flex aspect-square w-48 items-center justify-center border-2 border-gold/40 bg-incense text-parchment md:mx-0"
+        class="mx-auto flex aspect-square w-48 items-center justify-center border-2 border-brand-tan bg-cream-card md:mx-0"
         aria-label="Placeholder for photograph of Fr. Antonios Altermatt"
       >
-        <span aria-hidden="true" class="text-5xl text-gold">☩</span>
+        <span aria-hidden="true" class="text-5xl text-sacred-gold">☩</span>
       </div>
       <div>
-        <p class="text-xs uppercase tracking-widest text-gold-dim">Our Pastor</p>
-        <h2 class="mt-2 font-display text-3xl text-ink md:text-4xl">Fr. Antonios Altermatt</h2>
-        <div class="mt-4 h-px w-16 bg-gold"></div>
-        <p class="mt-6 text-ink/80 leading-relaxed">
+        <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Our Pastor</p>
+        <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Fr. Antonios Altermatt</h2>
+        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+        <p class="mt-6 text-text-primary/85 leading-relaxed">
           Fr. Antonios serves as priest of St. John of Kronstadt Orthodox Mission, leading the
           parish's liturgical life and offering pastoral counsel to inquirers, catechumens, and
           parishioners across the Rio Grande Valley.
         </p>
-        <p class="mt-4 text-ink/75">
+        <p class="mt-4 text-text-primary/75">
           To speak with Fr. Antonios, please call
-          <a href="tel:+19564490225" class="text-burgundy underline hover:text-ink">(956) 449-0225</a>
-          or <a href="/contact/" class="text-burgundy underline hover:text-ink">send a message</a>.
+          <a href="tel:+19564490225">(956) 449-0225</a>
+          or <a href="/contact/">send a message</a>.
         </p>
       </div>
     </div>
   </section>
 
+  <hr class="mx-auto h-px w-full max-w-6xl border-0 bg-liturgical-current opacity-40" />
+
   <!-- ==================== CONTACT / LOCATION STRIP ==================== -->
-  <section class="bg-incense text-parchment">
+  <section class="bg-brand-blue-pale">
     <div class="mx-auto max-w-6xl px-4 py-20 md:px-6">
       <div class="text-center">
-        <p class="text-xs uppercase tracking-widest text-gold">Visit Us</p>
-        <h2 class="mt-2 font-display text-3xl text-parchment md:text-4xl">Find the Parish</h2>
-        <div class="mx-auto mt-6 h-px w-16 bg-gold"></div>
+        <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Visit Us</p>
+        <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Find the Parish</h2>
+        <div class="mx-auto mt-6 h-px w-16 bg-liturgical-current"></div>
       </div>
 
       <div class="mt-12 grid gap-8 md:grid-cols-3">
-        <div class="border border-gold/30 p-6 text-center">
-          <p class="text-xs uppercase tracking-widest text-gold-light">Address</p>
-          <address class="mt-3 not-italic font-display text-lg text-parchment">
+        <div class="border border-border-soft bg-cream-card p-6 text-center shadow-sm">
+          <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Address</p>
+          <address class="mt-3 not-italic font-display text-lg text-text-primary">
             39737 Palm Drive<br />
             Bayview, TX 78566
           </address>
         </div>
-        <div class="border border-gold/30 p-6 text-center">
-          <p class="text-xs uppercase tracking-widest text-gold-light">Phone</p>
+        <div class="border border-border-soft bg-cream-card p-6 text-center shadow-sm">
+          <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Phone</p>
           <p class="mt-3 font-display text-lg">
-            <a href="tel:+19564490225" class="text-parchment hover:text-gold-light transition-colors">
+            <a href="tel:+19564490225" class="text-brand-blue hover:text-brand-blue-dark transition-colors">
               (956) 449-0225
             </a>
           </p>
         </div>
-        <div class="border border-gold/30 p-6 text-center">
-          <p class="text-xs uppercase tracking-widest text-gold-light">Pastor</p>
-          <p class="mt-3 font-display text-lg text-parchment">Fr. Antonios Altermatt</p>
+        <div class="border border-border-soft bg-cream-card p-6 text-center shadow-sm">
+          <p class="text-xs uppercase tracking-widest text-brand-tan-dark">Pastor</p>
+          <p class="mt-3 font-display text-lg text-text-primary">Fr. Antonios Altermatt</p>
         </div>
       </div>
     </div>
