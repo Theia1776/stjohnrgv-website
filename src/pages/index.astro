@@ -127,7 +127,7 @@ const services = [
         <p class="text-xs font-semibold uppercase tracking-[0.25em] text-brand-tan-dark">Rio Grande Valley, Texas</p>
         <h1 class="mt-4 font-display text-4xl leading-tight text-text-primary md:text-5xl lg:text-6xl">
           St. John of Kronstadt<br />
-          <span class="text-brand-blue">Orthodox Mission</span>
+          <span class="text-brand-blue-dark">Orthodox Mission</span>
         </h1>
         <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
         <p class="mt-6 font-display italic text-lg text-text-primary/80 md:text-xl">
@@ -202,22 +202,22 @@ const services = [
     <div class="mx-auto max-w-6xl px-4 py-3 md:px-6">
       <ul class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs uppercase tracking-widest">
         <li>
-          <a href="#schedule" class="font-semibold text-text-secondary no-underline hover:text-brand-blue transition-colors">
+          <a href="#schedule" class="font-semibold text-text-secondary no-underline hover:text-brand-blue-dark transition-colors">
             Schedule
           </a>
         </li>
         <li>
-          <a href="#readings" class="font-semibold text-text-secondary no-underline hover:text-brand-blue transition-colors">
+          <a href="#readings" class="font-semibold text-text-secondary no-underline hover:text-brand-blue-dark transition-colors">
             Readings
           </a>
         </li>
         <li>
-          <a href="#visit" class="font-semibold text-text-secondary no-underline hover:text-brand-blue transition-colors">
+          <a href="#visit" class="font-semibold text-text-secondary no-underline hover:text-brand-blue-dark transition-colors">
             Visit Us
           </a>
         </li>
         <li>
-          <a href="#about" class="font-semibold text-text-secondary no-underline hover:text-brand-blue transition-colors">
+          <a href="#about" class="font-semibold text-text-secondary no-underline hover:text-brand-blue-dark transition-colors">
             About
           </a>
         </li>
@@ -260,14 +260,14 @@ const services = [
           <div class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-tan">
             <div class="text-2xl text-sacred-gold" aria-hidden="true">☩</div>
             <h3 class="mt-3 font-display text-xl text-text-primary">{s.name}</h3>
-            <p class="mt-2 text-brand-blue">{s.when}</p>
+            <p class="mt-2 text-brand-blue-dark">{s.when}</p>
             <p class="mt-2 text-sm text-text-secondary">{s.note}</p>
           </div>
         ))}
       </div>
 
       <div class="mt-10 text-center">
-        <a href="/schedule/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue no-underline hover:text-brand-blue-dark transition-colors">
+        <a href="/schedule/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline transition-colors">
           Full schedule and feast days →
         </a>
       </div>
@@ -307,7 +307,7 @@ const services = [
         {upcomingFeasts.map((f) => (
           <article class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-blue">
             <h3 class="font-display text-xl text-text-primary">{f.name}</h3>
-            <p class="mt-2 text-sm text-brand-blue">
+            <p class="mt-2 text-sm text-brand-blue-dark">
               <span class="font-display">{f.osDate}</span>
               <span class="mx-2 text-brand-tan-dark">·</span>
               <span class="font-display">{f.nsDate}</span>
@@ -318,7 +318,7 @@ const services = [
       </div>
 
       <div class="mt-10 text-center">
-        <a href="/calendar/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue no-underline hover:text-brand-blue-dark transition-colors">
+        <a href="/calendar/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline transition-colors">
           Full Julian Calendar →
         </a>
       </div>
@@ -376,7 +376,7 @@ const services = [
         <div class="border border-border-soft bg-cream-card p-6 text-center shadow-sm">
           <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Phone</p>
           <p class="mt-3 font-display text-lg">
-            <a href="tel:+19564490225" class="text-brand-blue hover:text-brand-blue-dark transition-colors">
+            <a href="tel:+19564490225" class="text-brand-blue-dark transition-colors">
               (956) 449-0225
             </a>
           </p>

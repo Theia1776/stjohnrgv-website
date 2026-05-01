@@ -105,15 +105,16 @@ strong, b {
    - Inside buttons / nav: opt-out of underline locally with `no-underline`
    ============================================================================ */
 a {
-  color: var(--color-brand-blue);
-  font-weight: 500;            /* Links: 500 minimum, distinct from body weight + color */
+  color: var(--color-brand-blue-dark);   /* Stronger contrast on light bg (vs prior brand-blue) — passes WCAG AAA on cream-bg */
+  font-weight: 500;                       /* Links: 500 minimum */
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
-  transition: color 150ms ease;
+  transition: text-decoration-thickness 150ms ease, color 150ms ease;
 }
 a:hover {
-  color: var(--color-brand-blue-dark);
+  color: var(--color-brand-blue-dark);    /* Color stays — hover signal is the underline thickening */
+  text-decoration-thickness: 2px;
 }
 a[href^="tel:"] {
   text-decoration: none;
