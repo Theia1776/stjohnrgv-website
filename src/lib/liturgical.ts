@@ -87,7 +87,7 @@ const VESTMENT = {
   gold: { hex: "#C9A84C", textHex: "#2C3E50", textVar: "var(--color-text-primary)", name: "Gold" },
   // Paschal red: vivid, festal — used for Pascha day, Bright Week, Paschal season.
   // Distinct from the somber oxblood `red` used for Apostles' Fast / Cross / martyrs.
-  paschalRed: { hex: "#F00808", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Paschal Red" },
+  paschalRed: { hex: "#E60000", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Paschal Red" },
   red: { hex: "#8B2C2C", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Red" },
   green: { hex: "#5B7A4A", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Green" },
   blue: { hex: "#4A6B8A", textHex: "#FAF7F0", textVar: "var(--color-cream-bg)", name: "Blue" },

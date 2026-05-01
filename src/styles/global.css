@@ -27,7 +27,7 @@
      ======================================================================== */
   --color-liturgical-white:        #F5F0E8;  /* Theophany, Transfiguration, funerals */
   --color-liturgical-gold:         #C9A84C;  /* Christmas season, ordinary Sundays, default */
-  --color-liturgical-paschal-red:  #F00808;  /* Pascha day, Bright Week, Paschal season — vivid pure red, Moscow tradition */
+  --color-liturgical-paschal-red:  #E60000;  /* Pascha day, Bright Week, Paschal season — true vivid red, no orange shift, Moscow tradition */
   --color-liturgical-red:          #8B2C2C;  /* Apostles' Fast, Cross feasts, martyrs — somber oxblood, NOT festal */
   --color-liturgical-green:        #5B7A4A;  /* Pentecost to Apostles' Fast, Palm Sunday, monastic saints */
   --color-liturgical-blue:         #4A6B8A;  /* Theotokos feasts, Annunciation, Dormition */
