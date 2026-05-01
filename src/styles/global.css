@@ -274,17 +274,17 @@ a[href^="tel:"] {
 }
 
 /* Paschal banner background — for pascha-day, bright-week, paschal-season.
-   The Anastasis icon (Resurrection of Christ) sits behind the banner text
-   as a sacred backdrop. A 45%-black gradient overlay sits on top of the
-   icon (CSS layers paint top-down, so this is the "darkening overlay" the
-   text is read against). The Paschal red is set as background-color
-   underneath as a fallback if the image fails to load. */
+   Solid Paschal red (#E60000) softened by a subtle radial gradient: a warm
+   gold glow at center fading to transparent by ~60% radius. The center
+   reads slightly warmer/brighter than the edges, lifting the gold "Christ
+   is Risen!" headline without competing with it. The Anastasis icon now
+   has its own dedicated section on the homepage rather than living in the
+   banner background — see #paschal-anastasis. */
 .paschal-banner-bg {
   background-color: var(--color-liturgical-paschal-red);
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
-    url("/images/icons/anastasis.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: radial-gradient(
+    ellipse at center,
+    rgba(255, 220, 130, 0.22) 0%,
+    rgba(255, 220, 130, 0) 60%
+  );
 }
