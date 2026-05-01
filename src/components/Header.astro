@@ -10,13 +10,16 @@ const navLinks = [
 ];
 ---
 
-<header class="sticky top-0 z-40 border-b border-gold/20 bg-parchment/90 backdrop-blur">
+<header class="sticky top-0 z-40 border-b border-border-soft bg-cream-bg/90 backdrop-blur">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-    <a href="/" class="flex items-center gap-3 text-ink hover:text-burgundy transition-colors">
-      <span aria-hidden="true" class="text-2xl text-gold">☩</span>
+    <a
+      href="/"
+      class="flex items-center gap-3 text-text-primary no-underline hover:text-brand-blue transition-colors"
+    >
+      <span aria-hidden="true" class="text-2xl text-sacred-gold">☩</span>
       <span class="flex flex-col leading-tight">
         <span class="font-display text-base md:text-lg">St. John of Kronstadt</span>
-        <span class="text-xs uppercase tracking-widest text-gold-dim">Orthodox Mission · RGV</span>
+        <span class="text-xs uppercase tracking-widest text-brand-tan-dark">Orthodox Mission · RGV</span>
       </span>
     </a>
 
@@ -24,14 +27,14 @@ const navLinks = [
       {navLinks.map((link) => (
         <a
           href={link.href}
-          class="text-ink/80 hover:text-burgundy transition-colors"
+          class="text-text-primary/80 no-underline hover:text-brand-blue transition-colors"
         >
           {link.label}
         </a>
       ))}
       <a
         href="/schedule/"
-        class="rounded-sm border border-gold bg-burgundy px-4 py-2 text-parchment hover:bg-ink transition-colors"
+        class="rounded-sm bg-brand-blue px-4 py-2 text-cream-card no-underline hover:bg-brand-blue-dark transition-colors"
       >
         Plan Your Visit
       </a>
@@ -40,7 +43,7 @@ const navLinks = [
     <button
       type="button"
       id="mobile-menu-toggle"
-      class="md:hidden flex items-center justify-center rounded-sm border border-gold/40 px-3 py-2 text-ink hover:bg-gold/10"
+      class="md:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
       aria-controls="mobile-menu"
       aria-expanded="false"
       aria-label="Open menu"
@@ -49,19 +52,19 @@ const navLinks = [
     </button>
   </div>
 
-  <div id="mobile-menu" class="hidden border-t border-gold/20 bg-parchment md:hidden" aria-label="Mobile">
+  <div id="mobile-menu" class="hidden border-t border-border-soft bg-cream-bg md:hidden" aria-label="Mobile">
     <nav class="mx-auto flex max-w-6xl flex-col px-4 py-4">
       {navLinks.map((link) => (
         <a
           href={link.href}
-          class="border-b border-gold/10 py-3 text-ink hover:text-burgundy transition-colors"
+          class="border-b border-border-soft py-3 text-text-primary no-underline hover:text-brand-blue transition-colors"
         >
           {link.label}
         </a>
       ))}
       <a
         href="/schedule/"
-        class="mt-3 rounded-sm border border-gold bg-burgundy px-4 py-3 text-center text-parchment hover:bg-ink transition-colors"
+        class="mt-3 rounded-sm bg-brand-blue px-4 py-3 text-center text-cream-card no-underline hover:bg-brand-blue-dark transition-colors"
       >
         Plan Your Visit
       </a>

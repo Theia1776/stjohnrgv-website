@@ -35,34 +35,32 @@ const jurisdictionLinks = [
 ];
 ---
 
-<footer class="mt-24 border-t-2 border-gold/40 bg-deep text-parchment">
+<footer class="mt-24 border-t-2 border-brand-tan/40 bg-cream-card text-text-primary">
   <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
     <div class="grid gap-10 md:grid-cols-4">
       <div class="md:col-span-1">
         <div class="flex items-center gap-2">
-          <span aria-hidden="true" class="text-3xl text-gold">☩</span>
+          <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
           <span class="font-display text-lg leading-tight">St. John of<br />Kronstadt</span>
         </div>
-        <p class="mt-4 text-sm text-text-mid">
+        <p class="mt-4 text-sm text-text-secondary">
           A True Orthodox mission serving the Rio Grande Valley on the
           traditional Julian Calendar.
         </p>
-        <address class="mt-4 not-italic text-sm leading-relaxed text-parchment-dark">
+        <address class="mt-4 not-italic text-sm leading-relaxed text-text-primary">
           39737 Palm Drive<br />
           Bayview, TX 78566<br />
-          <a href="tel:+19564346874" class="text-gold hover:text-gold-light transition-colors">
-            (956) 434-6874
-          </a>
+          <a href="tel:+19564490225">(956) 449-0225</a>
         </address>
       </div>
 
       {footerColumns.map((col) => (
         <div>
-          <h3 class="font-display text-sm uppercase tracking-widest text-gold">{col.heading}</h3>
+          <h3 class="font-display text-sm uppercase tracking-widest text-brand-tan-dark">{col.heading}</h3>
           <ul class="mt-4 space-y-2 text-sm">
             {col.links.map((link) => (
               <li>
-                <a href={link.href} class="text-parchment-dark hover:text-gold-light transition-colors">
+                <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue hover:underline">
                   {link.label}
                 </a>
               </li>
@@ -72,15 +70,15 @@ const jurisdictionLinks = [
       ))}
     </div>
 
-    <div class="mt-12 border-t border-gold/20 pt-8">
-      <h3 class="font-display text-sm uppercase tracking-widest text-gold">In Communion With</h3>
+    <div class="mt-12 border-t border-border-soft pt-8">
+      <h3 class="font-display text-sm uppercase tracking-widest text-brand-tan-dark">In Communion With</h3>
       <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         {jurisdictionLinks.map((link) => (
           <li>
             <a
               href={link.href}
               rel="noopener external"
-              class="text-parchment-dark hover:text-gold-light transition-colors"
+              class="text-text-secondary no-underline hover:text-brand-blue hover:underline"
             >
               {link.label} ↗
             </a>
@@ -89,9 +87,9 @@ const jurisdictionLinks = [
       </ul>
     </div>
 
-    <div class="mt-10 flex flex-col gap-2 border-t border-gold/20 pt-6 text-xs text-text-mid md:flex-row md:items-center md:justify-between">
+    <div class="mt-10 flex flex-col gap-2 border-t border-border-soft pt-6 text-xs text-text-secondary md:flex-row md:items-center md:justify-between">
       <p>© {year} St. John of Kronstadt Orthodox Mission. All rights reserved.</p>
-      <p class="font-display tracking-wider text-gold-dim">Anchored in Ancient Faith</p>
+      <p class="font-display tracking-wider text-brand-tan-dark">Anchored in Ancient Faith</p>
     </div>
   </div>
 </footer>
