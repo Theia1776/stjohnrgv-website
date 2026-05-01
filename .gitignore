@@ -6,6 +6,14 @@
 # Local tool settings
 .claude/
 
+# Astro
+dist/
+.astro/
+
+# OS / editor
+.DS_Store
+.idea/
+
 # Logs
 logs
 *.log
