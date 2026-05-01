@@ -59,6 +59,8 @@ const ogImageUrl = ogImage.startsWith("http") ? ogImage : SITE_URL + ogImage;
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap"
     />
+
+    <slot name="head" />
   </head>
   <body class="flex min-h-screen flex-col">
     <Header />

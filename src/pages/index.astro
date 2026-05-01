@@ -1,6 +1,62 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+const parishSchema = {
+  "@context": "https://schema.org",
+  "@type": ["Church", "LocalBusiness"],
+  "name": "St. John of Kronstadt Orthodox Mission",
+  "alternateName": ["St. John RGV", "St. John of Kronstadt Orthodox Mission Texas"],
+  "description":
+    "True Orthodox Christian mission church serving the Rio Grande Valley on the traditional Julian Calendar. Member of the Orthodox Metropolia and Avlona Synod USA.",
+  "url": "https://stjohnrgv.org",
+  "telephone": "+1-956-434-6874",
+  "email": "contact@stjohnrgv.org",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "39737 Palm Drive",
+    "addressLocality": "Bayview",
+    "addressRegion": "TX",
+    "postalCode": "78566",
+    "addressCountry": "US",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 26.10,
+    "longitude": -97.42,
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Sunday",
+      "opens": "09:00",
+      "closes": "12:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "18:00",
+      "closes": "19:30",
+    },
+  ],
+  "memberOf": [
+    {
+      "@type": "Organization",
+      "name": "Orthodox Metropolia",
+      "url": "https://orthodoxmetropolia.org",
+    },
+    {
+      "@type": "Organization",
+      "name": "Avlona Synod USA",
+      "url": "https://avlonasynodusa.com",
+    },
+  ],
+  "sameAs": [
+    "https://orthodoxmetropolia.org",
+    "https://avlonasynodusa.com",
+    "https://ipckatakomb.ru",
+  ],
+};
+
 const services = [
   { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
   { name: "Vespers", when: "Saturday · 6:00 PM", note: "Eve of the Lord's Day" },
@@ -40,6 +96,13 @@ const upcomingFeasts = [
   title="St. John of Kronstadt Orthodox Mission | Orthodox Church Rio Grande Valley, TX"
   description="Orthodox Christian church serving the Rio Grande Valley in Bayview, TX. Traditional Julian Calendar services, weekly Divine Liturgy, and a welcoming parish. Fr. Antonios Altermatt. Call (956) 434-6874."
 >
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify(parishSchema)}
+  />
+
   <!-- ==================== HERO ==================== -->
   <section class="relative overflow-hidden bg-deep text-parchment">
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-16 md:px-6 md:py-28">
