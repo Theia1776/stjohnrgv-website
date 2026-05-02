@@ -3,36 +3,263 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout
-  title="Contact & Prayer Requests | St. John of Kronstadt Orthodox Mission"
-  description="Contact St. John of Kronstadt Orthodox Mission in Bayview, Texas. Speak with Fr. Antonios Altermatt, request prayers, or plan a visit."
+  title="Contact Us | St. John of Kronstadt Orthodox Mission"
+  description="Contact St. John of Kronstadt Orthodox Mission in Bayview, Texas. Send a message about visiting, becoming a catechumen, prayer requests, donations, or website feedback."
 >
-  <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
-    <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Get in Touch</p>
-    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Contact &amp; Prayer Requests</h1>
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Get in Touch</p>
+      <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Contact Us</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+      <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
+        Please select the subject that best fits your inquiry and we will get
+        back to you as soon as possible.
+      </p>
+    </div>
+  </section>
 
-    <div class="mt-8 grid gap-6 md:grid-cols-2">
-      <div class="border border-border-soft bg-cream-card p-6">
-        <h2 class="font-display text-xl text-text-primary">St. John of Kronstadt Orthodox Mission</h2>
-        <address class="mt-3 not-italic text-text-primary/80">
-          39737 Palm Drive<br />
-          Bayview, TX 78566
-        </address>
-        <p class="mt-3 text-text-primary/80">
-          <a href="tel:+19564490225">(956) 449-0225</a>
-        </p>
+  <!-- ==================== FORM + INFO ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-6xl px-4 pb-16 md:px-6 md:pb-20">
+      <div class="grid gap-10 md:grid-cols-[3fr_2fr] md:gap-12">
+
+        <!-- ============== FORM COLUMN ============== -->
+        <div>
+          <form
+            id="contact-form"
+            action="https://formspree.io/f/xaqvqnjr"
+            method="POST"
+            class="space-y-5"
+          >
+            <!-- Name -->
+            <div>
+              <label for="name" class="block text-sm font-semibold text-text-primary">
+                Name <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                autocomplete="name"
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+              />
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label for="email" class="block text-sm font-semibold text-text-primary">
+                Email <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+              />
+            </div>
+
+            <!-- Subject -->
+            <div>
+              <label for="subject" class="block text-sm font-semibold text-text-primary">
+                Subject <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <select
+                id="subject"
+                name="subject"
+                required
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary"
+              >
+                <option value="" disabled selected>Select a subject…</option>
+                <option value="General Inquiry">General Inquiry</option>
+                <option value="Visiting / Attending a Service">Visiting / Attending a Service</option>
+                <option value="Becoming a Catechumen">Becoming a Catechumen</option>
+                <option value="Prayer Request">Prayer Request</option>
+                <option value="Donation Question">Donation Question</option>
+                <option value="Website Feedback">Website Feedback</option>
+              </select>
+            </div>
+
+            <!-- Message -->
+            <div>
+              <label for="message" class="block text-sm font-semibold text-text-primary">
+                Message <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                required
+                rows="6"
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+              ></textarea>
+            </div>
+
+            <!-- Honeypot — hidden from real users; bots fill it and Formspree drops the submission. -->
+            <input
+              type="text"
+              name="_gotcha"
+              tabindex="-1"
+              autocomplete="off"
+              aria-hidden="true"
+              style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"
+            />
+
+            <!-- Submit + inline error -->
+            <div>
+              <button id="submit-btn" type="submit" class="btn btn-primary btn-lg">
+                Send Message
+              </button>
+              <p
+                id="form-error"
+                role="alert"
+                hidden
+                class="mt-3 text-sm font-semibold text-liturgical-red"
+              ></p>
+            </div>
+          </form>
+
+          <!-- ============== SUCCESS MESSAGE ============== -->
+          <!-- Shown after the JS handler receives a 2xx from Formspree.
+               Replaces the form in-place; aria-live announces it for SR users. -->
+          <div
+            id="form-success"
+            hidden
+            role="status"
+            aria-live="polite"
+            class="border-2 border-sacred-gold bg-cream-card p-6 shadow-sm md:p-8"
+          >
+            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Message sent</p>
+            <h2 class="mt-2 font-display text-2xl text-text-primary">Thank you for writing to us.</h2>
+            <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+            <p class="mt-4 text-text-primary/85 leading-relaxed">
+              Your message has been received. We will respond as soon as we are
+              able. If your matter is urgent, please call
+              <a href="tel:+19564490225">(956) 449-0225</a>.
+            </p>
+          </div>
+        </div>
+
+        <!-- ============== INFO COLUMN ============== -->
+        <aside class="space-y-6">
+          <div class="border border-border-soft bg-cream-card p-6 shadow-sm md:p-8">
+            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Parish</p>
+            <h2 class="mt-2 font-display text-xl text-text-primary">St. John of Kronstadt Orthodox Mission</h2>
+            <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+
+            <div class="mt-5">
+              <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Address</p>
+              <address class="mt-1.5 not-italic text-text-primary/85">
+                39737 Palm Drive<br />
+                Bayview, TX 78566
+              </address>
+            </div>
+
+            <div class="mt-5">
+              <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Phone</p>
+              <p class="mt-1.5 text-text-primary/85">
+                <a href="tel:+19564490225">(956) 449-0225</a>
+              </p>
+            </div>
+
+            <div class="mt-5">
+              <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Email</p>
+              <p class="mt-1.5 break-words text-text-primary/85">
+                <a href="mailto:parishoffice@stjohnrgv.org">parishoffice@stjohnrgv.org</a>
+              </p>
+            </div>
+
+            <p class="mt-6">
+              <a
+                href="/schedule/"
+                class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+              >
+                Service Schedule →
+              </a>
+            </p>
+          </div>
+        </aside>
+
       </div>
-      <div class="border border-border-soft bg-cream-card p-6">
-        <h2 class="font-display text-xl text-text-primary">Fr. Antonios Altermatt</h2>
-        <p class="mt-3 text-text-primary/80">Pastor</p>
-        <p class="mt-3 text-text-primary/75 text-sm">
-          For pastoral conversations, inquirer questions, baptism and chrismation
-          preparation, or to request prayers, please call.
+    </div>
+  </section>
+
+  <!-- ==================== MAP ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-6xl px-4 pb-20 md:px-6 md:pb-28">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Find Us</p>
+      <h2 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">Bayview, Texas</h2>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+
+      <div class="mt-8 border border-border-soft bg-cream-card shadow-sm">
+        <iframe
+          title="Map of Bayview, Texas 78566 — St. John of Kronstadt Orthodox Mission"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=-97.44%2C26.08%2C-97.40%2C26.12&amp;layer=mapnik&amp;marker=26.10%2C-97.42"
+          class="block h-[420px] w-full border-0 md:h-[480px]"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+        <p class="border-t border-border-soft px-4 py-3 text-xs text-text-secondary">
+          <a
+            href="https://www.openstreetmap.org/?mlat=26.10&amp;mlon=-97.42#map=14/26.10/-97.42"
+            rel="noopener external"
+          >
+            View larger map on OpenStreetMap →
+          </a>
         </p>
       </div>
     </div>
-
-    <p class="mt-8 text-text-primary/75">
-      An online contact form and prayer request form are coming soon.
-    </p>
   </section>
+
+  <script>
+    // Progressive enhancement: intercept the Formspree submit and show an
+    // inline success card instead of redirecting away. If JS is disabled,
+    // the native form submit still works and Formspree handles the response.
+    const form = document.getElementById("contact-form") as HTMLFormElement | null;
+    const success = document.getElementById("form-success");
+    const errorEl = document.getElementById("form-error");
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
+
+    if (form && success && errorEl && submitBtn) {
+      const defaultLabel = submitBtn.textContent ?? "Send Message";
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorEl.hidden = true;
+        errorEl.textContent = "";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            headers: { Accept: "application/json" },
+          });
+
+          if (res.ok) {
+            form.hidden = true;
+            success.hidden = false;
+            success.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            const json = await res.json().catch(() => ({}));
+            const msg =
+              (Array.isArray(json?.errors) && json.errors.map((e: { message: string }) => e.message).join(" ")) ||
+              "Something went wrong sending your message. Please try again, or call (956) 449-0225.";
+            errorEl.textContent = msg;
+            errorEl.hidden = false;
+          }
+        } catch {
+          errorEl.textContent =
+            "Couldn't reach the form server. Please check your connection, or call (956) 449-0225.";
+          errorEl.hidden = false;
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = defaultLabel;
+        }
+      });
+    }
+  </script>
 </Layout>
