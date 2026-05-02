@@ -83,7 +83,7 @@ const seasonsForClient = seasons.map((s, i) => ({
       "flex min-h-[50vh] items-center justify-center transition-colors duration-500 md:min-h-[55vh]",
       initialIsPaschal ? "paschal-banner-bg" : "",
     ]}
-    style={`background-color: ${initial.colorHex}; color: ${initial.textColorHex};`}
+    style={`background-color: ${initial.colorHex}; color: ${initialIsPaschal ? "#FFFFFF" : initial.textColorHex};`}
   >
     <div class="mx-auto max-w-4xl px-4 py-16 text-center md:px-6 md:py-20">
       <p class="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Current Season</p>
@@ -91,7 +91,9 @@ const seasonsForClient = seasons.map((s, i) => ({
         data-preview-headline
         class:list={[
           "mt-3 font-display text-3xl md:text-4xl lg:text-5xl",
-          initialIsPaschal ? "text-sacred-gold paschal-headline" : "",
+          /* Paschal: pure-white text via section override + bold + shadow.
+             No sacred-gold (rule: all banner text white or cream). */
+          initialIsPaschal ? "paschal-headline" : "",
         ]}
       >
         {initial.bannerHeadline}
@@ -207,14 +209,15 @@ const seasonsForClient = seasons.map((s, i) => ({
 
       if (banner) {
         banner.style.backgroundColor = s.colorHex;
-        banner.style.color = s.textColorHex;
+        // Paschal: hardcoded pure white. Other seasons: per-vestment companion color.
+        banner.style.color = isPaschal ? "#FFFFFF" : s.textColorHex;
         banner.dataset.seasonKey = s.seasonKey;
         banner.classList.toggle("paschal-banner-bg", isPaschal);
       }
 
       if (headlineEl) {
         headlineEl.textContent = s.bannerHeadline;
-        headlineEl.classList.toggle("text-sacred-gold", isPaschal);
+        // No sacred-gold on the paschal headline — pure white via inheritance.
         headlineEl.classList.toggle("paschal-headline", isPaschal);
       }
       if (sublineEl) {

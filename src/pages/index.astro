@@ -174,8 +174,11 @@ const services = [
     id="liturgical-banner"
     data-season-key={season.seasonKey}
     class:list={[
-      "text-[var(--color-liturgical-current-text)]",
-      isPaschal ? "paschal-banner-bg" : "bg-liturgical-current",
+      /* Paschal banner: hardcoded pure white text, regardless of the
+         liturgical-current-text variable (which would otherwise resolve to
+         the warm cream-bg #FAF7F0 and read as gold-tinted on the red).
+         Other seasons keep using the dynamic var. */
+      isPaschal ? "text-cream-card paschal-banner-bg" : "bg-liturgical-current text-[var(--color-liturgical-current-text)]",
     ]}
   >
     <div class="mx-auto max-w-6xl px-4 py-8 text-center md:px-6 md:py-10">
@@ -184,7 +187,10 @@ const services = [
         data-banner-headline
         class:list={[
           "mt-3 font-display text-2xl md:text-3xl",
-          isPaschal ? "text-sacred-gold paschal-headline" : "",
+          /* Paschal headline: pure white via section inheritance + the bold
+             weight & dark text-shadow from .paschal-headline. No more
+             sacred-gold — per the "all banner text white or cream" rule. */
+          isPaschal ? "paschal-headline" : "",
         ]}
       >
         {season.bannerHeadline}

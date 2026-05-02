@@ -162,10 +162,12 @@ const liturgicalRootStyle =
           const isPaschalNow = PASCHAL_KEYS.has(today.seasonKey);
 
           banner.classList.toggle("paschal-banner-bg", isPaschalNow);
+          banner.classList.toggle("text-cream-card", isPaschalNow);
           banner.classList.toggle("bg-liturgical-current", !isPaschalNow);
 
           if (headlineEl) {
-            headlineEl.classList.toggle("text-sacred-gold", isPaschalNow);
+            // No sacred-gold on the paschal headline — pure white via
+            // inheritance from the section's text-cream-card override.
             headlineEl.classList.toggle("paschal-headline", isPaschalNow);
           }
           if (labelEl) {
