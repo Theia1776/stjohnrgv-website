@@ -3,21 +3,99 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout
-  title="Support Our Mission | St. John of Kronstadt Orthodox Mission"
-  description="Support St. John of Kronstadt Orthodox Mission — a True Orthodox parish serving the Rio Grande Valley. Online giving coming soon."
+  title="Support the Mission | St. John of Kronstadt Orthodox Mission"
+  description="Support St. John of Kronstadt Orthodox Mission through tithes and offerings — sustaining parish life, the Divine services, and care for the poor in the Rio Grande Valley."
 >
-  <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
-    <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Support the Mission</p>
-    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Donate</h1>
-    <p class="mt-6 text-lg text-text-primary/80">
-      Online giving for St. John of Kronstadt Orthodox Mission is coming soon, pending
-      completion of our nonprofit verification.
-    </p>
-    <p class="mt-4 text-text-primary/75">
-      In the meantime, gifts may be brought in person at services or arranged by phone with
-      Fr. Antonios at <a href="tel:+19564490225">(956) 449-0225</a>.
-      Your generosity sustains the daily liturgical life of the parish and the mission's
-      welcome to seekers throughout the Rio Grande Valley.
-    </p>
+  <!-- ==================== PAGE HEADER ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Tithes &amp; Offerings</p>
+      <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Support the Mission</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+      <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
+        The faithful giving of our parishioners and friends sustains the
+        Divine services, the upkeep of the temple, and the daily life of
+        the parish here in the Rio Grande Valley. Whether you worship with
+        us each Lord's Day or are simply moved to support the work of the
+        Mission, thank you.
+      </p>
+    </div>
   </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== CAMPAIGN: TITHE ====================
+       Campaign sections follow this shape: eyebrow, h2 heading, short
+       paragraph, then the bordered Zeffy embed card. To add another
+       campaign, duplicate this entire <section>...</section> block and
+       update the eyebrow text, heading, copy, and the data-form-url on
+       the data-zeffy-embed element (and the matching iframe src inside
+       data-zeffy-embed-fallback).
+  -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Campaign</p>
+      <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Tithe</h2>
+      <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
+        The tithe — the offering of a tenth — is among the most ancient
+        practices of the people of God, witnessed in the patriarchs Abraham
+        and Jacob long before the Law of Moses, carried by the Levites of
+        the Old Covenant, and taken up by the early Christians who held
+        all things in common. To tithe is not first an act of obligation
+        but of thanksgiving — a return to God of what was already His,
+        offered freely so that His altar may stand and His mercy reach the
+        poor.
+      </p>
+
+      <div class="mt-10 border border-border-soft bg-cream-card p-4 shadow-sm md:p-6">
+        <div data-zeffy-embed data-form-url="/embed/donation-form/tithe-58"></div>
+        <div data-zeffy-embed-fallback style="display:none;">
+          <div style="position:relative;overflow:hidden;height:450px;width:100%;">
+            <iframe
+              title="Donation form powered by Zeffy"
+              style="position: absolute; border: 0; top:0;left:0;bottom:0;right:0;width:100%;height:100%"
+              src="https://www.zeffy.com/embed/donation-form/tithe-58"
+              allowpaymentrequest
+              allowTransparency="true"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <!-- ==================== CLOSING NOTE ==================== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Questions?</p>
+      <h2 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">If we can help</h2>
+      <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-6 leading-relaxed text-text-primary/85">
+        For questions about giving, recurring offerings, or directing a
+        gift toward a particular need of the Mission, please reach out:
+      </p>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <div class="border border-border-soft bg-cream-card p-5 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Email</p>
+          <p class="mt-2 break-words text-text-primary/85">
+            <a href="mailto:parishoffice@stjohnrgv.org">parishoffice@stjohnrgv.org</a>
+          </p>
+        </div>
+        <div class="border border-border-soft bg-cream-card p-5 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Phone</p>
+          <p class="mt-2 text-text-primary/85">
+            <a href="tel:+19564490225">(956) 449-0225</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Zeffy embed loader. is:inline keeps Astro from bundling the script
+       so the onerror fallback (which reveals data-zeffy-embed-fallback
+       containers if the loader 404s or is blocked) ships verbatim. -->
+  <script src="https://www.zeffy.com/embed/v2/zeffy-embed.js" is:inline onerror="document.querySelectorAll('[data-zeffy-embed-fallback]').forEach(function(el){ el.style.display='block'; });"></script>
 </Layout>
