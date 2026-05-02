@@ -166,9 +166,20 @@ const liturgicalRootStyle =
           banner.classList.toggle("bg-liturgical-current", !isPaschalNow);
 
           if (headlineEl) {
-            // No sacred-gold on the paschal headline — pure white via
-            // inheritance from the section's text-cream-card override.
+            // Sacred-gold for the "Christ is Risen!" headline (visual focus);
+            // bold weight + dark text-shadow via .paschal-headline.
+            headlineEl.classList.toggle("text-sacred-gold", isPaschalNow);
             headlineEl.classList.toggle("paschal-headline", isPaschalNow);
+          }
+
+          // Eyebrow ("Current Season"): paschal swaps to Cinzel + stronger
+          // text-shadow + slightly more letter-spacing via .paschal-eyebrow;
+          // other seasons use the default tracked-out 70% opacity treatment.
+          const eyebrowEl = banner.querySelector<HTMLElement>("[data-banner-eyebrow]");
+          if (eyebrowEl) {
+            eyebrowEl.classList.toggle("paschal-eyebrow", isPaschalNow);
+            eyebrowEl.classList.toggle("tracking-[0.3em]", !isPaschalNow);
+            eyebrowEl.classList.toggle("opacity-70", !isPaschalNow);
           }
           if (labelEl) {
             labelEl.classList.toggle("text-base", isPaschalNow);

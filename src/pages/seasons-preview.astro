@@ -86,14 +86,19 @@ const seasonsForClient = seasons.map((s, i) => ({
     style={`background-color: ${initial.colorHex}; color: ${initialIsPaschal ? "#FFFFFF" : initial.textColorHex};`}
   >
     <div class="mx-auto max-w-4xl px-4 py-16 text-center md:px-6 md:py-20">
-      <p class="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Current Season</p>
+      <p
+        data-preview-eyebrow
+        class:list={[
+          "text-xs font-semibold uppercase",
+          initialIsPaschal ? "paschal-eyebrow" : "tracking-[0.3em] opacity-70",
+        ]}
+      >Current Season</p>
       <p
         data-preview-headline
         class:list={[
           "mt-3 font-display text-3xl md:text-4xl lg:text-5xl",
-          /* Paschal: pure-white text via section override + bold + shadow.
-             No sacred-gold (rule: all banner text white or cream). */
-          initialIsPaschal ? "paschal-headline" : "",
+          /* Paschal: sacred-gold for the headline; other banner text white. */
+          initialIsPaschal ? "text-sacred-gold paschal-headline" : "",
         ]}
       >
         {initial.bannerHeadline}
@@ -217,8 +222,15 @@ const seasonsForClient = seasons.map((s, i) => ({
 
       if (headlineEl) {
         headlineEl.textContent = s.bannerHeadline;
-        // No sacred-gold on the paschal headline — pure white via inheritance.
+        // Sacred-gold for the "Christ is Risen!" headline; weight + shadow via .paschal-headline.
+        headlineEl.classList.toggle("text-sacred-gold", isPaschal);
         headlineEl.classList.toggle("paschal-headline", isPaschal);
+      }
+      const eyebrowEl = document.querySelector("[data-preview-eyebrow]");
+      if (eyebrowEl) {
+        eyebrowEl.classList.toggle("paschal-eyebrow", isPaschal);
+        eyebrowEl.classList.toggle("tracking-[0.3em]", !isPaschal);
+        eyebrowEl.classList.toggle("opacity-70", !isPaschal);
       }
       if (sublineEl) {
         sublineEl.textContent = s.bannerSubline;

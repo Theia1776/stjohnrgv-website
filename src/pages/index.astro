@@ -182,15 +182,24 @@ const services = [
     ]}
   >
     <div class="mx-auto max-w-6xl px-4 py-8 text-center md:px-6 md:py-10">
-      <p class="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Current Season</p>
+      <p
+        data-banner-eyebrow
+        class:list={[
+          "text-xs font-semibold uppercase",
+          /* Paschal: Cinzel face, +0.35em tracking, dark text-shadow for
+             readability against the red. Other seasons keep the default
+             tracked-out 70%-opacity small caps. */
+          isPaschal ? "paschal-eyebrow" : "tracking-[0.3em] opacity-70",
+        ]}
+      >Current Season</p>
       <p
         data-banner-headline
         class:list={[
           "mt-3 font-display text-2xl md:text-3xl",
-          /* Paschal headline: pure white via section inheritance + the bold
-             weight & dark text-shadow from .paschal-headline. No more
-             sacred-gold — per the "all banner text white or cream" rule. */
-          isPaschal ? "paschal-headline" : "",
+          /* Paschal headline: sacred-gold (#C9A84C) for visual focus,
+             plus the bold weight & dark text-shadow from .paschal-headline.
+             Other banner text stays white. */
+          isPaschal ? "text-sacred-gold paschal-headline" : "",
         ]}
       >
         {season.bannerHeadline}

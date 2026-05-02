@@ -273,6 +273,17 @@ a[href^="tel:"] {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);   /* lighter than the headline's 0 2px 4px / .4 */
 }
 
+/* Paschal banner EYEBROW ("Current Season"): the default opacity-70 +
+   tracked-out small caps reads as faded against the vivid red. Switch to
+   the Cinzel display face, slightly more letter-spacing, and a stronger
+   text-shadow to lift it off the background. Paschal-only — other
+   vestment-color banners look fine with the default treatment. */
+.paschal-eyebrow {
+  font-family: var(--font-display);
+  letter-spacing: 0.35em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Paschal banner background — for pascha-day, bright-week, paschal-season.
    Solid Paschal red (#E60000) softened by a subtle radial gradient: a warm
    gold glow at center fading to transparent by ~60% radius. The center
