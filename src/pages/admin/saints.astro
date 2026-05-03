@@ -1,0 +1,388 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="Saints Database Admin | St. John of Kronstadt"
+  description="Internal admin tool for managing the parish saints database."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <section class="mx-auto max-w-3xl px-4 py-16 md:py-20">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="font-display text-3xl text-text-primary md:text-4xl">Saints Database</h1>
+    <p class="mt-4 max-w-2xl text-text-primary/85">
+      Paste an OC-app block, parse it, edit anything off, and save. Each save
+      commits the JSON straight to <code class="font-mono text-sm">src/data/saints/</code>
+      on <code class="font-mono text-sm">main</code> — Cloudflare Pages auto-deploys.
+    </p>
+
+    <!-- ============== AUTH GATE ============== -->
+    <div id="auth" class="mt-8 border border-brand-tan bg-cream-card p-6 shadow-sm">
+      <label class="block">
+        <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Admin Password</span>
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          class="mt-2 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary focus:outline-none"
+        />
+      </label>
+      <button id="sign-in-btn" type="button" class="btn btn-primary mt-4">Sign in</button>
+      <p id="auth-error" hidden class="mt-3 text-sm text-liturgical-red"></p>
+    </div>
+
+    <!-- ============== APP (revealed after sign-in) ============== -->
+    <div id="app" hidden class="mt-8 space-y-8">
+
+      <!-- Raw input + parse -->
+      <div class="border border-brand-tan bg-cream-card p-6 shadow-sm">
+        <h2 class="font-display text-xl text-text-primary">1. Paste &amp; Parse</h2>
+        <label class="mt-4 block">
+          <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Raw OC block (HTML or plain text)</span>
+          <textarea
+            id="raw"
+            rows="12"
+            class="mt-2 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 font-mono text-sm text-text-primary focus:outline-none"
+            placeholder="Paste a saint Life page (HTML) or plain-text block here…"
+          ></textarea>
+        </label>
+        <div class="mt-3 flex flex-wrap gap-3">
+          <button id="parse-btn" type="button" class="btn btn-primary">Parse</button>
+          <button id="clear-btn" type="button" class="btn btn-secondary">Clear</button>
+        </div>
+      </div>
+
+      <!-- Preview / Edit -->
+      <div id="preview" hidden class="border border-brand-tan bg-cream-card p-6 shadow-sm">
+        <h2 class="font-display text-xl text-text-primary">2. Review &amp; Edit</h2>
+
+        <div class="mt-4 space-y-4">
+          <label class="block">
+            <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Name</span>
+            <input id="f-name" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none" />
+          </label>
+
+          <label class="block">
+            <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Slug (filename without .json)</span>
+            <input id="f-slug" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 font-mono text-sm text-text-primary focus:outline-none" />
+            <span class="mt-1 block text-xs text-text-secondary">
+              Lowercase letters, digits, and hyphens only. Auto-generated from name; edit before saving if you'd prefer a shorter form.
+            </span>
+          </label>
+
+          <label class="block">
+            <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Feasts (comma-separated)</span>
+            <input id="f-feasts" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none" placeholder="April 20, 4th Sunday of Pascha" />
+          </label>
+
+          <label class="block">
+            <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Life</span>
+            <textarea id="f-life" rows="12" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none"></textarea>
+          </label>
+
+          <label class="block">
+            <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Attribution</span>
+            <input id="f-attribution" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none" placeholder="© 1996-2001 by translator Fr. S. Janos." />
+          </label>
+
+          <details class="border-t border-border-soft pt-4">
+            <summary class="cursor-pointer font-display text-xs uppercase tracking-widest text-text-secondary">Optional fields</summary>
+            <div class="mt-4 space-y-4">
+              <label class="block">
+                <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Troparion</span>
+                <textarea id="f-troparion" rows="3" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none"></textarea>
+              </label>
+              <label class="block">
+                <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Kontakion</span>
+                <textarea id="f-kontakion" rows="3" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-text-primary focus:outline-none"></textarea>
+              </label>
+              <label class="block">
+                <span class="font-display text-xs uppercase tracking-widest text-text-secondary">Icon slug</span>
+                <input id="f-icon-slug" class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2 font-mono text-sm text-text-primary focus:outline-none" />
+              </label>
+            </div>
+          </details>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center gap-4">
+          <button id="save-btn" type="button" class="btn btn-primary">Save to GitHub</button>
+          <span id="save-status" class="text-sm" aria-live="polite"></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script is:inline>
+    // ============================================================
+    // STATE: password held in JS memory only — never in localStorage,
+    // never in the DOM after sign-in.
+    // ============================================================
+    let adminPassword = "";
+
+    // ============================================================
+    // AUTH GATE
+    // ============================================================
+    const authBlock = document.getElementById("auth");
+    const authError = document.getElementById("auth-error");
+    const passwordEl = document.getElementById("password");
+    const signInBtn = document.getElementById("sign-in-btn");
+    const appBlock = document.getElementById("app");
+
+    function signIn() {
+      const pw = passwordEl.value.trim();
+      if (!pw) {
+        authError.textContent = "Enter the admin password.";
+        authError.hidden = false;
+        return;
+      }
+      // The real validation happens server-side on each save. We just
+      // stash the password in memory and reveal the app.
+      adminPassword = pw;
+      passwordEl.value = "";
+      authBlock.hidden = true;
+      authError.hidden = true;
+      appBlock.hidden = false;
+    }
+    signInBtn.addEventListener("click", signIn);
+    passwordEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") signIn();
+    });
+
+    // ============================================================
+    // PARSER (mirrors functions/api/saint.ts but client-side)
+    // ============================================================
+    function decodeEntities(s) {
+      const el = document.createElement("textarea");
+      el.innerHTML = s;
+      return el.value;
+    }
+
+    function stripInline(html) {
+      return decodeEntities(String(html).replace(/<[^>]+>/g, ""))
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    const BR = "";
+    const PP = "";
+    function stripBlock(html) {
+      let s = String(html)
+        .replace(/<br\s*\/?>/gi, BR)
+        .replace(/<\/p>/gi, PP)
+        .replace(/<p[^>]*>/gi, "")
+        .replace(/<[^>]+>/g, "");
+      s = decodeEntities(s);
+      // Collapse all whitespace (incl. literal \n source line wrap) to
+      // single spaces; sentinels survive because they aren't \s.
+      s = s.replace(/\s+/g, " ");
+      s = s.split(BR).join("\n");
+      s = s.split(PP).join("\n\n");
+      s = s.split("\n").map((l) => l.trim()).join("\n").replace(/\n{3,}/g, "\n\n");
+      return s.trim();
+    }
+
+    function nameToSlug(name) {
+      return String(name || "")
+        .toLowerCase()
+        // strip "Sainted/Saint/Holy/Monk/Venerable/etc." prefixes for shorter slugs
+        .replace(/^(?:saint(?:ed)?\s+|holy\s+|venerable\s+|monk\s+|martyr\s+|the\s+righteous\s+|righteous\s+)+/i, "")
+        .replace(/\([^)]*\)/g, " ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function parseFeasts(commemoratedLine) {
+      const m = /Commemorated\s+on\s+(.+)/i.exec(commemoratedLine);
+      if (!m) return [];
+      return m[1]
+        .replace(/\.\s*$/, "")
+        .split(/\s+and\s+|\s*,\s*|\s*;\s*/i)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function parse(raw) {
+      const result = { name: "", feasts: [], life: "", attribution: "" };
+      const isHtml = /<\/?[a-z][^>]*>/i.test(raw);
+
+      if (isHtml) {
+        // Try the HTC-style header12 paragraph first.
+        let nameMatch = /<p\s+class="header12"[^>]*>([\s\S]*?)<\/p>/i.exec(raw);
+        if (nameMatch) {
+          result.name = stripInline(nameMatch[1]);
+        } else {
+          const boldMatch = /<(?:b|strong)[^>]*>([\s\S]*?)<\/(?:b|strong)>/i.exec(raw);
+          if (boldMatch) result.name = stripInline(boldMatch[1]);
+        }
+
+        // All paragraphs in document order
+        const paraRe = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+        const paras = [];
+        let m;
+        while ((m = paraRe.exec(raw)) !== null) {
+          const text = stripBlock(m[1]);
+          if (text && text !== result.name) paras.push(text);
+        }
+
+        for (const p of paras) {
+          if (!result.feasts.length && /Commemorated\s+on/i.test(p) && p.length < 160) {
+            result.feasts = parseFeasts(p);
+            continue;
+          }
+          if (!result.attribution && /^(?:©|\(c\)\s|Copyright)/i.test(p)) {
+            result.attribution = p;
+            continue;
+          }
+          if (result.life) result.life += "\n\n";
+          result.life += p;
+        }
+      } else {
+        // Plain-text fallback. Heuristic:
+        // 1st non-empty line = name
+        // any line matching "Commemorated on …" = feasts
+        // line starting with © = attribution
+        // everything else = life paragraphs
+        const blocks = raw.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+        if (blocks.length > 0) {
+          // Take first block's first line as name
+          const firstLines = blocks[0].split("\n").map((l) => l.trim()).filter(Boolean);
+          if (firstLines.length) result.name = firstLines[0];
+        }
+        const lifeBlocks = [];
+        for (let i = 0; i < blocks.length; i++) {
+          const b = blocks[i];
+          if (i === 0 && b.split("\n")[0].trim() === result.name) {
+            // Strip the name from the first block
+            const rest = b.split("\n").slice(1).join("\n").trim();
+            if (rest) lifeBlocks.push(rest);
+            continue;
+          }
+          if (!result.feasts.length && /Commemorated\s+on/i.test(b) && b.length < 160) {
+            result.feasts = parseFeasts(b);
+            continue;
+          }
+          if (!result.attribution && /^(?:©|\(c\)\s|Copyright)/i.test(b)) {
+            result.attribution = b;
+            continue;
+          }
+          lifeBlocks.push(b);
+        }
+        result.life = lifeBlocks.join("\n\n").trim();
+      }
+
+      return result;
+    }
+
+    // ============================================================
+    // PARSE BUTTON
+    // ============================================================
+    const rawEl = document.getElementById("raw");
+    const parseBtn = document.getElementById("parse-btn");
+    const clearBtn = document.getElementById("clear-btn");
+    const previewBlock = document.getElementById("preview");
+    const fName = document.getElementById("f-name");
+    const fSlug = document.getElementById("f-slug");
+    const fFeasts = document.getElementById("f-feasts");
+    const fLife = document.getElementById("f-life");
+    const fAttribution = document.getElementById("f-attribution");
+    const fTroparion = document.getElementById("f-troparion");
+    const fKontakion = document.getElementById("f-kontakion");
+    const fIconSlug = document.getElementById("f-icon-slug");
+
+    parseBtn.addEventListener("click", () => {
+      const raw = rawEl.value;
+      if (!raw.trim()) {
+        alert("Paste a block first.");
+        return;
+      }
+      const parsed = parse(raw);
+      fName.value = parsed.name;
+      fSlug.value = nameToSlug(parsed.name);
+      fSlug.dataset.touched = "";
+      fFeasts.value = parsed.feasts.join(", ");
+      fLife.value = parsed.life;
+      fAttribution.value = parsed.attribution;
+      fTroparion.value = "";
+      fKontakion.value = "";
+      fIconSlug.value = "";
+      previewBlock.hidden = false;
+      previewBlock.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    clearBtn.addEventListener("click", () => {
+      rawEl.value = "";
+      previewBlock.hidden = true;
+    });
+
+    // Keep slug auto-syncing with name until the admin manually edits the slug.
+    fName.addEventListener("input", () => {
+      if (!fSlug.dataset.touched) fSlug.value = nameToSlug(fName.value);
+    });
+    fSlug.addEventListener("input", () => {
+      fSlug.dataset.touched = "1";
+    });
+
+    // ============================================================
+    // SAVE
+    // ============================================================
+    const saveBtn = document.getElementById("save-btn");
+    const saveStatus = document.getElementById("save-status");
+
+    function setStatus(msg, kind /* "ok" | "err" | "info" | "" */) {
+      saveStatus.textContent = msg;
+      saveStatus.style.color =
+        kind === "err" ? "#8B2C2C" :
+        kind === "ok"  ? "#2A5E84" :
+        "";
+    }
+
+    saveBtn.addEventListener("click", async () => {
+      const data = {
+        name:        fName.value.trim(),
+        slug:        fSlug.value.trim(),
+        feasts:      fFeasts.value.split(",").map((s) => s.trim()).filter(Boolean),
+        life:        fLife.value.trim(),
+        attribution: fAttribution.value.trim(),
+        troparion:   fTroparion.value.trim(),
+        kontakion:   fKontakion.value.trim(),
+        iconSlug:    fIconSlug.value.trim(),
+      };
+
+      if (!data.name) { setStatus("Name is required.", "err"); return; }
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug)) {
+        setStatus("Slug must be lowercase letters, digits, and hyphens only.", "err");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      setStatus("Saving…", "info");
+
+      try {
+        const res = await fetch("/api/admin/save-saint", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: adminPassword, data }),
+        });
+        const result = await res.json();
+        if (res.ok) {
+          const sha = result.commit ? result.commit.slice(0, 7) : "?";
+          setStatus(`✓ ${result.action || "saved"} ${data.slug}.json — commit ${sha}`, "ok");
+        } else if (res.status === 401) {
+          setStatus("✗ Password rejected. Sign in again.", "err");
+          // Force re-auth
+          adminPassword = "";
+          appBlock.hidden = true;
+          authBlock.hidden = false;
+        } else {
+          setStatus(`✗ ${result.error || "Unknown error"}`, "err");
+        }
+      } catch (e) {
+        setStatus(`✗ Network error: ${e.message || e}`, "err");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  </script>
+</Layout>
