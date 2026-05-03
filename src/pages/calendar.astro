@@ -1,5 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { saints, normalizeName } from "../lib/saints-lookup";
+
+// Pre-attach a normalized name to each saint so the client doesn't
+// have to re-normalize on every modal open. Inlined as JSON below
+// next to the existing inline scripts; the modal opener checks this
+// list first before falling through to /api/saint.
+const localSaintsForClient = saints.map((s) => ({
+  ...s,
+  _norm: normalizeName(s.name),
+}));
+const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u003c");
 ---
 
 <Layout
@@ -61,6 +72,12 @@ import Layout from "../layouts/Layout.astro";
       <div id="reading-modal-body" class="space-y-2 leading-relaxed"></div>
     </div>
   </div>
+
+  <!-- Local saints database (build-time snapshot of src/data/saints/).
+       The modal opener checks this list before falling through to
+       /api/saint, so a saint already in the parish catalog renders
+       its full local life/troparion/kontakion with no round-trip. -->
+  <script type="application/json" id="local-saints-data" is:inline set:html={localSaintsJson}></script>
 
   <script is:inline>
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -415,13 +432,88 @@ import Layout from "../layouts/Layout.astro";
       showModal();
     }
 
+    // ---- Local saints DB (inlined at build time) ----
+    // Mirrors src/lib/saints-lookup.ts so the modal can do a
+    // synchronous in-page lookup before falling back to /api/saint.
+    const LOCAL_SAINTS = JSON.parse(
+      document.getElementById('local-saints-data').textContent,
+    );
+    const PREFIX_RE_CLIENT =
+      /^(?:(?:the\s+)?(?:saint(?:ed)?|holy|venerable|monk|martyr|hieromartyr|righteous|apostle|prophet|blessed)\s+)+/i;
+    function normalizeNameClient(s) {
+      let n = String(s ?? '').toLowerCase();
+      n = n.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' ');
+      n = n.replace(PREFIX_RE_CLIENT, '');
+      n = n.replace(/[^a-z0-9\s]+/g, ' ');
+      n = n.replace(/\s+/g, ' ').trim();
+      return n;
+    }
+    function findLocalSaint(calendarName) {
+      const target = normalizeNameClient(calendarName);
+      if (!target) return null;
+      for (const s of LOCAL_SAINTS) {
+        if (!s._norm) continue;
+        if (target.includes(s._norm) || s._norm.includes(target)) {
+          return s;
+        }
+      }
+      return null;
+    }
+
+    function renderLocalSaintInModal(local) {
+      modalTitle.textContent = local.name || '';
+      const parts = [];
+      // Subtle source badge so visitors know the bio is from the
+      // parish catalog rather than the upstream HTC fetch.
+      parts.push(
+        '<p class="mb-3 font-display text-xs uppercase tracking-widest text-brand-tan-dark">From our parish saints catalog</p>',
+      );
+      if (local.feasts && local.feasts.length) {
+        parts.push(`<p class="mb-3 text-sm italic text-text-secondary">Commemorated on ${escapeHtml(local.feasts.join(' · '))}</p>`);
+      }
+      if (local.life && local.life.trim()) {
+        parts.push(`<div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(local.life)}</div>`);
+      } else {
+        parts.push('<p class="italic text-text-secondary">No biography available.</p>');
+      }
+      if (local.troparion && local.troparion.trim()) {
+        parts.push(`
+          <div class="border-t border-border-soft pt-4">
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Troparion</p>
+            <div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(local.troparion)}</div>
+          </div>
+        `);
+      }
+      if (local.kontakion && local.kontakion.trim()) {
+        parts.push(`
+          <div class="border-t border-border-soft pt-4">
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Kontakion</p>
+            <div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(local.kontakion)}</div>
+          </div>
+        `);
+      }
+      if (local.attribution) {
+        parts.push(`<p class="mt-6 text-xs italic text-text-secondary">${escapeHtml(local.attribution)}</p>`);
+      }
+      modalBody.innerHTML = parts.join('');
+    }
+
     async function openSaintModal(saint) {
       if (!saint) return;
       // Show the calendar's saint text immediately, then swap in the
-      // canonical name from the Life page once it loads.
+      // canonical name from the Life page (local or HTC) once it loads.
       modalTitle.textContent = saint.name || '';
-      modalBody.innerHTML = '<p class="italic text-text-secondary">Loading…</p>';
       showModal();
+
+      // Try the parish saints catalog first — synchronous, no fetch.
+      const local = findLocalSaint(saint.name);
+      if (local) {
+        renderLocalSaintInModal(local);
+        return;
+      }
+
+      // Fall back to the existing HTC fetch flow.
+      modalBody.innerHTML = '<p class="italic text-text-secondary">Loading…</p>';
       if (!saint.url) {
         modalBody.innerHTML = '<p class="italic text-text-secondary">No biography available.</p>';
         return;
