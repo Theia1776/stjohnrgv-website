@@ -1,10 +1,8 @@
 ---
 const navLinks = [
   { href: "/about/", label: "About" },
-  { href: "/schedule/", label: "Schedule" },
   { href: "/learn/", label: "Learn" },
   { href: "/calendar/", label: "Calendar" },
-  { href: "/communion/", label: "Communion" },
   { href: "/donate/", label: "Donate" },
   { href: "/contact/", label: "Contact" },
 ];
@@ -52,7 +50,7 @@ function isActive(href: string): boolean {
           </a>
         );
       })}
-      <a href="/schedule/" class="btn btn-primary">
+      <a href="/about/#schedule" class="btn btn-primary">
         Plan Your Visit
       </a>
     </nav>
@@ -88,7 +86,7 @@ function isActive(href: string): boolean {
           </a>
         );
       })}
-      <a href="/schedule/" class="btn btn-primary mt-3 w-full">
+      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
         Plan Your Visit
       </a>
     </nav>
