@@ -22,9 +22,29 @@
 
 import { saints } from "../lib/saints-lookup";
 
-// Inline saints data for the client; escape `<` so saint life text
-// containing "</script>" can't break out of the JSON tag.
+// Build a slug → URL map at build time. import.meta.glob with eager:true
+// resolves to the same processed asset URLs Astro's <Image> component
+// uses, so the client gets a hashed /_astro/<slug>.<hash>.<ext> path
+// it can drop into a plain <img src=…> at runtime. Files live in
+// src/assets/images/<iconSlug>.<jpg|png|webp>; if a saint's iconSlug
+// matches a filename here, the icon panel renders the image; otherwise
+// it falls back to the gold-cross "ICON PENDING" placeholder.
+const iconModules = import.meta.glob<{ default: { src: string } }>(
+  "../assets/images/*.{jpg,jpeg,png,webp}",
+  { eager: true },
+);
+const saintIconUrls: Record<string, string> = {};
+for (const [path, mod] of Object.entries(iconModules)) {
+  const filename = path.split("/").pop() ?? "";
+  const slug = filename.replace(/\.[^.]+$/, "");
+  saintIconUrls[slug] = mod.default.src;
+}
+
+// Inline saints data + icon-URL map for the client. Escape `<` in
+// each so saint life text containing "</script>" can't break out
+// of the JSON tag.
 const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
+const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c");
 ---
 
 <div
@@ -73,8 +93,9 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       </span>
     </span>
 
-    <!-- Bouncing gold latch on right edge -->
-    <span aria-hidden="true" class="diptych-latch absolute right-0 top-1/2 h-10 w-3 bg-sacred-gold"></span>
+    <!-- Bouncing gold latch on right edge — horizontal bar reading
+         as a book clasp rather than a vertical nub. -->
+    <span aria-hidden="true" class="diptych-latch absolute right-0 top-1/2 h-3 w-8 bg-sacred-gold"></span>
   </button>
 
   <!-- ============== OPEN STATE: DIPTYCH ============== -->
@@ -129,16 +150,19 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
   </div>
 </div>
 
-<!-- Saints data inlined for the diptych client script -->
+<!-- Saints data + iconSlug → URL map inlined for the diptych client script -->
 <script type="application/json" id="diptych-saints-data" is:inline set:html={saintsJson}></script>
+<script type="application/json" id="diptych-icon-urls" is:inline set:html={saintIconUrlsJson}></script>
 
 <script is:inline>
   (function () {
     const dataEl = document.getElementById('diptych-saints-data');
+    const iconUrlsEl = document.getElementById('diptych-icon-urls');
     const host = document.getElementById('saint-diptych');
     if (!dataEl || !host) return;
 
     const saints = JSON.parse(dataEl.textContent);
+    const ICON_URLS = iconUrlsEl ? JSON.parse(iconUrlsEl.textContent) : {};
     const MONTHS = [
       'January','February','March','April','May','June',
       'July','August','September','October','November','December',
@@ -173,11 +197,20 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       }
     }
 
-    // Left-panel icon. iconSlug is reserved for future image wiring;
-    // until that exists, every saint falls through to the gold-cross
+    // Left-panel icon: if the saint's iconSlug matches a file in
+    // src/assets/images/ (mapped to its processed URL at build time),
+    // render the image; otherwise fall through to the gold-cross
     // "ICON PENDING" placeholder.
     const iconArea = host.querySelector('[data-icon-area]');
-    iconArea.innerHTML = renderFallbackIcon();
+    const iconUrl = saint.iconSlug ? ICON_URLS[saint.iconSlug] : null;
+    if (iconUrl) {
+      const safeAlt = (saint.name || '')
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      iconArea.innerHTML =
+        '<img src="' + iconUrl + '" alt="Icon of ' + safeAlt + '" class="h-full w-full object-contain" />';
+    } else {
+      iconArea.innerHTML = renderFallbackIcon();
+    }
 
     function renderFallbackIcon() {
       return (
