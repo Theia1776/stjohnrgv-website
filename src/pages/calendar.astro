@@ -62,19 +62,27 @@ import Layout from "../layouts/Layout.astro";
     let currentDate = new Date();
     currentDate.setHours(0,0,0,0);
 
-    // Holds the day's readings array for modal lookup by index.
-    let currentReadings = [];
-
     function formatDate(d) {
       return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     }
 
+    // Format the local date as YYYY-MM-DD for the /api/calendar query
+    // string. Built from local components (not toISOString) so a user in
+    // the western hemisphere gets *their* civil date instead of a UTC
+    // shift to the next morning.
+    function dateParam(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
     function apiUrl(date) {
-      return `https://orthocal.info/api/julian/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}/`;
+      return `/api/calendar?date=${dateParam(date)}`;
     }
 
     function cacheKey(date) {
-      return `orthocal-${date.toISOString().split('T')[0]}`;
+      return `htoc-cal-${dateParam(date)}`;
     }
 
     async function fetchDay(date) {
@@ -103,14 +111,14 @@ import Layout from "../layouts/Layout.astro";
         .replace(/'/g, '&#39;');
     }
 
-    function renderContent(day) {
+    function renderContent(data) {
       const sections = [];
 
-      // Week description + Tone
-      const weekDesc = day.titles?.[0] || '';
-      const tone = day.tone ? `Tone ${toneOrdinal(day.tone)}` : '';
-      if (weekDesc || tone) {
-        const combined = [weekDesc, tone].filter(Boolean).join(' — ');
+      // Top banner: week_title — Tone Ordinal
+      const title = data.week_title || '';
+      const toneText = data.tone ? `Tone ${toneOrdinal(data.tone)}` : '';
+      if (title || toneText) {
+        const combined = [title, toneText].filter(Boolean).join(' — ');
         sections.push(`
           <div class="rounded border border-brand-tan bg-cream-card px-5 py-4">
             <p class="font-display text-base font-bold text-text-primary">${escapeHtml(combined)}</p>
@@ -118,23 +126,10 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Fasting rule
-      if (day.fast_level_desc) {
-        let fastText = day.fast_level_desc;
-        if (day.fast_exception) fastText += ` — ${day.fast_exception}`;
-        sections.push(`
-          <div class="border-l-4 border-brand-tan py-1 pl-4">
-            <p class="mb-1 font-display text-xs uppercase tracking-widest text-text-secondary">Fasting Rule</p>
-            <p class="text-lg text-text-primary">${escapeHtml(fastText)}</p>
-          </div>
-        `);
-      }
-
-      // Commemorations — saints come from day.saints; titles[0] is the
-      // week/tone description and is rendered in the top banner above.
-      const commemorations = day.saints || [];
-      if (commemorations.length > 0) {
-        const items = commemorations.map(t => `<li class="text-lg leading-snug text-text-primary">• ${escapeHtml(t)}</li>`).join('');
+      // Commemorations
+      const saints = data.saints || [];
+      if (saints.length > 0) {
+        const items = saints.map(t => `<li class="text-lg leading-snug text-text-primary">• ${escapeHtml(t)}</li>`).join('');
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Commemorations</h2>
@@ -143,28 +138,22 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Scripture Readings — card grid; full passage opens in a modal.
-      if (day.readings?.length > 0) {
-        currentReadings = day.readings;
-        const readingItems = day.readings.map((r, i) => {
-          const passage = r.passage || [];
-          const previewVerses = passage.slice(0, 2);
-          const previewHtml = previewVerses.length > 0
-            ? previewVerses.map(v =>
-                `<p class="text-sm leading-relaxed text-text-primary/85"><span class="mr-1 font-display text-xs text-text-secondary">${escapeHtml(v.verse)}</span>${escapeHtml(v.content)}</p>`
-              ).join('')
-            : '<p class="text-sm italic text-text-secondary">No preview available.</p>';
-          const hasFull = passage.length > 0;
-          const hasMore = passage.length > 2;
-          const moreLabel = hasMore ? 'Read more →' : (hasFull ? 'View →' : '');
-          const moreBtn = moreLabel
-            ? `<button type="button" data-reading-index="${i}" class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline">${moreLabel}</button>`
+      // Scripture Readings — compact card per reference. The "Read more"
+      // CTA is currently a target=_blank link to the upstream Holy
+      // Trinity passage page; we'll swap this for an on-site modal proxy
+      // once that endpoint exists. The modal markup + helpers below
+      // remain in place ready for that swap.
+      if (data.readings?.length > 0) {
+        const readingItems = data.readings.map(r => {
+          const ref = escapeHtml(r.reference || '');
+          const url = escapeHtml(r.url || '');
+          const cta = url
+            ? `<a href="${url}" target="_blank" rel="noopener" class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline">Read more →</a>`
             : '';
           return `
             <article class="flex flex-col border border-brand-tan bg-cream-card p-5 shadow-sm">
-              <p class="mb-3 font-display text-sm font-bold text-brand-blue">${escapeHtml(r.display || '')}</p>
-              <div class="flex-1 space-y-1">${previewHtml}</div>
-              ${moreBtn}
+              <p class="flex-1 font-display text-sm font-bold text-brand-blue">${ref}</p>
+              ${cta}
             </article>
           `;
         }).join('');
@@ -172,23 +161,17 @@ import Layout from "../layouts/Layout.astro";
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
-            <div class="grid gap-4 sm:grid-cols-2">${readingItems}</div>
+            <div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">${readingItems}</div>
           </div>
         `);
       }
 
-      // Troparia / stories
-      if (day.stories?.length > 0) {
-        const storyItems = day.stories.map(s => `
-          <div class="border-b border-border-soft pb-4 last:border-0">
-            <p class="mb-2 font-display text-sm font-bold text-text-primary">${escapeHtml(s.title || '')}</p>
-            <p class="text-lg leading-relaxed text-text-primary">${escapeHtml(s.text || '')}</p>
-          </div>
-        `).join('');
+      // Troparia & Kontakia — single text block, newlines preserved.
+      if (data.troparia && data.troparia.trim()) {
         sections.push(`
           <div>
-            <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia</h2>
-            <div class="space-y-2">${storyItems}</div>
+            <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia &amp; Kontakia</h2>
+            <div class="whitespace-pre-wrap text-base leading-relaxed text-text-primary">${escapeHtml(data.troparia)}</div>
           </div>
         `);
       }
@@ -209,12 +192,12 @@ import Layout from "../layouts/Layout.astro";
       document.getElementById('cal-date').textContent = formatDate(date);
 
       try {
-        const day = await fetchDay(date);
-        renderContent(day);
+        const data = await fetchDay(date);
+        renderContent(data);
         loading.classList.add('hidden');
         content.classList.remove('hidden');
       } catch (e) {
-        console.error('orthocal.info fetch failed:', e);
+        console.error('/api/calendar fetch failed:', e);
         loading.classList.add('hidden');
         error.classList.remove('hidden');
       }
@@ -244,23 +227,15 @@ import Layout from "../layouts/Layout.astro";
     }
 
     // Click outside the panel closes the modal; clicks inside the panel
-    // bubble up but the contains() check filters them out.
+    // bubble up but the contains() check filters them out. Modal is
+    // currently dormant — readings link out to upstream — but the
+    // structure stays in place ready for the on-site passage proxy.
     modal.addEventListener('click', (e) => {
       if (!modalPanel.contains(e.target)) closeReadingModal();
     });
     modalClose.addEventListener('click', closeReadingModal);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeReadingModal();
-    });
-
-    // Event delegation: any [data-reading-index] click in cal-content
-    // opens the modal with the corresponding reading.
-    document.getElementById('cal-content').addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-reading-index]');
-      if (btn) {
-        const idx = parseInt(btn.dataset.readingIndex, 10);
-        openReadingModal(currentReadings[idx]);
-      }
     });
 
     // ---- Day navigation ----
