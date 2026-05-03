@@ -1,5 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import stjohnIcon from "../assets/images/stjohn-of-kronstadt.jpg";
 import { getLiturgicalSeason } from "../lib/liturgical.ts";
 
 const parishSchema = {
@@ -152,16 +154,17 @@ const services = [
         </p>
       </div>
 
-      <!-- Icon placeholder for St. John of Kronstadt -->
+      <!-- Icon of St. John of Kronstadt -->
       <div class="flex justify-center md:justify-end">
         <div
           class="flex aspect-[3/4] w-full max-w-sm flex-col items-center justify-center border-2 border-sacred-gold bg-cream-card text-center shadow-sm"
-          aria-label="Placeholder for icon of St. John of Kronstadt"
         >
-          <span aria-hidden="true" class="text-6xl text-sacred-gold">☩</span>
-          <p class="mt-4 font-display text-lg text-text-primary">St. John of Kronstadt</p>
-          <p class="mt-1 text-xs font-semibold uppercase tracking-widest text-text-secondary">1829 — 1908</p>
-          <p class="mt-6 px-6 text-xs italic text-text-secondary">Icon image to be added</p>
+          <Image
+            src={stjohnIcon}
+            alt="Icon of St. John of Kronstadt"
+            class="h-full w-full object-cover"
+            loading="eager"
+          />
         </div>
       </div>
     </div>
