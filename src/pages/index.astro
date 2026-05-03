@@ -114,9 +114,9 @@ const upcomingFeasts = [
 
 const services = [
   { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
-  { name: "Vespers", when: "Saturday · 6:00 PM", note: "Eve of the Lord's Day" },
-  { name: "Great Feast Days", when: "Per Liturgical Calendar", note: "See calendar for upcoming feasts" },
-  { name: "Confession", when: "By Appointment", note: "Speak with Fr. Antonios" },
+  { name: "Vespers", when: "Saturday · 5:00 PM", note: "Eve of the Lord's Day" },
+  { name: "Great Feasts", when: "Per Liturgical Calendar", note: "" },
+  { name: "Confession", when: "Saturday at Vespers · or Sunday 8:00–8:45 AM", note: "For urgent needs, contact Fr. Antonios" },
 ];
 ---
 
@@ -419,15 +419,9 @@ const services = [
             <div class="text-2xl text-sacred-gold" aria-hidden="true">☩</div>
             <h3 class="mt-3 font-display text-xl text-text-primary">{s.name}</h3>
             <p class="mt-2 text-brand-blue-dark">{s.when}</p>
-            <p class="mt-2 text-sm text-text-secondary">{s.note}</p>
+            {s.note && <p class="mt-2 text-sm text-text-secondary">{s.note}</p>}
           </div>
         ))}
-      </div>
-
-      <div class="mt-10 text-center">
-        <a href="/about/#schedule" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline transition-colors">
-          Full schedule and feast days →
-        </a>
       </div>
     </div>
   </section>
