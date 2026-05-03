@@ -1,0 +1,79 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="What is Orthodox Christianity? | St. John of Kronstadt Orthodox Mission"
+  description="Discover Orthodox Christianity — the ancient faith of the Apostles and Church Fathers. Learn what makes Orthodoxy unique, what to expect at a service, and how to begin your journey."
+>
+  <section class="mx-auto max-w-5xl px-4 py-20 md:py-28">
+
+    <!-- Page header (clamped to readable width) -->
+    <div class="mx-auto max-w-3xl">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">For Inquirers &amp; Seekers</p>
+      <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">What is Orthodox Christianity?</h1>
+      <p class="mt-6 text-lg text-text-primary/80">
+        A welcoming introduction to the Orthodox faith, the Divine Liturgy, the Julian Calendar,
+        and the path of catechumens — coming soon.
+      </p>
+      <p class="mt-4 text-text-primary/75">
+        If you are exploring Orthodoxy and would like to speak with someone,
+        <a href="/contact/">reach out to Fr. Antonios</a>.
+        All seekers are welcome to attend services without prior introduction.
+      </p>
+    </div>
+
+    <!-- Existing pages — single centered row, wraps on narrow viewports -->
+    <nav
+      aria-label="Existing learn pages"
+      class="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
+    >
+      <a href="/learn/saints/" class="font-display">Saints &rarr;</a>
+      <a href="/learn/st-john-of-kronstadt/" class="font-display">St. John of Kronstadt &rarr;</a>
+      <a href="/learn/st-john-chrysostom/" class="font-display">St. John Chrysostom &rarr;</a>
+    </nav>
+
+    <!-- Resource cards — 1 col mobile, 3 col desktop -->
+    <div class="mt-12 grid gap-6 md:grid-cols-3">
+      <article>
+        <a
+          href="/learn/library/"
+          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
+        >
+          <h2 class="font-display text-xl text-text-primary">Parish Library</h2>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-secondary">
+            Texts, sermons, and documents from the parish and the wider Orthodox tradition.
+          </p>
+        </a>
+      </article>
+
+      <article>
+        <a
+          href="/learn/saints/"
+          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
+        >
+          <h2 class="font-display text-xl text-text-primary">Saints</h2>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-secondary">
+            A growing, searchable encyclopedia of the saints commemorated in our parish.
+          </p>
+        </a>
+      </article>
+
+      <article>
+        <a
+          href="/learn/catechumen/"
+          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
+        >
+          <h2 class="font-display text-xl text-text-primary">Catechumen Learning</h2>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-secondary">
+            An introduction to the Orthodox faith for those exploring or preparing for chrismation.
+          </p>
+        </a>
+      </article>
+    </div>
+
+  </section>
+</Layout>
