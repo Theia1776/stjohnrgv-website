@@ -134,9 +134,9 @@ const services = [
   <!-- ==================== HERO ==================== -->
   <section class="bg-cream-bg">
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:gap-16 md:px-6 md:py-28">
-      <div>
+      <div class="max-w-xl">
         <p class="text-xs font-semibold uppercase tracking-[0.25em] text-brand-tan-dark">Rio Grande Valley, Texas</p>
-        <h1 class="mt-4 font-display text-4xl leading-tight text-text-primary md:text-5xl lg:text-6xl">
+        <h1 class="mt-4 font-display text-3xl leading-tight text-text-primary md:text-4xl lg:text-5xl">
           St. John of Kronstadt<br />
           <span class="text-brand-blue-dark">Orthodox Mission</span>
         </h1>
@@ -144,7 +144,7 @@ const services = [
         <p class="mt-6 font-display italic text-lg text-text-primary/80 md:text-xl">
           Anchored in Ancient Faith · Welcoming All Seekers
         </p>
-        <p class="mt-6 max-w-xl text-text-secondary leading-relaxed">
+        <p class="mt-6 text-text-secondary leading-relaxed">
           A True Orthodox parish serving the Rio Grande Valley from Bayview, Texas, on
           the traditional Julian Calendar — preserving the unbroken liturgical life of
           the Apostles and Church Fathers.
@@ -161,6 +161,12 @@ const services = [
           Our Patron: <a href="/learn/st-john-of-kronstadt/">St. John of Kronstadt</a>
           · celebrating the Divine Liturgy of <a href="/learn/st-john-chrysostom/">St. John Chrysostom</a>
         </p>
+
+        <!-- Scroll hint — gentle vertical bounce, sits with the buttons
+             so it's visible above the fold even on shorter viewports. -->
+        <div class="mt-8 flex justify-center">
+          <span class="scroll-hint inline-block text-2xl text-brand-tan" aria-hidden="true">↓</span>
+        </div>
       </div>
 
       <!-- Icon of St. John of Kronstadt — accent size, not focal -->
@@ -175,11 +181,6 @@ const services = [
             loading="eager"
           />
         </div>
-      </div>
-
-      <!-- Scroll hint — gentle vertical bounce, full-width grid row -->
-      <div class="mt-6 flex justify-center md:col-span-2 md:mt-10">
-        <span class="scroll-hint inline-block text-3xl text-brand-tan" aria-hidden="true">↓</span>
       </div>
     </div>
   </section>
