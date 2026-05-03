@@ -21,10 +21,15 @@ interface Reading {
   url: string;
 }
 
+interface Saint {
+  name: string;
+  url: string | null;
+}
+
 interface CalendarData {
   week_title: string;
   tone: number | null;
-  saints: string[];
+  saints: Saint[];
   readings: Reading[];
   troparia: string;
 }
@@ -127,7 +132,7 @@ function parseCalendar(html: string): CalendarData {
 
   // ---- Saints ----
   // Section between <p class="pheaderheader"> and the next major header.
-  const saints: string[] = [];
+  const saints: Saint[] = [];
   const saintsSection = extractSection(
     html,
     /<p\s+class="pheaderheader"[\s\S]*?<\/p>/i,
@@ -142,8 +147,15 @@ function parseCalendar(html: string): CalendarData {
         /<span\s+class="typicon-[^"]*"[^>]*>[\s\S]*?<\/span>/gi,
         "",
       );
-      const text = stripInline(cleaned);
-      if (text) saints.push(text);
+      // First <a href> on the line points at the saint's Lives page.
+      // Saint lines that name multiple persons may have several <a>;
+      // we surface the first as the canonical URL for the bullet. A
+      // line with no <a> (e.g. minor commemorations without a Life
+      // page) gets url: null.
+      const linkMatch = /<a\s+[^>]*href="([^"]+)"[^>]*>/i.exec(cleaned);
+      const url = linkMatch ? linkMatch[1].trim() : null;
+      const name = stripInline(cleaned);
+      if (name) saints.push({ name, url });
     }
   }
 

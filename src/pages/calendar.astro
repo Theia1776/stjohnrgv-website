@@ -70,13 +70,15 @@ import Layout from "../layouts/Layout.astro";
     currentDate.setHours(0,0,0,0);
 
     // Per-day state used by the modal openers and the saints toggle
-    // (event handlers look these up by data-card-key index).
+    // (event handlers look these up by data-saint-index / data-card-key).
+    let currentSaints = [];
     let currentReadings = [];
     let currentTroparia = [];
 
-    // In-memory cache of fetched reading passages: url → {reference, verses}.
-    // Backed by localStorage so reload + day-back-and-forth stays snappy.
+    // In-memory caches of fetched bodies, keyed by upstream url. Backed
+    // by localStorage so reload + day-back-and-forth stays snappy.
     const readingCache = new Map();
+    const saintCache = new Map();
 
     function formatDate(d) {
       return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
@@ -94,6 +96,7 @@ import Layout from "../layouts/Layout.astro";
     function apiUrl(date) { return `/api/calendar?date=${dateParam(date)}`; }
     function dayCacheKey(date) { return `htoc-cal-${dateParam(date)}`; }
     function readingCacheKey(url) { return `htoc-reading-${url}`; }
+    function saintCacheKey(url) { return `htoc-saint-${url}`; }
 
     async function fetchDay(date) {
       const key = dayCacheKey(date);
@@ -120,6 +123,23 @@ import Layout from "../layouts/Layout.astro";
       const data = await res.json();
       localStorage.setItem(lsKey, JSON.stringify(data));
       readingCache.set(url, data);
+      return data;
+    }
+
+    async function fetchSaint(url) {
+      if (saintCache.has(url)) return saintCache.get(url);
+      const lsKey = saintCacheKey(url);
+      const stored = localStorage.getItem(lsKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        saintCache.set(url, parsed);
+        return parsed;
+      }
+      const res = await fetch(`/api/saint?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error('Saint API error');
+      const data = await res.json();
+      localStorage.setItem(lsKey, JSON.stringify(data));
+      saintCache.set(url, data);
       return data;
     }
 
@@ -226,21 +246,31 @@ import Layout from "../layouts/Layout.astro";
       }
 
       // Commemorations: first 5 visible, the rest carry data-saint-overflow
-      // and start hidden. The toggle button below flips them.
-      const saints = data.saints || [];
-      if (saints.length > 0) {
-        const itemsHtml = saints.map((t, i) => {
+      // and start hidden. The toggle button below flips them. Saints with
+      // a Lives URL render as buttons that open the in-page saint modal;
+      // saints with no upstream Life page stay as plain text.
+      // Backward-compat: tolerate cached payloads from before the API
+      // started returning {name, url} objects.
+      currentSaints = (data.saints || []).map(s =>
+        typeof s === 'string' ? { name: s, url: null } : s
+      );
+      if (currentSaints.length > 0) {
+        const itemsHtml = currentSaints.map((s, i) => {
           const overflow = i >= 5;
           const cls = `text-lg leading-snug text-text-primary${overflow ? ' hidden' : ''}`;
           const attr = overflow ? ' data-saint-overflow' : '';
-          return `<li class="${cls}"${attr}>• ${escapeHtml(t)}</li>`;
+          const name = escapeHtml(s.name || '');
+          const inner = s.url
+            ? `<button type="button" data-saint-index="${i}" class="text-left text-brand-blue-dark hover:underline">${name}</button>`
+            : name;
+          return `<li class="${cls}"${attr}>• ${inner}</li>`;
         }).join('');
-        const toggleHtml = saints.length > 5
+        const toggleHtml = currentSaints.length > 5
           ? `<button
               type="button"
               data-saints-toggle="show"
               class="mt-3 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline"
-            >Show all (${saints.length})</button>`
+            >Show all (${currentSaints.length})</button>`
           : '';
         sections.push(`
           <div class="mx-auto w-full max-w-3xl" data-saints-block>
@@ -382,6 +412,38 @@ import Layout from "../layouts/Layout.astro";
       showModal();
     }
 
+    async function openSaintModal(saint) {
+      if (!saint) return;
+      // Show the calendar's saint text immediately, then swap in the
+      // canonical name from the Life page once it loads.
+      modalTitle.textContent = saint.name || '';
+      modalBody.innerHTML = '<p class="italic text-text-secondary">Loading…</p>';
+      showModal();
+      if (!saint.url) {
+        modalBody.innerHTML = '<p class="italic text-text-secondary">No biography available.</p>';
+        return;
+      }
+      try {
+        const data = await fetchSaint(saint.url);
+        if (data.name) modalTitle.textContent = data.name;
+        const parts = [];
+        if (data.commemorated) {
+          parts.push(`<p class="mb-3 text-sm italic text-text-secondary">${escapeHtml(data.commemorated)}</p>`);
+        }
+        if (data.life) {
+          parts.push(`<div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(data.life)}</div>`);
+        } else {
+          parts.push('<p class="italic text-text-secondary">No biography text available.</p>');
+        }
+        if (data.attribution) {
+          parts.push(`<p class="mt-6 text-xs italic text-text-secondary">${escapeHtml(data.attribution)}</p>`);
+        }
+        modalBody.innerHTML = parts.join('');
+      } catch (_err) {
+        modalBody.innerHTML = '<p class="italic text-text-secondary">Could not load life.</p>';
+      }
+    }
+
     // Close handlers
     modal.addEventListener('click', (e) => {
       if (!modalPanel.contains(e.target)) closeModal();
@@ -391,9 +453,17 @@ import Layout from "../layouts/Layout.astro";
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
     });
 
-    // ---- Card click delegation (modal triggers + saints toggle) ----
+    // ---- Click delegation (saint links + card modal triggers + saints toggle) ----
     document.getElementById('cal-content').addEventListener('click', (e) => {
-      // Modal triggers
+      // Saint name click → open Life modal
+      const saintLink = e.target.closest('[data-saint-index]');
+      if (saintLink) {
+        const idx = parseInt(saintLink.dataset.saintIndex, 10);
+        openSaintModal(currentSaints[idx]);
+        return;
+      }
+
+      // Card modal triggers (readings + troparia)
       const opener = e.target.closest('[data-modal-open]');
       if (opener) {
         const card = opener.closest('[data-card]');
