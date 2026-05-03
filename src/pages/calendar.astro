@@ -94,7 +94,10 @@ import Layout from "../layouts/Layout.astro";
     }
 
     function apiUrl(date) { return `/api/calendar?date=${dateParam(date)}`; }
-    function dayCacheKey(date) { return `htoc-cal-${dateParam(date)}`; }
+    // v2 prefix bust: bumped from htoc-cal- so visitors with cached
+    // payloads from before saints became {name, url} objects get a
+    // fresh fetch and clickable saint links instead of plain text.
+    function dayCacheKey(date) { return `htoc-cal2-${dateParam(date)}`; }
     function readingCacheKey(url) { return `htoc-reading-${url}`; }
     function saintCacheKey(url) { return `htoc-saint-${url}`; }
 
