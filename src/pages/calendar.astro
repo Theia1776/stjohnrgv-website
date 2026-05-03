@@ -62,14 +62,21 @@ import Layout from "../layouts/Layout.astro";
     let currentDate = new Date();
     currentDate.setHours(0,0,0,0);
 
+    // Per-day state used by the modal openers and the saints toggle
+    // (event handlers look these up by data-card-key index).
+    let currentReadings = [];
+    let currentTroparia = [];
+
+    // In-memory cache of fetched reading passages: url → {reference, verses}.
+    // Backed by localStorage so reload + day-back-and-forth stays snappy.
+    const readingCache = new Map();
+
     function formatDate(d) {
       return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     }
 
-    // Format the local date as YYYY-MM-DD for the /api/calendar query
-    // string. Built from local components (not toISOString) so a user in
-    // the western hemisphere gets *their* civil date instead of a UTC
-    // shift to the next morning.
+    // YYYY-MM-DD from local components (not toISOString) so a user in the
+    // western hemisphere gets *their* civil date instead of a UTC shift.
     function dateParam(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -77,22 +84,35 @@ import Layout from "../layouts/Layout.astro";
       return `${y}-${m}-${day}`;
     }
 
-    function apiUrl(date) {
-      return `/api/calendar?date=${dateParam(date)}`;
-    }
-
-    function cacheKey(date) {
-      return `htoc-cal-${dateParam(date)}`;
-    }
+    function apiUrl(date) { return `/api/calendar?date=${dateParam(date)}`; }
+    function dayCacheKey(date) { return `htoc-cal-${dateParam(date)}`; }
+    function readingCacheKey(url) { return `htoc-reading-${url}`; }
 
     async function fetchDay(date) {
-      const key = cacheKey(date);
+      const key = dayCacheKey(date);
       const cached = localStorage.getItem(key);
       if (cached) return JSON.parse(cached);
       const res = await fetch(apiUrl(date));
-      if (!res.ok) throw new Error('API error');
+      if (!res.ok) throw new Error('Calendar API error');
       const data = await res.json();
       localStorage.setItem(key, JSON.stringify(data));
+      return data;
+    }
+
+    async function fetchReading(url) {
+      if (readingCache.has(url)) return readingCache.get(url);
+      const lsKey = readingCacheKey(url);
+      const stored = localStorage.getItem(lsKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        readingCache.set(url, parsed);
+        return parsed;
+      }
+      const res = await fetch(`/api/reading?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error('Reading API error');
+      const data = await res.json();
+      localStorage.setItem(lsKey, JSON.stringify(data));
+      readingCache.set(url, data);
       return data;
     }
 
@@ -111,6 +131,76 @@ import Layout from "../layouts/Layout.astro";
         .replace(/'/g, '&#39;');
     }
 
+    // Take the first N non-empty lines of a multiline string.
+    function firstLines(text, n) {
+      if (!text) return '';
+      return text.split('\n').filter(l => l.trim()).slice(0, n).join('\n');
+    }
+
+    // Split the troparia plain-text block into individual entries.
+    // Heuristic per the upstream format: a non-empty line ending in
+    // " —" (em dash) is a title; everything from there until the next
+    // such line is its body.
+    function parseTroparia(text) {
+      if (!text) return [];
+      const entries = [];
+      let current = null;
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim();
+        const titleMatch = /^(.+?)\s*—\s*$/.exec(trimmed);
+        if (titleMatch && titleMatch[1].trim()) {
+          if (current) entries.push(current);
+          current = { title: titleMatch[1].trim(), body: '' };
+        } else if (current) {
+          current.body += (current.body ? '\n' : '') + line;
+        }
+      }
+      if (current) entries.push(current);
+      return entries.map(e => ({ title: e.title, body: e.body.trim() }));
+    }
+
+    // ---- Card rendering ----
+    function renderReadingCard(r, i) {
+      const ref = escapeHtml(r.reference || '');
+      return `
+        <article
+          class="flex flex-col border border-brand-tan bg-cream-card p-5 shadow-sm"
+          data-card="reading"
+          data-card-key="${i}"
+        >
+          <p class="mb-3 font-display text-sm font-bold text-brand-blue">${ref}</p>
+          <div class="flex-1 whitespace-pre-wrap text-sm leading-relaxed text-text-primary/85" data-preview>
+            <span class="italic text-text-secondary">Loading…</span>
+          </div>
+          <button
+            type="button"
+            data-modal-open
+            class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline"
+          >Read more →</button>
+        </article>
+      `;
+    }
+
+    function renderTroparionCard(entry, i) {
+      const title = escapeHtml(entry.title || '');
+      const preview = escapeHtml(firstLines(entry.body, 1));
+      return `
+        <article
+          class="flex flex-col border border-brand-tan bg-cream-card p-5 shadow-sm"
+          data-card="troparion"
+          data-card-key="${i}"
+        >
+          <p class="mb-3 font-display text-sm font-bold text-brand-blue">${title}</p>
+          <div class="flex-1 text-sm leading-relaxed text-text-primary/85">${preview || '<span class="italic text-text-secondary">(no text)</span>'}</div>
+          <button
+            type="button"
+            data-modal-open
+            class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline"
+          >Read more →</button>
+        </article>
+      `;
+    }
+
     function renderContent(data) {
       const sections = [];
 
@@ -126,38 +216,36 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Commemorations
+      // Commemorations: first 5 visible, the rest carry data-saint-overflow
+      // and start hidden. The toggle button below flips them.
       const saints = data.saints || [];
       if (saints.length > 0) {
-        const items = saints.map(t => `<li class="text-lg leading-snug text-text-primary">• ${escapeHtml(t)}</li>`).join('');
+        const itemsHtml = saints.map((t, i) => {
+          const overflow = i >= 5;
+          const cls = `text-lg leading-snug text-text-primary${overflow ? ' hidden' : ''}`;
+          const attr = overflow ? ' data-saint-overflow' : '';
+          return `<li class="${cls}"${attr}>• ${escapeHtml(t)}</li>`;
+        }).join('');
+        const toggleHtml = saints.length > 5
+          ? `<button
+              type="button"
+              data-saints-toggle="show"
+              class="mt-3 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline"
+            >Show all (${saints.length})</button>`
+          : '';
         sections.push(`
-          <div>
+          <div data-saints-block>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Commemorations</h2>
-            <ul class="space-y-2">${items}</ul>
+            <ul class="space-y-2">${itemsHtml}</ul>
+            ${toggleHtml}
           </div>
         `);
       }
 
-      // Scripture Readings — compact card per reference. The "Read more"
-      // CTA is currently a target=_blank link to the upstream Holy
-      // Trinity passage page; we'll swap this for an on-site modal proxy
-      // once that endpoint exists. The modal markup + helpers below
-      // remain in place ready for that swap.
-      if (data.readings?.length > 0) {
-        const readingItems = data.readings.map(r => {
-          const ref = escapeHtml(r.reference || '');
-          const url = escapeHtml(r.url || '');
-          const cta = url
-            ? `<a href="${url}" target="_blank" rel="noopener" class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline">Read more →</a>`
-            : '';
-          return `
-            <article class="flex flex-col border border-brand-tan bg-cream-card p-5 shadow-sm">
-              <p class="flex-1 font-display text-sm font-bold text-brand-blue">${ref}</p>
-              ${cta}
-            </article>
-          `;
-        }).join('');
-
+      // Scripture Readings — card grid; "Read more" opens the in-page modal.
+      currentReadings = data.readings || [];
+      if (currentReadings.length > 0) {
+        const readingItems = currentReadings.map((r, i) => renderReadingCard(r, i)).join('');
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
@@ -166,17 +254,42 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Troparia & Kontakia — single text block, newlines preserved.
-      if (data.troparia && data.troparia.trim()) {
+      // Troparia & Kontakia — parsed into cards matching the readings style.
+      currentTroparia = parseTroparia(data.troparia || '');
+      if (currentTroparia.length > 0) {
+        const tropItems = currentTroparia.map((e, i) => renderTroparionCard(e, i)).join('');
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia &amp; Kontakia</h2>
-            <div class="whitespace-pre-wrap text-base leading-relaxed text-text-primary">${escapeHtml(data.troparia)}</div>
+            <div class="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">${tropItems}</div>
           </div>
         `);
       }
 
       document.getElementById('cal-content').innerHTML = sections.join('');
+    }
+
+    // After renderContent: lazily fetch each reading's verses to fill in
+    // the card preview. Runs in parallel; failures are swallowed
+    // gracefully and the card shows a fallback.
+    async function populateReadingPreviews() {
+      await Promise.all(currentReadings.map(async (r, i) => {
+        if (!r.url) return;
+        const card = document.querySelector(`[data-card="reading"][data-card-key="${i}"]`);
+        if (!card) return;
+        const previewEl = card.querySelector('[data-preview]');
+        try {
+          const data = await fetchReading(r.url);
+          const preview = firstLines(data.verses || '', 3);
+          if (previewEl) {
+            previewEl.textContent = preview || '(no preview available)';
+          }
+        } catch (_err) {
+          if (previewEl) {
+            previewEl.innerHTML = '<span class="italic text-text-secondary">(preview unavailable)</span>';
+          }
+        }
+      }));
     }
 
     async function loadDay(date) {
@@ -196,6 +309,9 @@ import Layout from "../layouts/Layout.astro";
         renderContent(data);
         loading.classList.add('hidden');
         content.classList.remove('hidden');
+        // Kick off reading-preview fetches; do not block the visible
+        // render on them.
+        populateReadingPreviews();
       } catch (e) {
         console.error('/api/calendar fetch failed:', e);
         loading.classList.add('hidden');
@@ -203,39 +319,103 @@ import Layout from "../layouts/Layout.astro";
       }
     }
 
-    // ---- Reading modal ----
+    // ---- Modal ----
     const modal = document.getElementById('reading-modal');
     const modalPanel = document.getElementById('reading-modal-panel');
     const modalTitle = document.getElementById('reading-modal-title');
     const modalBody = document.getElementById('reading-modal-body');
     const modalClose = document.getElementById('reading-modal-close');
 
-    function openReadingModal(reading) {
-      if (!reading) return;
-      modalTitle.textContent = reading.display || '';
-      const verses = (reading.passage || []).map(v =>
-        `<p><span class="mr-1 font-display text-xs text-text-secondary">${escapeHtml(v.verse)}</span><span class="text-base text-text-primary">${escapeHtml(v.content)}</span></p>`
-      ).join('');
-      modalBody.innerHTML = verses || '<p class="italic text-text-secondary">No passage text available.</p>';
+    function showModal() {
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     }
-
-    function closeReadingModal() {
+    function closeModal() {
       modal.classList.add('hidden');
       document.body.style.overflow = '';
     }
 
-    // Click outside the panel closes the modal; clicks inside the panel
-    // bubble up but the contains() check filters them out. Modal is
-    // currently dormant — readings link out to upstream — but the
-    // structure stays in place ready for the on-site passage proxy.
+    function renderVersesHtml(verses) {
+      return verses.split('\n').filter(l => l.trim()).map(line => {
+        const m = /^(\S+)\s+([\s\S]+)$/.exec(line);
+        if (m) {
+          return `<p><span class="mr-1 font-display text-xs text-text-secondary">${escapeHtml(m[1])}</span><span class="text-text-primary">${escapeHtml(m[2])}</span></p>`;
+        }
+        return `<p class="text-text-primary">${escapeHtml(line)}</p>`;
+      }).join('');
+    }
+
+    async function openReadingModal(reading) {
+      if (!reading) return;
+      modalTitle.textContent = reading.reference || '';
+      modalBody.innerHTML = '<p class="italic text-text-secondary">Loading…</p>';
+      showModal();
+      if (!reading.url) {
+        modalBody.innerHTML = '<p class="italic text-text-secondary">No passage available.</p>';
+        return;
+      }
+      try {
+        const data = await fetchReading(reading.url);
+        const verses = (data.verses || '').trim();
+        modalBody.innerHTML = verses
+          ? renderVersesHtml(verses)
+          : '<p class="italic text-text-secondary">No passage text available.</p>';
+      } catch (_err) {
+        modalBody.innerHTML = '<p class="italic text-text-secondary">Could not load passage.</p>';
+      }
+    }
+
+    function openTroparionModal(entry) {
+      if (!entry) return;
+      modalTitle.textContent = entry.title || '';
+      modalBody.innerHTML =
+        `<div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(entry.body || '')}</div>`;
+      showModal();
+    }
+
+    // Close handlers
     modal.addEventListener('click', (e) => {
-      if (!modalPanel.contains(e.target)) closeReadingModal();
+      if (!modalPanel.contains(e.target)) closeModal();
     });
-    modalClose.addEventListener('click', closeReadingModal);
+    modalClose.addEventListener('click', closeModal);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeReadingModal();
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
+
+    // ---- Card click delegation (modal triggers + saints toggle) ----
+    document.getElementById('cal-content').addEventListener('click', (e) => {
+      // Modal triggers
+      const opener = e.target.closest('[data-modal-open]');
+      if (opener) {
+        const card = opener.closest('[data-card]');
+        if (card) {
+          const idx = parseInt(card.dataset.cardKey, 10);
+          if (card.dataset.card === 'reading') {
+            openReadingModal(currentReadings[idx]);
+          } else if (card.dataset.card === 'troparion') {
+            openTroparionModal(currentTroparia[idx]);
+          }
+        }
+        return;
+      }
+
+      // Commemorations show-all / show-less toggle
+      const toggle = e.target.closest('[data-saints-toggle]');
+      if (toggle) {
+        const block = toggle.closest('[data-saints-block]');
+        if (!block) return;
+        const overflow = block.querySelectorAll('[data-saint-overflow]');
+        const expanded = toggle.dataset.saintsToggle === 'hide';
+        if (expanded) {
+          overflow.forEach(li => li.classList.add('hidden'));
+          toggle.textContent = `Show all (${overflow.length + 5})`;
+          toggle.dataset.saintsToggle = 'show';
+        } else {
+          overflow.forEach(li => li.classList.remove('hidden'));
+          toggle.textContent = 'Show less';
+          toggle.dataset.saintsToggle = 'hide';
+        }
+      }
     });
 
     // ---- Day navigation ----
@@ -243,12 +423,10 @@ import Layout from "../layouts/Layout.astro";
       currentDate.setDate(currentDate.getDate() - 1);
       loadDay(currentDate);
     });
-
     document.getElementById('next-day').addEventListener('click', () => {
       currentDate.setDate(currentDate.getDate() + 1);
       loadDay(currentDate);
     });
-
     document.getElementById('today-btn').addEventListener('click', () => {
       currentDate = new Date();
       currentDate.setHours(0,0,0,0);
