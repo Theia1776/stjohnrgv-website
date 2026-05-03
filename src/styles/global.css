@@ -62,6 +62,30 @@
 }
 
 /* ============================================================================
+   Dark theme — opt-in via <html data-theme="dark">. The toggle in
+   Header.astro flips the attribute and persists the choice in
+   localStorage; an inline script in Layout.astro reads it at parse
+   time so visitors don't see a flash of light theme.
+
+   Only the @theme color tokens are overridden — Tailwind utilities
+   (bg-cream-card, text-text-primary, etc.) automatically pick up the
+   new values via the var(--color-*) chain.
+   ============================================================================ */
+[data-theme="dark"] {
+  --color-cream-bg:        #0F1B2D;
+  --color-cream-card:      #1A2B42;
+  --color-text-primary:    #FAF7F0;
+  --color-text-secondary:  #C9B99A;
+  --color-brand-blue:      #7AB8E0;
+  --color-brand-blue-dark: #A8D4F0;
+  --color-brand-tan:       #C9B99A;
+  --color-brand-tan-dark:  #E8D5B0;
+  --color-sacred-gold:     #C9A84C;
+  --color-border-soft:     #2D3F58;
+  --color-brand-blue-pale: #1F3552;
+}
+
+/* ============================================================================
    Base typography & document defaults
    ============================================================================ */
 html {

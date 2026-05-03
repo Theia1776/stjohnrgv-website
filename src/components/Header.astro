@@ -32,39 +32,51 @@ function isActive(href: string): boolean {
       </span>
     </a>
 
-    <nav class="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
-      {navLinks.map((link) => {
-        const active = isActive(link.href);
-        return (
-          <a
-            href={link.href}
-            aria-current={active ? "page" : undefined}
-            class:list={[
-              "no-underline transition-colors py-1 border-b-2",
-              active
-                ? "text-text-primary border-liturgical-current"
-                : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
-            ]}
-          >
-            {link.label}
-          </a>
-        );
-      })}
-      <a href="/about/#schedule" class="btn btn-primary">
-        Plan Your Visit
-      </a>
-    </nav>
+    <div class="flex items-center gap-3">
+      <nav class="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
+        {navLinks.map((link) => {
+          const active = isActive(link.href);
+          return (
+            <a
+              href={link.href}
+              aria-current={active ? "page" : undefined}
+              class:list={[
+                "no-underline transition-colors py-1 border-b-2",
+                active
+                  ? "text-text-primary border-liturgical-current"
+                  : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
+              ]}
+            >
+              {link.label}
+            </a>
+          );
+        })}
+        <a href="/about/#schedule" class="btn btn-primary">
+          Plan Your Visit
+        </a>
+      </nav>
 
-    <button
-      type="button"
-      id="mobile-menu-toggle"
-      class="md:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
-      aria-controls="mobile-menu"
-      aria-expanded="false"
-      aria-label="Open menu"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
+      <button
+        type="button"
+        id="theme-toggle"
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+        class="text-xl px-2 py-1 rounded hover:bg-brand-blue/20 transition-colors"
+      >
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <button
+        type="button"
+        id="mobile-menu-toggle"
+        class="md:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+        aria-label="Open menu"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 
   <div id="mobile-menu" class="hidden border-t border-border-soft bg-cream-bg md:hidden" aria-label="Mobile">
@@ -101,4 +113,34 @@ function isActive(href: string): boolean {
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
+</script>
+
+<script is:inline>
+  // Dark-mode toggle. Initial state is set by the bootstrap script in
+  // Layout.astro <head>; this just flips the attribute on click and
+  // persists the user's choice. Icon swaps moon ↔ sun.
+  (function () {
+    const btn = document.getElementById('theme-toggle');
+    const icon = document.getElementById('theme-icon');
+    if (!btn || !icon) return;
+
+    function updateIcon() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      icon.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    updateIcon();
+
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      updateIcon();
+    });
+  })();
 </script>

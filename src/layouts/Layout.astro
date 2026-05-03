@@ -40,6 +40,20 @@ const liturgicalRootStyle =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
+    <!-- Dark-theme bootstrap. Runs synchronously before the body
+         renders so visitors with a saved or system-preferred dark
+         theme don't see a flash of light theme. The Header.astro
+         toggle persists the user's choice in localStorage. -->
+    <script is:inline>
+      (function() {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
