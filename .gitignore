@@ -10,6 +10,9 @@
 dist/
 .astro/
 
+# Wrangler local Pages-dev cache (used for testing functions/* locally)
+.wrangler/
+
 # OS / editor
 .DS_Store
 .idea/
