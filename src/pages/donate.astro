@@ -4,139 +4,105 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout
   title="Support the Mission | St. John of Kronstadt Orthodox Mission"
-  description="Support St. John of Kronstadt Orthodox Mission through tithes and offerings — sustaining parish life, the Divine services, and care for the poor in the Rio Grande Valley."
+  description="Support St. John of Kronstadt Orthodox Mission with tithes, prayer candles, and offerings — sustaining the Divine services and parish life in the Rio Grande Valley."
 >
-  <!-- Zeffy modal launcher. Bound to any element with a
-       zeffy-form-link="..." attribute (used by the Prayer Candles button
-       below) and opens the form in an overlay so the visitor stays on
-       this page. is:inline keeps Astro from bundling the external script
-       so the original loader runs verbatim. -->
+  <!-- Zeffy modal launcher. Bound to any element carrying a
+       zeffy-form-link="…" attribute (the two card CTAs below) and opens
+       the form in an overlay so the visitor stays on this page.
+       is:inline keeps Astro from bundling the external loader. -->
   <script
     slot="head"
     src="https://zeffy-scripts.s3.ca-central-1.amazonaws.com/embed-form-script.min.js"
     is:inline
   ></script>
 
-  <!-- ==================== PAGE HEADER ==================== -->
+  <!-- ==================== PAGE HEADER (centered) ==================== -->
   <section class="bg-cream-bg">
-    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
+    <div class="mx-auto max-w-3xl px-4 py-16 text-center md:px-6 md:py-20">
       <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Tithes &amp; Offerings</p>
       <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Support the Mission</h1>
-      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+      <div class="mx-auto mt-6 h-px w-24 bg-liturgical-current"></div>
       <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
-        The faithful giving of our parishioners and friends sustains the
-        Divine services, the upkeep of the temple, and the daily life of
-        the parish here in the Rio Grande Valley. Whether you worship with
-        us each Lord's Day or are simply moved to support the work of the
-        Mission, thank you.
+        Your offerings sustain the life of the parish — the services, the
+        sacraments, and the work of making Orthodoxy present in the Rio
+        Grande Valley.
       </p>
     </div>
   </section>
 
-  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
-
-  <!-- ==================== CAMPAIGN: TITHE ====================
-       Campaign sections follow this shape: eyebrow, h2 heading, short
-       paragraph, then the bordered Zeffy embed card. To add another
-       campaign, duplicate this entire <section>...</section> block and
-       update the eyebrow text, heading, copy, and the data-form-url on
-       the data-zeffy-embed element (and the matching iframe src inside
-       data-zeffy-embed-fallback).
-  -->
+  <!-- ==================== TRANSPARENCY + CARDS + FOOTER ==================== -->
   <section class="bg-cream-bg">
-    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
-      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Campaign</p>
-      <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Tithe</h2>
-      <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
-      <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
-        The tithe — the offering of a tenth — is among the most ancient
-        practices of the people of God, witnessed in the patriarchs Abraham
-        and Jacob long before the Law of Moses, carried by the Levites of
-        the Old Covenant, and taken up by the early Christians who held
-        all things in common. To tithe is not first an act of obligation
-        but of thanksgiving — a return to God of what was already His,
-        offered freely so that His altar may stand and His mercy reach the
-        poor.
-      </p>
+    <div class="mx-auto max-w-5xl px-4 pb-20 md:px-6 md:pb-28">
 
-      <div class="mt-10 border border-border-soft bg-cream-card p-4 shadow-sm md:p-6">
-        <div data-zeffy-embed data-form-url="/embed/donation-form/tithe-58"></div>
-        <div data-zeffy-embed-fallback style="display:none;">
-          <div style="position:relative;overflow:hidden;height:450px;width:100%;">
-            <iframe
-              title="Donation form powered by Zeffy"
-              style="position: absolute; border: 0; top:0;left:0;bottom:0;right:0;width:100%;height:100%"
-              src="https://www.zeffy.com/embed/donation-form/tithe-58"
-              allowpaymentrequest
-              allowTransparency="true"
-            ></iframe>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
-
-  <!-- ==================== CAMPAIGN: PRAYER CANDLES ==================== -->
-  <section class="bg-cream-bg">
-    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
-      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Campaign</p>
-      <h2 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Prayer Candles</h2>
-      <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
-      <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
-        Lighting a candle is an act of prayer — a small flame offered for
-        the living and for those who have fallen asleep in the faith.
-        Purchase candles here and they will be lit on your behalf at our
-        services.
-      </p>
-
-      <div class="mt-10 text-center">
-        <button
-          type="button"
-          zeffy-form-link="https://www.zeffy.com/embed/ticketing/prayer-candles?modal=true"
-          class="btn btn-primary btn-lg"
-        >
-          Purchase Prayer Candles — $1.00 each
-        </button>
-        <p class="mt-3 text-sm italic text-text-secondary">
-          Opens a secure form — you stay on this page
+      <!-- Zeffy transparency callout — brand-blue left border on cream-card -->
+      <aside
+        class="border-l-4 border-brand-blue bg-cream-card p-5 shadow-sm md:p-6"
+        aria-label="About Zeffy"
+      >
+        <p class="leading-relaxed text-text-primary/85">
+          We use Zeffy, a free donation platform. During checkout, Zeffy
+          may suggest an optional tip to support themselves — you can set
+          it to $0. 100% of your offering goes directly to the parish.
         </p>
+      </aside>
+
+      <!-- Subheading -->
+      <h2 class="mt-12 font-display text-2xl text-text-primary md:text-3xl">Choose how to give</h2>
+      <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+      <!-- Card grid — duplicate <article> below to add another campaign -->
+      <div class="mt-8 grid gap-6 md:grid-cols-2 md:gap-8">
+
+        <!-- Card: Tithe -->
+        <article class="border border-brand-tan bg-cream-card p-6 shadow-sm md:p-8">
+          <h3 class="font-display text-2xl text-text-primary">Tithe</h3>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-primary/85">
+            Return the firstfruits of what God has given. Supports the
+            ongoing needs of the parish.
+          </p>
+          <p class="mt-6">
+            <a
+              zeffy-form-link="https://www.zeffy.com/embed/donation-form/tithe-58?modal=true"
+              role="button"
+              tabindex="0"
+              class="cursor-pointer font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+            >
+              Give now →
+            </a>
+          </p>
+        </article>
+
+        <!-- Card: Prayer Candles -->
+        <article class="border border-brand-tan bg-cream-card p-6 shadow-sm md:p-8">
+          <h3 class="font-display text-2xl text-text-primary">Prayer Candles</h3>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-primary/85">
+            $1.00 each. Lit on your behalf for the living and for those who
+            have fallen asleep in the faith.
+          </p>
+          <p class="mt-6">
+            <a
+              zeffy-form-link="https://www.zeffy.com/embed/ticketing/prayer-candles?modal=true"
+              role="button"
+              tabindex="0"
+              class="cursor-pointer font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+            >
+              Purchase candles →
+            </a>
+          </p>
+        </article>
+
       </div>
-    </div>
-  </section>
 
-  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
-
-  <!-- ==================== CLOSING NOTE ==================== -->
-  <section class="bg-cream-bg">
-    <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
-      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Questions?</p>
-      <h2 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">If we can help</h2>
-      <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
-      <p class="mt-6 leading-relaxed text-text-primary/85">
-        For questions about giving, recurring offerings, or directing a
-        gift toward a particular need of the Mission, please reach out:
+      <!-- Footer line -->
+      <p class="mt-12 text-sm text-text-secondary">
+        Questions about giving?
+        <a href="mailto:parishoffice@stjohnrgv.org">parishoffice@stjohnrgv.org</a>
+        <span aria-hidden="true" class="mx-2 text-brand-tan-dark">·</span>
+        <a href="tel:+19564490225">(956) 449-0225</a>
       </p>
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <div class="border border-border-soft bg-cream-card p-5 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Email</p>
-          <p class="mt-2 break-words text-text-primary/85">
-            <a href="mailto:parishoffice@stjohnrgv.org">parishoffice@stjohnrgv.org</a>
-          </p>
-        </div>
-        <div class="border border-border-soft bg-cream-card p-5 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Phone</p>
-          <p class="mt-2 text-text-primary/85">
-            <a href="tel:+19564490225">(956) 449-0225</a>
-          </p>
-        </div>
-      </div>
+
     </div>
   </section>
-
-  <!-- Zeffy embed loader. is:inline keeps Astro from bundling the script
-       so the onerror fallback (which reveals data-zeffy-embed-fallback
-       containers if the loader 404s or is blocked) ships verbatim. -->
-  <script src="https://www.zeffy.com/embed/v2/zeffy-embed.js" is:inline onerror="document.querySelectorAll('[data-zeffy-embed-fallback]').forEach(function(el){ el.style.display='block'; });"></script>
 </Layout>
