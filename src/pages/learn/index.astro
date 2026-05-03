@@ -8,8 +8,8 @@ import Layout from "../../layouts/Layout.astro";
 >
   <section class="mx-auto max-w-5xl px-4 py-20 md:py-28">
 
-    <!-- Page header (clamped to readable width) -->
-    <div class="mx-auto max-w-3xl">
+    <!-- Page header (clamped to readable width, centered) -->
+    <div class="mx-auto max-w-3xl text-center">
       <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">For Inquirers &amp; Seekers</p>
       <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">What is Orthodox Christianity?</h1>
       <p class="mt-6 text-lg text-text-primary/80">
@@ -23,14 +23,19 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </div>
 
-    <!-- Existing pages — single centered row, wraps on narrow viewports -->
+    <!-- Existing pages — link + subtitle, two groups centered with wrap -->
     <nav
       aria-label="Existing learn pages"
-      class="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
+      class="mt-12 flex flex-wrap items-start justify-center gap-x-12 gap-y-6"
     >
-      <a href="/learn/saints/" class="font-display">Saints &rarr;</a>
-      <a href="/learn/st-john-of-kronstadt/" class="font-display">St. John of Kronstadt &rarr;</a>
-      <a href="/learn/st-john-chrysostom/" class="font-display">St. John Chrysostom &rarr;</a>
+      <div class="flex flex-col items-center text-center">
+        <a href="/learn/st-john-of-kronstadt/" class="font-display">St. John of Kronstadt &rarr;</a>
+        <span class="mt-1 text-sm text-text-secondary">The life of our patron saint.</span>
+      </div>
+      <div class="flex flex-col items-center text-center">
+        <a href="/learn/st-john-chrysostom/" class="font-display">St. John Chrysostom &rarr;</a>
+        <span class="mt-1 text-sm text-text-secondary">Whose Divine Liturgy we celebrate.</span>
+      </div>
     </nav>
 
     <!-- Resource cards — 1 col mobile, 3 col desktop -->
