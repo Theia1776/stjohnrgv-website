@@ -35,22 +35,38 @@ import Layout from "../layouts/Layout.astro";
 
   </section>
 
+  <!-- Reading modal — hidden by default, opened by Read More buttons. -->
+  <div
+    id="reading-modal"
+    class="hidden fixed inset-0 z-[60] overflow-y-auto bg-text-primary/60 p-4 md:p-8"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reading-modal-title"
+  >
+    <div id="reading-modal-panel" class="mx-auto max-w-2xl border border-brand-tan bg-cream-card p-6 shadow-lg md:p-8">
+      <button
+        id="reading-modal-close"
+        type="button"
+        aria-label="Close reading"
+        class="float-right -mr-1 -mt-1 font-display text-2xl leading-none text-text-secondary hover:text-text-primary"
+      >×</button>
+      <h3 id="reading-modal-title" class="mb-4 pr-8 font-display text-xl font-bold text-brand-blue"></h3>
+      <div id="reading-modal-body" class="space-y-2 leading-relaxed"></div>
+    </div>
+  </div>
+
   <script is:inline>
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-    // Current date is always stored as Gregorian for API calls
     let currentDate = new Date();
     currentDate.setHours(0,0,0,0);
 
-    function toJulian(gregorianDate) {
-      const d = new Date(gregorianDate);
-      d.setDate(d.getDate() - 13);
-      return d;
-    }
+    // Holds the day's readings array for modal lookup by index.
+    let currentReadings = [];
 
-    function formatJulianDate(jd) {
-      return `${DAYS[jd.getDay()]}, ${MONTHS[jd.getMonth()]} ${jd.getDate()}, ${jd.getFullYear()} O.S.`;
+    function formatDate(d) {
+      return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     }
 
     function apiUrl(date) {
@@ -78,6 +94,15 @@ import Layout from "../layouts/Layout.astro";
       return words[n] || n;
     }
 
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderContent(day) {
       const sections = [];
 
@@ -88,7 +113,7 @@ import Layout from "../layouts/Layout.astro";
         const combined = [weekDesc, tone].filter(Boolean).join(' — ');
         sections.push(`
           <div class="rounded border border-brand-tan bg-cream-card px-5 py-4">
-            <p class="font-display text-base font-bold text-text-primary">${combined}</p>
+            <p class="font-display text-base font-bold text-text-primary">${escapeHtml(combined)}</p>
           </div>
         `);
       }
@@ -100,7 +125,7 @@ import Layout from "../layouts/Layout.astro";
         sections.push(`
           <div class="border-l-4 border-brand-tan py-1 pl-4">
             <p class="mb-1 font-display text-xs uppercase tracking-widest text-text-secondary">Fasting Rule</p>
-            <p class="text-lg text-text-primary">${fastText}</p>
+            <p class="text-lg text-text-primary">${escapeHtml(fastText)}</p>
           </div>
         `);
       }
@@ -108,7 +133,7 @@ import Layout from "../layouts/Layout.astro";
       // Commemorations — titles[1..n] are the saints list
       const commemorations = (day.titles || []).slice(1);
       if (commemorations.length > 0) {
-        const items = commemorations.map(t => `<li class="text-lg leading-snug text-text-primary">• ${t}</li>`).join('');
+        const items = commemorations.map(t => `<li class="text-lg leading-snug text-text-primary">• ${escapeHtml(t)}</li>`).join('');
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Commemorations</h2>
@@ -117,23 +142,36 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Scripture Readings
+      // Scripture Readings — card grid; full passage opens in a modal.
       if (day.readings?.length > 0) {
-        const readingItems = day.readings.map(r => {
-          let inner = `<p class="mb-3 font-display text-sm font-bold text-brand-blue">${r.display || ''}</p>`;
-          if (r.passage?.length > 0) {
-            const verses = r.passage.map(v =>
-              `<p class="mb-1"><span class="mr-2 font-display text-xs text-text-secondary">${v.verse}</span><span class="text-lg text-text-primary">${v.content}</span></p>`
-            ).join('');
-            inner += `<div class="leading-relaxed">${verses}</div>`;
-          }
-          return `<div class="border-b border-border-soft pb-6 last:border-0">${inner}</div>`;
+        currentReadings = day.readings;
+        const readingItems = day.readings.map((r, i) => {
+          const passage = r.passage || [];
+          const previewVerses = passage.slice(0, 2);
+          const previewHtml = previewVerses.length > 0
+            ? previewVerses.map(v =>
+                `<p class="text-sm leading-relaxed text-text-primary/85"><span class="mr-1 font-display text-xs text-text-secondary">${escapeHtml(v.verse)}</span>${escapeHtml(v.content)}</p>`
+              ).join('')
+            : '<p class="text-sm italic text-text-secondary">No preview available.</p>';
+          const hasFull = passage.length > 0;
+          const hasMore = passage.length > 2;
+          const moreLabel = hasMore ? 'Read more →' : (hasFull ? 'View →' : '');
+          const moreBtn = moreLabel
+            ? `<button type="button" data-reading-index="${i}" class="mt-4 self-start font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline">${moreLabel}</button>`
+            : '';
+          return `
+            <article class="flex flex-col border border-brand-tan bg-cream-card p-5 shadow-sm">
+              <p class="mb-3 font-display text-sm font-bold text-brand-blue">${escapeHtml(r.display || '')}</p>
+              <div class="flex-1 space-y-1">${previewHtml}</div>
+              ${moreBtn}
+            </article>
+          `;
         }).join('');
 
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
-            <div class="space-y-2">${readingItems}</div>
+            <div class="grid gap-4 sm:grid-cols-2">${readingItems}</div>
           </div>
         `);
       }
@@ -142,8 +180,8 @@ import Layout from "../layouts/Layout.astro";
       if (day.stories?.length > 0) {
         const storyItems = day.stories.map(s => `
           <div class="border-b border-border-soft pb-4 last:border-0">
-            <p class="mb-2 font-display text-sm font-bold text-text-primary">${s.title || ''}</p>
-            <p class="text-lg leading-relaxed text-text-primary">${s.text || ''}</p>
+            <p class="mb-2 font-display text-sm font-bold text-text-primary">${escapeHtml(s.title || '')}</p>
+            <p class="text-lg leading-relaxed text-text-primary">${escapeHtml(s.text || '')}</p>
           </div>
         `).join('');
         sections.push(`
@@ -167,20 +205,68 @@ import Layout from "../layouts/Layout.astro";
       content.classList.add('hidden');
       content.innerHTML = '';
 
-      const julianDate = toJulian(date);
-      document.getElementById('cal-date').textContent = formatJulianDate(julianDate);
+      document.getElementById('cal-date').textContent = formatDate(date);
 
       try {
         const day = await fetchDay(date);
+        // DEBUG: full raw response — used to verify field names for
+        // saints/commemorations and full readings list. Safe to remove
+        // once the data shape is confirmed.
+        console.log('orthocal.info response:', day);
         renderContent(day);
         loading.classList.add('hidden');
         content.classList.remove('hidden');
       } catch (e) {
+        console.error('orthocal.info fetch failed:', e);
         loading.classList.add('hidden');
         error.classList.remove('hidden');
       }
     }
 
+    // ---- Reading modal ----
+    const modal = document.getElementById('reading-modal');
+    const modalPanel = document.getElementById('reading-modal-panel');
+    const modalTitle = document.getElementById('reading-modal-title');
+    const modalBody = document.getElementById('reading-modal-body');
+    const modalClose = document.getElementById('reading-modal-close');
+
+    function openReadingModal(reading) {
+      if (!reading) return;
+      modalTitle.textContent = reading.display || '';
+      const verses = (reading.passage || []).map(v =>
+        `<p><span class="mr-1 font-display text-xs text-text-secondary">${escapeHtml(v.verse)}</span><span class="text-base text-text-primary">${escapeHtml(v.content)}</span></p>`
+      ).join('');
+      modalBody.innerHTML = verses || '<p class="italic text-text-secondary">No passage text available.</p>';
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReadingModal() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Click outside the panel closes the modal; clicks inside the panel
+    // bubble up but the contains() check filters them out.
+    modal.addEventListener('click', (e) => {
+      if (!modalPanel.contains(e.target)) closeReadingModal();
+    });
+    modalClose.addEventListener('click', closeReadingModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeReadingModal();
+    });
+
+    // Event delegation: any [data-reading-index] click in cal-content
+    // opens the modal with the corresponding reading.
+    document.getElementById('cal-content').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-reading-index]');
+      if (btn) {
+        const idx = parseInt(btn.dataset.readingIndex, 10);
+        openReadingModal(currentReadings[idx]);
+      }
+    });
+
+    // ---- Day navigation ----
     document.getElementById('prev-day').addEventListener('click', () => {
       currentDate.setDate(currentDate.getDate() - 1);
       loadDay(currentDate);
