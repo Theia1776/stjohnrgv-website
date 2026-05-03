@@ -135,8 +135,14 @@ function parseCalendar(html: string): CalendarData {
   if (saintsSection) {
     const inner = unwrapNormaltext(saintsSection.raw);
     // Each saint occupies one <br>-terminated line.
-    for (const line of inner.split(/<br\s*\/?>/i)) {
-      const text = stripInline(line);
+    for (const rawLine of inner.split(/<br\s*\/?>/i)) {
+      // Drop typicon icon-stand-in spans entirely so their inner glyph
+      // (e.g. "1", "0", "o") doesn't bleed into the saint's name.
+      const cleaned = rawLine.replace(
+        /<span\s+class="typicon-[^"]*"[^>]*>[\s\S]*?<\/span>/gi,
+        "",
+      );
+      const text = stripInline(cleaned);
       if (text) saints.push(text);
     }
   }
@@ -231,16 +237,25 @@ export async function onRequestGet(
     day = now.getUTCDate();
   }
 
+  // The legacy /calendar/calendar.php endpoint silently ignores its
+  // mm/dd/yy params and returns today's data regardless, AND never
+  // returns troparia. Use the v2 endpoint that the live HTC calendar
+  // widget itself loads (loadCalendar2_v2 in their loadCalendar_v2.js):
+  // path is /htc/ocalendar/v2calendar.php, params are month/today/year
+  // /dt/header/lives/trp/scripture, plus a random sid cache-buster.
+  const sid = Math.floor(Math.random() * 1e9);
   const upstream =
-    `https://www.holytrinityorthodox.com/calendar/calendar.php` +
-    `?mm=${month}&dd=${day}&yy=${year}` +
-    `&dt=1&hh=1&ll=1&tt=1&ss=1`;
+    `https://www.holytrinityorthodox.com/htc/ocalendar/v2calendar.php` +
+    `?month=${month}&today=${day}&year=${year}` +
+    `&dt=1&header=1&lives=1&trp=1&scripture=1` +
+    `&sid=${sid}`;
 
   let upstreamRes: Response;
   try {
     upstreamRes = await fetch(upstream, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; StJohnRGV-Calendar)",
+        "Referer": "https://www.holytrinityorthodox.com/htc/orthodox-calendar/",
       },
     });
   } catch (_e) {
@@ -257,7 +272,11 @@ export async function onRequestGet(
     );
   }
 
-  const html = await upstreamRes.text();
+  // The endpoint serves Content-Type: text/html; charset=windows-1251.
+  // Decode the byte stream with that codec so characters like 0x97
+  // ("—" em dash) and other Cyrillic-page glyphs render correctly.
+  const buf = await upstreamRes.arrayBuffer();
+  const html = new TextDecoder("windows-1251").decode(buf);
 
   let parsed: CalendarData;
   try {
