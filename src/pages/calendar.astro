@@ -164,7 +164,7 @@ import Layout from "../layouts/Layout.astro";
       const ref = escapeHtml(r.reference || '');
       return `
         <article
-          class="flex w-full max-w-sm flex-col border border-brand-tan bg-cream-card p-6 shadow-sm md:p-8"
+          class="flex w-full max-w-sm flex-col border border-brand-tan bg-cream-card p-6 shadow-sm sm:basis-72 md:p-8"
           data-card="reading"
           data-card-key="${i}"
         >
@@ -186,7 +186,7 @@ import Layout from "../layouts/Layout.astro";
       const preview = escapeHtml(firstLines(entry.body, 1));
       return `
         <article
-          class="flex w-full max-w-sm flex-col border border-brand-tan bg-cream-card p-6 shadow-sm md:p-8"
+          class="flex w-full max-w-sm flex-col border border-brand-tan bg-cream-card p-6 shadow-sm sm:basis-72 md:p-8"
           data-card="troparion"
           data-card-key="${i}"
         >
@@ -249,7 +249,7 @@ import Layout from "../layouts/Layout.astro";
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
-            <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-items-center">${readingItems}</div>
+            <div class="flex flex-wrap justify-center gap-6">${readingItems}</div>
           </div>
         `);
       }
@@ -261,7 +261,7 @@ import Layout from "../layouts/Layout.astro";
         sections.push(`
           <div>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia &amp; Kontakia</h2>
-            <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-items-center">${tropItems}</div>
+            <div class="flex flex-wrap justify-center gap-6">${tropItems}</div>
           </div>
         `);
       }
