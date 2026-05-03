@@ -184,10 +184,22 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     function nameToSlug(name) {
+      // Strip leading hagiographic titles so slugs start at the actual
+      // proper name. Each pass eats one optional "the " + one title
+      // word + trailing space, so multi-word stacks like "The Holy
+      // Martyr" or "The Righteous" peel off one piece at a time:
+      //   "The Holy Martyr Avramii…" → "Avramii…"
+      //   "The Monk Theodore"        → "Theodore"
+      //   "Sainted Anastasias I…"    → "Anastasias I…"
+      //   "The Righteous Tabitha"    → "Tabitha"
+      //   "The Apostle Zacchaeus…"   → "Zacchaeus…"
+      //   "Saint Gregory…"           → "Gregory…"
+      //   "Holy Martyr X"            → "X"
+      const PREFIX_RE =
+        /^(?:(?:the\s+)?(?:saint(?:ed)?|holy|venerable|monk|martyr|hieromartyr|righteous|apostle|prophet|blessed|child-martyr|new\s+martyr|new\s+hieromartyr)\s+)+/i;
       return String(name || "")
         .toLowerCase()
-        // strip "Sainted/Saint/Holy/Monk/Venerable/etc." prefixes for shorter slugs
-        .replace(/^(?:saint(?:ed)?\s+|holy\s+|venerable\s+|monk\s+|martyr\s+|the\s+righteous\s+|righteous\s+)+/i, "")
+        .replace(PREFIX_RE, "")
         .replace(/\([^)]*\)/g, " ")
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
