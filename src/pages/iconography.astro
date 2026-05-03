@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import stjohnIcon from "../assets/images/stjohn-of-kronstadt.jpg";
 
 /**
  * Icon catalog. Add new entries as imagery is sourced and placed on the site.
@@ -11,9 +12,10 @@ import Layout from "../layouts/Layout.astro";
  */
 interface IconEntry {
   name: string;
-  thumbnail?: string;        // /public path; required when sourcing is false
-  tradition: string;
+  thumbnail?: string;        // /public path or imported asset .src; required when sourcing is false
+  tradition?: string;        // optional — school / regional style / era
   iconographer: string;      // named artist, or "Unknown"
+  year?: string | number;    // optional — year written/painted, when known
   source?: string;           // optional — archive, collection, or provenance note
   location: string;          // human description, e.g. "Paschal banner"
   locationHref?: string;     // optional link to where it appears
@@ -32,6 +34,16 @@ const icons: IconEntry[] = [
     locationHref: "/#paschal-anastasis",
     note:
       "A canonical depiction of Christ harrowing Hades and raising Adam and Eve. The visual companion to the Paschal troparion: “Christ is risen from the dead, trampling down death by death, and upon those in the tombs bestowing life.”",
+  },
+  {
+    name: "Icon of St. John of Kronstadt",
+    thumbnail: stjohnIcon.src,
+    iconographer: "Brother Simeon Davis",
+    year: 1985,
+    location: "Patron saint life page",
+    locationHref: "/learn/st-john-of-kronstadt/",
+    note:
+      "Depicts the saint holding a scroll with a prayer for the divine gift of holy prayer.",
   },
 ];
 ---
@@ -164,18 +176,28 @@ const icons: IconEntry[] = [
               <h3 class="mt-5 font-display text-xl text-text-primary">{entry.name}</h3>
 
               <dl class="mt-4 space-y-1.5 text-sm text-text-primary/80">
-                <div>
-                  <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
-                    Tradition:
-                  </dt>{" "}
-                  <dd class="inline">{entry.tradition}</dd>
-                </div>
+                {entry.tradition && (
+                  <div>
+                    <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                      Tradition:
+                    </dt>{" "}
+                    <dd class="inline">{entry.tradition}</dd>
+                  </div>
+                )}
                 <div>
                   <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
                     Iconographer:
                   </dt>{" "}
                   <dd class="inline">{entry.iconographer}</dd>
                 </div>
+                {entry.year && (
+                  <div>
+                    <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">
+                      Year:
+                    </dt>{" "}
+                    <dd class="inline">{entry.year}</dd>
+                  </div>
+                )}
                 {entry.source && (
                   <div>
                     <dt class="inline text-xs font-semibold uppercase tracking-wider text-brand-tan-dark">

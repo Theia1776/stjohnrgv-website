@@ -1,5 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import stjohnIcon from "../../assets/images/stjohn-of-kronstadt.jpg";
 ---
 
 <Layout
@@ -21,23 +23,18 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </section>
 
-  <!-- ==================== ICON PLACEHOLDER ==================== -->
+  <!-- ==================== ICON ==================== -->
   <section class="bg-cream-bg">
     <div class="mx-auto max-w-3xl px-4 pb-12 md:px-6 md:pb-16">
       <figure class="m-0">
-        <div
-          class="mx-auto flex aspect-[3/4] w-full max-w-xs flex-col items-center justify-center border-2 border-sacred-gold bg-cream-card text-center shadow-sm sm:max-w-sm"
-          aria-label="Placeholder for icon of Saint John of Kronstadt"
-        >
-          <span aria-hidden="true" class="text-6xl text-sacred-gold">☩</span>
-          <p class="mt-4 font-display text-lg text-text-primary">Saint John of Kronstadt</p>
-          <p class="mt-1 text-xs font-semibold uppercase tracking-widest text-text-secondary">
-            1829 — 1908
-          </p>
-          <p class="mt-6 px-6 text-xs italic text-text-secondary">Icon image to be added</p>
-        </div>
+        <Image
+          src={stjohnIcon}
+          alt="Icon of St. John of Kronstadt, painted by Brother Simeon Davis, 1985"
+          loading="eager"
+          class="mx-auto block w-full max-w-xs border-2 border-sacred-gold bg-cream-card object-cover shadow-sm sm:max-w-sm"
+        />
         <figcaption class="mt-4 text-center text-sm italic text-text-secondary">
-          <a href="/iconography/">About Orthodox iconography →</a>
+          Icon by Brother Simeon Davis, 1985
         </figcaption>
       </figure>
     </div>
