@@ -23,6 +23,12 @@ export interface SaintData {
   troparion: string;
   kontakion: string;
   iconSlug: string;
+  /** Optional alternate spellings / descriptors for matching against
+   *  upstream calendar entries that use different transliterations
+   *  ("Anastasius" vs "Anastasias") or different descriptor phrasing
+   *  ("near Onega Lake" vs "of Oshevensk"). Each alias is a free-form
+   *  string that gets normalized the same way as `name`. */
+  aliases?: string[];
 }
 
 const saintModules = import.meta.glob<{ default: SaintData }>(
@@ -73,10 +79,19 @@ export function findSaint(calendarName: string): SaintData | null {
   const target = normalizeName(calendarName);
   if (!target) return null;
   for (const saint of saints) {
+    // Primary: canonical name
     const local = normalizeName(saint.name);
-    if (!local) continue;
-    if (target.includes(local) || local.includes(target)) {
+    if (local && (target.includes(local) || local.includes(target))) {
       return saint;
+    }
+    // Fallback: any alias
+    if (saint.aliases) {
+      for (const alias of saint.aliases) {
+        const aNorm = normalizeName(alias);
+        if (aNorm && (target.includes(aNorm) || aNorm.includes(target))) {
+          return saint;
+        }
+      }
     }
   }
   return null;

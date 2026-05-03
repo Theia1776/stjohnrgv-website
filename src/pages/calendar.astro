@@ -9,6 +9,7 @@ import { saints, normalizeName } from "../lib/saints-lookup";
 const localSaintsForClient = saints.map((s) => ({
   ...s,
   _norm: normalizeName(s.name),
+  _normAliases: (s.aliases ?? []).map((a) => normalizeName(a)).filter(Boolean),
 }));
 const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u003c");
 ---
@@ -452,9 +453,15 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       const target = normalizeNameClient(calendarName);
       if (!target) return null;
       for (const s of LOCAL_SAINTS) {
-        if (!s._norm) continue;
-        if (target.includes(s._norm) || s._norm.includes(target)) {
+        if (s._norm && (target.includes(s._norm) || s._norm.includes(target))) {
           return s;
+        }
+        if (s._normAliases) {
+          for (const a of s._normAliases) {
+            if (a && (target.includes(a) || a.includes(target))) {
+              return s;
+            }
+          }
         }
       }
       return null;
