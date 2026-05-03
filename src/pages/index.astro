@@ -163,10 +163,10 @@ const services = [
         </p>
       </div>
 
-      <!-- Icon of St. John of Kronstadt -->
+      <!-- Icon of St. John of Kronstadt — accent size, not focal -->
       <div class="flex justify-center md:justify-end">
         <div
-          class="flex aspect-[3/4] w-full max-w-sm flex-col items-center justify-center border-2 border-sacred-gold bg-cream-card text-center shadow-sm"
+          class="flex aspect-[3/4] w-full max-w-[14rem] flex-col items-center justify-center border-2 border-sacred-gold bg-cream-card text-center shadow-sm"
         >
           <Image
             src={stjohnIcon}
@@ -176,8 +176,26 @@ const services = [
           />
         </div>
       </div>
+
+      <!-- Scroll hint — gentle vertical bounce, full-width grid row -->
+      <div class="mt-6 flex justify-center md:col-span-2 md:mt-10">
+        <span class="scroll-hint inline-block text-3xl text-brand-tan" aria-hidden="true">↓</span>
+      </div>
     </div>
   </section>
+
+  <style>
+    @keyframes scroll-hint-bounce {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(8px); }
+    }
+    .scroll-hint {
+      animation: scroll-hint-bounce 2s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-hint { animation: none; }
+    }
+  </style>
 
   <!-- ==================== SAINT OF THE DAY ====================
        Hidden by default; the inline script below pulls today's Julian
