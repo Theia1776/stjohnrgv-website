@@ -12,10 +12,43 @@ interface Saint {
   iconSlug: string;
 }
 
-// Load every saint JSON at build time and sort alphabetically by name.
-// Astro 6 removed Astro.glob; use Vite's import.meta.glob with
-// `eager: true` so the JSON contents land here synchronously rather
-// than as lazy-loaders.
+interface Entry {
+  /** Index into the master `saints` array — used by the modal opener. */
+  idx: number;
+  name: string;
+  /** Display feast text for the panel: a single fixed date for month
+   *  panels, or all of the saint's movable feasts joined for the
+   *  movable panel. */
+  feast: string;
+  /** For sorting fixed entries within a month. -1 if not applicable. */
+  day: number;
+}
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MOVABLE_TOKEN_RE = /\b(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday|pascha)\b/i;
+
+function classifyFeast(feast: string): { kind: "fixed"; month: number; day: number } | { kind: "movable" } {
+  // Movable wins when any weekday/pascha word appears, even if a
+  // month name happens to be in the string too.
+  if (MOVABLE_TOKEN_RE.test(feast)) return { kind: "movable" };
+  // Plain "Month Day" pattern — case-insensitive, allows "April 1" /
+  // "April 1." / "April 1, 2020" but not "April 1st" with ordinal
+  // suffix (rare in this dataset; flag if it shows up).
+  const m = /^([A-Za-z]+)\s+(\d{1,2})\b/.exec(feast.trim());
+  if (m) {
+    const monthIdx = MONTHS.findIndex((n) => n.toLowerCase() === m[1].toLowerCase());
+    if (monthIdx >= 0) return { kind: "fixed", month: monthIdx, day: parseInt(m[2], 10) };
+  }
+  // Catch-all: anything that isn't recognizable as fixed (e.g. "Day
+  // of the Holy Spirit") falls into Movable Feasts so it doesn't
+  // disappear from the catalog.
+  return { kind: "movable" };
+}
+
+// Load + sort all saints alphabetically.
 const saintModules = import.meta.glob<{ default: Saint }>(
   "../../data/saints/*.json",
   { eager: true },
@@ -24,18 +57,48 @@ const saints: Saint[] = Object.values(saintModules)
   .map((m) => m.default)
   .sort((a, b) => a.name.localeCompare(b.name));
 
-const count = saints.length;
+// Build month buckets and movable bucket. A saint with both a fixed
+// and a movable feast appears in both buckets.
+const monthBuckets: Entry[][] = MONTHS.map(() => []);
+const movableBucket: Entry[] = [];
 
-// Inline the saints array as JSON in a <script type="application/json">
-// tag so the client-side modal can read full life/troparion/kontakion
-// without round-trips. Escaping `<` blocks any "</script>" sequence
-// inside saint life text from breaking out of the tag.
+saints.forEach((saint, idx) => {
+  const movableFeasts: string[] = [];
+  saint.feasts.forEach((feast) => {
+    const c = classifyFeast(feast);
+    if (c.kind === "fixed") {
+      monthBuckets[c.month].push({ idx, name: saint.name, feast, day: c.day });
+    } else {
+      movableFeasts.push(feast);
+    }
+  });
+  if (movableFeasts.length > 0) {
+    movableBucket.push({
+      idx,
+      name: saint.name,
+      feast: movableFeasts.join(" · "),
+      day: -1,
+    });
+  }
+});
+
+// Sort: fixed entries by day-of-month then name; movable by name.
+monthBuckets.forEach((b) =>
+  b.sort((a, b) => (a.day - b.day) || a.name.localeCompare(b.name)),
+);
+movableBucket.sort((a, b) => a.name.localeCompare(b.name));
+
+const totalCount = saints.length;
+const movableCount = movableBucket.length;
+
+// Inline saint data for client-side search + modal. Escape `<` so any
+// "</script>" fragment inside a saint life can't break out of the tag.
 const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
 ---
 
 <Layout
   title="Saints | St. John of Kronstadt Orthodox Mission"
-  description="A growing encyclopedia of the saints commemorated in our parish. Browse and search the Orthodox calendar."
+  description="A growing encyclopedia of the saints commemorated in our parish, browsable by month or movable feast."
 >
   <section class="mx-auto max-w-5xl px-4 py-16 md:py-20">
 
@@ -49,7 +112,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
         New entries are added daily.
       </p>
       <p class="mt-2 text-sm text-text-secondary">
-        <span id="saints-count">{count}</span> saints in the database
+        <span id="saints-count">{totalCount}</span> saints in the database
       </p>
 
       <!-- Search -->
@@ -67,35 +130,108 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       </div>
     </div>
 
-    <!-- Empty state -->
-    <p id="saints-empty" hidden class="mt-12 text-center italic text-text-secondary">
-      No saints found matching your search.
-    </p>
+    <!-- ============== SEARCH RESULTS (only shown when search has text) ============== -->
+    <div id="search-results" hidden class="mt-10"></div>
 
-    <!-- Saints grid -->
-    <div id="saints-grid" class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {saints.map((s, i) => (
-        <article
-          class="flex cursor-pointer flex-col border border-brand-tan bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-tan-dark focus:border-brand-tan-dark focus:outline-none"
-          tabindex="0"
-          role="button"
-          aria-label={`Read about ${s.name}`}
-          data-saint-card
-          data-saint-index={i}
-          data-search={(s.name + " " + s.feasts.join(" ")).toLowerCase()}
+    <!-- ============== MONTH VIEW (default) ============== -->
+    <div id="month-view" class="mt-10">
+
+      <!-- Movable Feasts tile, centered -->
+      <div class="mx-auto max-w-md">
+        <button
+          type="button"
+          data-tile="movable"
+          aria-expanded="false"
+          aria-controls="panel-movable"
+          class="group flex w-full flex-col items-center justify-center border-2 border-brand-tan bg-cream-card px-6 py-5 shadow-sm transition-colors hover:border-brand-tan-dark focus:border-brand-tan-dark focus:outline-none aria-expanded:border-brand-blue-dark aria-expanded:bg-brand-blue-pale"
+          disabled={movableCount === 0}
         >
-          <h3 class="font-display text-base font-bold leading-snug text-text-primary">{s.name}</h3>
-          {s.feasts.length > 0 && (
-            <p class="mt-3 text-sm text-text-secondary">{s.feasts.join(" · ")}</p>
-          )}
-        </article>
-      ))}
+          <span class="font-display text-xl text-text-primary">Movable Feasts</span>
+          <span class="mt-1 text-xs text-text-secondary">
+            {movableCount} {movableCount === 1 ? "saint" : "saints"}
+          </span>
+        </button>
+      </div>
+
+      <!-- Month tile grid: 3×4 on lg, scaling down responsively -->
+      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {MONTHS.map((monthName, i) => {
+          const count = monthBuckets[i].length;
+          const empty = count === 0;
+          return (
+            <button
+              type="button"
+              data-tile={String(i)}
+              aria-expanded="false"
+              aria-controls={`panel-${i}`}
+              class={[
+                "flex flex-col items-center justify-center border bg-cream-card px-4 py-5 shadow-sm transition-colors focus:outline-none",
+                empty
+                  ? "cursor-not-allowed border-border-soft opacity-50"
+                  : "border-brand-tan hover:border-brand-tan-dark focus:border-brand-tan-dark aria-expanded:border-brand-blue-dark aria-expanded:bg-brand-blue-pale",
+              ].join(" ")}
+              disabled={empty}
+            >
+              <span class="font-display text-lg text-text-primary">{monthName}</span>
+              <span class="mt-1 text-xs text-text-secondary">
+                {count} {count === 1 ? "saint" : "saints"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <!-- Panel area: a single panel slot whose content swaps on tile
+           click. We render all panels with hidden=true at build time
+           and toggle the visible one in JS. -->
+      <div id="panel-area" class="mt-8">
+
+        {movableCount > 0 && (
+          <div id="panel-movable" data-panel hidden class="border border-brand-tan bg-cream-card p-6 shadow-sm">
+            <h2 class="font-display text-2xl text-text-primary">Movable Feasts</h2>
+            <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+            <ul class="mt-5 divide-y divide-border-soft border-y border-border-soft">
+              {movableBucket.map((e) => (
+                <li class="py-3">
+                  <button
+                    type="button"
+                    data-saint-index={e.idx}
+                    class="block w-full text-left focus:outline-none"
+                  >
+                    <span class="font-display text-text-primary hover:underline">{e.name}</span>
+                    <span class="block text-sm text-text-secondary">{e.feast}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {monthBuckets.map((entries, i) => entries.length > 0 && (
+          <div id={`panel-${i}`} data-panel hidden class="border border-brand-tan bg-cream-card p-6 shadow-sm">
+            <h2 class="font-display text-2xl text-text-primary">{MONTHS[i]}</h2>
+            <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+            <ul class="mt-5 divide-y divide-border-soft border-y border-border-soft">
+              {entries.map((e) => (
+                <li class="py-3">
+                  <button
+                    type="button"
+                    data-saint-index={e.idx}
+                    class="block w-full text-left focus:outline-none"
+                  >
+                    <span class="font-display text-text-primary hover:underline">{e.name}</span>
+                    <span class="block text-sm text-text-secondary">{e.feast}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 
   <!-- ============== SAINT MODAL ============== -->
-  <!-- Same shape as the calendar's reading modal: backdrop click,
-       × button, and Esc all close. -->
   <div
     id="saint-modal"
     class="hidden fixed inset-0 z-[60] overflow-y-auto bg-text-primary/60 p-4 md:p-8"
@@ -116,44 +252,15 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
     </div>
   </div>
 
-  <!-- Saints data baked into the page as JSON. The modal pulls
-       full life / troparion / kontakion from here without a round-trip. -->
+  <!-- Saints data baked in for client-side search + modal -->
   <script type="application/json" id="saints-data" is:inline set:html={saintsJson}></script>
 
   <script is:inline>
     const saints = JSON.parse(document.getElementById("saints-data").textContent);
 
     // ============================================================
-    // SEARCH — client-only filter on data-search attribute.
+    // Helpers
     // ============================================================
-    const searchEl = document.getElementById("saints-search");
-    const grid = document.getElementById("saints-grid");
-    const emptyEl = document.getElementById("saints-empty");
-    const cards = Array.from(grid.querySelectorAll("[data-saint-card]"));
-
-    function filterCards() {
-      const q = searchEl.value.trim().toLowerCase();
-      let visible = 0;
-      for (const card of cards) {
-        const haystack = card.dataset.search || "";
-        const match = !q || haystack.includes(q);
-        card.hidden = !match;
-        if (match) visible++;
-      }
-      emptyEl.hidden = visible > 0;
-    }
-    searchEl.addEventListener("input", filterCards);
-
-    // ============================================================
-    // MODAL
-    // ============================================================
-    const modal = document.getElementById("saint-modal");
-    const modalPanel = document.getElementById("saint-modal-panel");
-    const modalTitle = document.getElementById("saint-modal-title");
-    const modalFeasts = document.getElementById("saint-modal-feasts");
-    const modalBody = document.getElementById("saint-modal-body");
-    const modalClose = document.getElementById("saint-modal-close");
-
     function escapeHtml(s) {
       return String(s ?? "")
         .replace(/&/g, "&amp;")
@@ -162,6 +269,113 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     }
+
+    // ============================================================
+    // Tile / panel toggle (only one panel open at a time)
+    // ============================================================
+    const monthView = document.getElementById("month-view");
+    const panels = Array.from(monthView.querySelectorAll("[data-panel]"));
+    const tiles = Array.from(monthView.querySelectorAll("[data-tile]"));
+    let activeTile = null;
+
+    function closeAllPanels() {
+      panels.forEach((p) => { p.hidden = true; });
+      tiles.forEach((t) => t.setAttribute("aria-expanded", "false"));
+      activeTile = null;
+    }
+
+    function openPanel(which) {
+      const panelId = which === "movable" ? "panel-movable" : `panel-${which}`;
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      panels.forEach((p) => { p.hidden = (p !== panel); });
+      tiles.forEach((t) => {
+        t.setAttribute("aria-expanded", t.dataset.tile === which ? "true" : "false");
+      });
+      activeTile = which;
+      // Smooth scroll the panel into view.
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    monthView.addEventListener("click", (e) => {
+      const tile = e.target.closest("[data-tile]");
+      if (!tile || tile.disabled) return;
+      const which = tile.dataset.tile;
+      if (activeTile === which) {
+        closeAllPanels();
+      } else {
+        openPanel(which);
+      }
+    });
+
+    // ============================================================
+    // Search — hides month view, renders flat results list
+    // ============================================================
+    const searchEl = document.getElementById("saints-search");
+    const searchResults = document.getElementById("search-results");
+
+    function renderSearchResults(q) {
+      const matches = saints
+        .map((s, idx) => ({ s, idx }))
+        .filter(({ s }) =>
+          (s.name + " " + s.feasts.join(" ")).toLowerCase().includes(q),
+        );
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = `
+          <p class="text-center italic text-text-secondary">
+            No saints found matching your search.
+          </p>
+        `;
+        return;
+      }
+
+      const items = matches.map(({ s, idx }) => `
+        <li class="py-3">
+          <button
+            type="button"
+            data-saint-index="${idx}"
+            class="block w-full text-left focus:outline-none"
+          >
+            <span class="font-display text-text-primary hover:underline">${escapeHtml(s.name)}</span>
+            <span class="block text-sm text-text-secondary">${escapeHtml(s.feasts.join(" · "))}</span>
+          </button>
+        </li>
+      `).join("");
+
+      const noun = matches.length === 1 ? "result" : "results";
+      searchResults.innerHTML = `
+        <p class="mb-4 text-sm text-text-secondary">${matches.length} ${noun} matching &ldquo;${escapeHtml(q)}&rdquo;</p>
+        <ul class="divide-y divide-border-soft border-y border-border-soft">${items}</ul>
+      `;
+    }
+
+    searchEl.addEventListener("input", () => {
+      const q = searchEl.value.trim().toLowerCase();
+      if (!q) {
+        // Clear search → restore month grid, hide results
+        searchResults.hidden = true;
+        searchResults.innerHTML = "";
+        monthView.hidden = false;
+        return;
+      }
+      // Search active → hide month grid, show results (and close any
+      // open panel state so re-clearing search reverts cleanly)
+      closeAllPanels();
+      monthView.hidden = true;
+      searchResults.hidden = false;
+      renderSearchResults(q);
+    });
+
+    // ============================================================
+    // Modal
+    // ============================================================
+    const modal = document.getElementById("saint-modal");
+    const modalPanel = document.getElementById("saint-modal-panel");
+    const modalTitle = document.getElementById("saint-modal-title");
+    const modalFeasts = document.getElementById("saint-modal-feasts");
+    const modalBody = document.getElementById("saint-modal-body");
+    const modalClose = document.getElementById("saint-modal-close");
 
     function openModal(idx) {
       const saint = saints[idx];
@@ -204,8 +418,6 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
 
       modal.classList.remove("hidden");
       document.body.style.overflow = "hidden";
-      // Focus close button so Esc works immediately and screen-reader
-      // users land in the dialog.
       modalClose.focus();
     }
 
@@ -222,21 +434,13 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       if (e.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
     });
 
-    // Card click + keyboard activation
-    grid.addEventListener("click", (e) => {
-      const card = e.target.closest("[data-saint-card]");
-      if (!card) return;
-      const idx = parseInt(card.dataset.saintIndex, 10);
-      openModal(idx);
-    });
-    grid.addEventListener("keydown", (e) => {
-      const card = e.target.closest("[data-saint-card]");
-      if (!card) return;
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        const idx = parseInt(card.dataset.saintIndex, 10);
-        openModal(idx);
-      }
+    // Saint-name click → open modal. Single delegated listener catches
+    // clicks inside month/movable panels AND inside search results.
+    document.addEventListener("click", (e) => {
+      const target = e.target.closest("[data-saint-index]");
+      if (!target) return;
+      const idx = parseInt(target.dataset.saintIndex, 10);
+      if (Number.isFinite(idx)) openModal(idx);
     });
   </script>
 </Layout>
