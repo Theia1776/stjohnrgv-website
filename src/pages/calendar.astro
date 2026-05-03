@@ -3,19 +3,200 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout
-  title="Julian Calendar & Feast Days | St. John of Kronstadt Orthodox Mission"
-  description="The traditional Julian Calendar feast days observed at St. John of Kronstadt Orthodox Mission, with both Old Style and New Style dates."
+  title="Julian Calendar | St. John of Kronstadt Orthodox Mission"
+  description="Daily Orthodox commemorations, scripture readings, fasting rules, and troparia according to the Julian calendar."
 >
   <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
-    <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Liturgical Year</p>
-    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Julian Calendar &amp; Feast Days</h1>
-    <p class="mt-6 text-lg text-text-primary/80">
-      A full-year calendar of Great Feasts and major commemorations — with Julian (Old Style)
-      and Gregorian (New Style) dates side-by-side — coming soon.
-    </p>
-    <p class="mt-4 text-text-primary/75">
-      The Julian Calendar currently runs thirteen days behind the civil (Gregorian) calendar.
-      A feast on December 25 OS, for example, falls on January 7 NS.
-    </p>
+
+    <p class="mb-4 font-display text-xs uppercase tracking-widest text-text-secondary">Julian Calendar</p>
+
+    <!-- Date header + navigation -->
+    <div id="cal-header" class="mb-10 flex items-center gap-3">
+      <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">← Prev</button>
+      <h1 id="cal-date" class="flex-1 text-center font-display text-xl text-text-primary md:text-2xl"></h1>
+      <button id="next-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">Next →</button>
+    </div>
+    <div class="mb-8 text-center">
+      <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">↩ Today</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="cal-loading" class="py-20 text-center text-text-secondary">
+      <p class="font-display text-base tracking-wide">Loading…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="cal-error" class="hidden py-20 text-center">
+      <p class="text-lg text-text-secondary">Could not load calendar data. Please check your connection and try again.</p>
+    </div>
+
+    <!-- Content -->
+    <div id="cal-content" class="hidden space-y-10"></div>
+
   </section>
+
+  <script is:inline>
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    // Current date is always stored as Gregorian for API calls
+    let currentDate = new Date();
+    currentDate.setHours(0,0,0,0);
+
+    function toJulian(gregorianDate) {
+      const d = new Date(gregorianDate);
+      d.setDate(d.getDate() - 13);
+      return d;
+    }
+
+    function formatJulianDate(jd) {
+      return `${DAYS[jd.getDay()]}, ${MONTHS[jd.getMonth()]} ${jd.getDate()}, ${jd.getFullYear()} O.S.`;
+    }
+
+    function apiUrl(date) {
+      return `https://orthocal.info/api/julian/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}/`;
+    }
+
+    function cacheKey(date) {
+      return `orthocal-${date.toISOString().split('T')[0]}`;
+    }
+
+    async function fetchDay(date) {
+      const key = cacheKey(date);
+      const cached = localStorage.getItem(key);
+      if (cached) return JSON.parse(cached);
+      const res = await fetch(apiUrl(date));
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      localStorage.setItem(key, JSON.stringify(data));
+      return data;
+    }
+
+    function toneOrdinal(n) {
+      if (!n) return '';
+      const words = ['','One','Two','Three','Four','Five','Six','Seven','Eight'];
+      return words[n] || n;
+    }
+
+    function renderContent(day) {
+      const sections = [];
+
+      // Week description + Tone
+      const weekDesc = day.titles?.[0] || '';
+      const tone = day.tone ? `Tone ${toneOrdinal(day.tone)}` : '';
+      if (weekDesc || tone) {
+        const combined = [weekDesc, tone].filter(Boolean).join(' — ');
+        sections.push(`
+          <div class="rounded border border-brand-tan bg-cream-card px-5 py-4">
+            <p class="font-display text-base font-bold text-text-primary">${combined}</p>
+          </div>
+        `);
+      }
+
+      // Fasting rule
+      if (day.fast_level_desc) {
+        let fastText = day.fast_level_desc;
+        if (day.fast_exception) fastText += ` — ${day.fast_exception}`;
+        sections.push(`
+          <div class="border-l-4 border-brand-tan py-1 pl-4">
+            <p class="mb-1 font-display text-xs uppercase tracking-widest text-text-secondary">Fasting Rule</p>
+            <p class="text-lg text-text-primary">${fastText}</p>
+          </div>
+        `);
+      }
+
+      // Commemorations — titles[1..n] are the saints list
+      const commemorations = (day.titles || []).slice(1);
+      if (commemorations.length > 0) {
+        const items = commemorations.map(t => `<li class="text-lg leading-snug text-text-primary">• ${t}</li>`).join('');
+        sections.push(`
+          <div>
+            <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Commemorations</h2>
+            <ul class="space-y-2">${items}</ul>
+          </div>
+        `);
+      }
+
+      // Scripture Readings
+      if (day.readings?.length > 0) {
+        const readingItems = day.readings.map(r => {
+          let inner = `<p class="mb-3 font-display text-sm font-bold text-brand-blue">${r.display || ''}</p>`;
+          if (r.passage?.length > 0) {
+            const verses = r.passage.map(v =>
+              `<p class="mb-1"><span class="mr-2 font-display text-xs text-text-secondary">${v.verse}</span><span class="text-lg text-text-primary">${v.content}</span></p>`
+            ).join('');
+            inner += `<div class="leading-relaxed">${verses}</div>`;
+          }
+          return `<div class="border-b border-border-soft pb-6 last:border-0">${inner}</div>`;
+        }).join('');
+
+        sections.push(`
+          <div>
+            <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
+            <div class="space-y-2">${readingItems}</div>
+          </div>
+        `);
+      }
+
+      // Troparia / stories
+      if (day.stories?.length > 0) {
+        const storyItems = day.stories.map(s => `
+          <div class="border-b border-border-soft pb-4 last:border-0">
+            <p class="mb-2 font-display text-sm font-bold text-text-primary">${s.title || ''}</p>
+            <p class="text-lg leading-relaxed text-text-primary">${s.text || ''}</p>
+          </div>
+        `).join('');
+        sections.push(`
+          <div>
+            <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia</h2>
+            <div class="space-y-2">${storyItems}</div>
+          </div>
+        `);
+      }
+
+      document.getElementById('cal-content').innerHTML = sections.join('');
+    }
+
+    async function loadDay(date) {
+      const loading = document.getElementById('cal-loading');
+      const error = document.getElementById('cal-error');
+      const content = document.getElementById('cal-content');
+
+      loading.classList.remove('hidden');
+      error.classList.add('hidden');
+      content.classList.add('hidden');
+      content.innerHTML = '';
+
+      const julianDate = toJulian(date);
+      document.getElementById('cal-date').textContent = formatJulianDate(julianDate);
+
+      try {
+        const day = await fetchDay(date);
+        renderContent(day);
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+      } catch (e) {
+        loading.classList.add('hidden');
+        error.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('prev-day').addEventListener('click', () => {
+      currentDate.setDate(currentDate.getDate() - 1);
+      loadDay(currentDate);
+    });
+
+    document.getElementById('next-day').addEventListener('click', () => {
+      currentDate.setDate(currentDate.getDate() + 1);
+      loadDay(currentDate);
+    });
+
+    document.getElementById('today-btn').addEventListener('click', () => {
+      currentDate = new Date();
+      currentDate.setHours(0,0,0,0);
+      loadDay(currentDate);
+    });
+
+    loadDay(currentDate);
+  </script>
 </Layout>
