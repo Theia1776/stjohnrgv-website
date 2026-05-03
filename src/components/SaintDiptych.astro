@@ -1,0 +1,240 @@
+---
+/**
+ * Saint of the Day diptych — self-contained interactive component.
+ *
+ * Closed state: tall burgundy book cover with a gold three-bar
+ * Orthodox cross, "SAINT OF THE DAY" lettering, and a bouncing gold
+ * latch on the right edge. Click anywhere on the cover to open.
+ *
+ * Open state: two cream panels side-by-side connected by a gold
+ * hinge. Left panel shows the saint's icon (if iconSlug is set) or a
+ * fallback gold cross + "ICON PENDING" label. Right panel shows
+ * eyebrow, saint name, feast date, gold rule, optional life preview
+ * (first two sentences, italic Crimson Pro), and an "All Saints →"
+ * link. A small "✕ close" returns to the closed state.
+ *
+ * Logic mirrors the previous Saint of the Day card:
+ *   - julian = today − 13 days
+ *   - find first saint whose feasts[] contains "Month Day"
+ *   - hide the entire component if no match
+ *   - skip the bio if life starts with the "Little is known…" stub
+ */
+
+import { saints } from "../lib/saints-lookup";
+
+// Inline saints data for the client; escape `<` so saint life text
+// containing "</script>" can't break out of the JSON tag.
+const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
+---
+
+<div
+  id="saint-diptych"
+  data-state="closed"
+  hidden
+  class="diptych-host mx-auto"
+>
+  <!-- ============== CLOSED STATE: BOOK COVER ============== -->
+  <button
+    type="button"
+    data-action="open"
+    aria-label="Open Saint of the Day"
+    class="diptych-closed group relative mx-auto block h-96 w-72 overflow-hidden focus:outline-none"
+    style="background-color: #6B1F1F;"
+  >
+    <!-- Spine shadow on left edge -->
+    <span
+      aria-hidden="true"
+      class="absolute inset-y-0 left-0 w-12"
+      style="background: linear-gradient(to right, #3A0F0F, transparent);"
+    ></span>
+
+    <!-- Double inset gold border -->
+    <span aria-hidden="true" class="pointer-events-none absolute inset-3 border border-sacred-gold/80"></span>
+    <span aria-hidden="true" class="pointer-events-none absolute inset-5 border border-sacred-gold/80"></span>
+
+    <!-- Cross + label, vertically centered with breathing room -->
+    <span class="relative flex h-full w-full flex-col items-center justify-center px-6">
+      <svg
+        viewBox="0 0 100 200"
+        class="h-32 w-auto text-sacred-gold"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="6"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <line x1="50" y1="20" x2="50" y2="185" />
+        <line x1="38" y1="42" x2="62" y2="42" />
+        <line x1="25" y1="80" x2="75" y2="80" />
+        <line x1="30" y1="135" x2="70" y2="150" />
+      </svg>
+      <span class="mt-12 font-display text-xs uppercase tracking-[0.3em] text-sacred-gold">
+        Saint of the Day
+      </span>
+    </span>
+
+    <!-- Bouncing gold latch on right edge -->
+    <span aria-hidden="true" class="diptych-latch absolute right-0 top-1/2 h-10 w-3 bg-sacred-gold"></span>
+  </button>
+
+  <!-- ============== OPEN STATE: DIPTYCH ============== -->
+  <div class="diptych-open relative mx-auto w-full max-w-3xl">
+    <div
+      class="grid grid-cols-1 overflow-hidden border-2 border-sacred-gold shadow-lg md:grid-cols-[1fr_8px_1fr]"
+      style="background-color: #FAF7F0;"
+    >
+
+      <!-- LEFT PANEL: icon area with gold frame -->
+      <div class="relative flex items-center justify-center p-4">
+        <div class="relative flex h-64 w-full max-w-[16rem] items-center justify-center border-2 border-sacred-gold p-3 md:h-full md:max-w-none">
+          <div data-icon-area class="flex h-full w-full items-center justify-center"></div>
+        </div>
+      </div>
+
+      <!-- HINGE — visible on md+ only -->
+      <div class="hidden bg-sacred-gold md:block" aria-hidden="true"></div>
+
+      <!-- RIGHT PANEL: text content -->
+      <div class="relative flex flex-col p-6 md:p-8">
+        <!-- Corner flourishes -->
+        <span aria-hidden="true" class="absolute top-3 left-3 h-3 w-3 border-l border-t border-sacred-gold"></span>
+        <span aria-hidden="true" class="absolute top-3 right-3 h-3 w-3 border-r border-t border-sacred-gold"></span>
+        <span aria-hidden="true" class="absolute bottom-3 left-3 h-3 w-3 border-l border-b border-sacred-gold"></span>
+        <span aria-hidden="true" class="absolute bottom-3 right-3 h-3 w-3 border-r border-b border-sacred-gold"></span>
+
+        <p class="font-display text-xs uppercase tracking-widest text-sacred-gold">Saint of the Day</p>
+        <h3 data-saint-name class="mt-2 font-display text-xl text-text-primary md:text-2xl"></h3>
+        <p data-saint-feast class="mt-1 text-sm text-sacred-gold"></p>
+        <hr class="mt-4 h-px w-12 border-0 bg-sacred-gold" />
+        <p
+          data-saint-bio
+          hidden
+          class="mt-4 italic leading-relaxed text-text-primary/85"
+        ></p>
+        <div class="mt-auto flex items-center justify-between gap-4 pt-4">
+          <a
+            href="/learn/saints/"
+            class="font-display text-sm text-brand-blue-dark no-underline hover:underline"
+          >All Saints &rarr;</a>
+          <button
+            type="button"
+            data-action="close"
+            aria-label="Close Saint of the Day"
+            class="font-display text-xs uppercase tracking-widest text-text-secondary hover:text-text-primary"
+          >&times; close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Saints data inlined for the diptych client script -->
+<script type="application/json" id="diptych-saints-data" is:inline set:html={saintsJson}></script>
+
+<script is:inline>
+  (function () {
+    const dataEl = document.getElementById('diptych-saints-data');
+    const host = document.getElementById('saint-diptych');
+    if (!dataEl || !host) return;
+
+    const saints = JSON.parse(dataEl.textContent);
+    const MONTHS = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December',
+    ];
+
+    // Today's liturgical date = Gregorian − 13 days.
+    const now = new Date();
+    const julian = new Date(now.getTime() - 13 * 24 * 60 * 60 * 1000);
+    const feastKey = MONTHS[julian.getMonth()] + ' ' + julian.getDate();
+
+    const saint = saints.find(
+      (s) => Array.isArray(s.feasts) && s.feasts.includes(feastKey),
+    );
+    if (!saint) return;
+
+    // Right-panel text fields
+    host.querySelector('[data-saint-name]').textContent = saint.name || '';
+    host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + feastKey;
+
+    // Bio: skip the stub placeholder used for entries we haven't
+    // written yet.
+    const isStub =
+      typeof saint.life === 'string' &&
+      saint.life.startsWith('Little is known about this saint beyond their commemoration');
+    if (saint.life && !isStub) {
+      const sentences = saint.life.match(/[^.!?]+[.!?]+/g) || [];
+      const preview = sentences.slice(0, 2).join(' ').trim();
+      if (preview) {
+        const bioEl = host.querySelector('[data-saint-bio]');
+        bioEl.textContent = preview;
+        bioEl.hidden = false;
+      }
+    }
+
+    // Left-panel icon. iconSlug is reserved for future image wiring;
+    // until that exists, every saint falls through to the gold-cross
+    // "ICON PENDING" placeholder.
+    const iconArea = host.querySelector('[data-icon-area]');
+    iconArea.innerHTML = renderFallbackIcon();
+
+    function renderFallbackIcon() {
+      return (
+        '<div class="flex h-full w-full flex-col items-center justify-center text-center">' +
+          '<svg viewBox="0 0 100 200" class="h-3/4 max-h-44 w-auto text-sacred-gold" ' +
+            'fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" aria-hidden="true">' +
+            '<line x1="50" y1="20" x2="50" y2="185" />' +
+            '<line x1="38" y1="42" x2="62" y2="42" />' +
+            '<line x1="25" y1="80" x2="75" y2="80" />' +
+            '<line x1="30" y1="135" x2="70" y2="150" />' +
+          '</svg>' +
+          '<p class="mt-3 font-display text-[10px] uppercase tracking-widest text-text-secondary">Icon Pending</p>' +
+        '</div>'
+      );
+    }
+
+    host.hidden = false;
+
+    // Open / close. Single delegated listener catches the closed-cover
+    // button (data-action="open") and the close button in the right
+    // panel (data-action="close").
+    host.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-action]');
+      if (!trigger) return;
+      const action = trigger.dataset.action;
+      if (action === 'open') {
+        host.dataset.state = 'open';
+      } else if (action === 'close') {
+        host.dataset.state = 'closed';
+      }
+    });
+
+    // Esc closes when open.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && host.dataset.state === 'open') {
+        host.dataset.state = 'closed';
+      }
+    });
+  })();
+</script>
+
+<style>
+  /* State swap: closed/open hide each other */
+  #saint-diptych[data-state="closed"] .diptych-open { display: none; }
+  #saint-diptych[data-state="open"]   .diptych-closed { display: none; }
+
+  /* Latch bounce. Combine vertical centering with horizontal nudge
+     directly in the keyframe transform so it overrides Tailwind
+     utility classes cleanly. */
+  @keyframes diptych-latch-bounce {
+    0%, 100% { transform: translate(0,   -50%); }
+    50%      { transform: translate(6px, -50%); }
+  }
+  .diptych-latch {
+    animation: diptych-latch-bounce 1.8s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .diptych-latch { animation: none; transform: translateY(-50%); }
+  }
+</style>

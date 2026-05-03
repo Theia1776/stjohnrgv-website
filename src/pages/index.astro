@@ -3,15 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import stjohnIcon from "../assets/images/stjohn-of-kronstadt.jpg";
 import { getLiturgicalSeason } from "../lib/liturgical.ts";
-import { saints } from "../lib/saints-lookup";
-
-// Inline the parish saints database for the Saint of the Day card.
-// The card's client-side script reads this JSON, computes today's
-// Julian date (Gregorian − 13 days), and picks the first saint whose
-// feasts array contains the matching "Month Day" string. Same
-// `<` escape pattern calendar.astro uses to keep saint life text
-// containing "</script>" from breaking out.
-const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
+import SaintDiptych from "../components/SaintDiptych.astro";
 
 const parishSchema = {
   "@context": "https://schema.org",
@@ -183,78 +175,14 @@ const services = [
 
 
   <!-- ==================== SAINT OF THE DAY ====================
-       Hidden by default; the inline script below pulls today's Julian
-       date (Gregorian − 13 days) and reveals the section only if a
-       saint in src/data/saints/ has a matching "Month Day" feast. -->
-  <section id="saint-of-day-section" hidden class="bg-cream-bg">
-    <div class="mx-auto max-w-3xl px-4 pt-6 pb-12 md:pt-8 md:pb-16">
-      <article class="border border-brand-tan bg-cream-card p-6 shadow-sm md:p-8">
-        <div class="text-2xl text-sacred-gold" aria-hidden="true">☩</div>
-        <p class="mt-3 text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Saint of the Day</p>
-        <h2 id="saint-of-day-name" class="mt-2 font-display text-2xl text-text-primary md:text-3xl"></h2>
-        <p id="saint-of-day-feast" class="mt-1 text-sm text-text-secondary"></p>
-        <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
-        <p id="saint-of-day-life" hidden class="mt-4 leading-relaxed text-text-primary/85"></p>
-        <p class="mt-6">
-          <a
-            href="/learn/saints/"
-            class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline transition-colors"
-          >
-            View all saints →
-          </a>
-        </p>
-      </article>
+       Self-contained component: hidden until today's Julian date
+       matches a saint in src/data/saints/. Closed-state book opens
+       to a two-panel diptych on click. -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-5xl px-4 pt-6 pb-12 md:pt-8 md:pb-16">
+      <SaintDiptych />
     </div>
   </section>
-
-  <!-- Saints data baked in for the Saint of the Day card. -->
-  <script type="application/json" id="saints-data" is:inline set:html={saintsJson}></script>
-
-  <script is:inline>
-    (function () {
-      const dataEl = document.getElementById('saints-data');
-      const section = document.getElementById('saint-of-day-section');
-      if (!dataEl || !section) return;
-
-      const saints = JSON.parse(dataEl.textContent);
-      const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-      // Today's Julian date = Gregorian − 13 days. Subtracting raw
-      // milliseconds is fine for this offset; DST rolls don't change
-      // the calendar day for a 13-day shift.
-      const now = new Date();
-      const julian = new Date(now.getTime() - 13 * 24 * 60 * 60 * 1000);
-      const feastKey = MONTHS[julian.getMonth()] + ' ' + julian.getDate();
-
-      const match = saints.find(s =>
-        Array.isArray(s.feasts) && s.feasts.includes(feastKey),
-      );
-      if (!match) return;
-
-      document.getElementById('saint-of-day-name').textContent = match.name || '';
-      document.getElementById('saint-of-day-feast').textContent =
-        'Commemorated on ' + feastKey;
-
-      // Skip the placeholder life text used for stub entries.
-      const isStub =
-        typeof match.life === 'string' &&
-        match.life.startsWith('Little is known about this saint beyond their commemoration');
-      if (match.life && !isStub) {
-        // First two sentences. The regex captures runs of non-
-        // sentence-ending characters followed by ./!/? so each
-        // match is a complete sentence with its trailing punctuation.
-        const sentences = match.life.match(/[^.!?]+[.!?]+/g) || [];
-        const preview = sentences.slice(0, 2).join(' ').trim();
-        if (preview) {
-          const lifeEl = document.getElementById('saint-of-day-life');
-          lifeEl.textContent = preview;
-          lifeEl.hidden = false;
-        }
-      }
-
-      section.hidden = false;
-    })();
-  </script>
 
   <!-- ==================== CURRENT SEASON BANNER ====================
        Background and text colors track the active liturgical season via
