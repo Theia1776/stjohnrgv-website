@@ -130,8 +130,9 @@ import Layout from "../layouts/Layout.astro";
         `);
       }
 
-      // Commemorations — titles[1..n] are the saints list
-      const commemorations = (day.titles || []).slice(1);
+      // Commemorations — saints come from day.saints; titles[0] is the
+      // week/tone description and is rendered in the top banner above.
+      const commemorations = day.saints || [];
       if (commemorations.length > 0) {
         const items = commemorations.map(t => `<li class="text-lg leading-snug text-text-primary">• ${escapeHtml(t)}</li>`).join('');
         sections.push(`
@@ -209,10 +210,6 @@ import Layout from "../layouts/Layout.astro";
 
       try {
         const day = await fetchDay(date);
-        // DEBUG: full raw response — used to verify field names for
-        // saints/commemorations and full readings list. Safe to remove
-        // once the data shape is confirmed.
-        console.log('orthocal.info response:', day);
         renderContent(day);
         loading.classList.add('hidden');
         content.classList.remove('hidden');
