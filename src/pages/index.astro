@@ -76,32 +76,12 @@ const season = getLiturgicalSeason(new Date());
 const isPaschal = ["pascha-day", "bright-week", "paschal-season"].includes(season.seasonKey);
 const seasonLabel = `${season.label} — ${season.vestmentName} vestments`;
 
-// Upcoming feasts — corrected for Pascha 2026 = April 12 NS (= March 30 OS).
+// Upcoming feasts — Gregorian dates only (Pascha 2026 = April 12).
 const upcomingFeasts = [
-  {
-    name: "Great and Holy Pascha",
-    osDate: "March 30 OS",
-    nsDate: "April 12 NS",
-    note: "The Resurrection of Our Lord",
-  },
-  {
-    name: "Bright Week",
-    osDate: "March 31 – April 5 OS",
-    nsDate: "April 13 – 18 NS",
-    note: "Daily Paschal services",
-  },
-  {
-    name: "Mid-Pentecost",
-    osDate: "April 23 OS",
-    nsDate: "May 6 NS",
-    note: "The middle of the Paschal season",
-  },
-  {
-    name: "Ascension of Our Lord",
-    osDate: "May 8 OS",
-    nsDate: "May 21 NS",
-    note: "Forty days after Pascha",
-  },
+  { name: "Great and Holy Pascha", date: "April 12",       note: "The Resurrection of Our Lord" },
+  { name: "Bright Week",           date: "April 13 – 18",  note: "Daily Paschal services" },
+  { name: "Mid-Pentecost",         date: "May 6",          note: "The middle of the Paschal season" },
+  { name: "Ascension of Our Lord", date: "May 21",         note: "Forty days after Pascha" },
 ];
 
 const services = [
@@ -110,17 +90,57 @@ const services = [
   { name: "Great Feasts", when: "Per Liturgical Calendar", note: "" },
   { name: "Confession", when: "Saturday at Vespers · or Sunday 8:00–8:45 AM", note: "For urgent needs, contact Fr. Antonios" },
 ];
+
+// Local-business schema with explicit areaServed + corporate name +
+// pastor name. Lives alongside the existing parishSchema so Google
+// has both the descriptive jurisdictional schema and the local-search
+// signals.
+const churchLocalSchema = {
+  "@context": "https://schema.org",
+  "@type": "Church",
+  "name": "St. John of Kronstadt Orthodox Mission",
+  "alternateName": "ST JOHN OF KRONSTADT INC",
+  "url": "https://stjohnrgv.org",
+  "telephone": "+19564490225",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "39737 Palm Drive",
+    "addressLocality": "Bayview",
+    "addressRegion": "TX",
+    "postalCode": "78566",
+    "addressCountry": "US",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 26.0869,
+    "longitude": -97.3849,
+  },
+  "areaServed": [
+    "Bayview TX",
+    "Rio Grande Valley",
+    "McAllen TX",
+    "Harlingen TX",
+    "Brownsville TX",
+  ],
+  "pastor": "Fr. Antonios Altermatt",
+};
 ---
 
 <Layout
   title="St. John of Kronstadt Orthodox Mission | Orthodox Church Rio Grande Valley, TX"
-  description="Orthodox Christian church serving the Rio Grande Valley in Bayview, TX. Weekly Divine Liturgy and a welcoming parish. Fr. Antonios Altermatt. Call (956) 449-0225."
+  description="Orthodox Christian parish in Bayview, TX serving the Rio Grande Valley and McAllen area. Weekly Divine Liturgy. Fr. Antonios Altermatt. (956) 449-0225."
 >
   <script
     slot="head"
     type="application/ld+json"
     is:inline
     set:html={JSON.stringify(parishSchema)}
+  />
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify(churchLocalSchema)}
   />
 
   <!-- ==================== HERO ==================== -->
@@ -388,9 +408,7 @@ const services = [
           <article class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-blue">
             <h3 class="font-display text-xl text-text-primary">{f.name}</h3>
             <p class="mt-2 text-sm text-brand-blue-dark">
-              <span class="font-display">{f.osDate}</span>
-              <span class="mx-2 text-brand-tan-dark">·</span>
-              <span class="font-display">{f.nsDate}</span>
+              <span class="font-display">{f.date}</span>
             </p>
             <p class="mt-3 text-sm text-text-secondary">{f.note}</p>
           </article>
