@@ -1,11 +1,63 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+const contactSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "St. John of Kronstadt Orthodox Mission",
+  "url": "https://stjohnrgv.org/contact/",
+  "telephone": "+1-956-449-0225",
+  "email": "parishoffice@stjohnrgv.org",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "39737 Palm Drive",
+    "addressLocality": "Bayview",
+    "addressRegion": "TX",
+    "postalCode": "78566",
+    "addressCountry": "US",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 26.0869,
+    "longitude": -97.3849,
+  },
+  "areaServed": [
+    "Bayview TX",
+    "Rio Grande Valley",
+    "McAllen TX",
+    "Harlingen TX",
+    "Brownsville TX",
+  ],
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "17:00",
+      "closes": "18:30",
+      "name": "Vespers",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Sunday",
+      "opens": "09:00",
+      "closes": "12:00",
+      "name": "Divine Liturgy",
+    },
+  ],
+};
 ---
 
 <Layout
   title="Contact Us | St. John of Kronstadt Orthodox Mission"
   description="Contact St. John of Kronstadt Orthodox Mission in Bayview, TX. Visiting, catechumen inquiries, prayer requests — serving the Rio Grande Valley."
 >
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify(contactSchema)}
+  />
+
   <!-- ==================== PAGE HEADER ==================== -->
   <section class="bg-cream-bg">
     <div class="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-20">
