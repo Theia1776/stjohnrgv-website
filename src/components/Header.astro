@@ -51,7 +51,15 @@ function isActive(href: string): boolean {
             </a>
           );
         })}
-        <a href="/about/#schedule" class="btn btn-primary">
+        <a
+          href="/about/#schedule"
+          class:list={[
+            "no-underline transition-colors py-1 border-b-2",
+            currentPath === "/about/#schedule"
+              ? "text-text-primary border-liturgical-current"
+              : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
+          ]}
+        >
           Plan Your Visit
         </a>
       </nav>
@@ -163,7 +171,7 @@ function isActive(href: string): boolean {
       if (response.ok && data.loggedIn) {
         const name = escapeHtml(data.name || "Member");
         authNav.innerHTML = `
-          <span class="font-display text-sm text-brand-blue-dark">Hi, ${name}</span>
+          <span class="font-display text-sm text-brand-blue-dark">${name}</span>
           <button id="sign-out-button" type="button" class="btn btn-primary whitespace-nowrap text-xs font-display uppercase tracking-[0.26em] py-2">
             Sign Out
           </button>
