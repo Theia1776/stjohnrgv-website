@@ -15,7 +15,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
-import { verifySession } from "../../learn/_auth";
+import { verifySession } from "../../../src/lib/session.ts";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
