@@ -11,42 +11,11 @@
  * (max 1 hour by default).
  */
 
-import { createClient, type User } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SESSION_COOKIE } from "../../src/lib/supabase";
+import { verifySession } from "../../src/lib/session.ts";
 
 interface PagesContext {
   request: Request;
   next: () => Promise<Response>;
-}
-
-export function readCookie(request: Request, name: string): string | null {
-  const header = request.headers.get("Cookie");
-  if (!header) return null;
-  for (const part of header.split(";")) {
-    const [k, ...rest] = part.trim().split("=");
-    if (k === name) return rest.join("=");
-  }
-  return null;
-}
-
-/**
- * Returns the Supabase user if the request carries a valid session cookie,
- * or null otherwise. Shared by the page-protecting middleware (which
- * redirects to /login on null) and the JSON API endpoints (which return
- * 401). Keeping the verification in one place means a Supabase client SDK
- * change only needs editing here.
- */
-export async function verifySession(request: Request): Promise<User | null> {
-  const token = readCookie(request, SESSION_COOKIE);
-  if (!token) return null;
-
-  const auth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-
-  const { data, error } = await auth.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user;
 }
 
 function loginRedirect(request: Request): Response {

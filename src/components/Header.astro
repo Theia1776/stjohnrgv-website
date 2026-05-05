@@ -8,6 +8,7 @@ const navLinks = [
 ];
 
 const currentPath = Astro.url.pathname;
+const userFirstName = Astro.props.userFirstName as string | null;
 
 /** True when this nav link should be marked as the current page. */
 function isActive(href: string): boolean {
@@ -56,6 +57,15 @@ function isActive(href: string): boolean {
         </a>
       </nav>
 
+      {userFirstName ? (
+        <div class="hidden md:flex items-center gap-3 text-sm">
+          <span class="text-text-primary/80">Hi, {userFirstName}</span>
+          <button type="button" id="sign-out-button" class="btn btn-secondary whitespace-nowrap">
+            Sign Out
+          </button>
+        </div>
+      ) : null}
+
       <button
         type="button"
         id="theme-toggle"
@@ -101,6 +111,15 @@ function isActive(href: string): boolean {
       <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
         Plan Your Visit
       </a>
+      {userFirstName ? (
+        <button
+          id="mobile-sign-out-button"
+          type="button"
+          class="btn btn-secondary mt-3 w-full"
+        >
+          Sign Out
+        </button>
+      ) : null}
     </nav>
   </div>
 </header>
@@ -112,6 +131,25 @@ function isActive(href: string): boolean {
     const open = menu?.classList.toggle("hidden") === false;
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  });
+
+  const signOutButtons = [
+    document.getElementById("sign-out-button"),
+    document.getElementById("mobile-sign-out-button"),
+  ].filter(Boolean);
+
+  signOutButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+      } finally {
+        window.location.assign("/");
+      }
+    });
   });
 </script>
 
