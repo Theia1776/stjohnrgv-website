@@ -17,7 +17,7 @@ import Layout from "../../layouts/Layout.astro";
     <div class="mx-auto mt-10 max-w-2xl text-center">
       <a
         href="/login/?tab=register"
-        class="font-display text-sm text-brand-blue-dark underline decoration-brand-blue-dark decoration-1 underline-offset-4 hover:text-brand-blue"
+        class="font-display text-sm text-brand-blue-dark hover:text-brand-blue no-underline"
       >
         Parishioner Registration
       </a>
@@ -53,19 +53,16 @@ import Layout from "../../layouts/Layout.astro";
         </a>
       </article>
 
-      <article class="border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8">
+      <article>
         <a
           href="/learn/catechumen/"
-          class="block h-full no-underline"
+          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
         >
           <h2 class="font-display text-xl text-text-primary">Catechumen Learning</h2>
           <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
           <p class="mt-4 leading-relaxed text-text-secondary">
             An introduction to the Orthodox faith for those exploring or preparing for chrismation.
           </p>
-        </a>
-        <a href="/login/?tab=register" class="mt-4 inline-block text-sm text-brand-blue-dark hover:text-brand-blue">
-          Parishioner Registration
         </a>
       </article>
 
