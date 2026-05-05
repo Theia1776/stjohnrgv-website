@@ -1,19 +1,143 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import booksData from "../../data/library/books.json";
+
+interface Book {
+  slug: string;
+  title: string;
+  author: string;
+  category: string;
+  languages: string[];
+  description: string;
+  pdfStorageKey: string;
+}
+
+const books = (booksData as { books: Book[] }).books;
+
+// Fixed filter set per spec — even categories that aren't yet present in
+// the catalog show as tabs so the shape of the library is visible.
+const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scripture"];
 ---
 
 <Layout
   title="Parish Library | Orthodox Texts, Bayview TX"
   description="Orthodox Christian texts, patristic writings, sermons, and True Orthodoxy documents — St. John of Kronstadt Orthodox Mission, Bayview TX, Rio Grande Valley."
 >
-  <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
-    <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Resources</p>
-    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Parish Library</h1>
-    <p class="mt-6 text-lg text-text-primary/80">
-      Coming soon. This section will contain texts, sermons, and documents from the parish and the wider Orthodox tradition.
-    </p>
-    <p class="mt-4 text-text-primary/75">
-      In the meantime, <a href="/contact/">reach out to Fr. Antonios</a> for reading recommendations.
-    </p>
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Parish Resources</p>
+      <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Parish Library</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+
+      <p class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
+        Texts for prayer and study, available to registered members of the
+        parish. Click a title to open the in-browser reader.
+      </p>
+
+      <!-- ============== FILTER TABS ============== -->
+      <div
+        role="tablist"
+        aria-label="Filter library by category"
+        class="mt-10 flex flex-wrap gap-x-1 gap-y-2 border-b border-border-soft"
+      >
+        {categories.map((cat, i) => (
+          <button
+            type="button"
+            role="tab"
+            data-filter={cat}
+            aria-selected={i === 0 ? "true" : "false"}
+            class:list={[
+              "library-tab -mb-px border-b-2 px-3 py-2 font-display text-sm font-semibold uppercase tracking-widest",
+              i === 0
+                ? "border-brand-blue-dark text-brand-blue-dark"
+                : "border-transparent text-text-secondary hover:text-text-primary",
+            ]}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <!-- ============== CARD GRID ============== -->
+      <div id="library-grid" class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {books.map((book) => (
+          <article
+            data-category={book.category}
+            class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+          >
+            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+              {book.category}
+            </p>
+            <h2 class="mt-2 font-display text-xl text-text-primary leading-snug">
+              {book.title}
+            </h2>
+            <p class="mt-2 text-sm italic text-text-secondary">{book.author}</p>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              {book.languages.map((lang) => (
+                <span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">
+                  {lang}
+                </span>
+              ))}
+            </div>
+
+            <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">
+              {book.description}
+            </p>
+
+            <div class="mt-6 flex-grow"></div>
+
+            <p>
+              <a
+                href={`/learn/library/${book.slug}/`}
+                class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+              >
+                Read →
+              </a>
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <!-- Empty-state for filters that select an empty category -->
+      <p
+        id="library-empty"
+        hidden
+        class="mt-10 text-center text-text-secondary italic"
+      >
+        No texts in this category yet.
+      </p>
+    </div>
   </section>
+
+  <script>
+    const tabs = document.querySelectorAll<HTMLButtonElement>(".library-tab");
+    const cards = document.querySelectorAll<HTMLElement>(".library-card");
+    const empty = document.getElementById("library-empty") as HTMLParagraphElement;
+
+    function applyFilter(filter: string) {
+      let visible = 0;
+      cards.forEach((card) => {
+        const show = filter === "All" || card.dataset.category === filter;
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      empty.hidden = visible !== 0;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const filter = tab.dataset.filter || "All";
+        tabs.forEach((t) => {
+          const active = t === tab;
+          t.setAttribute("aria-selected", String(active));
+          t.classList.toggle("border-brand-blue-dark", active);
+          t.classList.toggle("text-brand-blue-dark", active);
+          t.classList.toggle("border-transparent", !active);
+          t.classList.toggle("text-text-secondary", !active);
+        });
+        applyFilter(filter);
+      });
+    });
+  </script>
 </Layout>

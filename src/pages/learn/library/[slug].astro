@@ -1,0 +1,405 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import booksData from "../../../data/library/books.json";
+
+interface Book {
+  slug: string;
+  title: string;
+  author: string;
+  category: string;
+  languages: string[];
+  description: string;
+  pdfStorageKey: string;
+}
+
+export async function getStaticPaths() {
+  const books = (booksData as { books: Book[] }).books;
+  return books.map((book) => ({
+    params: { slug: book.slug },
+    props: { book },
+  }));
+}
+
+interface Props { book: Book; }
+const { book } = Astro.props as Props;
+---
+
+<Layout
+  title={`${book.title} | Parish Library`}
+  description={book.description}
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <!-- Reader-only theming. The site has light/dark mode but the reader
+       always uses a dark frame so the white PDF pages pop. The toolbar
+       and breadcrumb stay in the site's regular theme above. -->
+  <style is:global>
+    .pdf-stage { background: #1d1f23; }
+    .pdf-page-canvas {
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+
+  <!-- ============== HEADER + TOOLBAR ============== -->
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-6xl px-4 pt-10 pb-6 md:px-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+        <a href="/learn/library/" class="text-brand-tan-dark no-underline hover:underline">
+          ← Parish Library
+        </a>
+      </p>
+      <h1 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">{book.title}</h1>
+      <p class="mt-2 text-sm italic text-text-secondary">{book.author}</p>
+    </div>
+
+    <div class="mx-auto max-w-6xl px-4 pb-4 md:px-6">
+      <div
+        class="flex flex-wrap items-center gap-3 border border-border-soft bg-cream-card p-3 shadow-sm md:gap-4 md:p-4"
+        role="toolbar"
+        aria-label="Reader controls"
+      >
+        <!-- Mode toggle -->
+        <div role="group" aria-label="View mode" class="flex">
+          <button
+            id="mode-scroll"
+            type="button"
+            aria-pressed="true"
+            class="border border-brand-blue-dark bg-brand-blue-dark px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-cream-card"
+          >
+            Scroll
+          </button>
+          <button
+            id="mode-book"
+            type="button"
+            aria-pressed="false"
+            class="border border-brand-blue-dark border-l-0 bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark"
+          >
+            Book
+          </button>
+        </div>
+
+        <!-- Pager -->
+        <div class="ml-auto flex items-center gap-2">
+          <button
+            id="pager-prev"
+            type="button"
+            class="border border-border-soft bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Prev
+          </button>
+          <span
+            id="pager-status"
+            class="font-display text-xs uppercase tracking-widest text-text-secondary"
+            aria-live="polite"
+          >
+            Loading…
+          </span>
+          <button
+            id="pager-next"
+            type="button"
+            class="border border-border-soft bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== READER STAGE ============== -->
+  <section class="pdf-stage">
+    <div
+      id="pdf-viewer"
+      class="mx-auto min-h-[60vh] max-w-6xl px-4 py-8 md:px-6 md:py-12"
+      data-storage-key={book.pdfStorageKey}
+    >
+      <p id="pdf-loading" class="text-center font-display text-sm uppercase tracking-widest text-cream-card/70">
+        Loading text…
+      </p>
+      <p
+        id="pdf-error"
+        hidden
+        role="alert"
+        class="mx-auto max-w-md border border-liturgical-red bg-cream-card p-4 text-center text-sm text-liturgical-red"
+      ></p>
+    </div>
+  </section>
+
+  <!-- PDF.js — pinned to 3.11.174 -->
+  <script
+    is:inline
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+  ></script>
+
+  <script>
+    // PDF.js attaches itself as window.pdfjsLib. Declare a typed shim so
+    // TypeScript stops complaining; the actual API surface is documented
+    // at https://mozilla.github.io/pdf.js/api/.
+    interface PDFViewport { width: number; height: number; }
+    interface PDFPage {
+      getViewport(opts: { scale: number }): PDFViewport;
+      render(opts: { canvasContext: CanvasRenderingContext2D; viewport: PDFViewport }): { promise: Promise<void> };
+    }
+    interface PDFDocument {
+      numPages: number;
+      getPage(n: number): Promise<PDFPage>;
+    }
+    interface PDFJSLib {
+      GlobalWorkerOptions: { workerSrc: string };
+      getDocument(opts: { url: string } | string): { promise: Promise<PDFDocument> };
+    }
+    const pdfjsLib = (window as unknown as { pdfjsLib: PDFJSLib }).pdfjsLib;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const viewer = document.getElementById("pdf-viewer") as HTMLDivElement;
+    const loadingEl = document.getElementById("pdf-loading") as HTMLParagraphElement;
+    const errorEl = document.getElementById("pdf-error") as HTMLParagraphElement;
+    const modeScrollBtn = document.getElementById("mode-scroll") as HTMLButtonElement;
+    const modeBookBtn = document.getElementById("mode-book") as HTMLButtonElement;
+    const prevBtn = document.getElementById("pager-prev") as HTMLButtonElement;
+    const nextBtn = document.getElementById("pager-next") as HTMLButtonElement;
+    const statusEl = document.getElementById("pager-status") as HTMLSpanElement;
+
+    type Mode = "scroll" | "book";
+    let mode: Mode = "scroll";
+    let pdf: PDFDocument | null = null;
+    let currentPage = 1;
+    // Cache rendered scroll-mode canvases so toggling modes doesn't
+    // re-render every page.
+    const scrollCanvases = new Map<number, HTMLCanvasElement>();
+
+    function showError(msg: string) {
+      loadingEl.hidden = true;
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+
+    function setStatus() {
+      if (!pdf) {
+        statusEl.textContent = "Loading…";
+        return;
+      }
+      if (mode === "scroll") {
+        statusEl.textContent = `Page ${currentPage} of ${pdf.numPages}`;
+      } else {
+        // Book mode shows a spread; report as e.g. "2-3 of 50".
+        const left = currentPage;
+        const right = Math.min(currentPage + 1, pdf.numPages);
+        statusEl.textContent =
+          left === right
+            ? `Page ${left} of ${pdf.numPages}`
+            : `Pages ${left}-${right} of ${pdf.numPages}`;
+      }
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled =
+        mode === "scroll"
+          ? currentPage >= pdf.numPages
+          : currentPage + 1 > pdf.numPages;
+    }
+
+    async function renderToCanvas(pageNum: number, targetWidth: number): Promise<HTMLCanvasElement> {
+      const page = await pdf!.getPage(pageNum);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = targetWidth / baseViewport.width;
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement("canvas");
+      canvas.className = "pdf-page-canvas";
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.maxWidth = "100%";
+      canvas.style.height = "auto";
+      canvas.dataset.pageNum = String(pageNum);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas 2D context unavailable.");
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return canvas;
+    }
+
+    function clearViewer() {
+      viewer.querySelectorAll(".pdf-stack, .pdf-spread").forEach((n) => n.remove());
+    }
+
+    async function renderScroll() {
+      clearViewer();
+      const stack = document.createElement("div");
+      stack.className = "pdf-stack space-y-6";
+      viewer.appendChild(stack);
+
+      const targetWidth = Math.min(viewer.clientWidth - 32, 900);
+
+      for (let i = 1; i <= pdf!.numPages; i++) {
+        let canvas = scrollCanvases.get(i);
+        if (!canvas) {
+          canvas = await renderToCanvas(i, targetWidth);
+          scrollCanvases.set(i, canvas);
+        }
+        // Anchor for prev/next scrolling.
+        canvas.id = `pdf-page-${i}`;
+        stack.appendChild(canvas);
+      }
+
+      // Track current page in scroll mode by which canvas is closest to top.
+      const obs = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting && e.intersectionRatio > 0.5) {
+              const n = Number((e.target as HTMLElement).dataset.pageNum);
+              if (n) {
+                currentPage = n;
+                setStatus();
+              }
+            }
+          }
+        },
+        { threshold: [0.5] },
+      );
+      stack.querySelectorAll<HTMLCanvasElement>(".pdf-page-canvas").forEach((c) => obs.observe(c));
+    }
+
+    async function renderSpread() {
+      clearViewer();
+      const spread = document.createElement("div");
+      spread.className =
+        "pdf-spread relative grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6";
+      viewer.appendChild(spread);
+
+      // Aim for each page to fill ~half the container, capped so very wide
+      // viewports don't make the pages cartoonish.
+      const halfWidth = Math.min((viewer.clientWidth - 64) / 2, 700);
+
+      const left = await renderToCanvas(currentPage, halfWidth);
+      spread.appendChild(left);
+
+      if (currentPage + 1 <= pdf!.numPages) {
+        const right = await renderToCanvas(currentPage + 1, halfWidth);
+        spread.appendChild(right);
+      }
+
+      // Click-edge navigation: left half = prev spread, right half = next.
+      // Overlay sits above the canvases but below the toolbar (which is in
+      // a separate section), and forwards clicks via stopPropagation only
+      // when one of the halves is hit.
+      const overlay = document.createElement("div");
+      overlay.className = "pointer-events-none absolute inset-0 grid grid-cols-2";
+      const leftHalf = document.createElement("div");
+      leftHalf.className = "pointer-events-auto cursor-w-resize";
+      leftHalf.title = "Previous spread";
+      leftHalf.addEventListener("click", () => goPrev());
+      const rightHalf = document.createElement("div");
+      rightHalf.className = "pointer-events-auto cursor-e-resize";
+      rightHalf.title = "Next spread";
+      rightHalf.addEventListener("click", () => goNext());
+      overlay.appendChild(leftHalf);
+      overlay.appendChild(rightHalf);
+      spread.appendChild(overlay);
+    }
+
+    async function render() {
+      if (!pdf) return;
+      if (mode === "scroll") await renderScroll();
+      else await renderSpread();
+      setStatus();
+    }
+
+    function goPrev() {
+      if (!pdf) return;
+      if (mode === "scroll") {
+        currentPage = Math.max(1, currentPage - 1);
+        document.getElementById(`pdf-page-${currentPage}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setStatus();
+      } else {
+        currentPage = Math.max(1, currentPage - 2);
+        render();
+      }
+    }
+
+    function goNext() {
+      if (!pdf) return;
+      if (mode === "scroll") {
+        currentPage = Math.min(pdf.numPages, currentPage + 1);
+        document.getElementById(`pdf-page-${currentPage}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setStatus();
+      } else {
+        if (currentPage + 2 <= pdf.numPages) currentPage += 2;
+        render();
+      }
+    }
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+
+    function setMode(next: Mode) {
+      if (mode === next) return;
+      mode = next;
+      const isScroll = mode === "scroll";
+      modeScrollBtn.setAttribute("aria-pressed", String(isScroll));
+      modeBookBtn.setAttribute("aria-pressed", String(!isScroll));
+      modeScrollBtn.classList.toggle("bg-brand-blue-dark", isScroll);
+      modeScrollBtn.classList.toggle("text-cream-card", isScroll);
+      modeScrollBtn.classList.toggle("bg-cream-card", !isScroll);
+      modeScrollBtn.classList.toggle("text-brand-blue-dark", !isScroll);
+      modeBookBtn.classList.toggle("bg-brand-blue-dark", !isScroll);
+      modeBookBtn.classList.toggle("text-cream-card", !isScroll);
+      modeBookBtn.classList.toggle("bg-cream-card", isScroll);
+      modeBookBtn.classList.toggle("text-brand-blue-dark", isScroll);
+      // When entering book mode, snap the current page to the start of a
+      // spread (left page is always odd-indexed: 1, 3, 5, …) so the
+      // current page stays visible.
+      if (!isScroll && currentPage % 2 === 0) currentPage -= 1;
+      render();
+    }
+    modeScrollBtn.addEventListener("click", () => setMode("scroll"));
+    modeBookBtn.addEventListener("click", () => setMode("book"));
+
+    // Keyboard navigation: ←/→ move the pager. Skip when the user is
+    // typing into an input — the parish library doesn't have any such
+    // inputs today, but the check is cheap.
+    document.addEventListener("keydown", (e) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    });
+
+    // ============================================================
+    // BOOTSTRAP — fetch signed URL, then load PDF
+    // ============================================================
+    (async () => {
+      const key = viewer.dataset.storageKey || "";
+      try {
+        const res = await fetch(`/api/library/pdf?key=${encodeURIComponent(key)}`, {
+          headers: { Accept: "application/json" },
+        });
+        if (res.status === 401) {
+          location.assign(
+            `/login/?next=${encodeURIComponent(location.pathname)}`,
+          );
+          return;
+        }
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          showError(json.error || `Could not load text (${res.status}).`);
+          return;
+        }
+        const { url } = (await res.json()) as { url: string };
+        pdf = await pdfjsLib.getDocument({ url }).promise;
+        loadingEl.hidden = true;
+        await render();
+      } catch (e) {
+        showError(`Could not load text: ${(e as Error).message || e}`);
+      }
+    })();
+  </script>
+</Layout>
