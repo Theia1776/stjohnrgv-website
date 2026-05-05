@@ -8,7 +8,6 @@ const navLinks = [
 ];
 
 const currentPath = Astro.url.pathname;
-const userFirstName = Astro.props.userFirstName as string | null;
 
 /** True when this nav link should be marked as the current page. */
 function isActive(href: string): boolean {
@@ -57,14 +56,7 @@ function isActive(href: string): boolean {
         </a>
       </nav>
 
-      {userFirstName ? (
-        <div class="hidden md:flex items-center gap-3 text-sm">
-          <span class="text-text-primary/80">Hi, {userFirstName}</span>
-          <button type="button" id="sign-out-button" class="btn btn-secondary whitespace-nowrap">
-            Sign Out
-          </button>
-        </div>
-      ) : null}
+      <div id="auth-nav" class="hidden md:flex items-center gap-3 text-sm"></div>
 
       <button
         type="button"
@@ -111,15 +103,7 @@ function isActive(href: string): boolean {
       <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
         Plan Your Visit
       </a>
-      {userFirstName ? (
-        <button
-          id="mobile-sign-out-button"
-          type="button"
-          class="btn btn-secondary mt-3 w-full"
-        >
-          Sign Out
-        </button>
-      ) : null}
+      <div id="mobile-auth-nav" class="mt-3"></div>
     </nav>
   </div>
 </header>
@@ -133,24 +117,78 @@ function isActive(href: string): boolean {
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
 
-  const signOutButtons = [
-    document.getElementById("sign-out-button"),
-    document.getElementById("mobile-sign-out-button"),
-  ].filter(Boolean);
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
-  signOutButtons.forEach((button) => {
-    button.addEventListener("click", async () => {
-      try {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-      } finally {
-        window.location.assign("/");
-      }
+  function attachSignOutHandlers() {
+    const buttons = [
+      document.getElementById("sign-out-button"),
+      document.getElementById("mobile-sign-out-button"),
+    ].filter(Boolean);
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            cache: "no-store",
+          });
+        } finally {
+          window.location.assign("/");
+        }
+      });
     });
-  });
+  }
+
+  async function updateAuthNav() {
+    const authNav = document.getElementById("auth-nav");
+    const mobileAuthNav = document.getElementById("mobile-auth-nav");
+
+    if (!authNav || !mobileAuthNav) return;
+
+    try {
+      const response = await fetch("/api/auth/me", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      if (response.ok && data.loggedIn) {
+        const name = escapeHtml(data.name || "Member");
+        authNav.innerHTML = `
+          <span class="font-display text-sm text-brand-blue-dark">Hi, ${name}</span>
+          <button id="sign-out-button" type="button" class="btn btn-primary whitespace-nowrap text-xs font-display uppercase tracking-[0.26em] py-2">
+            Sign Out
+          </button>
+        `;
+        mobileAuthNav.innerHTML = `
+          <button id="mobile-sign-out-button" type="button" class="btn btn-primary w-full">
+            Sign Out
+          </button>
+        `;
+        attachSignOutHandlers();
+        return;
+      }
+    } catch (error) {
+      // Gracefully fall through to show sign-in when unauthenticated or on error.
+    }
+
+    authNav.innerHTML = `
+      <a href="/login/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue">Sign In</a>
+    `;
+    mobileAuthNav.innerHTML = `
+      <a href="/login/" class="btn btn-secondary w-full">Sign In</a>
+    `;
+  }
+
+  updateAuthNav();
 </script>
 
 <script is:inline>

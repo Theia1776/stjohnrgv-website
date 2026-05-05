@@ -3,7 +3,6 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { getLiturgicalSeason } from "../lib/liturgical.ts";
-import { getFirstName, verifySession } from "../lib/session.ts";
 
 interface Props {
   title: string;
@@ -21,9 +20,6 @@ const {
   canonical = SITE_URL + Astro.url.pathname,
   ogImage = DEFAULT_OG,
 } = Astro.props;
-
-const user = await verifySession(Astro.request);
-const userFirstName = user ? getFirstName(user) : null;
 
 const ogImageUrl = ogImage.startsWith("http") ? ogImage : SITE_URL + ogImage;
 
@@ -95,7 +91,7 @@ const liturgicalRootStyle =
          times. The signature seasonal-color element on every page. -->
     <div class="sticky top-0 z-50 h-1 w-full bg-liturgical-current" aria-hidden="true"></div>
 
-    <Header userFirstName={userFirstName} />
+    <Header />
     <main class="flex-1">
       <slot />
     </main>
