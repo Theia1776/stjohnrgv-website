@@ -68,13 +68,7 @@ interface PagesContext {
 
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return jsonResponse(
-      {
-        error: "Server not configured.",
-        debug_keys: Object.keys(context.env || {}),
-      },
-      500,
-    );
+    return jsonResponse({ error: "Server not configured." }, 500);
   }
 
   let body: { email?: unknown; password?: unknown; full_name?: unknown };
