@@ -16,55 +16,17 @@ const PROFILE_COLUMNS =
   "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
   "opt_in_communications";
 
-function debugInfo(request: Request, env: Env, user: { id: string } | null) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const cookieNames = cookieHeader
-    .split(";")
-    .map((c) => c.trim().split("=")[0])
-    .filter(Boolean);
-  return {
-    method: request.method,
-    url: request.url,
-    contentType: request.headers.get("content-type"),
-    hasCookieHeader: Boolean(cookieHeader),
-    cookieNames,
-    hasServiceRoleKey: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
-    sessionVerified: Boolean(user),
-    userId: user?.id ?? null,
-  };
-}
-
 function jsonResponse(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body, null, 2), {
+  return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
-function describeError(err: unknown): Record<string, unknown> {
-  if (err instanceof Error) {
-    return {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-      cause: err.cause ? String(err.cause) : undefined,
-    };
-  }
-  try {
-    return { value: JSON.parse(JSON.stringify(err)) };
-  } catch {
-    return { value: String(err) };
-  }
-}
-
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  let debug: Record<string, unknown> = { phase: "init", method: context.request.method };
   try {
     const user = await verifySession(context.request);
-    debug = debugInfo(context.request, context.env, user);
-    console.log("[profile GET]", JSON.stringify(debug));
-
-    if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
+    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
     const supabase = getSupabase(context.env);
     const { data, error } = await supabase
@@ -73,44 +35,26 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .eq("id", user.id)
       .single();
 
-    if (error) {
-      console.log("[profile GET db error]", JSON.stringify(error));
-      return jsonResponse(
-        {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          debug,
-        },
-        404,
-      );
-    }
+    if (error) return jsonResponse({ error: error.message }, 404);
     return Response.json(data);
   } catch (err) {
-    const exc = describeError(err);
-    console.log("[profile GET unhandled]", JSON.stringify(exc));
-    return jsonResponse({ error: "Unhandled exception", exception: exc, debug }, 500);
+    return jsonResponse(
+      { error: err instanceof Error ? err.message : "Internal error" },
+      500,
+    );
   }
 }
 
 export async function onRequestPatch(context: { request: Request; env: Env }): Promise<Response> {
-  let debug: Record<string, unknown> = { phase: "init", method: context.request.method };
   try {
     const user = await verifySession(context.request);
-    debug = debugInfo(context.request, context.env, user);
-    console.log("[profile PATCH]", JSON.stringify(debug));
-
-    if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
+    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
     let body: Record<string, unknown>;
     try {
       body = await context.request.json();
-    } catch (err) {
-      return jsonResponse(
-        { error: "Invalid JSON", parseError: err instanceof Error ? err.message : String(err), debug },
-        400,
-      );
+    } catch {
+      return jsonResponse({ error: "Invalid JSON" }, 400);
     }
 
     const allowed = [
@@ -125,32 +69,18 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
       if (key in body) updates[key] = body[key];
     }
 
-    console.log("[profile PATCH updates]", JSON.stringify({ keys: Object.keys(updates) }));
-
     const supabase = getSupabase(context.env);
     const { error } = await supabase
       .from("profiles")
       .update(updates)
       .eq("id", user.id);
 
-    if (error) {
-      console.log("[profile PATCH db error]", JSON.stringify(error));
-      return jsonResponse(
-        {
-          error: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          attemptedKeys: Object.keys(updates),
-          debug,
-        },
-        500,
-      );
-    }
+    if (error) return jsonResponse({ error: error.message }, 500);
     return new Response(null, { status: 204 });
   } catch (err) {
-    const exc = describeError(err);
-    console.log("[profile PATCH unhandled]", JSON.stringify(exc));
-    return jsonResponse({ error: "Unhandled exception", exception: exc, debug }, 500);
+    return jsonResponse(
+      { error: err instanceof Error ? err.message : "Internal error" },
+      500,
+    );
   }
 }
