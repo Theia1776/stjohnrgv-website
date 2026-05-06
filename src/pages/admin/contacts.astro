@@ -1,0 +1,341 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="Parish Administration | St. John of Kronstadt"
+  description="Internal admin tools for parish contacts and directory."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="font-display text-3xl text-text-primary mb-6 md:text-4xl">Parish Administration</h1>
+
+    <div id="loading" class="text-text-secondary">Loading…</div>
+    <div id="error-msg" class="text-liturgical-red hidden mb-4"></div>
+
+    <div id="app" class="hidden">
+      <!-- Tab bar -->
+      <div class="flex gap-2 mb-6 no-print" role="tablist">
+        <button id="tab-contacts" type="button" class="btn btn-primary" data-tab="contacts" role="tab" aria-selected="true">
+          Contact List
+        </button>
+        <button id="tab-directory" type="button" class="btn btn-secondary" data-tab="directory" role="tab" aria-selected="false">
+          Parish Directory
+        </button>
+      </div>
+
+      <!-- Contacts tab -->
+      <section id="panel-contacts" role="tabpanel" aria-labelledby="tab-contacts">
+        <div class="flex flex-wrap gap-3 mb-4 no-print items-center">
+          <input id="search" type="search" placeholder="Search by name…"
+            class="flex-1 min-w-48 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          <button id="copy-emails-btn" type="button" class="btn btn-primary">Copy All Emails</button>
+          <button id="download-csv-btn" type="button" class="btn btn-secondary">Download CSV</button>
+        </div>
+
+        <div class="overflow-x-auto border border-border-soft rounded">
+          <table id="contacts-table" class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-brand-blue-dark text-cream-bg text-left">
+                <th class="p-2">Name</th>
+                <th class="p-2">Email</th>
+                <th class="p-2">Phone</th>
+                <th class="p-2">Address</th>
+                <th class="p-2">Emergency 1</th>
+                <th class="p-2">Emergency 2</th>
+                <th class="p-2">Directory</th>
+              </tr>
+            </thead>
+            <tbody id="contacts-tbody"></tbody>
+          </table>
+        </div>
+        <p id="contacts-empty" class="text-text-secondary mt-4 hidden">No opted-in contacts yet.</p>
+      </section>
+
+      <!-- Directory tab -->
+      <section id="panel-directory" class="hidden" role="tabpanel" aria-labelledby="tab-directory">
+        <div class="flex flex-wrap gap-3 mb-4 no-print">
+          <button id="copy-dir-emails-btn" type="button" class="btn btn-primary">Copy Shared Emails</button>
+          <button id="print-dir-btn" type="button" class="btn btn-secondary">Print Directory</button>
+        </div>
+
+        <div id="directory-list" class="md:columns-2 gap-8"></div>
+        <p id="directory-empty" class="text-text-secondary mt-4 hidden">No directory entries yet.</p>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    header, footer, nav { display: none !important; }
+    .directory-entry { break-inside: avoid; }
+    body { font-family: Georgia, serif; font-size: 11pt; }
+  }
+</style>
+
+<script>
+  type Contact = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    phone: string | null;
+    address_line1: string | null;
+    address_line2: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+    emergency_name: string | null;
+    emergency_relationship: string | null;
+    emergency_phone: string | null;
+    emergency_name_2: string | null;
+    emergency_relationship_2: string | null;
+    emergency_phone_2: string | null;
+    opt_in_directory: boolean | null;
+  };
+
+  type DirEntry = {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email: string | null;
+    address_line1: string | null;
+    address_line2: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+  };
+
+  let allContacts: Contact[] = [];
+  let directoryEntries: DirEntry[] = [];
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showError(message: string) {
+    const el = document.getElementById("error-msg");
+    const loading = document.getElementById("loading");
+    if (el) {
+      el.textContent = message;
+      el.classList.remove("hidden");
+    }
+    if (loading) loading.classList.add("hidden");
+  }
+
+  async function init() {
+    try {
+      const [contactsRes, dirRes] = await Promise.all([
+        fetch("/api/admin/contacts", { credentials: "same-origin", cache: "no-store" }),
+        fetch("/api/admin/directory", { credentials: "same-origin", cache: "no-store" }),
+      ]);
+
+      if (contactsRes.status === 401 || contactsRes.status === 403) {
+        window.location.assign("/");
+        return;
+      }
+      if (!contactsRes.ok) {
+        showError(`Couldn't load contacts (${contactsRes.status}).`);
+        return;
+      }
+      if (!dirRes.ok) {
+        showError(`Couldn't load directory (${dirRes.status}).`);
+        return;
+      }
+
+      const contactsData = await contactsRes.json();
+      const dirData = await dirRes.json();
+      allContacts = contactsData.contacts ?? [];
+      directoryEntries = dirData.entries ?? [];
+
+      document.getElementById("loading")?.classList.add("hidden");
+      document.getElementById("app")?.classList.remove("hidden");
+      renderContacts(allContacts);
+      renderDirectory(directoryEntries);
+    } catch (err) {
+      showError(`Couldn't load admin data: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  function showTab(tab: "contacts" | "directory") {
+    const panelContacts = document.getElementById("panel-contacts");
+    const panelDir = document.getElementById("panel-directory");
+    const btnContacts = document.getElementById("tab-contacts");
+    const btnDir = document.getElementById("tab-directory");
+
+    panelContacts?.classList.toggle("hidden", tab !== "contacts");
+    panelDir?.classList.toggle("hidden", tab !== "directory");
+
+    // Active tab uses btn-primary, inactive uses btn-secondary.
+    if (btnContacts) {
+      btnContacts.className = `btn ${tab === "contacts" ? "btn-primary" : "btn-secondary"}`;
+      btnContacts.setAttribute("aria-selected", String(tab === "contacts"));
+    }
+    if (btnDir) {
+      btnDir.className = `btn ${tab === "directory" ? "btn-primary" : "btn-secondary"}`;
+      btnDir.setAttribute("aria-selected", String(tab === "directory"));
+    }
+  }
+
+  function renderContacts(list: Contact[]) {
+    const tbody = document.getElementById("contacts-tbody");
+    const empty = document.getElementById("contacts-empty");
+    if (!tbody || !empty) return;
+
+    if (list.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    tbody.innerHTML = list
+      .map((c) => {
+        const fullAddress = [c.address_line1, c.address_line2, c.city, c.state, c.zip]
+          .filter(Boolean)
+          .join(", ");
+        const e1 = c.emergency_name
+          ? `${c.emergency_name}${c.emergency_relationship ? ` (${c.emergency_relationship})` : ""}${c.emergency_phone ? ` ${c.emergency_phone}` : ""}`
+          : "";
+        const e2 = c.emergency_name_2
+          ? `${c.emergency_name_2}${c.emergency_relationship_2 ? ` (${c.emergency_relationship_2})` : ""}${c.emergency_phone_2 ? ` ${c.emergency_phone_2}` : ""}`
+          : "";
+
+        return `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40">
+          <td class="p-2">${escapeHtml(c.last_name ?? "")}, ${escapeHtml(c.first_name ?? "")}</td>
+          <td class="p-2">${escapeHtml(c.email)}</td>
+          <td class="p-2">${escapeHtml(c.phone ?? "—")}</td>
+          <td class="p-2 text-xs">${escapeHtml(fullAddress || "—")}</td>
+          <td class="p-2 text-xs">${escapeHtml(e1 || "—")}</td>
+          <td class="p-2 text-xs">${escapeHtml(e2 || "—")}</td>
+          <td class="p-2 text-center">${c.opt_in_directory ? "✓" : "—"}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  function renderDirectory(list: DirEntry[]) {
+    const container = document.getElementById("directory-list");
+    const empty = document.getElementById("directory-empty");
+    if (!container || !empty) return;
+
+    if (list.length === 0) {
+      container.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    container.innerHTML = list
+      .map((e) => {
+        const address = [e.address_line1, e.address_line2, e.city, e.state, e.zip]
+          .filter(Boolean)
+          .join(", ");
+        return `<div class="directory-entry mb-4 break-inside-avoid">
+          <div class="font-semibold text-text-primary">${escapeHtml(e.last_name ?? "")}, ${escapeHtml(e.first_name ?? "")}</div>
+          ${e.phone ? `<div class="text-sm text-text-secondary">${escapeHtml(e.phone)}</div>` : ""}
+          ${e.email ? `<div class="text-sm text-text-secondary">${escapeHtml(e.email)}</div>` : ""}
+          ${address ? `<div class="text-sm text-text-secondary">${escapeHtml(address)}</div>` : ""}
+        </div>`;
+      })
+      .join("");
+  }
+
+  // Tab clicks
+  document.getElementById("tab-contacts")?.addEventListener("click", () => showTab("contacts"));
+  document.getElementById("tab-directory")?.addEventListener("click", () => showTab("directory"));
+
+  // Search
+  document.getElementById("search")?.addEventListener("input", (e) => {
+    const q = (e.target as HTMLInputElement).value.toLowerCase();
+    const filtered = allContacts.filter((c) =>
+      `${c.first_name ?? ""} ${c.last_name ?? ""}`.toLowerCase().includes(q),
+    );
+    renderContacts(filtered);
+  });
+
+  function flashLabel(btn: HTMLButtonElement, message: string, ms = 2000) {
+    const original = btn.textContent;
+    btn.textContent = message;
+    setTimeout(() => {
+      btn.textContent = original;
+    }, ms);
+  }
+
+  // Copy emails (contacts tab — every contact who opted into communications)
+  document.getElementById("copy-emails-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("copy-emails-btn") as HTMLButtonElement | null;
+    const emails = allContacts.map((c) => c.email).filter(Boolean).join(", ");
+    if (!emails || !btn) return;
+    try {
+      await navigator.clipboard.writeText(emails);
+      flashLabel(btn, "Copied!");
+    } catch {
+      flashLabel(btn, "Copy failed");
+    }
+  });
+
+  // Copy directory emails (only those who shared their email)
+  document.getElementById("copy-dir-emails-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("copy-dir-emails-btn") as HTMLButtonElement | null;
+    const emails = directoryEntries.map((e) => e.email).filter(Boolean).join(", ");
+    if (!btn) return;
+    if (!emails) {
+      flashLabel(btn, "Nobody shared an email");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(emails);
+      flashLabel(btn, "Copied!");
+    } catch {
+      flashLabel(btn, "Copy failed");
+    }
+  });
+
+  // Download CSV
+  document.getElementById("download-csv-btn")?.addEventListener("click", () => {
+    const headers = [
+      "Last Name", "First Name", "Email", "Phone",
+      "Address 1", "Address 2", "City", "State", "ZIP",
+      "Emergency 1 Name", "Emergency 1 Relationship", "Emergency 1 Phone",
+      "Emergency 2 Name", "Emergency 2 Relationship", "Emergency 2 Phone",
+      "In Directory",
+    ];
+    const escapeCsv = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = allContacts.map((c) => [
+      c.last_name, c.first_name, c.email, c.phone,
+      c.address_line1, c.address_line2, c.city, c.state, c.zip,
+      c.emergency_name, c.emergency_relationship, c.emergency_phone,
+      c.emergency_name_2, c.emergency_relationship_2, c.emergency_phone_2,
+      c.opt_in_directory ? "Yes" : "No",
+    ].map(escapeCsv));
+    const csv = [headers.map(escapeCsv), ...rows].map((r) => r.join(",")).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `stjohn-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // Print directory
+  document.getElementById("print-dir-btn")?.addEventListener("click", () => {
+    showTab("directory");
+    window.print();
+  });
+
+  init();
+</script>
