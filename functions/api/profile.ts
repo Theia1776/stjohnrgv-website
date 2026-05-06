@@ -42,86 +42,116 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
-export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  const user = await verifySession(context.request);
-  const debug = debugInfo(context.request, context.env, user);
-  console.log("[profile GET]", JSON.stringify(debug));
-
-  if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
-
-  const supabase = getSupabase(context.env);
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(PROFILE_COLUMNS)
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    console.log("[profile GET error]", JSON.stringify(error));
-    return jsonResponse(
-      {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        debug,
-      },
-      404,
-    );
+function describeError(err: unknown): Record<string, unknown> {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      cause: err.cause ? String(err.cause) : undefined,
+    };
   }
-  return Response.json(data);
+  try {
+    return { value: JSON.parse(JSON.stringify(err)) };
+  } catch {
+    return { value: String(err) };
+  }
+}
+
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  let debug: Record<string, unknown> = { phase: "init", method: context.request.method };
+  try {
+    const user = await verifySession(context.request);
+    debug = debugInfo(context.request, context.env, user);
+    console.log("[profile GET]", JSON.stringify(debug));
+
+    if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
+
+    const supabase = getSupabase(context.env);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.log("[profile GET db error]", JSON.stringify(error));
+      return jsonResponse(
+        {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          debug,
+        },
+        404,
+      );
+    }
+    return Response.json(data);
+  } catch (err) {
+    const exc = describeError(err);
+    console.log("[profile GET unhandled]", JSON.stringify(exc));
+    return jsonResponse({ error: "Unhandled exception", exception: exc, debug }, 500);
+  }
 }
 
 export async function onRequestPatch(context: { request: Request; env: Env }): Promise<Response> {
-  const user = await verifySession(context.request);
-  const debug = debugInfo(context.request, context.env, user);
-  console.log("[profile PATCH]", JSON.stringify(debug));
-
-  if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
-
-  let body: Record<string, unknown>;
+  let debug: Record<string, unknown> = { phase: "init", method: context.request.method };
   try {
-    body = await context.request.json();
+    const user = await verifySession(context.request);
+    debug = debugInfo(context.request, context.env, user);
+    console.log("[profile PATCH]", JSON.stringify(debug));
+
+    if (!user) return jsonResponse({ error: "Unauthorized", debug }, 401);
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch (err) {
+      return jsonResponse(
+        { error: "Invalid JSON", parseError: err instanceof Error ? err.message : String(err), debug },
+        400,
+      );
+    }
+
+    const allowed = [
+      "first_name", "last_name", "phone", "avatar_url",
+      "emergency_name", "emergency_relationship", "emergency_phone",
+      "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
+      "opt_in_communications",
+    ] as const;
+
+    const updates: Partial<Record<typeof allowed[number], unknown>> = {};
+    for (const key of allowed) {
+      if (key in body) updates[key] = body[key];
+    }
+
+    console.log("[profile PATCH updates]", JSON.stringify({ keys: Object.keys(updates) }));
+
+    const supabase = getSupabase(context.env);
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+
+    if (error) {
+      console.log("[profile PATCH db error]", JSON.stringify(error));
+      return jsonResponse(
+        {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          attemptedKeys: Object.keys(updates),
+          debug,
+        },
+        500,
+      );
+    }
+    return new Response(null, { status: 204 });
   } catch (err) {
-    return jsonResponse(
-      { error: "Invalid JSON", parseError: err instanceof Error ? err.message : String(err), debug },
-      400,
-    );
+    const exc = describeError(err);
+    console.log("[profile PATCH unhandled]", JSON.stringify(exc));
+    return jsonResponse({ error: "Unhandled exception", exception: exc, debug }, 500);
   }
-
-  const allowed = [
-    "first_name", "last_name", "phone", "avatar_url",
-    "emergency_name", "emergency_relationship", "emergency_phone",
-    "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
-    "opt_in_communications",
-  ] as const;
-
-  const updates: Partial<Record<typeof allowed[number], unknown>> = {};
-  for (const key of allowed) {
-    if (key in body) updates[key] = body[key];
-  }
-
-  console.log("[profile PATCH updates]", JSON.stringify({ keys: Object.keys(updates) }));
-
-  const supabase = getSupabase(context.env);
-  const { error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", user.id);
-
-  if (error) {
-    console.log("[profile PATCH db error]", JSON.stringify(error));
-    return jsonResponse(
-      {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        attemptedKeys: Object.keys(updates),
-        debug,
-      },
-      500,
-    );
-  }
-  return new Response(null, { status: 204 });
 }
