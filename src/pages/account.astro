@@ -63,7 +63,7 @@ import Layout from "../layouts/Layout.astro";
         Choose Photo
         <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
       </label>
-      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm hidden">
+      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm" style="display: none;">
         Upload Photo
       </button>
       <p id="avatar-status" class="text-sm hidden"></p>
@@ -340,21 +340,31 @@ import Layout from "../layouts/Layout.astro";
     else avatarStatus.classList.add("text-gray-500");
   }
 
+  function setUploadBtnVisible(visible: boolean) {
+    if (!uploadBtn) return;
+    // Inline style beats the .btn class's `display: inline-flex`,
+    // which would otherwise override Tailwind's .hidden utility.
+    uploadBtn.style.display = visible ? "" : "none";
+  }
+
   avatarInput?.addEventListener("change", () => {
     const file = avatarInput.files?.[0];
     if (!file) {
-      uploadBtn?.classList.add("hidden");
+      setUploadBtnVisible(false);
       return;
     }
     const previewUrl = URL.createObjectURL(file);
     showAvatar(previewUrl);
-    uploadBtn?.classList.remove("hidden");
+    setUploadBtnVisible(true);
     avatarStatus?.classList.add("hidden");
   });
 
   uploadBtn?.addEventListener("click", async () => {
     const file = avatarInput?.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setAvatarStatus("Choose a photo first.", "info");
+      return;
+    }
 
     const originalLabel = uploadBtn.textContent;
     uploadBtn.textContent = "Uploading…";
@@ -382,7 +392,9 @@ import Layout from "../layouts/Layout.astro";
       const data = await res.json().catch(() => ({}));
       if (typeof data.avatar_url === "string") showAvatar(data.avatar_url);
       setAvatarStatus("✓ Photo saved", "ok");
-      uploadBtn.classList.add("hidden");
+      setUploadBtnVisible(false);
+      // Reset the input so picking the same file again still fires `change`.
+      avatarInput.value = "";
     } else {
       const detail = await res.text().catch(() => "");
       setAvatarStatus(detail ? `Upload failed (${res.status}): ${detail}` : `Upload failed (${res.status})`, "error");
