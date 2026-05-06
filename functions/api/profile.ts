@@ -1,4 +1,4 @@
-import { verifySession } from "../../../src/lib/session.ts";
+import { verifySession } from "../../src/lib/session.ts";
 import { createClient } from "@supabase/supabase-js";
 
 interface Env {
