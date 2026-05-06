@@ -1,9 +1,18 @@
 /**
  * Cloudflare Pages Function: GET /api/auth/me
  *
- * Returns the current login state from the session cookie.
+ * Returns the current login state from the session cookie, plus the
+ * user's first name and parish role. Header.astro calls this on every
+ * page load to decide whether to show Sign In, the user's name, and
+ * the Admin link.
  */
 import { getFirstName, verifySession } from "../../../src/lib/session.ts";
+import { SUPABASE_URL } from "../../../src/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+interface Env {
+  SUPABASE_SERVICE_ROLE_KEY: string;
+}
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -12,11 +21,28 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
-export async function onRequestGet(context: { request: Request }): Promise<Response> {
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const user = await verifySession(context.request);
   if (!user) {
     return jsonResponse({ loggedIn: false }, 200);
   }
 
-  return jsonResponse({ loggedIn: true, name: getFirstName(user) }, 200);
+  // Best-effort role lookup. If Supabase is unreachable we still return
+  // the logged-in state with the default role, so a transient DB blip
+  // doesn't sign the user out of the UI — they just lose any admin
+  // affordances until the next request succeeds.
+  let role = "member";
+  try {
+    const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (data?.role) role = data.role;
+  } catch {
+    // Keep default.
+  }
+
+  return jsonResponse({ loggedIn: true, name: getFirstName(user), role }, 200);
 }
