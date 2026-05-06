@@ -1,0 +1,191 @@
+---
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import { verifySession } from "../lib/session";
+
+const session = await verifySession(Astro.request, Astro.locals.runtime?.env ?? import.meta.env);
+if (!session) return Astro.redirect("/signin?next=/account");
+
+const profileRes = await fetch(`${Astro.url.origin}/api/profile`, {
+  headers: { cookie: Astro.request.headers.get("cookie") ?? "" },
+});
+const profile = profileRes.ok ? await profileRes.json() : {};
+---
+
+<Layout title="My Account">
+  <main class="max-w-2xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold mb-8">My Account</h1>
+
+    <!-- Profile Picture -->
+    <div class="flex items-center gap-6 mb-10">
+      <div class="w-24 h-24 rounded-full overflow-hidden shrink-0">
+        {profile.avatar_url
+          ? <img src={profile.avatar_url} alt="Profile photo" class="w-full h-full object-cover" />
+          : <svg viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+              <defs>
+                <clipPath id="cc"><circle cx="340" cy="207" r="188"/></clipPath>
+                <linearGradient id="wd" gradientUnits="userSpaceOnUse" x1="210" y1="0" x2="470" y2="0">
+                  <stop offset="0%" stop-color="#3E2006"/>
+                  <stop offset="18%" stop-color="#8C6222"/>
+                  <stop offset="42%" stop-color="#C4A044"/>
+                  <stop offset="58%" stop-color="#A07428"/>
+                  <stop offset="82%" stop-color="#6E4818"/>
+                  <stop offset="100%" stop-color="#3E2006"/>
+                </linearGradient>
+              </defs>
+              <circle cx="340" cy="207" r="191" fill="#1A2F5E"/>
+              <g clip-path="url(#cc)">
+                <g fill="#F0CC50" fill-opacity="0.17">
+                  <polygon points="340,207 307,-13 373,-13"/>
+                  <polygon points="340,207 494,10 540,58"/>
+                  <polygon points="340,207 590,174 590,240"/>
+                  <polygon points="340,207 540,358 494,404"/>
+                  <polygon points="340,207 373,427 307,427"/>
+                  <polygon points="340,207 186,404 140,358"/>
+                  <polygon points="340,207 90,240 90,174"/>
+                  <polygon points="340,207 140,58 186,10"/>
+                </g>
+                <rect x="210" y="150" width="260" height="54" fill="url(#wd)"/>
+                <rect x="210" y="150" width="260" height="6" fill="#DCC068" fill-opacity="0.55"/>
+                <rect x="210" y="150" width="6" height="54" fill="#DCC068" fill-opacity="0.32"/>
+                <rect x="464" y="150" width="6" height="54" fill="#180800" fill-opacity="0.48"/>
+                <rect x="210" y="198" width="260" height="6" fill="#180800" fill-opacity="0.48"/>
+                <g transform="rotate(-15,340,274)">
+                  <rect x="259" y="254" width="162" height="42" fill="url(#wd)"/>
+                  <rect x="259" y="254" width="162" height="5" fill="#DCC068" fill-opacity="0.55"/>
+                  <rect x="259" y="254" width="5" height="42" fill="#DCC068" fill-opacity="0.32"/>
+                  <rect x="416" y="254" width="5" height="42" fill="#180800" fill-opacity="0.48"/>
+                  <rect x="259" y="291" width="162" height="5" fill="#180800" fill-opacity="0.48"/>
+                </g>
+                <rect x="287" y="58" width="106" height="57" fill="url(#wd)"/>
+                <rect x="287" y="58" width="106" height="6" fill="#DCC068" fill-opacity="0.55"/>
+                <rect x="287" y="58" width="6" height="57" fill="#DCC068" fill-opacity="0.32"/>
+                <rect x="387" y="58" width="6" height="57" fill="#180800" fill-opacity="0.48"/>
+                <rect x="287" y="109" width="106" height="6" fill="#180800" fill-opacity="0.48"/>
+                <rect x="312" y="40" width="56" height="332" fill="url(#wd)"/>
+                <rect x="312" y="40" width="6" height="332" fill="#DCC068" fill-opacity="0.26"/>
+                <rect x="362" y="40" width="6" height="332" fill="#180800" fill-opacity="0.40"/>
+              </g>
+              <circle cx="340" cy="207" r="191" fill="none" stroke="#243C6E" stroke-width="2"/>
+            </svg>
+        }
+      </div>
+      <div>
+        <p class="font-semibold text-lg">{profile.first_name} {profile.last_name}</p>
+        <p class="text-sm text-gray-500">Photo upload coming soon</p>
+      </div>
+    </div>
+
+    <form id="profile-form" class="space-y-8">
+
+      <!-- Basic Info -->
+      <section>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">Basic Information</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="first_name">First Name</label>
+            <input id="first_name" name="first_name" type="text" value={profile.first_name ?? ""}
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="last_name">Last Name</label>
+            <input id="last_name" name="last_name" type="text" value={profile.last_name ?? ""}
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1" for="email">Email</label>
+          <input id="email" type="email" value={profile.email ?? ""} disabled
+            class="w-full border rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed" />
+          <p class="text-xs text-gray-400 mt-1">Contact the parish office to change your email.</p>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1" for="phone">Phone Number <span class="text-gray-400 font-normal">(optional)</span></label>
+          <input id="phone" name="phone" type="tel" value={profile.phone ?? ""} placeholder="(956) 555-0100"
+            class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </section>
+
+      <!-- Emergency Contact -->
+      <section>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">Emergency Contact <span class="text-gray-400 font-normal text-sm">(optional)</span></h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="emergency_name">Name</label>
+            <input id="emergency_name" name="emergency_name" type="text" value={profile.emergency_name ?? ""}
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="emergency_relationship">Relationship</label>
+            <input id="emergency_relationship" name="emergency_relationship" type="text"
+              value={profile.emergency_relationship ?? ""} placeholder="Spouse, Parent, Sibling…"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1" for="emergency_phone">Phone</label>
+          <input id="emergency_phone" name="emergency_phone" type="tel" value={profile.emergency_phone ?? ""}
+            placeholder="(956) 555-0100"
+            class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </section>
+
+      <!-- Communications -->
+      <section>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input id="opt_in_communications" name="opt_in_communications" type="checkbox"
+            checked={profile.opt_in_communications ?? false}
+            class="mt-0.5 h-4 w-4 rounded border-gray-300" />
+          <span class="text-sm">Receive email updates and announcements from St. John of Kronstadt Orthodox Church</span>
+        </label>
+      </section>
+
+      <!-- Save -->
+      <div class="flex items-center gap-4 pt-2">
+        <button type="submit"
+          class="bg-navy text-white text-sm font-semibold px-6 py-2.5 rounded-md hover:opacity-90 transition-opacity">
+          Save Changes
+        </button>
+        <span id="save-status" class="text-sm hidden"></span>
+      </div>
+
+    </form>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById("profile-form") as HTMLFormElement;
+  const status = document.getElementById("save-status") as HTMLSpanElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const payload: Record<string, unknown> = {
+      first_name: data.get("first_name"),
+      last_name: data.get("last_name"),
+      phone: data.get("phone") || null,
+      emergency_name: data.get("emergency_name") || null,
+      emergency_relationship: data.get("emergency_relationship") || null,
+      emergency_phone: data.get("emergency_phone") || null,
+      opt_in_communications: (form.querySelector("#opt_in_communications") as HTMLInputElement).checked,
+    };
+
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    status.classList.remove("hidden", "text-green-600", "text-red-600");
+    if (res.ok) {
+      status.textContent = "✓ Saved";
+      status.classList.add("text-green-600");
+    } else {
+      status.textContent = "Something went wrong. Please try again.";
+      status.classList.add("text-red-600");
+    }
+    setTimeout(() => status.classList.add("hidden"), 3000);
+  });
+</script>

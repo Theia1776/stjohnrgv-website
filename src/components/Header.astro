@@ -9,10 +9,7 @@ const navLinks = [
 
 const currentPath = Astro.url.pathname;
 
-/** True when this nav link should be marked as the current page. */
 function isActive(href: string): boolean {
-  // Exact match first; otherwise treat the link as a section root and
-  // mark active when the current path starts with it (e.g. /about/foo).
   if (currentPath === href) return true;
   if (href === "/") return false;
   return currentPath.startsWith(href);
@@ -21,7 +18,7 @@ function isActive(href: string): boolean {
 
 <header class="sticky top-1 z-40 border-b border-border-soft bg-cream-card shadow-sm">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-    <a
+    
       href="/"
       class="flex items-center gap-3 text-text-primary no-underline hover:text-brand-blue-dark transition-colors"
     >
@@ -37,7 +34,7 @@ function isActive(href: string): boolean {
         {navLinks.map((link) => {
           const active = isActive(link.href);
           return (
-            <a
+            
               href={link.href}
               aria-current={active ? "page" : undefined}
               class:list={[
@@ -51,9 +48,18 @@ function isActive(href: string): boolean {
             </a>
           );
         })}
-        <a href="/about/#schedule" class="btn btn-primary">
-          Plan Your Visit
+        <a href="/about/#schedule" class="btn btn-primary">Plan Your Visit</a>
+
+        <!-- Auth state (populated client-side) -->
+        <a href="/signin" id="nav-signin" class="no-underline text-sm text-text-primary/80 hover:text-brand-blue-dark transition-colors">
+          Sign In
         </a>
+        <span id="nav-user" class="hidden items-center gap-3 text-sm">
+          <a href="/account" id="nav-username" class="no-underline text-text-primary/80 hover:text-brand-blue-dark transition-colors"></a>
+          <button id="nav-signout" class="text-text-primary/60 hover:text-brand-blue-dark transition-colors text-xs uppercase tracking-wide">
+            Sign Out
+          </button>
+        </span>
       </nav>
 
       <button
@@ -84,7 +90,7 @@ function isActive(href: string): boolean {
       {navLinks.map((link) => {
         const active = isActive(link.href);
         return (
-          <a
+          
             href={link.href}
             aria-current={active ? "page" : undefined}
             class:list={[
@@ -98,14 +104,24 @@ function isActive(href: string): boolean {
           </a>
         );
       })}
-      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
-        Plan Your Visit
+      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">Plan Your Visit</a>
+
+      <!-- Mobile auth state (populated client-side) -->
+      <a href="/signin" id="mobile-nav-signin" class="border-b border-border-soft py-3 no-underline text-text-primary hover:text-brand-blue-dark transition-colors">
+        Sign In
       </a>
+      <span id="mobile-nav-user" class="hidden flex-col">
+        <a href="/account" id="mobile-nav-username" class="border-b border-border-soft py-3 no-underline text-text-primary hover:text-brand-blue-dark transition-colors"></a>
+        <button id="mobile-nav-signout" class="py-3 text-left text-text-primary/60 hover:text-brand-blue-dark transition-colors text-sm uppercase tracking-wide">
+          Sign Out
+        </button>
+      </span>
     </nav>
   </div>
 </header>
 
 <script>
+  // Mobile menu toggle
   const toggle = document.getElementById("mobile-menu-toggle");
   const menu = document.getElementById("mobile-menu");
   toggle?.addEventListener("click", () => {
@@ -113,12 +129,44 @@ function isActive(href: string): boolean {
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
+
+  // Auth state
+  async function updateAuthUI() {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const { firstName } = await res.json();
+
+        // Desktop
+        document.getElementById("nav-signin")?.classList.add("hidden");
+        const navUser = document.getElementById("nav-user");
+        if (navUser) navUser.classList.replace("hidden", "flex");
+        const navUsername = document.getElementById("nav-username");
+        if (navUsername) navUsername.textContent = firstName;
+
+        // Mobile
+        document.getElementById("mobile-nav-signin")?.classList.add("hidden");
+        const mobileUser = document.getElementById("mobile-nav-user");
+        if (mobileUser) mobileUser.classList.replace("hidden", "flex");
+        const mobileUsername = document.getElementById("mobile-nav-username");
+        if (mobileUsername) mobileUsername.textContent = firstName;
+      }
+    } catch {}
+  }
+
+  updateAuthUI();
+
+  // Sign out
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  }
+
+  document.getElementById("nav-signout")?.addEventListener("click", signOut);
+  document.getElementById("mobile-nav-signout")?.addEventListener("click", signOut);
 </script>
 
 <script is:inline>
-  // Dark-mode toggle. Initial state is set by the bootstrap script in
-  // Layout.astro <head>; this just flips the attribute on click and
-  // persists the user's choice. Icon swaps moon ↔ sun.
   (function () {
     const btn = document.getElementById('theme-toggle');
     const icon = document.getElementById('theme-icon');
