@@ -9,7 +9,10 @@ const navLinks = [
 
 const currentPath = Astro.url.pathname;
 
+/** True when this nav link should be marked as the current page. */
 function isActive(href: string): boolean {
+  // Exact match first; otherwise treat the link as a section root and
+  // mark active when the current path starts with it (e.g. /about/foo).
   if (currentPath === href) return true;
   if (href === "/") return false;
   return currentPath.startsWith(href);
@@ -18,7 +21,7 @@ function isActive(href: string): boolean {
 
 <header class="sticky top-1 z-40 border-b border-border-soft bg-cream-card shadow-sm">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-    
+    <a
       href="/"
       class="flex items-center gap-3 text-text-primary no-underline hover:text-brand-blue-dark transition-colors"
     >
@@ -34,7 +37,7 @@ function isActive(href: string): boolean {
         {navLinks.map((link) => {
           const active = isActive(link.href);
           return (
-            
+            <a
               href={link.href}
               aria-current={active ? "page" : undefined}
               class:list={[
@@ -48,19 +51,20 @@ function isActive(href: string): boolean {
             </a>
           );
         })}
-        <a href="/about/#schedule" class="btn btn-primary">Plan Your Visit</a>
-
-        <!-- Auth state (populated client-side) -->
-        <a href="/signin" id="nav-signin" class="no-underline text-sm text-text-primary/80 hover:text-brand-blue-dark transition-colors">
-          Sign In
+        <a
+          href="/about/#schedule"
+          class:list={[
+            "no-underline transition-colors py-1 border-b-2",
+            currentPath === "/about/#schedule"
+              ? "text-text-primary border-liturgical-current"
+              : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
+          ]}
+        >
+          Plan Your Visit
         </a>
-        <span id="nav-user" class="hidden items-center gap-3 text-sm">
-          <a href="/account" id="nav-username" class="no-underline text-text-primary/80 hover:text-brand-blue-dark transition-colors"></a>
-          <button id="nav-signout" class="text-text-primary/60 hover:text-brand-blue-dark transition-colors text-xs uppercase tracking-wide">
-            Sign Out
-          </button>
-        </span>
       </nav>
+
+      <div id="auth-nav" class="hidden md:flex items-center gap-3 text-sm"></div>
 
       <button
         type="button"
@@ -90,7 +94,7 @@ function isActive(href: string): boolean {
       {navLinks.map((link) => {
         const active = isActive(link.href);
         return (
-          
+          <a
             href={link.href}
             aria-current={active ? "page" : undefined}
             class:list={[
@@ -104,24 +108,15 @@ function isActive(href: string): boolean {
           </a>
         );
       })}
-      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">Plan Your Visit</a>
-
-      <!-- Mobile auth state (populated client-side) -->
-      <a href="/signin" id="mobile-nav-signin" class="border-b border-border-soft py-3 no-underline text-text-primary hover:text-brand-blue-dark transition-colors">
-        Sign In
+      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
+        Plan Your Visit
       </a>
-      <span id="mobile-nav-user" class="hidden flex-col">
-        <a href="/account" id="mobile-nav-username" class="border-b border-border-soft py-3 no-underline text-text-primary hover:text-brand-blue-dark transition-colors"></a>
-        <button id="mobile-nav-signout" class="py-3 text-left text-text-primary/60 hover:text-brand-blue-dark transition-colors text-sm uppercase tracking-wide">
-          Sign Out
-        </button>
-      </span>
+      <div id="mobile-auth-nav" class="mt-3"></div>
     </nav>
   </div>
 </header>
 
 <script>
-  // Mobile menu toggle
   const toggle = document.getElementById("mobile-menu-toggle");
   const menu = document.getElementById("mobile-menu");
   toggle?.addEventListener("click", () => {
@@ -130,43 +125,84 @@ function isActive(href: string): boolean {
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
 
-  // Auth state
-  async function updateAuthUI() {
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function attachSignOutHandlers() {
+    const buttons = [
+      document.getElementById("sign-out-button"),
+      document.getElementById("mobile-sign-out-button"),
+    ].filter(Boolean);
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            cache: "no-store",
+          });
+        } finally {
+          window.location.assign("/");
+        }
+      });
+    });
+  }
+
+  async function updateAuthNav() {
+    const authNav = document.getElementById("auth-nav");
+    const mobileAuthNav = document.getElementById("mobile-auth-nav");
+
+    if (!authNav || !mobileAuthNav) return;
+
     try {
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        const { firstName } = await res.json();
+      const response = await fetch("/api/auth/me", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const data = await response.json();
 
-        // Desktop
-        document.getElementById("nav-signin")?.classList.add("hidden");
-        const navUser = document.getElementById("nav-user");
-        if (navUser) navUser.classList.replace("hidden", "flex");
-        const navUsername = document.getElementById("nav-username");
-        if (navUsername) navUsername.textContent = firstName;
-
-        // Mobile
-        document.getElementById("mobile-nav-signin")?.classList.add("hidden");
-        const mobileUser = document.getElementById("mobile-nav-user");
-        if (mobileUser) mobileUser.classList.replace("hidden", "flex");
-        const mobileUsername = document.getElementById("mobile-nav-username");
-        if (mobileUsername) mobileUsername.textContent = firstName;
+      if (response.ok && data.loggedIn) {
+        const name = escapeHtml(data.name || "Member");
+        authNav.innerHTML = `
+          <a href="/account/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue no-underline">${name}</a>
+          <button id="sign-out-button" type="button" class="btn btn-primary whitespace-nowrap text-xs font-display uppercase tracking-[0.26em] py-2">
+            Sign Out
+          </button>
+        `;
+        mobileAuthNav.innerHTML = `
+          <button id="mobile-sign-out-button" type="button" class="btn btn-primary w-full">
+            Sign Out
+          </button>
+        `;
+        attachSignOutHandlers();
+        return;
       }
-    } catch {}
+    } catch (error) {
+      // Gracefully fall through to show sign-in when unauthenticated or on error.
+    }
+
+    authNav.innerHTML = `
+      <a href="/login/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue">Sign In</a>
+    `;
+    mobileAuthNav.innerHTML = `
+      <a href="/login/" class="btn btn-secondary w-full">Sign In</a>
+    `;
   }
 
-  updateAuthUI();
-
-  // Sign out
-  async function signOut() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  }
-
-  document.getElementById("nav-signout")?.addEventListener("click", signOut);
-  document.getElementById("mobile-nav-signout")?.addEventListener("click", signOut);
+  updateAuthNav();
 </script>
 
 <script is:inline>
+  // Dark-mode toggle. Initial state is set by the bootstrap script in
+  // Layout.astro <head>; this just flips the attribute on click and
+  // persists the user's choice. Icon swaps moon ↔ sun.
   (function () {
     const btn = document.getElementById('theme-toggle');
     const icon = document.getElementById('theme-icon');

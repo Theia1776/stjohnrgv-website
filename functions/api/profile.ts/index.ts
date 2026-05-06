@@ -1,5 +1,4 @@
-import type { EventContext } from "@cloudflare/workers-types";
-import { verifySession } from "../../src/lib/session";
+import { verifySession } from "../../../src/lib/session.ts";
 import { createClient } from "@supabase/supabase-js";
 
 interface Env {
@@ -11,11 +10,11 @@ function getSupabase(env: Env) {
   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
-export async function onRequestGet(ctx: EventContext<Env, string, unknown>) {
-  const user = await verifySession(ctx.request);
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  const user = await verifySession(context.request);
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const supabase = getSupabase(ctx.env);
+  const supabase = getSupabase(context.env);
   const { data, error } = await supabase
     .from("profiles")
     .select("first_name, last_name, email, phone, avatar_url, emergency_name, emergency_relationship, emergency_phone, opt_in_communications")
@@ -26,13 +25,13 @@ export async function onRequestGet(ctx: EventContext<Env, string, unknown>) {
   return Response.json(data);
 }
 
-export async function onRequestPatch(ctx: EventContext<Env, string, unknown>) {
-  const user = await verifySession(ctx.request);
+export async function onRequestPatch(context: { request: Request; env: Env }): Promise<Response> {
+  const user = await verifySession(context.request);
   if (!user) return new Response("Unauthorized", { status: 401 });
 
   let body: Record<string, unknown>;
   try {
-    body = await ctx.request.json();
+    body = await context.request.json();
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
@@ -48,7 +47,7 @@ export async function onRequestPatch(ctx: EventContext<Env, string, unknown>) {
     if (key in body) updates[key] = body[key];
   }
 
-  const supabase = getSupabase(ctx.env);
+  const supabase = getSupabase(context.env);
   const { error } = await supabase
     .from("profiles")
     .update(updates)

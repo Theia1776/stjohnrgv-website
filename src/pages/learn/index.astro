@@ -10,17 +10,21 @@ import Layout from "../../layouts/Layout.astro";
 
     <!-- Page header (clamped to readable width, centered) -->
     <div class="mx-auto max-w-3xl text-center">
-      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">For Inquirers &amp; Seekers</p>
-      <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">What is Orthodox Christianity?</h1>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">THE LEARNING CENTER</p>
+      <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Curious About the Orthodox Faith?</h1>
       <p class="mt-6 text-lg text-text-primary/80">
-        A welcoming introduction to the Orthodox faith, the Divine Liturgy,
-        and the path of catechumens — coming soon.
+        Whether you are a longtime parishioner or just beginning to explore, our Learning Center is here for you. Registered members have full access to the Parish Library — texts, liturgical documents, and the lives of the saints. All are welcome.
       </p>
-      <p class="mt-4 text-text-primary/75">
-        If you are exploring Orthodoxy and would like to speak with someone,
-        <a href="/contact/">reach out to Fr. Antonios</a>.
-        All seekers are welcome to attend services without prior introduction.
-      </p>
+    </div>
+
+    <div class="mx-auto mt-10 text-center">
+      <a
+        href="/login/?tab=register"
+        class="inline-flex w-full max-w-[340px] items-center justify-center rounded-sm border border-brand-blue-dark bg-brand-blue-dark px-6 py-3 text-sm font-display font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-brand-blue"
+        style="color: #ffffff !important;"
+      >
+        Parishioner Registration
+      </a>
     </div>
 
     <!-- Existing pages — link + subtitle, two groups centered with wrap -->
@@ -55,19 +59,6 @@ import Layout from "../../layouts/Layout.astro";
 
       <article>
         <a
-          href="/learn/saints/"
-          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
-        >
-          <h2 class="font-display text-xl text-text-primary">Saints</h2>
-          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
-          <p class="mt-4 leading-relaxed text-text-secondary">
-            A growing, searchable encyclopedia of the saints commemorated in our parish.
-          </p>
-        </a>
-      </article>
-
-      <article>
-        <a
           href="/learn/catechumen/"
           class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
         >
@@ -75,6 +66,19 @@ import Layout from "../../layouts/Layout.astro";
           <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
           <p class="mt-4 leading-relaxed text-text-secondary">
             An introduction to the Orthodox faith for those exploring or preparing for chrismation.
+          </p>
+        </a>
+      </article>
+
+      <article>
+        <a
+          href="/learn/saints/"
+          class="block h-full border border-brand-tan bg-cream-card p-6 shadow-sm transition-shadow hover:shadow-lg md:p-8 no-underline"
+        >
+          <h2 class="font-display text-xl text-text-primary">Catalog of the Saints</h2>
+          <div class="mt-4 h-px w-12 bg-liturgical-current"></div>
+          <p class="mt-4 leading-relaxed text-text-secondary">
+            A growing, searchable encyclopedia of the saints commemorated in our parish.
           </p>
         </a>
       </article>
