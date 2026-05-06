@@ -145,26 +145,67 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // the previous photo at the same URL after re-upload.
     const avatar_url = `${urlData.publicUrl}?v=${Date.now()}`;
 
-    // Chain .select().single() so the call fails loudly if zero rows
-    // matched (e.g., no profile row for this user.id). Without this
-    // an UPDATE that affects zero rows succeeds silently and we'd
-    // hand the client an avatar_url that was never actually saved.
-    const { data: updated, error: updateError } = await supabase
+    // Pull the existing row so we can include its NOT NULL columns
+    // (email, full_name) in the upsert payload. Otherwise, if the
+    // row somehow doesn't exist, INSERT would fail on those columns.
+    const { data: existing, error: existingError } = await supabase
       .from("profiles")
-      .update({ avatar_url })
+      .select("email, full_name")
       .eq("id", user.id)
-      .select("avatar_url")
-      .single();
+      .maybeSingle();
 
-    if (updateError) return jsonResponse({ error: updateError.message }, 500);
-    if (!updated?.avatar_url) {
+    if (existingError) {
       return jsonResponse(
-        { error: "Profile row not found — avatar URL was not saved" },
+        { error: `Failed to read existing profile: ${existingError.message}` },
         500,
       );
     }
 
-    return jsonResponse({ avatar_url: updated.avatar_url }, 200);
+    const upsertPayload: Record<string, unknown> = {
+      id: user.id,
+      avatar_url,
+    };
+    if (existing?.email) upsertPayload.email = existing.email;
+    if (existing?.full_name) upsertPayload.full_name = existing.full_name;
+
+    // Upsert (rather than update) so an INSERT happens if the row is
+    // missing for any reason. Cowork tracking down the previous false-
+    // positive — POST returning 200 with a URL but the column staying
+    // null — pointed at the update path silently no-op'ing on a row
+    // that didn't match. Upsert sidesteps that.
+    const { error: upsertError } = await supabase
+      .from("profiles")
+      .upsert(upsertPayload, { onConflict: "id" });
+
+    if (upsertError) {
+      return jsonResponse({ error: `Upsert failed: ${upsertError.message}` }, 500);
+    }
+
+    // Verify by reading back the column we just wrote. If the readback
+    // shows null or a different value than what we sent, the upsert
+    // didn't stick and we return a precise error rather than lying
+    // about success.
+    const { data: verified, error: verifyError } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single();
+
+    if (verifyError) {
+      return jsonResponse({ error: `Verify read failed: ${verifyError.message}` }, 500);
+    }
+    if (verified?.avatar_url !== avatar_url) {
+      return jsonResponse(
+        {
+          error: "Avatar URL did not persist",
+          sent: avatar_url,
+          readback: verified?.avatar_url ?? null,
+        },
+        500,
+      );
+    }
+
+    return jsonResponse({ avatar_url: verified.avatar_url }, 200);
   } catch (err) {
     return jsonResponse(
       { error: err instanceof Error ? err.message : "Internal error" },
