@@ -388,25 +388,35 @@ import Layout from "../layouts/Layout.astro";
         cache: "no-store",
       });
     } catch (err) {
-      setAvatarStatus(`Network error: ${err instanceof Error ? err.message : String(err)}`, "error");
+      setUploadBtnVisible(false);
+      avatarInput.value = "";
       uploadBtn.textContent = originalLabel;
       uploadBtn.disabled = false;
+      setAvatarStatus(`❌ Network error: ${err instanceof Error ? err.message : String(err)}`, "error");
       return;
     }
+
+    // Hide the upload button on every response — success or failure —
+    // and clear the file input. This forces the user's eye to the status
+    // line for feedback and prevents "I clicked Upload, the button is
+    // still there, did anything happen?" confusion. To retry, pick a
+    // file again.
+    setUploadBtnVisible(false);
+    avatarInput.value = "";
+    uploadBtn.textContent = originalLabel;
+    uploadBtn.disabled = false;
 
     if (res.ok) {
       const data = await res.json().catch(() => ({}));
       if (typeof data.avatar_url === "string") showAvatar(data.avatar_url);
       setAvatarStatus("✓ Photo saved", "ok");
-      setUploadBtnVisible(false);
-      // Reset the input so picking the same file again still fires `change`.
-      avatarInput.value = "";
     } else {
       const detail = await res.text().catch(() => "");
-      setAvatarStatus(detail ? `Upload failed (${res.status}): ${detail}` : `Upload failed (${res.status})`, "error");
+      setAvatarStatus(
+        detail ? `❌ Upload failed (${res.status}): ${detail}` : `❌ Upload failed (${res.status})`,
+        "error",
+      );
     }
-    uploadBtn.textContent = originalLabel;
-    uploadBtn.disabled = false;
   });
 
   // Profile save
