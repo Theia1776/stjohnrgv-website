@@ -63,7 +63,7 @@ import Layout from "../layouts/Layout.astro";
         Choose Photo
         <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
       </label>
-      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm" style="display: none;">
+      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm" style="display: none !important;">
         Upload Photo
       </button>
       <p id="avatar-status" class="text-sm hidden"></p>
@@ -342,9 +342,15 @@ import Layout from "../layouts/Layout.astro";
 
   function setUploadBtnVisible(visible: boolean) {
     if (!uploadBtn) return;
-    // Inline style beats the .btn class's `display: inline-flex`,
-    // which would otherwise override Tailwind's .hidden utility.
-    uploadBtn.style.display = visible ? "" : "none";
+    // Hide with !important so nothing in the cascade can re-show the
+    // button (we've seen this happen in production despite plain
+    // inline display:none). Show by fully removing the inline display
+    // property so the .btn rule from global.css takes over.
+    if (visible) {
+      uploadBtn.style.removeProperty("display");
+    } else {
+      uploadBtn.style.setProperty("display", "none", "important");
+    }
   }
 
   avatarInput?.addEventListener("change", () => {
