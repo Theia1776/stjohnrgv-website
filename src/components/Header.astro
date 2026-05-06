@@ -170,13 +170,22 @@ function isActive(href: string): boolean {
 
       if (response.ok && data.loggedIn) {
         const name = escapeHtml(data.name || "Member");
+        const isAdmin = data.role === "admin";
+        const adminDesktop = isAdmin
+          ? `<a href="/admin/contacts/" class="font-display text-xs uppercase tracking-[0.26em] text-brand-tan-dark hover:text-brand-tan no-underline">Admin</a>`
+          : "";
+        const adminMobile = isAdmin
+          ? `<a href="/admin/contacts/" class="btn btn-secondary w-full mb-2">Admin</a>`
+          : "";
         authNav.innerHTML = `
+          ${adminDesktop}
           <a href="/account/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue no-underline">${name}</a>
           <button id="sign-out-button" type="button" class="btn btn-primary whitespace-nowrap text-xs font-display uppercase tracking-[0.26em] py-2">
             Sign Out
           </button>
         `;
         mobileAuthNav.innerHTML = `
+          ${adminMobile}
           <button id="mobile-sign-out-button" type="button" class="btn btn-primary w-full">
             Sign Out
           </button>
