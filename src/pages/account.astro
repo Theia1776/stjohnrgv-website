@@ -63,9 +63,11 @@ import Layout from "../layouts/Layout.astro";
         Choose Photo
         <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
       </label>
-      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm" style="display: none !important;">
-        Upload Photo
-      </button>
+      <div id="avatar-upload-wrapper" style="display: none;">
+        <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm">
+          Upload Photo
+        </button>
+      </div>
       <p id="avatar-status" class="text-sm hidden"></p>
     </div>
 
@@ -329,6 +331,7 @@ import Layout from "../layouts/Layout.astro";
   // Avatar upload
   const avatarInput = document.getElementById("avatar-input") as HTMLInputElement | null;
   const uploadBtn = document.getElementById("avatar-upload-btn") as HTMLButtonElement | null;
+  const uploadBtnWrapper = document.getElementById("avatar-upload-wrapper") as HTMLDivElement | null;
   const avatarStatus = document.getElementById("avatar-status") as HTMLParagraphElement | null;
 
   function setAvatarStatus(message: string, kind: "ok" | "error" | "info") {
@@ -341,16 +344,13 @@ import Layout from "../layouts/Layout.astro";
   }
 
   function setUploadBtnVisible(visible: boolean) {
-    if (!uploadBtn) return;
-    // Hide with !important so nothing in the cascade can re-show the
-    // button (we've seen this happen in production despite plain
-    // inline display:none). Show by fully removing the inline display
-    // property so the .btn rule from global.css takes over.
-    if (visible) {
-      uploadBtn.style.removeProperty("display");
-    } else {
-      uploadBtn.style.setProperty("display", "none", "important");
-    }
+    // Toggle visibility on a wrapper <div> rather than the button
+    // itself. The .btn class sets `display: inline-flex` which won
+    // the cascade against plain inline `display: none` on the button
+    // in production. The wrapper has no such rule fighting it, so
+    // plain inline display toggle works.
+    if (!uploadBtnWrapper) return;
+    uploadBtnWrapper.style.display = visible ? "" : "none";
   }
 
   avatarInput?.addEventListener("change", () => {

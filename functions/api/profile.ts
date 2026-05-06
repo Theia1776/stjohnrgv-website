@@ -145,14 +145,26 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // the previous photo at the same URL after re-upload.
     const avatar_url = `${urlData.publicUrl}?v=${Date.now()}`;
 
-    const { error: updateError } = await supabase
+    // Chain .select().single() so the call fails loudly if zero rows
+    // matched (e.g., no profile row for this user.id). Without this
+    // an UPDATE that affects zero rows succeeds silently and we'd
+    // hand the client an avatar_url that was never actually saved.
+    const { data: updated, error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("avatar_url")
+      .single();
 
     if (updateError) return jsonResponse({ error: updateError.message }, 500);
+    if (!updated?.avatar_url) {
+      return jsonResponse(
+        { error: "Profile row not found — avatar URL was not saved" },
+        500,
+      );
+    }
 
-    return jsonResponse({ avatar_url }, 200);
+    return jsonResponse({ avatar_url: updated.avatar_url }, 200);
   } catch (err) {
     return jsonResponse(
       { error: err instanceof Error ? err.message : "Internal error" },
