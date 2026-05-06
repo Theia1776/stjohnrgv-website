@@ -10,7 +10,9 @@ import Layout from "../layouts/Layout.astro";
     <div class="flex flex-col items-center gap-3 mb-10">
       <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-brand-blue-dark bg-cream-card">
         <img id="avatar-img" alt="Profile photo" class="w-full h-full object-cover hidden" />
-        <svg id="avatar-fallback" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+        <!-- viewBox cropped to the inner circle's bounding box (cx=340 cy=207 r=191)
+             so the placeholder fills the round container without letterboxing. -->
+        <svg id="avatar-fallback" viewBox="149 16 382 382" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
           <defs>
             <clipPath id="cc"><circle cx="340" cy="207" r="188"/></clipPath>
             <linearGradient id="wd" gradientUnits="userSpaceOnUse" x1="210" y1="0" x2="470" y2="0">
@@ -59,15 +61,10 @@ import Layout from "../layouts/Layout.astro";
         </svg>
       </div>
       <p class="font-semibold text-lg"><span id="display-name"></span></p>
-      <label class="btn btn-secondary cursor-pointer text-sm">
-        Choose Photo
+      <label id="avatar-button" class="btn btn-secondary cursor-pointer text-sm">
+        <span id="avatar-button-label">Change Photo</span>
         <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
       </label>
-      <div id="avatar-upload-wrapper" style="display: none;">
-        <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm">
-          Upload Photo
-        </button>
-      </div>
       <p id="avatar-status" class="text-sm hidden"></p>
     </div>
 
@@ -328,10 +325,10 @@ import Layout from "../layouts/Layout.astro";
     }
   });
 
-  // Avatar upload
+  // Avatar upload — single button, auto-uploads as soon as a file is picked.
   const avatarInput = document.getElementById("avatar-input") as HTMLInputElement | null;
-  const uploadBtn = document.getElementById("avatar-upload-btn") as HTMLButtonElement | null;
-  const uploadBtnWrapper = document.getElementById("avatar-upload-wrapper") as HTMLDivElement | null;
+  const avatarButton = document.getElementById("avatar-button") as HTMLLabelElement | null;
+  const avatarButtonLabel = document.getElementById("avatar-button-label");
   const avatarStatus = document.getElementById("avatar-status") as HTMLParagraphElement | null;
 
   function setAvatarStatus(message: string, kind: "ok" | "error" | "info") {
@@ -343,38 +340,26 @@ import Layout from "../layouts/Layout.astro";
     else avatarStatus.classList.add("text-gray-500");
   }
 
-  function setUploadBtnVisible(visible: boolean) {
-    // Toggle visibility on a wrapper <div> rather than the button
-    // itself. The .btn class sets `display: inline-flex` which won
-    // the cascade against plain inline `display: none` on the button
-    // in production. The wrapper has no such rule fighting it, so
-    // plain inline display toggle works.
-    if (!uploadBtnWrapper) return;
-    uploadBtnWrapper.style.display = visible ? "" : "none";
+  function setAvatarBusy(busy: boolean) {
+    if (avatarInput) avatarInput.disabled = busy;
+    if (avatarButtonLabel) avatarButtonLabel.textContent = busy ? "Uploading…" : "Change Photo";
+    if (avatarButton) {
+      avatarButton.style.opacity = busy ? "0.6" : "";
+      avatarButton.style.pointerEvents = busy ? "none" : "";
+      avatarButton.style.cursor = busy ? "not-allowed" : "";
+    }
   }
 
-  avatarInput?.addEventListener("change", () => {
+  avatarInput?.addEventListener("change", async () => {
     const file = avatarInput.files?.[0];
-    if (!file) {
-      setUploadBtnVisible(false);
-      return;
-    }
+    if (!file) return;
+
+    // Show local preview immediately so the user sees instant feedback,
+    // then upload in the background.
     const previewUrl = URL.createObjectURL(file);
     showAvatar(previewUrl);
-    setUploadBtnVisible(true);
     avatarStatus?.classList.add("hidden");
-  });
-
-  uploadBtn?.addEventListener("click", async () => {
-    const file = avatarInput?.files?.[0];
-    if (!file) {
-      setAvatarStatus("Choose a photo first.", "info");
-      return;
-    }
-
-    const originalLabel = uploadBtn.textContent;
-    uploadBtn.textContent = "Uploading…";
-    uploadBtn.disabled = true;
+    setAvatarBusy(true);
 
     const fd = new FormData();
     fd.append("avatar", file);
@@ -388,23 +373,14 @@ import Layout from "../layouts/Layout.astro";
         cache: "no-store",
       });
     } catch (err) {
-      setUploadBtnVisible(false);
+      setAvatarBusy(false);
       avatarInput.value = "";
-      uploadBtn.textContent = originalLabel;
-      uploadBtn.disabled = false;
       setAvatarStatus(`❌ Network error: ${err instanceof Error ? err.message : String(err)}`, "error");
       return;
     }
 
-    // Hide the upload button on every response — success or failure —
-    // and clear the file input. This forces the user's eye to the status
-    // line for feedback and prevents "I clicked Upload, the button is
-    // still there, did anything happen?" confusion. To retry, pick a
-    // file again.
-    setUploadBtnVisible(false);
+    setAvatarBusy(false);
     avatarInput.value = "";
-    uploadBtn.textContent = originalLabel;
-    uploadBtn.disabled = false;
 
     if (res.ok) {
       const data = await res.json().catch(() => ({}));
