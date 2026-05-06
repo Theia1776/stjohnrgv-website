@@ -94,7 +94,7 @@ import Layout from "../layouts/Layout.astro";
         </div>
       </section>
 
-      <!-- Emergency Contact -->
+      <!-- Emergency Contact 1 -->
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Emergency Contact <span class="text-gray-400 font-normal text-sm">(optional)</span></h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -118,6 +118,30 @@ import Layout from "../layouts/Layout.astro";
         </div>
       </section>
 
+      <!-- Emergency Contact 2 -->
+      <section>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">Second Emergency Contact <span class="text-gray-400 font-normal text-sm">(optional)</span></h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="emergency_name_2">Name</label>
+            <input id="emergency_name_2" name="emergency_name_2" type="text"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="emergency_relationship_2">Relationship</label>
+            <input id="emergency_relationship_2" name="emergency_relationship_2" type="text"
+              placeholder="Spouse, Parent, Sibling…"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1" for="emergency_phone_2">Phone</label>
+          <input id="emergency_phone_2" name="emergency_phone_2" type="tel"
+            placeholder="(956) 555-0100"
+            class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </section>
+
       <!-- Communications -->
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
@@ -130,8 +154,7 @@ import Layout from "../layouts/Layout.astro";
 
       <!-- Save -->
       <div class="flex items-center gap-4 pt-2">
-        <button type="submit"
-          class="bg-navy text-white text-sm font-semibold px-6 py-2.5 rounded-md hover:opacity-90 transition-opacity">
+        <button type="submit" class="btn btn-primary">
           Save Changes
         </button>
         <span id="save-status" class="text-sm hidden"></span>
@@ -168,6 +191,9 @@ import Layout from "../layouts/Layout.astro";
     setInputValue("emergency_name", profile.emergency_name);
     setInputValue("emergency_relationship", profile.emergency_relationship);
     setInputValue("emergency_phone", profile.emergency_phone);
+    setInputValue("emergency_name_2", profile.emergency_name_2);
+    setInputValue("emergency_relationship_2", profile.emergency_relationship_2);
+    setInputValue("emergency_phone_2", profile.emergency_phone_2);
 
     const optIn = document.getElementById("opt_in_communications") as HTMLInputElement | null;
     if (optIn) optIn.checked = Boolean(profile.opt_in_communications);
@@ -194,34 +220,58 @@ import Layout from "../layouts/Layout.astro";
   const form = document.getElementById("profile-form") as HTMLFormElement;
   const status = document.getElementById("save-status") as HTMLSpanElement;
 
+  function strOrNull(value: FormDataEntryValue | null): string | null {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(form);
     const payload: Record<string, unknown> = {
-      first_name: data.get("first_name"),
-      last_name: data.get("last_name"),
-      phone: data.get("phone") || null,
-      emergency_name: data.get("emergency_name") || null,
-      emergency_relationship: data.get("emergency_relationship") || null,
-      emergency_phone: data.get("emergency_phone") || null,
+      first_name: strOrNull(data.get("first_name")),
+      last_name: strOrNull(data.get("last_name")),
+      phone: strOrNull(data.get("phone")),
+      emergency_name: strOrNull(data.get("emergency_name")),
+      emergency_relationship: strOrNull(data.get("emergency_relationship")),
+      emergency_phone: strOrNull(data.get("emergency_phone")),
+      emergency_name_2: strOrNull(data.get("emergency_name_2")),
+      emergency_relationship_2: strOrNull(data.get("emergency_relationship_2")),
+      emergency_phone_2: strOrNull(data.get("emergency_phone_2")),
       opt_in_communications: (form.querySelector("#opt_in_communications") as HTMLInputElement).checked,
     };
 
-    const res = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify(payload),
-    });
+    let res: Response;
+    try {
+      res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        cache: "no-store",
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      status.classList.remove("hidden", "text-green-600");
+      status.classList.add("text-red-600");
+      status.textContent = `Network error: ${err instanceof Error ? err.message : String(err)}`;
+      return;
+    }
 
     status.classList.remove("hidden", "text-green-600", "text-red-600");
     if (res.ok) {
       status.textContent = "✓ Saved";
       status.classList.add("text-green-600");
+      setTimeout(() => status.classList.add("hidden"), 3000);
     } else {
-      status.textContent = "Something went wrong. Please try again.";
+      let detail = "";
+      try {
+        detail = await res.text();
+      } catch {}
+      status.textContent = detail
+        ? `Save failed (${res.status}): ${detail}`
+        : `Save failed (${res.status})`;
       status.classList.add("text-red-600");
     }
-    setTimeout(() => status.classList.add("hidden"), 3000);
   });
 </script>

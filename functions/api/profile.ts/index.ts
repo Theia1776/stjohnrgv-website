@@ -10,6 +10,12 @@ function getSupabase(env: Env) {
   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+const PROFILE_COLUMNS =
+  "first_name, last_name, email, phone, avatar_url, " +
+  "emergency_name, emergency_relationship, emergency_phone, " +
+  "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
+  "opt_in_communications";
+
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const user = await verifySession(context.request);
   if (!user) return new Response("Unauthorized", { status: 401 });
@@ -17,11 +23,11 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   const supabase = getSupabase(context.env);
   const { data, error } = await supabase
     .from("profiles")
-    .select("first_name, last_name, email, phone, avatar_url, emergency_name, emergency_relationship, emergency_phone, opt_in_communications")
+    .select(PROFILE_COLUMNS)
     .eq("id", user.id)
     .single();
 
-  if (error) return new Response("Not found", { status: 404 });
+  if (error) return new Response(error.message, { status: 404 });
   return Response.json(data);
 }
 
@@ -39,6 +45,7 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
   const allowed = [
     "first_name", "last_name", "phone", "avatar_url",
     "emergency_name", "emergency_relationship", "emergency_phone",
+    "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
     "opt_in_communications",
   ] as const;
 
