@@ -103,18 +103,30 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
  * to profiles.avatar_url so subsequent loads pick it up.
  */
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
+  const log = (step: string, info: Record<string, unknown> = {}) => {
+    console.log(`[avatar POST] ${step}`, JSON.stringify(info));
+  };
+
   try {
+    log("entry");
     const user = await verifySession(context.request);
+    log("after verifySession", { hasUser: !!user, userId: user?.id ?? null });
     if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
     let formData: FormData;
     try {
       formData = await context.request.formData();
-    } catch {
+    } catch (err) {
+      log("formData parse failed", { err: String(err) });
       return jsonResponse({ error: "Expected multipart/form-data" }, 400);
     }
 
     const file = formData.get("avatar");
+    log("got file", {
+      isFile: file instanceof File,
+      type: file instanceof File ? file.type : null,
+      size: file instanceof File ? file.size : null,
+    });
     if (!(file instanceof File)) {
       return jsonResponse({ error: "No file provided" }, 400);
     }
@@ -130,6 +142,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const supabase = getSupabase(context.env);
     const path = `${user.id}/avatar.${ext}`;
     const buffer = await file.arrayBuffer();
+    log("about to upload to storage", { path, byteLength: buffer.byteLength });
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
@@ -138,21 +151,25 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         upsert: true,
       });
 
+    log("after storage upload", { uploadError: uploadError?.message ?? null });
     if (uploadError) return jsonResponse({ error: uploadError.message }, 500);
 
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-    // Cache-bust: append a timestamp so the browser doesn't keep showing
-    // the previous photo at the same URL after re-upload.
     const avatar_url = `${urlData.publicUrl}?v=${Date.now()}`;
+    log("computed public URL", { avatar_url });
 
-    // Pull the existing row so we can include its NOT NULL columns
-    // (email, full_name) in the upsert payload. Otherwise, if the
-    // row somehow doesn't exist, INSERT would fail on those columns.
     const { data: existing, error: existingError } = await supabase
       .from("profiles")
       .select("email, full_name")
       .eq("id", user.id)
       .maybeSingle();
+
+    log("read existing row", {
+      hasExisting: !!existing,
+      existingError: existingError?.message ?? null,
+      email: existing?.email ?? null,
+      full_name: existing?.full_name ?? null,
+    });
 
     if (existingError) {
       return jsonResponse(
@@ -168,28 +185,34 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     if (existing?.email) upsertPayload.email = existing.email;
     if (existing?.full_name) upsertPayload.full_name = existing.full_name;
 
-    // Upsert (rather than update) so an INSERT happens if the row is
-    // missing for any reason. Cowork tracking down the previous false-
-    // positive — POST returning 200 with a URL but the column staying
-    // null — pointed at the update path silently no-op'ing on a row
-    // that didn't match. Upsert sidesteps that.
-    const { error: upsertError } = await supabase
+    log("about to upsert", { keys: Object.keys(upsertPayload) });
+    const { data: upsertData, error: upsertError } = await supabase
       .from("profiles")
-      .upsert(upsertPayload, { onConflict: "id" });
+      .upsert(upsertPayload, { onConflict: "id" })
+      .select("avatar_url")
+      .single();
+
+    log("after upsert", {
+      upsertError: upsertError?.message ?? null,
+      upsertCode: (upsertError as { code?: string } | null)?.code ?? null,
+      upsertedAvatarUrl: upsertData?.avatar_url ?? null,
+    });
 
     if (upsertError) {
       return jsonResponse({ error: `Upsert failed: ${upsertError.message}` }, 500);
     }
 
-    // Verify by reading back the column we just wrote. If the readback
-    // shows null or a different value than what we sent, the upsert
-    // didn't stick and we return a precise error rather than lying
-    // about success.
     const { data: verified, error: verifyError } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single();
+
+    log("readback", {
+      verifyError: verifyError?.message ?? null,
+      verified_avatar_url: verified?.avatar_url ?? null,
+      matches: verified?.avatar_url === avatar_url,
+    });
 
     if (verifyError) {
       return jsonResponse({ error: `Verify read failed: ${verifyError.message}` }, 500);
@@ -205,6 +228,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       );
     }
 
+    log("returning 200");
     return jsonResponse({ avatar_url: verified.avatar_url }, 200);
   } catch (err) {
     return jsonResponse(
