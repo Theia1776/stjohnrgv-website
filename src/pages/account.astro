@@ -6,9 +6,9 @@ import Layout from "../layouts/Layout.astro";
   <main class="max-w-2xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold mb-8">My Account</h1>
 
-    <!-- Profile Picture -->
-    <div class="flex items-center gap-6 mb-10">
-      <div class="w-24 h-24 rounded-full overflow-hidden shrink-0">
+    <!-- Profile Photo -->
+    <div class="flex flex-col items-center gap-3 mb-10">
+      <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-brand-blue-dark bg-cream-card">
         <img id="avatar-img" alt="Profile photo" class="w-full h-full object-cover hidden" />
         <svg id="avatar-fallback" viewBox="0 0 680 440" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
           <defs>
@@ -58,10 +58,15 @@ import Layout from "../layouts/Layout.astro";
           <circle cx="340" cy="207" r="191" fill="none" stroke="#243C6E" stroke-width="2"/>
         </svg>
       </div>
-      <div>
-        <p class="font-semibold text-lg"><span id="display-name"></span></p>
-        <p class="text-sm text-gray-500">Photo upload coming soon</p>
-      </div>
+      <p class="font-semibold text-lg"><span id="display-name"></span></p>
+      <label class="btn btn-secondary cursor-pointer text-sm">
+        Choose Photo
+        <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
+      </label>
+      <button type="button" id="avatar-upload-btn" class="btn btn-primary text-sm hidden">
+        Upload Photo
+      </button>
+      <p id="avatar-status" class="text-sm hidden"></p>
     </div>
 
     <form id="profile-form" class="space-y-8">
@@ -91,6 +96,40 @@ import Layout from "../layouts/Layout.astro";
           <label class="block text-sm font-medium mb-1" for="phone">Phone Number <span class="text-gray-400 font-normal">(optional)</span></label>
           <input id="phone" name="phone" type="tel" placeholder="(956) 555-0100"
             class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+      </section>
+
+      <!-- Home Address -->
+      <section>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">Home Address <span class="text-gray-400 font-normal text-sm">(optional)</span></h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="address_line1">Street Address</label>
+            <input id="address_line1" name="address_line1" type="text" placeholder="123 Main St"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="address_line2">Apt / Unit <span class="text-gray-400 font-normal">(optional)</span></label>
+            <input id="address_line2" name="address_line2" type="text"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-1">
+              <label class="block text-sm font-medium mb-1" for="city">City</label>
+              <input id="city" name="city" type="text"
+                class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1" for="state">State</label>
+              <input id="state" name="state" type="text" maxlength="2" placeholder="TX"
+                class="w-full border rounded-md px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1" for="zip">ZIP</label>
+              <input id="zip" name="zip" type="text" maxlength="10"
+                class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -142,14 +181,43 @@ import Layout from "../layouts/Layout.astro";
         </div>
       </section>
 
-      <!-- Communications -->
+      <!-- Communications + Directory -->
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
+
         <label class="flex items-start gap-3 cursor-pointer">
           <input id="opt_in_communications" name="opt_in_communications" type="checkbox"
             class="mt-0.5 h-4 w-4 rounded border-gray-300" />
           <span class="text-sm">Receive email updates and announcements from St. John of Kronstadt Orthodox Church</span>
         </label>
+
+        <div class="border border-gray-200 rounded p-4 mt-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input id="opt_in_directory" name="opt_in_directory" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-gray-300" />
+            <div>
+              <span class="font-medium text-text-primary">Include me in the parish directory</span>
+              <p class="text-sm text-gray-500 mt-0.5">
+                Your name will appear in the directory shared with fellow parishioners.
+                Choose below which contact details to share.
+              </p>
+            </div>
+          </label>
+
+          <div id="directory-options" class="mt-3 ml-7 grid gap-2 hidden">
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input id="directory_show_phone" name="directory_show_phone" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+              Share my phone number
+            </label>
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input id="directory_show_email" name="directory_show_email" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+              Share my email address
+            </label>
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input id="directory_show_address" name="directory_show_address" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+              Share my mailing address
+            </label>
+          </div>
+        </div>
       </section>
 
       <!-- Save -->
@@ -170,6 +238,25 @@ import Layout from "../layouts/Layout.astro";
     if (el) el.value = typeof value === "string" ? value : "";
   }
 
+  function setChecked(id: string, value: unknown) {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    if (el) el.checked = Boolean(value);
+  }
+
+  function showAvatar(url: string | null) {
+    const img = document.getElementById("avatar-img") as HTMLImageElement | null;
+    const fallback = document.getElementById("avatar-fallback");
+    if (!img || !fallback) return;
+    if (url) {
+      img.src = url;
+      img.classList.remove("hidden");
+      fallback.classList.add("hidden");
+    } else {
+      img.classList.add("hidden");
+      fallback.classList.remove("hidden");
+    }
+  }
+
   async function loadProfile() {
     const res = await fetch("/api/profile", {
       credentials: "same-origin",
@@ -188,6 +275,13 @@ import Layout from "../layouts/Layout.astro";
     setInputValue("last_name", profile.last_name);
     setInputValue("email", profile.email);
     setInputValue("phone", profile.phone);
+
+    setInputValue("address_line1", profile.address_line1);
+    setInputValue("address_line2", profile.address_line2);
+    setInputValue("city", profile.city);
+    setInputValue("state", profile.state);
+    setInputValue("zip", profile.zip);
+
     setInputValue("emergency_name", profile.emergency_name);
     setInputValue("emergency_relationship", profile.emergency_relationship);
     setInputValue("emergency_phone", profile.emergency_phone);
@@ -195,8 +289,15 @@ import Layout from "../layouts/Layout.astro";
     setInputValue("emergency_relationship_2", profile.emergency_relationship_2);
     setInputValue("emergency_phone_2", profile.emergency_phone_2);
 
-    const optIn = document.getElementById("opt_in_communications") as HTMLInputElement | null;
-    if (optIn) optIn.checked = Boolean(profile.opt_in_communications);
+    setChecked("opt_in_communications", profile.opt_in_communications);
+    setChecked("opt_in_directory", profile.opt_in_directory);
+    setChecked("directory_show_phone", profile.directory_show_phone);
+    setChecked("directory_show_email", profile.directory_show_email);
+    setChecked("directory_show_address", profile.directory_show_address);
+
+    if (profile.opt_in_directory) {
+      document.getElementById("directory-options")?.classList.remove("hidden");
+    }
 
     const displayName = document.getElementById("display-name");
     if (displayName) {
@@ -205,18 +306,92 @@ import Layout from "../layouts/Layout.astro";
     }
 
     if (typeof profile.avatar_url === "string" && profile.avatar_url) {
-      const img = document.getElementById("avatar-img") as HTMLImageElement | null;
-      const fallback = document.getElementById("avatar-fallback");
-      if (img) {
-        img.src = profile.avatar_url;
-        img.classList.remove("hidden");
-      }
-      if (fallback) fallback.classList.add("hidden");
+      showAvatar(profile.avatar_url);
     }
   }
 
   loadProfile();
 
+  // Directory opt-in: master checkbox toggles visibility of sub-options.
+  // When unchecked, also clear the sub-options so a save doesn't keep
+  // leaking fields the user thought they hid.
+  const dirMaster = document.getElementById("opt_in_directory") as HTMLInputElement | null;
+  dirMaster?.addEventListener("change", () => {
+    const panel = document.getElementById("directory-options");
+    if (panel) panel.classList.toggle("hidden", !dirMaster.checked);
+    if (!dirMaster.checked) {
+      setChecked("directory_show_phone", false);
+      setChecked("directory_show_email", false);
+      setChecked("directory_show_address", false);
+    }
+  });
+
+  // Avatar upload
+  const avatarInput = document.getElementById("avatar-input") as HTMLInputElement | null;
+  const uploadBtn = document.getElementById("avatar-upload-btn") as HTMLButtonElement | null;
+  const avatarStatus = document.getElementById("avatar-status") as HTMLParagraphElement | null;
+
+  function setAvatarStatus(message: string, kind: "ok" | "error" | "info") {
+    if (!avatarStatus) return;
+    avatarStatus.textContent = message;
+    avatarStatus.classList.remove("hidden", "text-green-600", "text-red-600", "text-gray-500");
+    if (kind === "ok") avatarStatus.classList.add("text-green-600");
+    else if (kind === "error") avatarStatus.classList.add("text-red-600");
+    else avatarStatus.classList.add("text-gray-500");
+  }
+
+  avatarInput?.addEventListener("change", () => {
+    const file = avatarInput.files?.[0];
+    if (!file) {
+      uploadBtn?.classList.add("hidden");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    showAvatar(previewUrl);
+    uploadBtn?.classList.remove("hidden");
+    avatarStatus?.classList.add("hidden");
+  });
+
+  uploadBtn?.addEventListener("click", async () => {
+    const file = avatarInput?.files?.[0];
+    if (!file) return;
+
+    const originalLabel = uploadBtn.textContent;
+    uploadBtn.textContent = "Uploading…";
+    uploadBtn.disabled = true;
+
+    const fd = new FormData();
+    fd.append("avatar", file);
+
+    let res: Response;
+    try {
+      res = await fetch("/api/profile", {
+        method: "POST",
+        body: fd,
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+    } catch (err) {
+      setAvatarStatus(`Network error: ${err instanceof Error ? err.message : String(err)}`, "error");
+      uploadBtn.textContent = originalLabel;
+      uploadBtn.disabled = false;
+      return;
+    }
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (typeof data.avatar_url === "string") showAvatar(data.avatar_url);
+      setAvatarStatus("✓ Photo saved", "ok");
+      uploadBtn.classList.add("hidden");
+    } else {
+      const detail = await res.text().catch(() => "");
+      setAvatarStatus(detail ? `Upload failed (${res.status}): ${detail}` : `Upload failed (${res.status})`, "error");
+    }
+    uploadBtn.textContent = originalLabel;
+    uploadBtn.disabled = false;
+  });
+
+  // Profile save
   const form = document.getElementById("profile-form") as HTMLFormElement;
   const status = document.getElementById("save-status") as HTMLSpanElement;
 
@@ -226,20 +401,38 @@ import Layout from "../layouts/Layout.astro";
     return trimmed === "" ? null : trimmed;
   }
 
+  function checked(id: string): boolean {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return Boolean(el?.checked);
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(form);
+    const stateRaw = strOrNull(data.get("state"));
     const payload: Record<string, unknown> = {
       first_name: strOrNull(data.get("first_name")),
       last_name: strOrNull(data.get("last_name")),
       phone: strOrNull(data.get("phone")),
+
+      address_line1: strOrNull(data.get("address_line1")),
+      address_line2: strOrNull(data.get("address_line2")),
+      city: strOrNull(data.get("city")),
+      state: stateRaw ? stateRaw.toUpperCase() : null,
+      zip: strOrNull(data.get("zip")),
+
       emergency_name: strOrNull(data.get("emergency_name")),
       emergency_relationship: strOrNull(data.get("emergency_relationship")),
       emergency_phone: strOrNull(data.get("emergency_phone")),
       emergency_name_2: strOrNull(data.get("emergency_name_2")),
       emergency_relationship_2: strOrNull(data.get("emergency_relationship_2")),
       emergency_phone_2: strOrNull(data.get("emergency_phone_2")),
-      opt_in_communications: (form.querySelector("#opt_in_communications") as HTMLInputElement).checked,
+
+      opt_in_communications: checked("opt_in_communications"),
+      opt_in_directory: checked("opt_in_directory"),
+      directory_show_phone: checked("directory_show_phone"),
+      directory_show_email: checked("directory_show_email"),
+      directory_show_address: checked("directory_show_address"),
     };
 
     let res: Response;
