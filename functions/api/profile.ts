@@ -1,13 +1,13 @@
 import { verifySession } from "../../src/lib/session.ts";
+import { SUPABASE_URL } from "../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
 interface Env {
-  SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
 }
 
 function getSupabase(env: Env) {
-  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  return createClient(SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 const PROFILE_COLUMNS =
@@ -28,7 +28,6 @@ function debugInfo(request: Request, env: Env, user: { id: string } | null) {
     contentType: request.headers.get("content-type"),
     hasCookieHeader: Boolean(cookieHeader),
     cookieNames,
-    hasSupabaseUrl: Boolean(env.SUPABASE_URL),
     hasServiceRoleKey: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
     sessionVerified: Boolean(user),
     userId: user?.id ?? null,
