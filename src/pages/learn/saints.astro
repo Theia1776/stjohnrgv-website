@@ -108,11 +108,21 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       <h1 class="font-display text-3xl text-text-primary md:text-4xl">Saints</h1>
       <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
       <p class="mt-6 text-lg leading-relaxed text-text-primary/85">
-        A growing encyclopedia of the saints commemorated in our parish.
-        New entries are added daily.
+        An encyclopedia of the saints commemorated in our parish.
       </p>
       <p class="mt-2 text-sm text-text-secondary">
         <span id="saints-count">{totalCount}</span> saints in the database
+      </p>
+      <p class="mt-4 text-xs italic leading-relaxed text-text-secondary">
+        With grateful acknowledgement to David Leselidze and
+        <a
+          href="https://www.holytrinityorthodox.com/htc/orthodox-calendar/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-brand-blue-dark hover:underline"
+        >Holy Trinity Orthodox Mission</a>
+        for graciously permitting our parish to embed the calendar and
+        source these saint biographies for the formation of our community.
       </p>
 
       <!-- Search -->
