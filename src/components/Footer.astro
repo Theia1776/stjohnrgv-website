@@ -1,6 +1,11 @@
 ---
 const year = new Date().getFullYear();
 
+// Single grouped link grid — every page on the site lives in exactly one
+// of these columns, sorted by why a visitor would click it. Keeps the
+// "split by relevance" feel of the old Visit/Learn/Support row while
+// also covering the routes that used to be in the separate Site Map +
+// Site Information rows.
 const footerColumns = [
   {
     heading: "Visit",
@@ -15,6 +20,7 @@ const footerColumns = [
     links: [
       { href: "/about/", label: "About the Mission" },
       { href: "/learn/", label: "What is Orthodoxy?" },
+      { href: "/learn/library/", label: "Parish Library" },
       { href: "/about/#communion", label: "Canonical Standing" },
     ],
   },
@@ -25,52 +31,46 @@ const footerColumns = [
       { href: "/contact/", label: "Prayer Requests" },
     ],
   },
-];
-
-// Site map — every primary page on the site, alphabetised inside each
-// row for quick scanning. Auth-gated routes (account, admin, library)
-// are listed too; following one when signed-out routes through /login.
-const siteMapLinks = [
-  { href: "/", label: "Home" },
-  { href: "/about/", label: "About" },
-  { href: "/calendar/", label: "Calendar" },
-  { href: "/contact/", label: "Contact" },
-  { href: "/donate/", label: "Tithe / Donate" },
-  { href: "/learn/", label: "Learn" },
-  { href: "/learn/library/", label: "Parish Library" },
-  { href: "/account/", label: "My Account" },
-  { href: "/login/", label: "Sign In" },
-];
-
-const siteInfoLinks = [
-  { href: "/iconography/", label: "Iconography" },
-  { href: "/colophon/", label: "Colophon" },
-  { href: "/privacy/", label: "Privacy" },
+  {
+    heading: "Account",
+    links: [
+      { href: "/account/", label: "My Account" },
+      { href: "/login/", label: "Sign In" },
+    ],
+  },
+  {
+    heading: "Site Information",
+    links: [
+      { href: "/iconography/", label: "Iconography" },
+      { href: "/colophon/", label: "Colophon" },
+      { href: "/privacy/", label: "Privacy" },
+    ],
+  },
 ];
 ---
 
-<footer class="mt-24 border-t-2 border-liturgical-current bg-cream-card text-text-primary">
-  <div class="mx-auto max-w-6xl px-4 py-12 md:px-6">
-    <div class="grid gap-10 md:grid-cols-4">
-      <div class="md:col-span-1">
-        <div class="flex items-center gap-2">
-          <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
-          <span class="font-display text-lg leading-tight">St. John of<br />Kronstadt</span>
-        </div>
-        <p class="mt-4 text-sm text-text-secondary">
-          A True Orthodox mission serving the Rio Grande Valley.
-        </p>
-        <address class="mt-4 not-italic text-sm leading-relaxed text-text-primary">
-          39737 Palm Drive<br />
-          Bayview, TX 78566<br />
-          <a href="tel:+19564490225">(956) 449-0225</a>
-        </address>
+<footer class="mt-16 border-t-2 border-liturgical-current bg-cream-card text-text-primary">
+  <div class="mx-auto max-w-6xl px-4 py-10 md:px-6">
+    <!-- Identity row — parish name, mission tagline, address, phone.
+         Sits above the link grid so the grid gets full width and
+         doesn't have to share a column with the address block. -->
+    <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+      <div class="flex items-center gap-3">
+        <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
+        <span class="font-display text-lg leading-tight">St. John of Kronstadt</span>
       </div>
+      <p class="text-sm text-text-secondary">A True Orthodox mission serving the Rio Grande Valley.</p>
+      <address class="not-italic text-sm leading-relaxed text-text-primary sm:ml-auto sm:text-right">
+        39737 Palm Drive, Bayview, TX 78566 · <a href="tel:+19564490225">(956) 449-0225</a>
+      </address>
+    </div>
 
+    <!-- Single grouped link grid — relevance-sorted columns. -->
+    <div class="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 md:grid-cols-5">
       {footerColumns.map((col) => (
         <div>
           <h3 class="font-display text-sm font-semibold uppercase tracking-widest text-brand-tan-dark">{col.heading}</h3>
-          <ul class="mt-4 space-y-2 text-sm">
+          <ul class="mt-3 space-y-2 text-sm">
             {col.links.map((link) => (
               <li>
                 <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue-dark hover:underline">
@@ -83,32 +83,7 @@ const siteInfoLinks = [
       ))}
     </div>
 
-    <div class="mt-12 border-t border-border-soft pt-8">
-      <h3 class="font-display text-sm font-semibold uppercase tracking-widest text-brand-tan-dark">Site Map</h3>
-      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        {siteMapLinks.map((link) => (
-          <li>
-            <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue-dark hover:underline">
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    <div class="mt-8 border-t border-border-soft pt-6">
-      <h3 class="font-display text-sm font-semibold uppercase tracking-widest text-brand-tan-dark">Site Information</h3>
-      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        {siteInfoLinks.map((link) => (
-          <li>
-            <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue-dark hover:underline">
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-
+    <!-- Legal / credits row -->
     <div class="mt-10 grid gap-3 border-t border-border-soft pt-6 text-center text-xs text-text-secondary md:grid-cols-3 md:items-center md:gap-4">
       <p class="md:text-left">© {year} St. John of Kronstadt Orthodox Mission. All rights reserved.</p>
       <p class="md:text-center">
