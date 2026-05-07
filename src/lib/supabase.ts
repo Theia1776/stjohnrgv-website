@@ -33,3 +33,14 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 /** Cookie name for the access token. HttpOnly, Secure, SameSite=Lax. */
 export const SESSION_COOKIE = "sb-access-token";
+
+/** Cookie name for the refresh token. HttpOnly, Secure, SameSite=Lax.
+ *  Used to mint a new access token (and a new refresh token — Supabase
+ *  rotates them on every refresh) when the access token expires. */
+export const REFRESH_COOKIE = "sb-refresh-token";
+
+/** Lifetime of the session cookies — 30 days. The Supabase access JWT
+ *  itself is short-lived (default 1 hour); when it expires,
+ *  verifySession() exchanges the refresh token for a new pair and the
+ *  caller writes the new cookies on its response. */
+export const SESSION_MAX_AGE = 30 * 24 * 60 * 60;

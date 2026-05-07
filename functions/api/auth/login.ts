@@ -14,7 +14,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SESSION_COOKIE } from "../../../src/lib/supabase";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../../../src/lib/supabase";
+import { authCookies } from "../../../src/lib/session";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -58,9 +59,6 @@ export async function onRequestPost(
     return jsonResponse({ error: "Invalid email or password." }, 401);
   }
 
-  const accessToken = data.session.access_token;
-  const expiresIn = data.session.expires_in ?? 3600;
-
   // Check approval via the service-role key (bypasses RLS so we can
   // read the row even though the user-side RLS policy would also let
   // them — service role is simpler and removes a code path).
@@ -86,14 +84,16 @@ export async function onRequestPost(
     );
   }
 
-  const cookie = [
-    `${SESSION_COOKIE}=${accessToken}`,
-    "Path=/",
-    "HttpOnly",
-    "Secure",
-    "SameSite=Lax",
-    `Max-Age=${expiresIn}`,
-  ].join("; ");
-
-  return jsonResponse({ ok: true }, 200, { "Set-Cookie": cookie });
+  // Two cookies: the short-lived access JWT plus the long-lived
+  // refresh token. Both are written with a 30-day Max-Age; when the
+  // access JWT internally expires, verifySession() exchanges the
+  // refresh token for a fresh pair on the next request.
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store",
+  });
+  for (const cookie of authCookies(data.session.access_token, data.session.refresh_token)) {
+    headers.append("Set-Cookie", cookie);
+  }
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
 }

@@ -3,15 +3,17 @@
  * middlewares. Lives at functions/learn/_auth.ts (underscore-prefixed so
  * Cloudflare doesn't treat it as a route).
  *
- * Verifies the access token in the SESSION_COOKIE by calling Supabase's
- * auth.getUser(jwt) — if it returns a user, the token is valid and not
- * expired. We don't re-check the `approved` flag here; that's enforced at
- * login time and reflected by whether the cookie was issued at all. If
- * approval is later revoked, the user keeps access until their JWT expires
- * (max 1 hour by default).
+ * Verifies the session via verifySession() in src/lib/session.ts — that
+ * helper falls through to the refresh-token path when the access JWT
+ * has expired, so a logged-in user whose access token aged out doesn't
+ * get bounced to /login. Refreshed cookies (if any) are attached to
+ * the downstream response so the browser picks up the new pair.
+ *
+ * We don't re-check the `approved` flag here; that's enforced at login
+ * and reflected by whether the cookie pair was issued at all.
  */
 
-import { verifySession } from "../../src/lib/session.ts";
+import { verifySession, withSessionCookies } from "../../src/lib/session.ts";
 
 interface PagesContext {
   request: Request;
@@ -29,7 +31,10 @@ function loginRedirect(request: Request): Response {
 }
 
 export async function gateRequest(context: PagesContext): Promise<Response> {
-  const user = await verifySession(context.request);
-  if (!user) return loginRedirect(context.request);
-  return context.next();
+  const session = await verifySession(context.request);
+  if (!session.user) {
+    return withSessionCookies(loginRedirect(context.request), session.refreshedCookies);
+  }
+  const response = await context.next();
+  return withSessionCookies(response, session.refreshedCookies);
 }

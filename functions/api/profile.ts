@@ -1,4 +1,4 @@
-import { verifySession } from "../../src/lib/session.ts";
+import { verifySession, withSessionCookies } from "../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
@@ -42,37 +42,40 @@ function jsonResponse(body: unknown, status: number): Response {
 }
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
   try {
-    const user = await verifySession(context.request);
-    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
 
     const supabase = getSupabase(context.env);
     const { data, error } = await supabase
       .from("profiles")
       .select(PROFILE_COLUMNS)
-      .eq("id", user.id)
+      .eq("id", session.user.id)
       .single();
 
-    if (error) return jsonResponse({ error: error.message }, 404);
-    return Response.json(data);
+    if (error) return wrap(jsonResponse({ error: error.message }, 404));
+    return wrap(Response.json(data));
   } catch (err) {
-    return jsonResponse(
-      { error: err instanceof Error ? err.message : "Internal error" },
-      500,
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
     );
   }
 }
 
 export async function onRequestPatch(context: { request: Request; env: Env }): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
   try {
-    const user = await verifySession(context.request);
-    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
 
     let body: Record<string, unknown>;
     try {
       body = await context.request.json();
     } catch {
-      return jsonResponse({ error: "Invalid JSON" }, 400);
+      return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
     }
 
     const updates: Partial<Record<typeof PATCH_ALLOWED[number], unknown>> = {};
@@ -84,14 +87,13 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
     const { error } = await supabase
       .from("profiles")
       .update(updates)
-      .eq("id", user.id);
+      .eq("id", session.user.id);
 
-    if (error) return jsonResponse({ error: error.message }, 500);
-    return new Response(null, { status: 204 });
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    return wrap(new Response(null, { status: 204 }));
   } catch (err) {
-    return jsonResponse(
-      { error: err instanceof Error ? err.message : "Internal error" },
-      500,
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
     );
   }
 }
@@ -103,28 +105,31 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
  * to profiles.avatar_url so subsequent loads pick it up.
  */
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
   try {
-    const user = await verifySession(context.request);
-    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    const user = session.user;
 
     let formData: FormData;
     try {
       formData = await context.request.formData();
     } catch {
-      return jsonResponse({ error: "Expected multipart/form-data" }, 400);
+      return wrap(jsonResponse({ error: "Expected multipart/form-data" }, 400));
     }
 
     const file = formData.get("avatar");
     if (!(file instanceof File)) {
-      return jsonResponse({ error: "No file provided" }, 400);
+      return wrap(jsonResponse({ error: "No file provided" }, 400));
     }
 
     const ext = AVATAR_TYPES[file.type];
     if (!ext) {
-      return jsonResponse({ error: "Only JPEG, PNG, or WEBP images are allowed" }, 400);
+      return wrap(jsonResponse({ error: "Only JPEG, PNG, or WEBP images are allowed" }, 400));
     }
     if (file.size > AVATAR_MAX_BYTES) {
-      return jsonResponse({ error: "Image must be under 2 MB" }, 400);
+      return wrap(jsonResponse({ error: "Image must be under 2 MB" }, 400));
     }
 
     const supabase = getSupabase(context.env);
@@ -138,7 +143,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         upsert: true,
       });
 
-    if (uploadError) return jsonResponse({ error: uploadError.message }, 500);
+    if (uploadError) return wrap(jsonResponse({ error: uploadError.message }, 500));
 
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     // Cache-bust: append a timestamp so the browser doesn't keep showing
@@ -154,10 +159,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       .maybeSingle();
 
     if (existingError) {
-      return jsonResponse(
+      return wrap(jsonResponse(
         { error: `Failed to read existing profile: ${existingError.message}` },
         500,
-      );
+      ));
     }
 
     const upsertPayload: Record<string, unknown> = { id: user.id, avatar_url };
@@ -169,7 +174,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       .upsert(upsertPayload, { onConflict: "id" });
 
     if (upsertError) {
-      return jsonResponse({ error: `Upsert failed: ${upsertError.message}` }, 500);
+      return wrap(jsonResponse({ error: `Upsert failed: ${upsertError.message}` }, 500));
     }
 
     // Read back to confirm the URL persisted before claiming success.
@@ -180,25 +185,23 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       .single();
 
     if (verifyError) {
-      return jsonResponse({ error: `Verify read failed: ${verifyError.message}` }, 500);
+      return wrap(jsonResponse({ error: `Verify read failed: ${verifyError.message}` }, 500));
     }
     if (verified?.avatar_url !== avatar_url) {
-      return jsonResponse(
+      return wrap(jsonResponse(
         {
           error: "Avatar URL did not persist",
           sent: avatar_url,
           readback: verified?.avatar_url ?? null,
         },
         500,
-      );
+      ));
     }
 
-    log("returning 200");
-    return jsonResponse({ avatar_url: verified.avatar_url }, 200);
+    return wrap(jsonResponse({ avatar_url: verified.avatar_url }, 200));
   } catch (err) {
-    return jsonResponse(
-      { error: err instanceof Error ? err.message : "Internal error" },
-      500,
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
     );
   }
 }

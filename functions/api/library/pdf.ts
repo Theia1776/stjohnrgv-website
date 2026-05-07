@@ -15,7 +15,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
-import { verifySession } from "../../../src/lib/session.ts";
+import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -34,19 +34,21 @@ function jsonResponse(body: unknown, status: number): Response {
 export async function onRequestGet(
   context: { request: Request; env: Env },
 ): Promise<Response> {
-  const user = await verifySession(context.request);
-  if (!user) {
-    return jsonResponse({ error: "Unauthorized." }, 401);
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
+  if (!session.user) {
+    return wrap(jsonResponse({ error: "Unauthorized." }, 401));
   }
 
   const url = new URL(context.request.url);
   const key = url.searchParams.get("key")?.trim() || "";
   if (!key) {
-    return jsonResponse({ error: "Missing 'key' query parameter." }, 400);
+    return wrap(jsonResponse({ error: "Missing 'key' query parameter." }, 400));
   }
 
   if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return jsonResponse({ error: "Server not configured." }, 500);
+    return wrap(jsonResponse({ error: "Server not configured." }, 500));
   }
 
   const admin = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -60,10 +62,10 @@ export async function onRequestGet(
   if (error || !data?.signedUrl) {
     const msg = error?.message || "";
     if (/not found|does not exist|object/i.test(msg)) {
-      return jsonResponse({ error: "File not found." }, 404);
+      return wrap(jsonResponse({ error: "File not found." }, 404));
     }
-    return jsonResponse({ error: msg || "Could not sign URL." }, 500);
+    return wrap(jsonResponse({ error: msg || "Could not sign URL." }, 500));
   }
 
-  return jsonResponse({ url: data.signedUrl }, 200);
+  return wrap(jsonResponse({ url: data.signedUrl }, 200));
 }

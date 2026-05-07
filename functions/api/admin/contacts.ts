@@ -6,7 +6,7 @@
  * to pick up the email address. Service-role key required because
  * we hit auth.admin.listUsers().
  */
-import { verifySession } from "../../../src/lib/session.ts";
+import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
@@ -22,20 +22,22 @@ function jsonResponse(body: unknown, status: number): Response {
 }
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
   try {
-    const user = await verifySession(context.request);
-    if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
 
     const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: requester, error: requesterError } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", session.user.id)
       .single();
 
-    if (requesterError) return jsonResponse({ error: requesterError.message }, 500);
-    if (requester?.role !== "admin") return jsonResponse({ error: "Forbidden" }, 403);
+    if (requesterError) return wrap(jsonResponse({ error: requesterError.message }, 500));
+    if (requester?.role !== "admin") return wrap(jsonResponse({ error: "Forbidden" }, 403));
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
@@ -50,13 +52,13 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .eq("opt_in_communications", true)
       .order("last_name", { ascending: true });
 
-    if (profilesError) return jsonResponse({ error: profilesError.message }, 500);
+    if (profilesError) return wrap(jsonResponse({ error: profilesError.message }, 500));
 
     // perPage:1000 — Supabase defaults to 50, which would silently
     // truncate the list as the parish grows. The admin API caps each
     // page at 1000; we'd need to paginate explicitly past that.
     const { data: authData, error: authError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    if (authError) return jsonResponse({ error: authError.message }, 500);
+    if (authError) return wrap(jsonResponse({ error: authError.message }, 500));
 
     const emailMap: Record<string, string> = {};
     for (const u of authData?.users ?? []) {
@@ -68,11 +70,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       email: emailMap[p.id] ?? "",
     }));
 
-    return jsonResponse({ contacts }, 200);
+    return wrap(jsonResponse({ contacts }, 200));
   } catch (err) {
-    return jsonResponse(
-      { error: err instanceof Error ? err.message : "Internal error" },
-      500,
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
     );
   }
 }

@@ -6,7 +6,7 @@
  * page load to decide whether to show Sign In, the user's name, and
  * the Admin link.
  */
-import { getFirstName, verifySession } from "../../../src/lib/session.ts";
+import { getFirstName, verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
@@ -22,9 +22,9 @@ function jsonResponse(body: unknown, status: number): Response {
 }
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  const user = await verifySession(context.request);
-  if (!user) {
-    return jsonResponse({ loggedIn: false }, 200);
+  const session = await verifySession(context.request);
+  if (!session.user) {
+    return withSessionCookies(jsonResponse({ loggedIn: false }, 200), session.refreshedCookies);
   }
 
   // Best-effort role lookup. If Supabase is unreachable we still return
@@ -37,12 +37,15 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const { data } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", session.user.id)
       .single();
     if (data?.role) role = data.role;
   } catch {
     // Keep default.
   }
 
-  return jsonResponse({ loggedIn: true, name: getFirstName(user), role }, 200);
+  return withSessionCookies(
+    jsonResponse({ loggedIn: true, name: getFirstName(session.user), role }, 200),
+    session.refreshedCookies,
+  );
 }
