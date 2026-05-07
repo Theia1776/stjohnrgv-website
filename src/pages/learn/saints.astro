@@ -102,14 +102,23 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
 >
   <section class="mx-auto max-w-5xl px-4 py-16 md:py-20">
 
-    <!-- Header — heading + intro on the left, app-store CTA on the right.
-         Stacks on mobile; side-by-side from md and up. -->
-    <div class="grid gap-8 md:grid-cols-2 md:gap-12">
-      <!-- Left column: title + acknowledgement paragraph -->
+    <!-- Page heading — full-width centered above the two columns. -->
+    <div class="text-center">
+      <h1 class="font-display text-3xl text-text-primary md:text-4xl">
+        Comprehensive Catalog of Saints / Martyrs
+      </h1>
+      <div class="mx-auto mt-4 h-px w-24 bg-liturgical-current"></div>
+    </div>
+
+    <!-- Two columns below the heading: encyclopedia paragraph on the
+         left, app-store call-to-action centered on the right. With the
+         heading lifted out of the left column, both columns now start
+         at the same y-position so the prompt sits inline with the
+         opening line of the paragraph. -->
+    <div class="mt-10 grid gap-8 md:grid-cols-2 md:gap-12">
+      <!-- Left column: acknowledgement paragraph. -->
       <div>
-        <h1 class="font-display text-3xl text-text-primary md:text-4xl">Saints</h1>
-        <div class="mt-4 h-px w-24 bg-liturgical-current"></div>
-        <p class="mt-6 text-base leading-relaxed text-text-primary/85">
+        <p class="text-base leading-relaxed text-text-primary/85">
           An encyclopedia of saints commemorated in our parish. With deep
           gratitude to David Leselidze and
           <a
@@ -126,25 +135,23 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
         </p>
       </div>
 
-      <!-- Right column: app-store call-to-action.
+      <!-- Right column: centered app-store call-to-action.
            Badges hotlinked from Google's and Apple's brand-asset URLs
            (intended for that use per each platform's marketing
            guidelines).
 
-           Apple: h-14 (56px) — the SVG has no internal padding, so its
-                  bounding-box height equals the visible badge height.
-           Google: h-[68px] — the PNG has ~8% vertical and ~7%
-                  horizontal whitespace around the visible badge art.
-                  Bumping the bounding box to 68px makes the visible
-                  artwork (68px × 0.84 = ~57px tall) read at the same
-                  size as Apple's 56px-tall art. The two are NOT given
-                  the same CSS height on purpose — that's been the
-                  whole problem. -->
-      <div>
+           Google PNG stays at h-[68px] — the size that finally reads
+           correctly given the badge's ~8% internal whitespace padding.
+           Apple SVG drops to h-12 (48px) so the two badges read at a
+           similar visible weight side by side; the SVG has no padding
+           so its bounding box equals its visible art. The CSS heights
+           are intentionally different — equal CSS height = unequal
+           visible badges, which is the trap we kept falling into. -->
+      <div class="text-center">
         <p class="text-sm font-bold leading-relaxed text-brand-blue-dark">
           Take the Orthodox Calendar with you wherever you go &mdash; download the official app:
         </p>
-        <div class="mt-3 flex flex-wrap items-center gap-3">
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-3">
           <a
             href="https://play.google.com/store/apps/details?id=com.holytrinityorthodox.orthodoxcalendar&hl=en"
             target="_blank"
@@ -166,7 +173,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
             <img
               src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
               alt="Download on the App Store"
-              class="h-14 w-auto"
+              class="h-12 w-auto"
             />
           </a>
         </div>
