@@ -90,23 +90,22 @@ function stripBlock(html: string): string {
 }
 
 function parseSaint(html: string): SaintData {
-  // Name: <p class="header12">…<b>NAME</b>…</p>
+  // Name: <p class="ofd_los_header">NAME</p>
   let name = "";
-  const nameMatch = /<p\s+class="header12"[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>[\s\S]*?<\/p>/i
-    .exec(html);
+  const nameMatch = /<p\s+class="ofd_los_header"[^>]*>([\s\S]*?)<\/p>/i.exec(html);
   if (nameMatch) {
     name = stripInline(nameMatch[1]);
   }
 
-  // Walk every <p class="body10">…</p> in document order. The first
-  // typically holds "Commemorated on …", the middle one(s) the life
-  // text, and the last the © translator attribution. Categorize by
-  // shape so a missing piece doesn't mislabel the others.
+  // Walk every <p class="ofd_los_body">…</p> in document order. The
+  // first typically holds "Commemorated on …", the middle one(s) the
+  // life text, and the last the © translator attribution. Categorize
+  // by shape so a missing piece doesn't mislabel the others.
   let commemorated = "";
   let attribution = "";
   const lifeParts: string[] = [];
 
-  const paraRe = /<p\s+class="body10"[^>]*>([\s\S]*?)<\/p>/gi;
+  const paraRe = /<p\s+class="ofd_los_body"[^>]*>([\s\S]*?)<\/p>/gi;
   let m: RegExpExecArray | null;
   while ((m = paraRe.exec(html)) !== null) {
     const text = stripBlock(m[1]);
@@ -198,11 +197,15 @@ export async function onRequestGet(
     );
   }
 
-  // Saint pages are windows-1251 (charset declared in Content-Type).
-  // Decode explicitly so the © glyph and any Cyrillic chars come out
-  // right.
+  // The calendar v2 endpoint serves windows-1251; the Lives of
+  // Saints pages serve UTF-8. Sniff the Content-Type header so each
+  // page is decoded with the encoding it was actually produced in.
   const buf = await upstreamRes.arrayBuffer();
-  const html = new TextDecoder("windows-1251").decode(buf);
+  const ct = upstreamRes.headers.get("content-type") || "";
+  const charsetMatch = /charset=([^;\s]+)/i.exec(ct);
+  const charset = charsetMatch ? charsetMatch[1].toLowerCase() : "utf-8";
+  const decoderLabel = charset === "windows-1251" ? "windows-1251" : "utf-8";
+  const html = new TextDecoder(decoderLabel).decode(buf);
 
   let parsed: SaintData;
   try {

@@ -35,7 +35,7 @@
  * via User-Agent so HTC's logs can correlate.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -148,18 +148,22 @@ function parseCalendarSaints(html) {
   return out;
 }
 
-/** Parse a single saint Life page. */
+/** Parse a single saint Life page. HTC's "Lives of Saints" pages
+ *  use the v6los.css class names: ofd_los_header for the title and
+ *  ofd_los_body for the commemorated line + body paragraphs +
+ *  attribution. (The older header12 / body10 classes the previous
+ *  parser looked for don't appear on these pages — that's why the
+ *  initial import wrote empty life/feasts to every file.) */
 function parseSaintLife(html) {
   let name = "";
-  const nameMatch = /<p\s+class="header12"[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>[\s\S]*?<\/p>/i
-    .exec(html);
+  const nameMatch = /<p\s+class="ofd_los_header"[^>]*>([\s\S]*?)<\/p>/i.exec(html);
   if (nameMatch) name = stripInline(nameMatch[1]);
 
   let commemorated = "";
   let attribution = "";
   const lifeParts = [];
 
-  const paraRe = /<p\s+class="body10"[^>]*>([\s\S]*?)<\/p>/gi;
+  const paraRe = /<p\s+class="ofd_los_body"[^>]*>([\s\S]*?)<\/p>/gi;
   let m;
   while ((m = paraRe.exec(html)) !== null) {
     const text = stripBlock(m[1]);
@@ -254,9 +258,27 @@ async function fetchHtcAsText(url) {
     headers: { "User-Agent": USER_AGENT, "Referer": REFERER },
   });
   if (!res.ok) throw new Error(`HTC ${res.status} for ${url}`);
-  // HTC pages are served as windows-1251.
   const buf = await res.arrayBuffer();
-  return new TextDecoder("windows-1251").decode(buf);
+  // The calendar v2 endpoint serves windows-1251; the Lives of Saints
+  // pages serve UTF-8. Sniff the Content-Type header so each page is
+  // decoded with the encoding it was actually produced in.
+  const ct = res.headers.get("content-type") || "";
+  const charsetMatch = /charset=([^;\s]+)/i.exec(ct);
+  const charset = charsetMatch ? charsetMatch[1].toLowerCase() : "utf-8";
+  const decoderLabel = charset === "windows-1251" ? "windows-1251" : "utf-8";
+  return new TextDecoder(decoderLabel).decode(buf);
+}
+
+/** Compute the Julian-calendar feast key ("Month Day") that
+ *  corresponds to a Gregorian date. Used as a fallback when a saint's
+ *  Life page doesn't surface a "Commemorated on …" line — every saint
+ *  pulled from a given Gregorian day still belongs on that day's
+ *  Julian counterpart. The +13-day offset is constant across the
+ *  1900-2099 window. */
+function julianFeastFromGregorian(year, month, day) {
+  const greg = new Date(Date.UTC(year, month - 1, day));
+  const jul = new Date(greg.getTime() - 13 * 24 * 60 * 60 * 1000);
+  return MONTHS[jul.getUTCMonth()] + " " + jul.getUTCDate();
 }
 
 // ============================================================================
@@ -284,6 +306,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function importOneDate(year, month, day, opts) {
   const stamp = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const julianFallback = julianFeastFromGregorian(year, month, day);
   const calHtml = await fetchHtcAsText(calendarUrl(year, month, day));
   const saints = parseCalendarSaints(calHtml);
   if (saints.length === 0) {
@@ -298,6 +321,34 @@ async function importOneDate(year, month, day, opts) {
       skipped++;
       continue;
     }
+
+    // Slug is derivable from the calendar entry alone, so we can check
+    // file existence BEFORE hitting HTC for the Life page.
+    const provisionalSlug = slugify(cal.name);
+    const filePath = path.join(SAINTS_DIR, `${provisionalSlug}.json`);
+
+    let existing = null;
+    if (existsSync(filePath)) {
+      try {
+        existing = JSON.parse(await readFile(filePath, "utf8"));
+      } catch {
+        existing = null;
+      }
+      const hasLife = existing && typeof existing.life === "string" && existing.life.trim().length > 0;
+      if (opts.updateEmpty) {
+        if (hasLife) {
+          console.log(`[${stamp}] keep (has life): ${provisionalSlug}`);
+          skipped++;
+          continue;
+        }
+        // Empty life — fall through to re-fetch.
+      } else {
+        console.log(`[${stamp}] skip (exists): ${provisionalSlug}`);
+        skipped++;
+        continue;
+      }
+    }
+
     await sleep(opts.delay);
     let lifeHtml;
     try {
@@ -308,16 +359,23 @@ async function importOneDate(year, month, day, opts) {
       continue;
     }
     const parsed = parseSaintLife(lifeHtml);
-    const slug = slugify(parsed.name || cal.name);
-    const filePath = path.join(SAINTS_DIR, `${slug}.json`);
+    // For new files, prefer the parsed name's slug — it's usually the
+    // canonical short form ("greatmartyr-george-the-victory-bearer")
+    // rather than the calendar's longer commemorative phrasing.
+    // For existing files, keep the on-disk filename slug so we don't
+    // strand the file under one name with a JSON slug pointing to a
+    // different one (which breaks saintsBySlug lookups).
+    const newSlug = slugify(parsed.name || cal.name);
+    const slug = existing ? provisionalSlug : newSlug;
+    const targetPath = existing
+      ? filePath
+      : path.join(SAINTS_DIR, `${newSlug}.json`);
 
-    if (existsSync(filePath)) {
-      console.log(`[${stamp}] skip (exists): ${slug}`);
-      skipped++;
-      continue;
-    }
+    // Feast: prefer the Life page's "Commemorated on …" line; fall
+    // back to the Julian-equivalent of the import day so every saint
+    // still gets a feast date in the catalog.
+    const feast = extractFeastDay(parsed.commemorated) || julianFallback;
 
-    const feast = extractFeastDay(parsed.commemorated);
     const json = buildSaintJson({
       name: parsed.name || cal.name,
       slug,
@@ -326,8 +384,29 @@ async function importOneDate(year, month, day, opts) {
       attribution: parsed.attribution,
     });
 
-    await writeFile(filePath, JSON.stringify(json, null, 2) + "\n", "utf8");
-    console.log(`[${stamp}] + ${slug}`);
+    // When updating an existing entry, preserve any parish-curated
+    // fields (troparion, kontakion, iconSlug, aliases, custom
+    // attribution) that an editor may have filled in by hand.
+    if (existing) {
+      if (existing.troparion) json.troparion = existing.troparion;
+      if (existing.kontakion) json.kontakion = existing.kontakion;
+      if (existing.iconSlug) json.iconSlug = existing.iconSlug;
+      if (Array.isArray(existing.aliases)) json.aliases = existing.aliases;
+      // If the existing attribution is a hand-set parish credit
+      // ("translated by Fr. X" etc.), keep it; otherwise overwrite
+      // with whatever the page now reports.
+      if (
+        existing.attribution &&
+        existing.attribution !== "Holy Trinity Orthodox Mission, holytrinityorthodox.com" &&
+        !/^©|^\(c\)|^Copyright/i.test(existing.attribution)
+      ) {
+        json.attribution = existing.attribution;
+      }
+    }
+
+    await writeFile(targetPath, JSON.stringify(json, null, 2) + "\n", "utf8");
+    const label = existing ? "↻" : "+";
+    console.log(`[${stamp}] ${label} ${slug}`);
     saved++;
   }
 
@@ -360,7 +439,7 @@ async function importByUrl(url, opts) {
 // ============================================================================
 
 function parseArgs(argv) {
-  const out = { delay: 500 };
+  const out = { delay: 500, updateEmpty: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--date") out.date = argv[++i];
@@ -368,6 +447,7 @@ function parseArgs(argv) {
     else if (a === "--year") out.year = argv[++i];
     else if (a === "--url") out.url = argv[++i];
     else if (a === "--delay") out.delay = parseInt(argv[++i], 10) || 500;
+    else if (a === "--update-empty") out.updateEmpty = true;
     else if (a === "--help" || a === "-h") out.help = true;
   }
   return out;
@@ -381,6 +461,9 @@ function printHelp() {
       "  node scripts/import-htc-saints.mjs --range YYYY-MM-DD:YYYY-MM-DD",
       "  node scripts/import-htc-saints.mjs --year YYYY",
       "  node scripts/import-htc-saints.mjs --url <htc saint url>",
+      "  node scripts/import-htc-saints.mjs --update-empty --year YYYY",
+      "                                              # re-fetches and overwrites",
+      "                                              # files whose `life` is empty",
       "  node scripts/import-htc-saints.mjs --delay 1000   # ms between requests",
     ].join("\n"),
   );
