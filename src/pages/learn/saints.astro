@@ -477,8 +477,15 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
           </div>
         `);
       }
-      if (saint.attribution && saint.attribution.trim()) {
-        parts.push(`<p class="mt-4 text-xs italic text-text-secondary">${escapeHtml(saint.attribution)}</p>`);
+      // Only show per-card attribution when it's an actual copyright /
+      // translator credit (starts with © / Copyright). The generic
+      // "Holy Trinity Orthodox Mission, holytrinityorthodox.com"
+      // fallback we set during import — and any "unknown" placeholder —
+      // are covered by the page-level acknowledgement above and would
+      // be redundant noise on every card.
+      const a = (saint.attribution || "").trim();
+      if (a && /^(©|\(c\)|copyright)/i.test(a)) {
+        parts.push(`<p class="mt-4 text-xs italic text-text-secondary">${escapeHtml(a)}</p>`);
       }
       modalBody.innerHTML = parts.join("");
 

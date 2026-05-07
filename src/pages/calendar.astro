@@ -531,8 +531,12 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
           </div>
         `);
       }
-      if (local.attribution) {
-        parts.push(`<p class="mt-6 text-xs italic text-text-secondary">${escapeHtml(local.attribution)}</p>`);
+      // Only show per-card attribution when it's an actual copyright /
+      // translator credit. The generic HTC fallback and "unknown"
+      // placeholders are covered by the page-level acknowledgement.
+      const localAttrib = (local.attribution || "").trim();
+      if (localAttrib && /^(©|\(c\)|copyright)/i.test(localAttrib)) {
+        parts.push(`<p class="mt-6 text-xs italic text-text-secondary">${escapeHtml(localAttrib)}</p>`);
       }
       modalBody.innerHTML = parts.join('');
     }
