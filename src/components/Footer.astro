@@ -21,17 +21,25 @@ const footerColumns = [
   {
     heading: "Support",
     links: [
-      { href: "/donate/", label: "Donate" },
+      { href: "/donate/", label: "Tithe / Donate" },
       { href: "/contact/", label: "Prayer Requests" },
     ],
   },
 ];
 
-const jurisdictionLinks = [
-  { href: "https://orthodoxmetropolia.org", label: "Orthodox Metropolia" },
-  { href: "https://avlonasynodusa.com", label: "Avlona Synod USA" },
-  { href: "https://ipckatakomb.ru", label: "IPC Katakomb (Russia)" },
-  { href: "https://nftu.net", label: "NFTU" },
+// Site map — every primary page on the site, alphabetised inside each
+// row for quick scanning. Auth-gated routes (account, admin, library)
+// are listed too; following one when signed-out routes through /login.
+const siteMapLinks = [
+  { href: "/", label: "Home" },
+  { href: "/about/", label: "About" },
+  { href: "/calendar/", label: "Calendar" },
+  { href: "/contact/", label: "Contact" },
+  { href: "/donate/", label: "Tithe / Donate" },
+  { href: "/learn/", label: "Learn" },
+  { href: "/learn/library/", label: "Parish Library" },
+  { href: "/account/", label: "My Account" },
+  { href: "/login/", label: "Sign In" },
 ];
 
 const siteInfoLinks = [
@@ -76,16 +84,12 @@ const siteInfoLinks = [
     </div>
 
     <div class="mt-12 border-t border-border-soft pt-8">
-      <h3 class="font-display text-sm font-semibold uppercase tracking-widest text-brand-tan-dark">In Communion With</h3>
+      <h3 class="font-display text-sm font-semibold uppercase tracking-widest text-brand-tan-dark">Site Map</h3>
       <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        {jurisdictionLinks.map((link) => (
+        {siteMapLinks.map((link) => (
           <li>
-            <a
-              href={link.href}
-              rel="noopener external"
-              class="text-text-secondary no-underline hover:text-brand-blue-dark hover:underline"
-            >
-              {link.label} ↗
+            <a href={link.href} class="text-text-secondary no-underline hover:text-brand-blue-dark hover:underline">
+              {link.label}
             </a>
           </li>
         ))}

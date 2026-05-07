@@ -1,10 +1,10 @@
 ---
 const navLinks = [
   { href: "/about/", label: "About" },
-  { href: "/learn/", label: "Learn" },
   { href: "/calendar/", label: "Calendar" },
-  { href: "/donate/", label: "Donate" },
+  { href: "/donate/", label: "Tithe / Donate" },
   { href: "/contact/", label: "Contact" },
+  { href: "/learn/", label: "Learn" },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -41,7 +41,7 @@ function isActive(href: string): boolean {
               href={link.href}
               aria-current={active ? "page" : undefined}
               class:list={[
-                "no-underline transition-colors py-1 border-b-2",
+                "no-underline transition-colors py-1 border-b-2 whitespace-nowrap",
                 active
                   ? "text-text-primary border-liturgical-current"
                   : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
@@ -51,20 +51,7 @@ function isActive(href: string): boolean {
             </a>
           );
         })}
-        <a
-          href="/about/#schedule"
-          class:list={[
-            "no-underline transition-colors py-1 border-b-2",
-            currentPath === "/about/#schedule"
-              ? "text-text-primary border-liturgical-current"
-              : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
-          ]}
-        >
-          Plan Your Visit
-        </a>
       </nav>
-
-      <div id="auth-nav" class="hidden md:flex items-center gap-3 text-sm"></div>
 
       <button
         type="button"
@@ -75,6 +62,10 @@ function isActive(href: string): boolean {
       >
         <span id="theme-icon">🌙</span>
       </button>
+
+      <!-- Auth nav lives furthest right by design — rendered client-side
+           by the script below once /api/auth/me resolves. -->
+      <div id="auth-nav" class="hidden md:flex items-center text-sm"></div>
 
       <button
         type="button"
@@ -108,9 +99,6 @@ function isActive(href: string): boolean {
           </a>
         );
       })}
-      <a href="/about/#schedule" class="btn btn-primary mt-3 w-full">
-        Plan Your Visit
-      </a>
       <div id="mobile-auth-nav" class="mt-3"></div>
     </nav>
   </div>
@@ -155,6 +143,38 @@ function isActive(href: string): boolean {
     });
   }
 
+  function attachUserMenuToggle() {
+    const trigger = document.getElementById("user-menu-trigger");
+    const panel = document.getElementById("user-menu-panel");
+    if (!trigger || !panel) return;
+
+    const close = () => {
+      panel.classList.add("hidden");
+      trigger.setAttribute("aria-expanded", "false");
+    };
+    const open = () => {
+      panel.classList.remove("hidden");
+      trigger.setAttribute("aria-expanded", "true");
+    };
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = trigger.getAttribute("aria-expanded") === "true";
+      if (isOpen) close(); else open();
+    });
+
+    // Click outside the panel closes it.
+    document.addEventListener("click", (e) => {
+      if (!panel.contains(e.target) && e.target !== trigger) close();
+    });
+
+    // ESC closes it. Pressing Tab past the last menu item also closes
+    // (browser default, no extra wiring needed since we don't trap focus).
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+  }
+
   async function updateAuthNav() {
     const authNav = document.getElementById("auth-nav");
     const mobileAuthNav = document.getElementById("mobile-auth-nav");
@@ -171,26 +191,55 @@ function isActive(href: string): boolean {
       if (response.ok && data.loggedIn) {
         const name = escapeHtml(data.name || "Member");
         const isAdmin = data.role === "admin";
-        const adminDesktop = isAdmin
-          ? `<a href="/admin/contacts/" class="font-display text-xs uppercase tracking-[0.26em] text-brand-tan-dark hover:text-brand-tan no-underline">Admin</a>`
+        const adminDesktopItem = isAdmin
+          ? `<a href="/admin/contacts/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Admin</a>`
           : "";
         const adminMobile = isAdmin
           ? `<a href="/admin/contacts/" class="btn btn-secondary w-full mb-2">Admin</a>`
           : "";
+
+        // Desktop: name → click → dropdown panel with Account / Admin / Sign Out.
         authNav.innerHTML = `
-          ${adminDesktop}
-          <a href="/account/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue no-underline">${name}</a>
-          <button id="sign-out-button" type="button" class="btn btn-primary whitespace-nowrap text-xs font-display uppercase tracking-[0.26em] py-2">
-            Sign Out
-          </button>
+          <div class="relative">
+            <button
+              id="user-menu-trigger"
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="user-menu-panel"
+              class="flex items-center gap-1 font-display text-sm text-brand-blue-dark hover:text-brand-blue px-2 py-1 rounded transition-colors"
+            >
+              <span>${name}</span>
+              <span aria-hidden="true" class="text-xs">▾</span>
+            </button>
+            <div
+              id="user-menu-panel"
+              role="menu"
+              aria-labelledby="user-menu-trigger"
+              class="hidden absolute right-0 top-full mt-2 min-w-44 border border-border-soft bg-cream-card shadow-md py-1 z-50"
+            >
+              <a href="/account/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">My Account</a>
+              ${adminDesktopItem}
+              <button
+                id="sign-out-button"
+                type="button"
+                role="menuitem"
+                class="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale"
+              >Sign Out</button>
+            </div>
+          </div>
         `;
+
+        // Mobile: keep options as inline buttons/links, no dropdown.
         mobileAuthNav.innerHTML = `
+          <a href="/account/" class="btn btn-secondary w-full mb-2">My Account</a>
           ${adminMobile}
           <button id="mobile-sign-out-button" type="button" class="btn btn-primary w-full">
             Sign Out
           </button>
         `;
         attachSignOutHandlers();
+        attachUserMenuToggle();
         return;
       }
     } catch (error) {
@@ -198,7 +247,7 @@ function isActive(href: string): boolean {
     }
 
     authNav.innerHTML = `
-      <a href="/login/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue">Sign In</a>
+      <a href="/login/" class="font-display text-sm text-brand-blue-dark hover:text-brand-blue px-2 py-1">Sign In</a>
     `;
     mobileAuthNav.innerHTML = `
       <a href="/login/" class="btn btn-secondary w-full">Sign In</a>
