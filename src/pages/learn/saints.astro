@@ -114,16 +114,54 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
         <span id="saints-count">{totalCount}</span> saints in the database
       </p>
       <p class="mt-4 text-xs italic leading-relaxed text-text-secondary">
-        With grateful acknowledgement to David Leselidze and
+        With deep gratitude to David Leselidze and
         <a
           href="https://www.holytrinityorthodox.com/htc/orthodox-calendar/"
           target="_blank"
           rel="noopener noreferrer"
           class="text-brand-blue-dark hover:underline"
         >Holy Trinity Orthodox Mission</a>
-        for graciously permitting our parish to embed the calendar and
-        source these saint biographies for the formation of our community.
+        for graciously permitting our parish to embed their calendar and
+        draw from their comprehensive database of saints&apos; lives for
+        the formation of our community. Our catalog of {totalCount.toLocaleString()}
+        saints would not exist without their generosity.
       </p>
+
+      <!-- Official Orthodox Calendar app badges (hotlinked from
+           Google's and Apple's brand-assets URLs — meant to be used
+           this way per their respective marketing guidelines, no
+           licensing concerns). Both badges are sized at height: 48px
+           so they sit visually balanced; aspect ratio is preserved
+           by the browser. -->
+      <p class="mt-4 text-xs leading-relaxed text-text-secondary">
+        Take the Orthodox calendar with you — download the official app:
+      </p>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <a
+          href="https://play.google.com/store/apps/details?id=com.holytrinityorthodox.orthodoxcalendar&hl=en"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get the Orthodox Calendar on Google Play"
+        >
+          <img
+            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+            alt="Get it on Google Play"
+            height="48"
+          />
+        </a>
+        <a
+          href="https://apps.apple.com/us/app/orthodox-calendar/id381641703"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Download the Orthodox Calendar on the App Store"
+        >
+          <img
+            src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
+            alt="Download on the App Store"
+            height="48"
+          />
+        </a>
+      </div>
 
       <!-- Search -->
       <div class="mt-8">
