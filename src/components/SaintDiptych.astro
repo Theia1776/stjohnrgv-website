@@ -168,48 +168,11 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       'July','August','September','October','November','December',
     ];
 
-    // Today's liturgical date = Gregorian − 13 days.
-    const now = new Date();
-    const julian = new Date(now.getTime() - 13 * 24 * 60 * 60 * 1000);
-    const feastKey = MONTHS[julian.getMonth()] + ' ' + julian.getDate();
-
-    const saint = saints.find(
-      (s) => Array.isArray(s.feasts) && s.feasts.includes(feastKey),
-    );
-    if (!saint) return;
-
-    // Right-panel text fields
-    host.querySelector('[data-saint-name]').textContent = saint.name || '';
-    host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + feastKey;
-
-    // Bio: skip the stub placeholder used for entries we haven't
-    // written yet.
-    const isStub =
-      typeof saint.life === 'string' &&
-      saint.life.startsWith('Little is known about this saint beyond their commemoration');
-    if (saint.life && !isStub) {
-      const sentences = saint.life.match(/[^.!?]+[.!?]+/g) || [];
-      const preview = sentences.slice(0, 2).join(' ').trim();
-      if (preview) {
-        const bioEl = host.querySelector('[data-saint-bio]');
-        bioEl.textContent = preview;
-        bioEl.hidden = false;
-      }
-    }
-
-    // Left-panel icon: if the saint's iconSlug matches a file in
-    // src/assets/images/ (mapped to its processed URL at build time),
-    // render the image; otherwise fall through to the gold-cross
-    // "ICON PENDING" placeholder.
-    const iconArea = host.querySelector('[data-icon-area]');
-    const iconUrl = saint.iconSlug ? ICON_URLS[saint.iconSlug] : null;
-    if (iconUrl) {
-      const safeAlt = (saint.name || '')
-        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-      iconArea.innerHTML =
-        '<img src="' + iconUrl + '" alt="Icon of ' + safeAlt + '" class="h-full w-full object-contain" />';
-    } else {
-      iconArea.innerHTML = renderFallbackIcon();
+    function feastKeyForGregorian(gregorian) {
+      // Liturgical (Julian) date = Gregorian − 13 days for the
+      // 1900–2099 window.
+      const julian = new Date(gregorian.getTime() - 13 * 24 * 60 * 60 * 1000);
+      return MONTHS[julian.getMonth()] + ' ' + julian.getDate();
     }
 
     function renderFallbackIcon() {
@@ -227,7 +190,75 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       );
     }
 
-    host.hidden = false;
+    function loadForDate(gregorian) {
+      const feastKey = feastKeyForGregorian(gregorian);
+
+      const saint = saints.find(
+        (s) => Array.isArray(s.feasts) && s.feasts.includes(feastKey),
+      );
+
+      // No match — hide the diptych entirely. Re-collapse to closed
+      // state so the next match doesn't open mid-flip.
+      if (!saint) {
+        host.dataset.state = 'closed';
+        host.hidden = true;
+        return;
+      }
+
+      // Right-panel text fields
+      host.querySelector('[data-saint-name]').textContent = saint.name || '';
+      host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + feastKey;
+
+      // Bio: skip the stub placeholder used for entries we haven't
+      // written yet.
+      const bioEl = host.querySelector('[data-saint-bio]');
+      const isStub =
+        typeof saint.life === 'string' &&
+        saint.life.startsWith('Little is known about this saint beyond their commemoration');
+      if (saint.life && !isStub) {
+        const sentences = saint.life.match(/[^.!?]+[.!?]+/g) || [];
+        const preview = sentences.slice(0, 2).join(' ').trim();
+        if (preview) {
+          bioEl.textContent = preview;
+          bioEl.hidden = false;
+        } else {
+          bioEl.textContent = '';
+          bioEl.hidden = true;
+        }
+      } else {
+        bioEl.textContent = '';
+        bioEl.hidden = true;
+      }
+
+      // Left-panel icon: if the saint's iconSlug matches a file in
+      // src/assets/images/ (mapped to its processed URL at build time),
+      // render the image; otherwise fall through to the gold-cross
+      // "ICON PENDING" placeholder.
+      const iconArea = host.querySelector('[data-icon-area]');
+      const iconUrl = saint.iconSlug ? ICON_URLS[saint.iconSlug] : null;
+      if (iconUrl) {
+        const safeAlt = (saint.name || '')
+          .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        iconArea.innerHTML =
+          '<img src="' + iconUrl + '" alt="Icon of ' + safeAlt + '" class="h-full w-full object-contain" />';
+      } else {
+        iconArea.innerHTML = renderFallbackIcon();
+      }
+
+      host.hidden = false;
+    }
+
+    // Initial render — today's date.
+    loadForDate(new Date());
+
+    // The calendar page dispatches `calendar-date-change` whenever the
+    // user navigates Prev/Next/Today. We re-run the match against the
+    // event's date so the diptych stays in sync with what's below.
+    window.addEventListener('calendar-date-change', (e) => {
+      const detail = e && e.detail ? e.detail : null;
+      const date = detail && detail.date instanceof Date ? detail.date : new Date();
+      loadForDate(date);
+    });
 
     // Open / close. Single delegated listener catches the closed-cover
     // button (data-action="open") and the close button in the right

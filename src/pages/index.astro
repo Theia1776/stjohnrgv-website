@@ -4,7 +4,6 @@ import { Image } from "astro:assets";
 import stjohnIcon from "../assets/images/stjohn-of-kronstadt.jpg";
 import { getLiturgicalSeason } from "../lib/liturgical.ts";
 import { getUpcomingFeasts } from "../lib/feasts.ts";
-import SaintDiptych from "../components/SaintDiptych.astro";
 
 const parishSchema = {
   "@context": "https://schema.org",
@@ -252,16 +251,6 @@ const churchLocalSchema = {
     </div>
   </section>
 
-
-  <!-- ==================== SAINT OF THE DAY ====================
-       Self-contained component: hidden until today's Julian date
-       matches a saint in src/data/saints/. Closed-state book opens
-       to a two-panel diptych on click. -->
-  <section class="bg-cream-bg">
-    <div class="mx-auto max-w-5xl px-4 pt-6 pb-12 md:pt-8 md:pb-16">
-      <SaintDiptych />
-    </div>
-  </section>
 
   {isPaschal && (
     <!-- ==================== PASCHAL ANASTASIS + TROPARION (Pascha only) ====================

@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test --experimental-strip-types tests/*.test.ts"
+    "test": "node --test --experimental-strip-types tests/*.test.ts",
+    "import-saints": "node scripts/import-htc-saints.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.3",

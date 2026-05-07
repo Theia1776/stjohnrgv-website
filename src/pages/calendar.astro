@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import SaintDiptych from "../components/SaintDiptych.astro";
 import { saints, normalizeName } from "../lib/saints-lookup";
 
 // Pre-attach a normalized name to each saint so the client doesn't
@@ -36,7 +37,18 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       <div class="mb-8 text-center">
         <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">↩ Today</button>
       </div>
+    </div>
 
+    <!-- Saint of the Day diptych. Renders only on days that match a
+         saint in src/data/saints/. The component listens for the
+         `calendar-date-change` event below and re-runs its match
+         whenever the user navigates Prev / Next / Today, so the book
+         always reflects the displayed day, not just today. -->
+    <div class="mb-12 flex justify-center">
+      <SaintDiptych />
+    </div>
+
+    <div class="mx-auto max-w-3xl">
       <!-- Loading -->
       <div id="cal-loading" class="py-20 text-center text-text-secondary">
         <p class="font-display text-base tracking-wide">Loading…</p>
@@ -363,6 +375,10 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       content.innerHTML = '';
 
       document.getElementById('cal-date').textContent = formatDate(date);
+
+      // Notify the SaintDiptych so its match re-runs against the day
+      // we're displaying. (No-op when the diptych isn't on the page.)
+      window.dispatchEvent(new CustomEvent('calendar-date-change', { detail: { date } }));
 
       try {
         const data = await fetchDay(date);
