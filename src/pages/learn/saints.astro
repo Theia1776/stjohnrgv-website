@@ -129,8 +129,17 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       <!-- Right column: app-store call-to-action.
            Badges hotlinked from Google's and Apple's brand-asset URLs
            (intended for that use per each platform's marketing
-           guidelines). Both at h-14 (56px) so the chunky Google PNG and
-           the compact Apple SVG land at the same visual height. -->
+           guidelines).
+
+           Apple: h-14 (56px) — the SVG has no internal padding, so its
+                  bounding-box height equals the visible badge height.
+           Google: h-[68px] — the PNG has ~8% vertical and ~7%
+                  horizontal whitespace around the visible badge art.
+                  Bumping the bounding box to 68px makes the visible
+                  artwork (68px × 0.84 = ~57px tall) read at the same
+                  size as Apple's 56px-tall art. The two are NOT given
+                  the same CSS height on purpose — that's been the
+                  whole problem. -->
       <div>
         <p class="text-sm font-bold leading-relaxed text-brand-blue-dark">
           Take the Orthodox Calendar with you wherever you go &mdash; download the official app:
@@ -145,7 +154,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
             <img
               src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
               alt="Get it on Google Play"
-              class="h-14 w-auto"
+              class="h-[68px] w-auto"
             />
           </a>
           <a
