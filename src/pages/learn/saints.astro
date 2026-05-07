@@ -102,76 +102,80 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
 >
   <section class="mx-auto max-w-5xl px-4 py-16 md:py-20">
 
-    <!-- Header -->
-    <div class="mx-auto max-w-3xl">
-      <p class="mb-2 font-display text-xs uppercase tracking-widest text-brand-tan-dark">Our Canonical Calendar</p>
-      <h1 class="font-display text-3xl text-text-primary md:text-4xl">Saints</h1>
-      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
-      <p class="mt-6 text-base leading-relaxed text-text-primary/85">
-        An encyclopedia of saints commemorated in our parish. With deep
-        gratitude to David Leselidze and
-        <a
-          href="https://www.holytrinityorthodox.com/htc/orthodox-calendar/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-brand-blue-dark hover:underline"
-        >Holy Trinity Orthodox Mission</a>
-        for graciously permitting our parish to embed and source from
-        their calendar to draw a comprehensive database of saints&apos;
-        lives for the private use of our parish. Our catalog of
-        <span id="saints-count">{totalCount.toLocaleString()}</span>
-        saints would not exist without their generosity.
-      </p>
-
-      <!-- Official Orthodox Calendar app badges (hotlinked from Google's
-           and Apple's brand-assets URLs — meant to be used that way per
-           each platform's marketing guidelines, so no licensing
-           concerns). Both badges sized at h-10 (40px) so the chunky
-           Google PNG and the more compact Apple SVG land at the same
-           visual height side by side; w-auto preserves aspect ratio. -->
-      <p class="mt-4 text-sm font-bold leading-relaxed text-brand-blue-dark">
-        Take the Orthodox Calendar with you wherever you go &mdash; download the official app:
-      </p>
-      <div class="mt-3 flex flex-wrap items-center gap-3">
-        <a
-          href="https://play.google.com/store/apps/details?id=com.holytrinityorthodox.orthodoxcalendar&hl=en"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Get the Orthodox Calendar on Google Play"
-        >
-          <img
-            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-            alt="Get it on Google Play"
-            class="h-14 w-auto"
-          />
-        </a>
-        <a
-          href="https://apps.apple.com/us/app/orthodox-calendar/id381641703"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Download the Orthodox Calendar on the App Store"
-        >
-          <img
-            src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
-            alt="Download on the App Store"
-            class="h-14 w-auto"
-          />
-        </a>
+    <!-- Header — heading + intro on the left, app-store CTA on the right.
+         Stacks on mobile; side-by-side from md and up. -->
+    <div class="grid gap-8 md:grid-cols-2 md:gap-12">
+      <!-- Left column: title + acknowledgement paragraph -->
+      <div>
+        <h1 class="font-display text-3xl text-text-primary md:text-4xl">Saints</h1>
+        <div class="mt-4 h-px w-24 bg-liturgical-current"></div>
+        <p class="mt-6 text-base leading-relaxed text-text-primary/85">
+          An encyclopedia of saints commemorated in our parish. With deep
+          gratitude to David Leselidze and
+          <a
+            href="https://www.holytrinityorthodox.com/htc/orthodox-calendar/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-brand-blue-dark hover:underline"
+          >Holy Trinity Orthodox Mission</a>
+          for graciously permitting our parish to embed and source from
+          their calendar to draw a comprehensive database of saints&apos;
+          lives for the private use of our parish. Our catalog of
+          <span id="saints-count">{totalCount.toLocaleString()}</span>
+          saints would not exist without their generosity.
+        </p>
       </div>
 
-      <!-- Search -->
-      <div class="mt-8">
-        <label class="block">
-          <span class="sr-only">Search saints</span>
-          <input
-            id="saints-search"
-            type="search"
-            placeholder="Search saints..."
-            autocomplete="off"
-            class="block w-full border border-text-secondary bg-cream-card px-4 py-3 text-base text-text-primary placeholder:text-text-secondary focus:outline-none"
-          />
-        </label>
+      <!-- Right column: app-store call-to-action.
+           Badges hotlinked from Google's and Apple's brand-asset URLs
+           (intended for that use per each platform's marketing
+           guidelines). Both at h-14 (56px) so the chunky Google PNG and
+           the compact Apple SVG land at the same visual height. -->
+      <div>
+        <p class="text-sm font-bold leading-relaxed text-brand-blue-dark">
+          Take the Orthodox Calendar with you wherever you go &mdash; download the official app:
+        </p>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.holytrinityorthodox.orthodoxcalendar&hl=en"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Get the Orthodox Calendar on Google Play"
+          >
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              alt="Get it on Google Play"
+              class="h-14 w-auto"
+            />
+          </a>
+          <a
+            href="https://apps.apple.com/us/app/orthodox-calendar/id381641703"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download the Orthodox Calendar on the App Store"
+          >
+            <img
+              src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
+              alt="Download on the App Store"
+              class="h-14 w-auto"
+            />
+          </a>
+        </div>
       </div>
+    </div>
+
+    <!-- Search bar (full container width below the header) -->
+    <div class="mt-10 mx-auto max-w-3xl">
+      <label class="block">
+        <span class="sr-only">Search saints</span>
+        <input
+          id="saints-search"
+          type="search"
+          placeholder="Search saints..."
+          autocomplete="off"
+          class="block w-full border border-text-secondary bg-cream-card px-4 py-3 text-base text-text-primary placeholder:text-text-secondary focus:outline-none"
+        />
+      </label>
     </div>
 
     <!-- ============== SEARCH RESULTS (only shown when search has text) ============== -->
@@ -180,25 +184,9 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
     <!-- ============== MONTH VIEW (default) ============== -->
     <div id="month-view" class="mt-10">
 
-      <!-- Movable Feasts tile, centered -->
-      <div class="mx-auto max-w-md">
-        <button
-          type="button"
-          data-tile="movable"
-          aria-expanded="false"
-          aria-controls="panel-movable"
-          class="group flex w-full flex-col items-center justify-center border-2 border-brand-tan bg-cream-card px-6 py-5 shadow-sm transition-colors hover:border-brand-tan-dark focus:border-brand-tan-dark focus:outline-none aria-expanded:border-brand-blue-dark aria-expanded:bg-brand-blue-pale"
-          disabled={movableCount === 0}
-        >
-          <span class="font-display text-xl text-text-primary">Movable Feasts</span>
-          <span class="mt-1 text-xs text-text-secondary">
-            {movableCount} {movableCount === 1 ? "saint" : "saints"}
-          </span>
-        </button>
-      </div>
-
-      <!-- Month tile grid: 3×4 on lg, scaling down responsively -->
-      <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <!-- Month tile grid (now sits directly under the search bar):
+           3×4 on lg, scaling down responsively. -->
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {MONTHS.map((monthName, i) => {
           const count = monthBuckets[i].length;
           const empty = count === 0;
@@ -223,6 +211,23 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
             </button>
           );
         })}
+      </div>
+
+      <!-- Movable Feasts tile — centered, sits below the months grid. -->
+      <div class="mt-6 mx-auto max-w-md">
+        <button
+          type="button"
+          data-tile="movable"
+          aria-expanded="false"
+          aria-controls="panel-movable"
+          class="group flex w-full flex-col items-center justify-center border-2 border-brand-tan bg-cream-card px-6 py-5 shadow-sm transition-colors hover:border-brand-tan-dark focus:border-brand-tan-dark focus:outline-none aria-expanded:border-brand-blue-dark aria-expanded:bg-brand-blue-pale"
+          disabled={movableCount === 0}
+        >
+          <span class="font-display text-xl text-text-primary">Movable Feasts</span>
+          <span class="mt-1 text-xs text-text-secondary">
+            {movableCount} {movableCount === 1 ? "saint" : "saints"}
+          </span>
+        </button>
       </div>
 
       <!-- Panel area: a single panel slot whose content swaps on tile
