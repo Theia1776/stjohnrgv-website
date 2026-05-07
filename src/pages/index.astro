@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import stjohnIcon from "../assets/images/stjohn-of-kronstadt.jpg";
 import { getLiturgicalSeason } from "../lib/liturgical.ts";
+import { getUpcomingFeasts } from "../lib/feasts.ts";
 import SaintDiptych from "../components/SaintDiptych.astro";
 
 const parishSchema = {
@@ -76,13 +77,11 @@ const season = getLiturgicalSeason(new Date());
 const isPaschal = ["pascha-day", "bright-week", "paschal-season"].includes(season.seasonKey);
 const seasonLabel = `${season.label} — ${season.vestmentName} vestments`;
 
-// Upcoming feasts — Gregorian dates only (Pascha 2026 = April 12).
-const upcomingFeasts = [
-  { name: "Great and Holy Pascha", date: "April 12",       note: "The Resurrection of Our Lord" },
-  { name: "Bright Week",           date: "April 13 – 18",  note: "Daily Paschal services" },
-  { name: "Mid-Pentecost",         date: "May 6",          note: "The middle of the Paschal season" },
-  { name: "Ascension of Our Lord", date: "May 21",         note: "Forty days after Pascha" },
-];
+// Upcoming feasts — generated from the catalog in lib/feasts.ts.
+// Each feast's Gregorian date is computed for the current liturgical
+// year (Pascha-relative for movable, fixed NS month/day for fixed),
+// then the next four are taken in date order from today.
+const upcomingFeasts = getUpcomingFeasts(new Date(), 4);
 
 const services = [
   { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
@@ -412,7 +411,7 @@ const churchLocalSchema = {
           <article class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-blue">
             <h3 class="font-display text-xl text-text-primary">{f.name}</h3>
             <p class="mt-2 text-sm text-brand-blue-dark">
-              <span class="font-display">{f.date}</span>
+              <span class="font-display">{f.formatted}</span>
             </p>
             <p class="mt-3 text-sm text-text-secondary">{f.note}</p>
           </article>
