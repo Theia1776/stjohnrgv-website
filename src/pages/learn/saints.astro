@@ -393,7 +393,22 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       if (saint.life && saint.life.trim()) {
         parts.push(`<div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(saint.life)}</div>`);
       } else {
-        parts.push('<p class="italic text-text-secondary">No biography available.</p>');
+        // Bio-pending placeholder card — styled to match the saint
+        // catalog's other cards (cream surface, sacred-gold accent
+        // border + cross icon, text-primary copy). Surfaces honestly
+        // that the entry exists but the biographical text is still
+        // being sourced.
+        parts.push(`
+          <div class="border-2 border-sacred-gold bg-cream-card p-6 text-center">
+            <div aria-hidden="true" class="mb-3 text-4xl text-sacred-gold">☩</div>
+            <p class="font-display text-text-primary leading-relaxed">
+              We don&apos;t currently have biographical information for <strong>${escapeHtml(saint.name || "this saint")}</strong>.
+            </p>
+            <p class="mt-2 text-sm italic text-text-secondary">
+              We&apos;re working to source and add it &mdash; thank you for your patience.
+            </p>
+          </div>
+        `);
       }
       if (saint.troparion && saint.troparion.trim()) {
         parts.push(`
