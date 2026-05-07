@@ -53,6 +53,36 @@ function isActive(href: string): boolean {
         })}
       </nav>
 
+      <!-- Language switcher (desktop). Click EN/ES/RU; ES and RU send
+           the visitor through Google's translate proxy
+           (stjohnrgv-org.translate.goog). Google maintains the
+           translated session on subsequent navigations until the user
+           switches back. -->
+      <div class="hidden md:block relative">
+        <button
+          id="lang-trigger"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="lang-panel"
+          aria-label="Select language"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-display uppercase tracking-widest text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
+        >
+          <span id="lang-current-label">EN</span>
+          <span aria-hidden="true" class="text-[0.6rem]">▾</span>
+        </button>
+        <div
+          id="lang-panel"
+          role="menu"
+          aria-labelledby="lang-trigger"
+          class="hidden absolute right-0 top-full mt-2 min-w-36 border border-border-soft bg-cream-card shadow-md py-1 z-50"
+        >
+          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
+          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
+          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
+        </div>
+      </div>
+
       <button
         type="button"
         id="theme-toggle"
@@ -100,6 +130,15 @@ function isActive(href: string): boolean {
         );
       })}
       <div id="mobile-auth-nav" class="mt-3"></div>
+
+      <!-- Language switcher (mobile). Same data-lang values as the
+           desktop dropdown so the JS treats them uniformly. -->
+      <div class="mt-4 flex items-center gap-2 border-t border-border-soft pt-4">
+        <span class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Language:</span>
+        <button data-lang="en" type="button" class="lang-option px-3 py-1 text-xs font-display uppercase tracking-widest border border-border-soft rounded text-text-primary hover:bg-brand-blue-pale">EN</button>
+        <button data-lang="es" type="button" class="lang-option px-3 py-1 text-xs font-display uppercase tracking-widest border border-border-soft rounded text-text-primary hover:bg-brand-blue-pale">ES</button>
+        <button data-lang="ru" type="button" class="lang-option px-3 py-1 text-xs font-display uppercase tracking-widest border border-border-soft rounded text-text-primary hover:bg-brand-blue-pale">RU</button>
+      </div>
     </nav>
   </div>
 </header>
@@ -112,6 +151,94 @@ function isActive(href: string): boolean {
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
+
+  // ===== Language switcher =====
+  // ES / RU send the visitor through Google's translate proxy at
+  // <site-with-dashes>.translate.goog with _x_tr_tl=<lang>. Once
+  // there, every internal link stays inside the proxy until the user
+  // picks EN again. EN strips the _x_tr_* params and bounces back to
+  // the canonical host.
+  const TRANSLATE_PROXY_HOST = "stjohnrgv-org.translate.goog";
+  const ORIGINAL_HOST = "stjohnrgv.org";
+  const LANG_LABEL = { en: "EN", es: "ES", ru: "RU" };
+
+  function detectActiveLang() {
+    if (window.location.hostname.endsWith(".translate.goog")) {
+      const tl = new URLSearchParams(window.location.search).get("_x_tr_tl");
+      if (tl === "es" || tl === "ru") return tl;
+    }
+    return "en";
+  }
+
+  function stripTranslateParams(search) {
+    if (!search) return "";
+    const params = new URLSearchParams(search);
+    Array.from(params.keys()).forEach((k) => {
+      if (k.startsWith("_x_tr_")) params.delete(k);
+    });
+    const out = params.toString();
+    return out ? "?" + out : "";
+  }
+
+  function switchLanguage(target) {
+    const path = window.location.pathname;
+    const cleaned = stripTranslateParams(window.location.search);
+    const hash = window.location.hash;
+    if (target === "en") {
+      window.location.href = "https://" + ORIGINAL_HOST + path + cleaned + hash;
+      return;
+    }
+    const sep = cleaned ? cleaned + "&" : "?";
+    window.location.href =
+      "https://" + TRANSLATE_PROXY_HOST + path + sep
+      + "_x_tr_sl=en&_x_tr_tl=" + target + "&_x_tr_hl=en" + hash;
+  }
+
+  function initLanguageSwitcher() {
+    const active = detectActiveLang();
+
+    const currentLabel = document.getElementById("lang-current-label");
+    if (currentLabel) currentLabel.textContent = LANG_LABEL[active];
+
+    document.querySelectorAll(".lang-option").forEach((el) => {
+      const btn = el;
+      const lang = btn.dataset.lang;
+      if (lang === active) {
+        btn.setAttribute("aria-current", "true");
+        btn.classList.add("bg-brand-blue-pale", "font-semibold");
+      }
+      btn.addEventListener("click", () => {
+        if (lang && lang !== active) switchLanguage(lang);
+      });
+    });
+
+    const trigger = document.getElementById("lang-trigger");
+    const panel = document.getElementById("lang-panel");
+    if (!trigger || !panel) return;
+
+    const close = () => {
+      panel.classList.add("hidden");
+      trigger.setAttribute("aria-expanded", "false");
+    };
+    const open = () => {
+      panel.classList.remove("hidden");
+      trigger.setAttribute("aria-expanded", "true");
+    };
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = trigger.getAttribute("aria-expanded") === "true";
+      if (isOpen) close(); else open();
+    });
+    document.addEventListener("click", (e) => {
+      if (!panel.contains(e.target) && e.target !== trigger) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+  }
+
+  initLanguageSwitcher();
 
   function escapeHtml(value) {
     return String(value)
