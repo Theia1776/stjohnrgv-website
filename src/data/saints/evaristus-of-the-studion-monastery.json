@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Evaristus of the Studion Monastery (825).",
+  "name": "The Monk Euarestes",
   "slug": "evaristus-of-the-studion-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 26"
+  ],
+  "life": "The Monk Euarestes, a native of Galatia, was the son of illustrious parents. From his youth he yearned for the monastic life, and in particular he loved to read the books of Saint Ephrem the Syrian. Having settled into the Studite monastery, he pursued asceticism in strict fasting, vigil and prayer, wearing iron chains. He reposed peacefully to God at age 75 in the year 825.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

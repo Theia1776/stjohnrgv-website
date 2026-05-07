@@ -1,9 +1,11 @@
 {
-  "name": "Venerable George Limniotes the Confessor of Mt. Olympus (716).",
+  "name": "The Monk George Limniotes",
   "slug": "george-limniotes-the-confessor-of-mt-olympus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 24"
+  ],
+  "life": "The Monk George Limniotes lived during the VIII Century and was a monk of the Olympia monastery near Constantinople. He suffered for venerating icons under the Iconoclast emperor Leo the Isaurian (716-741). They burned his head and cut off his nose. The Monk George died in about the year 716.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

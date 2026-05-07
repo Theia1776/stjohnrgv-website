@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Theoctyrist [Theostyrictus] (8th C).",
+  "name": "The Holy Martyr Theoktyrist (Theostyriktos), Hegumen of the Pelikiote monastery",
   "slug": "theoctyrist",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 29"
+  ],
+  "life": "The Holy Martyr Theoktyrist (Theostyriktos), Hegumen of the Pelikiote monastery, suffered for icon veneration under the impious emperor Constantine Copronymos (741-775). Together with him, subjected to tortures were Saint Stephen the New (Comm. 28 November) and other pious monks. Saint Theoktyrist was burnt with boiling tar.\nThe holy martyr is known as a spiritual writer and the author of a canon to the Mother of God \"Sustaint in Many Misfortunes\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

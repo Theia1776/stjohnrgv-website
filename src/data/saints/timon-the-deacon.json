@@ -1,9 +1,11 @@
 {
-  "name": "Apostle Timon the Deacon (1st c.).",
+  "name": "The Holy Disciple Timon (I)",
   "slug": "timon-the-deacon",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 30"
+  ],
+  "life": "The Holy Disciple Timon (I) was one of the 7 Deacons, established by the Apostles for the assist of destitute Christian widows. Afterwards he was chosen bishop of the city of Arabian Bostra, where he led many to Christianity and died a martyr: they threw him into a red-hot furnace ( a 2nd commemoration is 28 July).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

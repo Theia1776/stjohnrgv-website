@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Callinica and Basilissa of Rome (2nd c.).",
+  "name": "The Holy Martyresses Callinica and Basilissa",
   "slug": "callinica-and-basilissa-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 22"
+  ],
+  "life": "The Holy Martyresses Callinica and Basilissa were beheaded by the sword at Rome in the year 252.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sisoes of the Kiev Caves (13th c.).",
+  "name": "The Monastic Sisoi, SchemaMonk of Pechersk (XIII)",
   "slug": "sisoes-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 6"
+  ],
+  "life": "The Monastic Sisoi, SchemaMonk of Pechersk (XIII), is commemorated in the general service of the Monastic Fathers of Kievo-Pechersk reposing in the Farther Caves. He is mentioned together with the Monk Gregory the Faster: \"Sisoi the wondrous and Gregory, a name courageous, having by fasting both restrained their passions, humble ye the fierce lust of our flesh: for unto you is given to have grace to help us in our passions\" (5th ode of the Canon).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

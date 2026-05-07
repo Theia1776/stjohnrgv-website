@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Stephen of St. Sabbas' Monastery (794).",
+  "name": "The Monk Stephanos Savvaites",
   "slug": "stephen-of-st-sabbas-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 13"
+  ],
+  "life": "The Monk Stephanos Savvaites, nephew of Saint John of Damascus (Comm. on 4 December), was born in the year 725. The ten year old lad entered the Lavra of Saint Savva and spent his whole life at this monastery, sometimes going out into the wilderness for solitary ascetic deeds. The monk Stephanos was bestowed the gifts of wonder-working and perspicacity: he healed the sick, cast out devils, and discerned the thoughts of those coming to him for counsel. He died in the year 724, foretelling in advance the day of his death. The life of the monk was compiled by his student Leontios.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

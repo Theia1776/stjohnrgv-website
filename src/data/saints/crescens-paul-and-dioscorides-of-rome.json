@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Crescens, Paul, and Dioscorides of Rome (326) (Greek).",
+  "name": "The Holy Martyrs Crescentius, Paul and Dioscorides",
   "slug": "crescens-paul-and-dioscorides-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 28"
+  ],
+  "life": "The Holy Martyrs Crescentius, Paul and Dioscorides suffered for Christ at Rome in the year 326.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

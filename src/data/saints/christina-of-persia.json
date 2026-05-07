@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Christina of Persia (4th c.).",
+  "name": "The Holy Martyress Christina of Persia",
   "slug": "christina-of-persia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 13"
+  ],
+  "life": "The Holy Martyress Christina of Persia was scourged to death for confessing her faith in Christ, during the IV Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

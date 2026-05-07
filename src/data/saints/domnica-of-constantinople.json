@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Domnica of Constantinople (395).",
+  "name": "The Nun Domnica",
   "slug": "domnica-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 8"
+  ],
+  "life": "The Nun Domnica came from Carthage to Constantinople during the time of the holy Emperor Theodosius the Great. Here she accepted Baptism from Patriarch Nektarios and entered a women's monastery. By means of strict and prolonged ascetic effort she attained to high spiritual perfection. The saint healed the sick, demonstrated power over the natural elements, and predicted the future. By her miracles the saint moved inhabitants of the capital towards concerns about life eternal and the soul. Adorned by virtues, the saint expired from life a spotless virgin in her old age (+ 474).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

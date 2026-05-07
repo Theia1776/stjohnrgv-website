@@ -1,9 +1,11 @@
 {
-  "name": "St. Emilian the Confessor, bishop of Cyzicus (820).",
+  "name": "Sainted Emelian, Bishop of Kyzika",
   "slug": "st-emilian-the-confessor-bishop-of-cyzicus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 8"
+  ],
+  "life": "Sainted Emelian, Bishop of Kyzika, lived during the reign of the Iconoclast emperor Leo the Armenian (813-820). He was summoned together with other bishops to the court of the emperor, who insistently urged the bishops to refrain from the veneration of holy icons. Saint Emelian was the first firmly to answer the emperor, that the question about the veneration of holy icons ought to be discussed and decided only within the Church by spiritual personages, and not at the imperial court. In the year 815 he was sent to prison for the Orthodox faith, where he died as a confessor.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

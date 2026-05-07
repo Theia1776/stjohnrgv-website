@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Stephen, monk of Constantinople (614) (Greek).",
+  "name": "The Monk Stephen",
   "slug": "stephen-monk-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 27"
+  ],
+  "life": "The Monk Stephen, formerly a courtier under the emperor Maurice (582-602), left his service, and founded an hospice for the elderly at Armatia (Constantinople), and devoted himself totally to the effort of taking in strangers. He died peacefully somewhat beyond age 61.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

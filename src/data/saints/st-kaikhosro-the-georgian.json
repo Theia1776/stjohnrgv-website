@@ -1,9 +1,11 @@
 {
-  "name": "St. Kaikhosro the Georgian (1612) (Georgia).",
+  "name": "St. Kaikhosro the Georgian",
   "slug": "st-kaikhosro-the-georgian",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 16"
+  ],
+  "life": "The life of St. Kaikhosro the Georgian has been passed down to our century in the works of Archbishop Timote (Gabashvili), a famous Church figure and historian of the 18th century.\nIn a passage describing the frescoes and commemoration books of the Holy Cross Monastery in Jerusalem, Bishop Timote writes that an image of St. Kaikhosro the Georgian is among the sacred frescoes.\nAccording to the commemoration books of the Holy Cross Monastery, St. Kaikhosro the Georgian was tortured to death by Shah Abbas I in 1612 for his pious veneration of the holy icons.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Gabriel, founder of Lesnovo Monastery, Serbia-Bulgaria (980) (Serbia).",
+  "name": "The Monk Gabriel",
   "slug": "st-gabriel-founder-of-lesnovo-monastery-serbia-bulgaria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 15"
+  ],
+  "life": "The Monk Gabriel, founder of the Lesnovsk monastery near the city of Kratov, having received after the death of his parents a large inheritance, rejected marriage and went out onto the Lesnovsk mountain and became a monk. And there he built a church in the name of the Archangel Michael, and having gathered many monks and established for it an hegumen, he left to the monastery all his inheritance. He then hid himself away in a mine cave, where he asceticised for a period of thirty years, conquering demonic temptations by prayer and fasting. He then returned to the Lesnovsk monastery and there peacefully reposed (XI). After thirty years his relics were uncovered, and healings worked through them. A long while later they were transferred to Ternovo (Tirnova) in Bulgaria.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

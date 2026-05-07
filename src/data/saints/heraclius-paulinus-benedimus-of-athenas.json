@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Heraclius, Paulinus, Benedimus of Athenas (250).",
+  "name": "The Holy Martyrs Herakleios, Pablinos and Benedimos",
   "slug": "heraclius-paulinus-benedimus-of-athenas",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 18"
+  ],
+  "life": "The Holy Martyrs Herakleios, Pablinos and Benedimos suffered for Christ in the city of Athens. They preached there to the pagans about Christ and urged them to abandon the worship of insensate idols. The chosen of God were brought to trial together with their followers, who had discerned the true path. After many torments they were thrown into a fiery oven, in which they offered up their souls to God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

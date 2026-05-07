@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Pimen, faster of the Kiev Caves (13th c.).",
+  "name": "The Monk Pimen, Faster of Pechersk",
   "slug": "pimen-faster-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 7"
+  ],
+  "life": "The Monk Pimen, Faster of Pechersk, asceticised in the Farther Caves. His abstinence was such, that he tasted of food only once a day and only in the most necessary quantity. His outward fasting corresponded to an inward abstemiousness from any actions, thoughts or feelings, unpleasing to God. The Monk Pimen was hegumen of the Kievo-Pechersk monastery from 1132 to 1141. A second commemoration to the saint occurs on 28 August.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

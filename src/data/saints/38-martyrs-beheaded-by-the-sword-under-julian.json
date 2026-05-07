@@ -1,9 +1,11 @@
 {
-  "name": "38 Martyrs, beheaded by the sword under Julian (361-363).",
+  "name": "38 Martyrs",
   "slug": "38-martyrs-beheaded-by-the-sword-under-julian",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 31"
+  ],
+  "life": "38 Martyrs are also remembered on this day, beheaded by the sword under Julian (361-363).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

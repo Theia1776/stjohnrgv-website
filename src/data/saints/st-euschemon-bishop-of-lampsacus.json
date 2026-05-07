@@ -1,9 +1,11 @@
 {
-  "name": "St. Euschemon, bishop of Lampsacus (9th c.).",
+  "name": "Saint Euskhymonos the Confessor, Bishop of Lampsaka",
   "slug": "st-euschemon-bishop-of-lampsacus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 14"
+  ],
+  "life": "Saint Euskhymonos the Confessor, Bishop of Lampsaka, lived in Asia Minor on the coastal region of the Dardanelles Peninsula, and was known for his virtuous and ascetic life. He suffered for his icon-veneration under the iconoclast emperor Theophilos (829-842), and having been imprisoned, he was sent off and died in exile.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

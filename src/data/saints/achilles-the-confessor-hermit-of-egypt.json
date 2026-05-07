@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Achilles the Confessor, hermit of Egypt (5th c.).",
+  "name": "The Monk Achilles the Confessor",
   "slug": "achilles-the-confessor-hermit-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 17"
+  ],
+  "life": "The Monk Achilles the Confessor asceticised living the life of an hermit, and died during the V Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Eustolia (610) and Sosipatra (635) of Constantinople.",
+  "name": "St Eustolia (610) of Constantinople",
   "slug": "eustolia-and-sosipatra-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 9"
+  ],
+  "life": "Saint Evstolia, a native of Rome, came to Constantinople and entered one of the women's monasteries. The virtuous and strict monastic life of the blessed saint gained her the love and respect of the sisters. Not only monastics, but also many laypeople came to her for advice and consolation.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

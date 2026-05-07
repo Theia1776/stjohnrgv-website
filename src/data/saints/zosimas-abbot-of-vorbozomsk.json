@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Zosimas, abbot of Vorbozomsk (1550).",
+  "name": "The Monk Zosima of Vorbozomsk",
   "slug": "zosimas-abbot-of-vorbozomsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 4"
+  ],
+  "life": "The Monk Zosima of Vorbozomsk was the founder of a monastery in honour of the Annuniciation of the Most Holy Mother of God on an island in Lake Vorbozoma, situated 23 versts to the south of Belozersk. The monastery was founded way back in the XV Century, since it is known, that in the year 1501 the head of the monastery was Hegumen Jona, a disciple of the Monk Zosima. The monastery was among the number of those numerous wilderness-monasteries (small monasteries) which, being of the form of the so-called \"Trans-Volga\" monasteries, were dispersed around the Kirillo-Belozersk monastery. The Monk Zosima died in the first half of the XVI Century. It is known, that the monk wrote guidances and letters to his spiritual daughter Anastasia.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

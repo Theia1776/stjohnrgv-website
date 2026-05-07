@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Anastasius the Deacon of the Kiev Caves (12th c.).",
+  "name": "The MonkMartyr Anastasii, Deacon of Pechersk",
   "slug": "anastasius-the-deacon-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 22"
+  ],
+  "life": "The MonkMartyr Anastasii, Deacon of Pechersk, pursued asceticism in the Nearer Caves. The priestmonk Athanasii the Sooty calls him brother of the Monk Tito the Presbyter (+ not before 1190; Comm. 27 February). In the manuscripts of the saints he is called a deacon. In the Service to the Sobor (Assemblage) of the Fathers of the Nearer Caves, it says about the MonkMartyr Anastasii, that he possessed such steadfastness in God, that he received everything he asked for. His memory is celebrated also on 28 September and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

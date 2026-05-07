@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Geroncius and Basilides (3rd c.).",
+  "name": "The Martyrs Gerontios and Basilides",
   "slug": "geroncius-and-basilides",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 1"
+  ],
+  "life": "The Martyrs Gerontios and Basilides suffered a martyr's death for Christ in the III Century, – they were beheaded by the sword.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

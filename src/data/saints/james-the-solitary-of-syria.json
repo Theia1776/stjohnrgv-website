@@ -1,9 +1,11 @@
 {
-  "name": "Venerable James the Solitary of Syria (457).",
+  "name": "The Monk James the Hermit",
   "slug": "james-the-solitary-of-syria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 26"
+  ],
+  "life": "The Monk James the Hermit asceticised on a mountain, not far from the city of Cyr in Syria. He suffered grievous ills, but he always wore chains, ate food only in the evening and prayed constantly. By such efforts he attained to an high spiritual perfection, having received from the Lord power over demons, the gift of healing and even of resuscitating the dead. In his declining years the Monk James peacefully expired to the Lord.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

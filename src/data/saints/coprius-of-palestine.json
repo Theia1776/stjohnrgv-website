@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Coprius of Palestine (530).",
+  "name": "The Monk Koprios",
   "slug": "coprius-of-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 24"
+  ],
+  "life": "The Monk Koprios was found as a newborn infant by monks of the monastery of the Monk Theodosios in Palestine. He lay upon a dung-hill (in Greek \"kopria\"), where his mother left him, in fleeing pursuit during an invasion of the Hagarites (i.e. Arabs). The monks took up the infant, named him Koprios, fed him goat's milk and raised him in their monastery. Saint Koprios afterwards accepted monastic tonsure and spent his whole life in his native monastery. Having attained to an high degree of virtue and the gift of wonderworking, the Monk Koprios died peacefully at 90 years of age.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

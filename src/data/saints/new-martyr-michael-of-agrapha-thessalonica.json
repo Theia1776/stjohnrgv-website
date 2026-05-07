@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Michael of Agrapha, Thessalonica (1544). (Greek).",
+  "name": "The Holy Martyr Michael (Maurudisos) of Soluneia",
   "slug": "new-martyr-michael-of-agrapha-thessalonica",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 10"
+  ],
+  "life": "The Holy Martyr Michael (Maurudisos) of Soluneia was by occupation a bread merchant. For his refusal to accept Islam he was burned by the Turks in the year 1544.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

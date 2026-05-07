@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Agatho, wonderworker of the Kiev Caves (13th-l4th c.).",
+  "name": "The Monk Agathon of Pechersk",
   "slug": "agatho-wonderworker-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 20"
+  ],
+  "life": "The Monk Agathon of Pechersk was a great fast-keeper, and he healed the sick by a laying-on of his hands upon them, he likewise possessed a gift of prophecy and foretold the time of his own death. His memory is celebrated also with the Sobor-Assembly of the Monks of the Farther Caves on 28 August.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

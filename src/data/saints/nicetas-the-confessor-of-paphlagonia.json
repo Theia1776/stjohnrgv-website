@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicetas the Confessor of Paphlagonia (838).",
+  "name": "The Monk Nikita the Confessor",
   "slug": "nicetas-the-confessor-of-paphlagonia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 13"
+  ],
+  "life": "The Monk Nikita the Confessor was situated at the imperial court, during the reigns of the empress Irene and her son Constantine.\nRenouncing all positions and honours, Nikita decided to take monastic vows. At the request of the emperor, he did not set off into the wilderness, but rather remained in a monastery in the capital. When the Iconoclast Theophilus occupied the imperial throne, the monk Nikita was banished from the monastery by the heretics for opposing the heresy. The monk wandered for a long time throughout the country.\nHe died at age 75 in about the year 838. During his life and after his death the monk worked many miracles.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

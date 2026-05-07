@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Paul of Mt. Latros (956).",
+  "name": "The Monk Paul of Latreia",
   "slug": "paul-of-mt-latros",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 15"
+  ],
+  "life": "The Monk Paul of Latreia was a native of the city of AElen in Pergamum. Early bereft of his father, he was educated at the monastery of Saint Stephen in Phrygia; after the death of his mother, he devoted himself completely to monastic deeds at a monastery on Mount Latra, near Miletos. Wanting to gain yet loftier accomplishment, he secluded himself in a cave. For his ascetic deeds he gained the gifts of perspicacity and wonderworking. The emperor Constantine VII Porphyrigenitos (912-959) often wrote to the monk, asking his prayers and counsel. The Monk Paul twice withdrew to the island of Samos, where he established a laura monastery and restored three monasteries ravaged by the Hagarites (Arabs). Foretelling his end, the monk reposed to God in the year 955.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Maximus of Serbia, metropolitan (1516) (Serbia).",
+  "name": "Sainted Maxim (Maksim) the New",
   "slug": "st-maximus-of-serbia-metropolitan",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 18"
+  ],
+  "life": "Sainted Maxim (Maksim) the New, despoton of Serbia, was the son of king Stefan of Serbia (Comm. 10 December), and was Metropolitan of Ugro-Valakhia. He died on 18 January 1516.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

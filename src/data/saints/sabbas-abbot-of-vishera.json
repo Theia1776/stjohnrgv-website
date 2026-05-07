@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sabbas, abbot of Vishera (Novgorod) (1461).",
+  "name": "The Monk Savva of Vishersk",
   "slug": "sabbas-abbot-of-vishera",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 1"
+  ],
+  "life": "The Monk Savva of Vishersk was the son of the boyar-noble, Ivan Borozda, from Kashin. From childhood the monk was noted for his piety. He initially asceticised at the Tver Savvino wilderness monastery, where the brethren chose him hegumen. In shunning honours, the Monk Savva went off to Athos, where he toiled over the copying of Divine-service books. Upon his return from Athos he selected for his ascetic efforts a solitary place 7 versts from Novgorod at the banks of the River Vishera. Here, with the blessing of the Novogorod archbishop Simon, the monk in 1418 organised a small monastery in honour of the Ascension of the Lord. The Monk Savva set up a pillar nearby the monastery and asceticised upon it. He died in 1461 at the advanced old age of 80. He appointed as his successor his disciple Andrei, known for a strict and ascetic life.\nThe local commemoration was established under the Novgorod archbishop Jona (+ 1470), in connection with the healing of the hegumen of the Savvo-Vishersk monastery. Archbishop Jona thereupon ordered an icon of the monk be written and a canon composed. The general churchly glorification of the Monk Savva took place at the Moscow Sobor (Council) of 1549. The service to him was composed by priest-monk Pakhomii the Serb.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

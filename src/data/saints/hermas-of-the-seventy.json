@@ -1,9 +1,11 @@
 {
-  "name": "Apostle Hermas of the Seventy (1st c.).",
+  "name": "The Holy Disciple from the 70, Hermas",
   "slug": "hermas-of-the-seventy",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 8"
+  ],
+  "life": "The Holy Disciple from the 70, Hermas, was bishop at Philippopolis, and died a martyr in the I Century. In the Epistle to the Romans the holy Apostle Paul summons the Romans to greet the Disciple Hermas (Rom. 16: 14).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

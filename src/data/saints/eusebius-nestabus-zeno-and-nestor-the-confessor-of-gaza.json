@@ -1,8 +1,10 @@
 {
-  "name": "Martyrs Eusebius, Nestabus, Zeno, and Nestor the Confessor of Gaza (4th c.).",
+  "name": "Martyrs Eusebius, Nestabus, Zeno, and Nestor the Confessor of Gaza (4th c.)",
   "slug": "eusebius-nestabus-zeno-and-nestor-the-confessor-of-gaza",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 21"
+  ],
+  "life": "Martyrs Eusebius, Nestabus and Zeno were beaten with stones in the city of Gaza during the reign of Emperor Julian the Apostate.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

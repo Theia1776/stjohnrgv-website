@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Hilarion of Crete (Mt. Athos) (1804) (Greek).",
+  "name": "New Martyr Hilarion of Crete (Mt. Athos) (1804)",
   "slug": "new-martyr-hilarion-of-crete",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 20"
+  ],
+  "life": "Born on the island of Crete, he, being light-headed, accepted Islam in Constantinople, but soon deeply repented and, prepared for torture, fearlessly confessed Christ before the Turkish judges. After severe torture for Christ he was beheaded in the year 1804.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

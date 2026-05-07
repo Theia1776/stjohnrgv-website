@@ -1,8 +1,10 @@
 {
-  "name": "Hieromartyr Reginus, bishop of the isle of Skopelos (355).",
+  "name": "Hieromartyr Reginus, bishop of the isle of Skopelos (355)",
   "slug": "reginus-bishop-of-the-isle-of-skopelos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "February 25"
+  ],
+  "life": "The Hieromartyr Regine, Bishop of Skopelos, struggled ascetically on the island of Skopelos (today Droma, in the Aegean sea), and died in about the year 355.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

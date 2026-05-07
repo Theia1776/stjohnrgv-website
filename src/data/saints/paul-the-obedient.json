@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Paul the Obedient.",
+  "name": "The Monk Paul the Obedient",
   "slug": "paul-the-obedient",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 7"
+  ],
+  "life": "The Monk Paul the Obedient – when he lived is unknown. There is only a short life which says that he was the son of well-off parents. He left secular life upon reaching maturity. The appellation \"Obedient\" was bestowed upon the monk for the deep humility peculiar to him and for the complete renunciation of his own will. One time the monk moved by hand boiling resin-pitch, and received not the slightest burn from it. Some of the brethren regarded him as a God-bearing ascetic, but others became suspicious of him. Through prayers the monks received an unique vision proving that their brother – was a true ascetic. By night they were all transported off to paradise and they conversed with the Monk Paul, who permitted them to take with them for the memory a flower or twig. Awakening from sleep, they detected in their hands the flowers and twigs from paradise. After this Blessed Paul set off to Jerusalem, and then to Cyprus. Having led a solitary life, he expired to God on Mount Paregoros [Mount Solace]. Before his death the voice of God said to him: \"Ascend the mountain, Paul, and accept the end of life\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

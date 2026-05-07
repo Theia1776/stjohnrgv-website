@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Gemellus of Paphlagonia (361).",
+  "name": "The Martyr Gemellos the Paphlagonian",
   "slug": "gemellus-of-paphlagonia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 10"
+  ],
+  "life": "The Martyr Gemellos the Paphlagonian, for his staunch denunciation of the emperor Juilan the Apostate (361-363) in the city of Ancyra (Galatia), was subjected to cruel tortures. They flayed the skin from him and nailed him to a cross.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

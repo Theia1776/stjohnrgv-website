@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Anna, daughter of Prince Vsevolod I Yaroslavich (1112).",
+  "name": "The Holy Princess Anna Vsevolodna",
   "slug": "anna-daughter-of-prince-vsevolod-i-yaroslavich",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "The Holy Princess Anna Vsevolodna was daughter of the Kiev GreatPrince Vsevolod Yaroslavich (1078-1093) whose wife was daughter of the Greek emperor Constantine Monomachos. She did not wish to marry, and as a maiden she took monastic vows in 1082 at the Andreev Yanchinov monastery built for her at Kiev, later destroyed under the Tatar invasion. The monastic and nobleborn princess Anna journeyed to Constantinople, from whence she returned in the company of the newly ordained metropolitan John the Eunuch. She died in the year 1112.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

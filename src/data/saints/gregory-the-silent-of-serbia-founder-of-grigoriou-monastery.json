@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gregory the Silent of Serbia, founder of Grigoriou Monastery, Mt. Athos (1405) (Greek).",
+  "name": "The Monk Gregory",
   "slug": "gregory-the-silent-of-serbia-founder-of-grigoriou-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 7"
+  ],
+  "life": "The Monk Gregory, born in Serbia, pursued asceticism on Athos. The monastery formed by him, and dedicated by him to Saint Nicholas, was termed in his honour the Gregoryite. In the Athos record-acts was discovered the signature of the monk from about 1405. By tradition, the relics of Saint Gregory were taken from Athos by Serbian monks.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

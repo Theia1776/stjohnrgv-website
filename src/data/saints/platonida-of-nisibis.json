@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Platonida (Platonis) of Nisibis (308).",
+  "name": "The Nun Platonida",
   "slug": "platonida-of-nisibis",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 6"
+  ],
+  "life": "The Nun Platonida was at first a deaconess, but afterwards withdrew into the Niziba wilderness, where she organised a women's monastery.\nThe ustav / rule of her monastery was distinguished for its strictness. The sisters partook of food only once a day. During their free-time from prayer they spent the time in monastic works and various obediences, usually of manual labour. On Fridays, the day commemorating the sufferings of Christ the Saviour on the Cross, all work stopped, and the monastics from morning until evening were in temple, where in the intervals between services they did readings from Holy Scripture and its interpretation.\nThe Nun Platonida was for all the sisters a living example of strict monastic ascetic deed, meekness, and love for neighbour. Having reached extreme old age, the Nun Platonida died peacefully in the year 308.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

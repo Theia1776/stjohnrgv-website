@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Daniel, monk of Egypt (6th c.).",
+  "name": "The Monk Daniel",
   "slug": "daniel-monk-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 18"
+  ],
+  "life": "The Monk Daniel asceticised in Egypt in the VI Century. At the instigation of the devil they accused him of profligacy, and he endured without complaint all the unjust abuse, taking comfort in the words of the Lord: \"Blessed are ye, when men shalt revile you... and shalt say all manner of evil against you falsely, for My sake\" (Mt. 5: 11). The saint was the teacher of the Monk Anastasias the Patrician (Comm. 10 March).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

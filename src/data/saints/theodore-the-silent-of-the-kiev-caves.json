@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Theodore the Silent of the Kiev Caves (13th c.).",
+  "name": "The Monk Feodor (Theodore) the Silent of Pechersk",
   "slug": "theodore-the-silent-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 17"
+  ],
+  "life": "The Monk Feodor (Theodore) the Silent of Pechersk chose the exploit of silence, so as to dwell constantly in thought of God and to safeguard himself in temptation even in word. He was glorified by the Lord with a gift of wonderworking. His memory is celebrated also on 28 August.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

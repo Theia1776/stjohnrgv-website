@@ -1,8 +1,10 @@
 {
-  "name": "St. Cuthbert of Lindisfarne, bishop (687) (Celtic & British).",
+  "name": "St. Cuthbert of Lindisfarne, bishop (687)",
   "slug": "st-cuthbert-of-lindisfarne-bishop",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "March 20"
+  ],
+  "life": "'Saint Cuthbert was born in Britain about the year 635, and became a monk in his youth at the monastery of Melrose by the River Tweed. After many years of struggle as a true priest of Christ, in the service both of his own brethren and of the neglected Christians of isolated country villages, he became a solitary on Farne Island in 676. After eight years as a hermit, he was constrained to leave his quiet to become Bishop of Lindisfarne, in which office he served for almost two years. He returned to his hermitage two months before he reposed in peace in 687.\n'Because of the miracles he wrought both during his life and at his tomb after death, he is called the \"Wonderworker of Britain.\" The whole English people honoured him, and kings were both benefactors to his shrine and suppliants of his prayers. Eleven years after his death, his holy relics were revealed to be incorrupt; when his body was translated from Lindisfarne to Durham Cathedral in August of 1104, his body was still found to be untouched by decay, giving off \"an odour of the sweetest fragrancy,\" and \"from the flexibility of its joints representing a person asleep rather than dead.\" Finally, when the most impious Henry VIII desecrated his shrine, opening it to despoil it of its valuables, his body was again found incorrupt, and was buried in 1542. It is believed that after this the holy relics of Saint Cuthbert were hidden to preserve them from further desecration.' (Great Horologion)",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

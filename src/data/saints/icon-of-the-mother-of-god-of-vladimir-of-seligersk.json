@@ -1,9 +1,11 @@
 {
-  "name": "Icon of the Mother of God of Vladimir of Seligersk.",
+  "name": "The Icon of the Mother of God of Seligersk-Vladimir",
   "slug": "icon-of-the-mother-of-god-of-vladimir-of-seligersk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 26"
+  ],
+  "life": "The Icon of the Mother of God of Seligersk-Vladimir was brought in the XVI Century by the Monk Nil of Stolobensk (Comm. 7 December and 27 May) to the island of Seliger, where the saint pursued asceticism and founded a monastic hermitage. The celebration for the Wonderworking Icon of the Mother of God is done also on 7 December.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

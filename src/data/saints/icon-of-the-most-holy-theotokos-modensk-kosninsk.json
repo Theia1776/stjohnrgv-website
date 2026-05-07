@@ -1,9 +1,11 @@
 {
-  "name": "Icon of the Most Holy Theotokos \"Modensk-Kosninsk\".",
+  "name": "The Modensk-Kosninsk Icon of the Mother of God",
   "slug": "icon-of-the-most-holy-theotokos-modensk-kosninsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 20"
+  ],
+  "life": "The Modensk-Kosninsk Icon of the Mother of God was brought by Graf Boris Petrovich Sheremetev in 1717 from the Italian city of Modena. Emperor Peter I presented this icon to the village of Kosino near Moscow, and it was glorified by numerous healings.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

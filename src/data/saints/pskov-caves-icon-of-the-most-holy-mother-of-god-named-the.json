@@ -1,9 +1,11 @@
 {
-  "name": "The Pskov Caves Icon of the Most Holy Mother of God, named the \"Tenderness\" (1542).",
+  "name": "The Pskovo-Pechersk Icon of the Most Holy Mother of God",
   "slug": "pskov-caves-icon-of-the-most-holy-mother-of-god-named-the",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 26"
+  ],
+  "life": "The Pskovo-Pechersk Icon of the Most Holy Mother of God, named the \"Umilenie\" or \"Tenderness\" (1542), is famous particularly for the defense of Pskov and the Pskovo-Pechersk monastery from the army of Stefan Bathory in 1581. Its celebration is made likewise on 21 May, 23 June and 7 October.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

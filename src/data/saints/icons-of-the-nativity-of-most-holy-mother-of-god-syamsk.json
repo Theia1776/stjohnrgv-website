@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Icons of the Nativity of Most Holy Mother of God Syamsk (1524), Glinsk (16th C), Lukianovsk (16th C), Isaacovsk (1659), Kholmsk, Kursk \"Sign\" Icon (1259), Pochaev (1559), Lesninsk, Domnitsk (1696).",
+  "name": "The Syamsk Icon of the Mother of God",
   "slug": "icons-of-the-nativity-of-most-holy-mother-of-god-syamsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 8"
+  ],
+  "life": "The Syamsk Icon of the Mother of God was found at the Syamsk-Vologda monastery, established in the XVI Century. In the year 1542 during a fire occurring at the monastery, only the wonderworking icon alone was saved. After the fire the monastery was rebuilt. And in the year 1770 at the monastery was built a church in honour of the Nativity of the Most Holy Mother of God, and in it was placed this wonderworking icon of the Mother of God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

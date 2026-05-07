@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Macarius at Kion in Bithynia (Mt. Athos) (1590) (Greek).",
+  "name": "New Martyr Macarius at Kion in Bithynia (Mt. Athos) (1590)",
   "slug": "new-martyr-macarius-at-kion-in-bithynia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 6"
+  ],
+  "life": "He was born in the village of Chios, in the province of Bithynia in Asia Minor. He suffered for Christ in the city of Prousa in 1590. After they tortured him the Turks beheaded him.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

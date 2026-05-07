@@ -1,9 +1,11 @@
 {
-  "name": "St. Artemon, bishop of Seleucia (1st c.).",
+  "name": "Sainted Artemon, Bishop of Seleucia,",
   "slug": "st-artemon-bishop-of-seleucia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 24"
+  ],
+  "life": "Sainted Artemon, Bishop of Seleucia, was born and lived in Pisidian Seleucia (Asia Minor). He was pious and virtuous, wherefore the holy Apostle Paul (Comm. 29 June), having come to Seleucia, established Saint Artemon as first bishop of this city, as the one most worthy. Saint Artemon wisely nourished the flock entrusted to him and won glory as a comforter of the poor and oppressed. Saint Artemon died in extreme old age.\n(In the ancient Slavonic of the Saints \"Seleucian\" was written as \"Seleoukinian\" from which appeared \"Seleunian\". However, also in several of the Greek memorials the sainted bishop was called Soluneian [ie. of Thessalonika]. Sainted Artemon (or Artemios) appeared in the Mesyatseslov Saint-lists either as Seleucian or Soluneian. In the second half of the XVII Century these two names were mistakenly applied to various persons).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

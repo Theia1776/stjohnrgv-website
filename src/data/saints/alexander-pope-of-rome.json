@@ -1,9 +1,11 @@
 {
-  "name": "Hieromartyr Alexander, pope of Rome (119).",
+  "name": "The PriestMartyr Alexander, Pope of Rome",
   "slug": "alexander-pope-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 16"
+  ],
+  "life": "The PriestMartyr Alexander, Pope of Rome, occupied the papal throne for ten years. He was burned alive on 3 May of the year 119 by order of the emperor Adrian (117-138).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

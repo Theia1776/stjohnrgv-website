@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Theocteristus, abbot of Symbola on Mt. Olympus.",
+  "name": "St. Theocteristus, abbot of Symbola on Mt. Olympus",
   "slug": "theocteristus-abbot-of-symbola-on-mt-olympus",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 10"
+  ],
+  "life": "The Venerable Theocteristus was tonsured in the Symbol Monastery, near Mount Olympus. He died in the Ninth Century.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

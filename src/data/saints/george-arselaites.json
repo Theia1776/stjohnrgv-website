@@ -1,9 +1,11 @@
 {
-  "name": "Venerable George Arselaites (6th c.).",
+  "name": "The Monk George",
   "slug": "george-arselaites",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 10"
+  ],
+  "life": "The Monk George, brother of the Monk John of the Ladder (Comm. 30 March), pursued asceticism in the wilderness of Arselo.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

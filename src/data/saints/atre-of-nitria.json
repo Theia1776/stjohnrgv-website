@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Atre (Athre) of Nitria (Egypt).",
+  "name": "The Monk Aphre",
   "slug": "atre-of-nitria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 8"
+  ],
+  "life": "The Monk Aphre was a student of the Monk Horus of Nitreia (+ c. 390, Comm. 7 August). He pursued asceticism in Egypt, and died during the V Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

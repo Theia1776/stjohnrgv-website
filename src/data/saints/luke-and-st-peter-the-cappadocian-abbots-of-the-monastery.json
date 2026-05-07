@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Luke and St. Peter the Cappadocian, abbots of the monastery of the Deep Stream (10th c.).",
+  "name": "The Monk Luke",
   "slug": "luke-and-st-peter-the-cappadocian-abbots-of-the-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 7"
+  ],
+  "life": "The Monk Luke was the third holy hegumen (from the year 975) at the Saviour monastery, named \"Deep Rivers\" (near Constantinople in the Cythian Gulf). The first holy hegumen was the Monk Basil (he died at the beginning of the IX Century, and his memory in the Greek Church is 1 July); the second holy hegumen – was the Monk Ignatios (c. 963-975, Comm. 27 September). The monastery was famed for the especial strictness of the ascetic life of its residents. The Monk Luke died at the end of the X Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

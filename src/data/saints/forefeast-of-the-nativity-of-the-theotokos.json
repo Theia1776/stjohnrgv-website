@@ -1,8 +1,10 @@
 {
-  "name": "Forefeast of the Nativity of the Theotokos.",
+  "name": "Forefeast of the Nativity of the Theotokos",
   "slug": "forefeast-of-the-nativity-of-the-theotokos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 7"
+  ],
+  "life": "The following are from the church hymns for this day. \"Today David exults, Jesse now leaps for joy and Levi is magnified; Joachim the righteous rejoices in spirit, and Anne is freed from childlessness\". \"Mountains, break out in gladness, Apostles and Martyrs, dance, Ascetics and Righteous now rejoice\". \"Today has been brought to birth the bridge which leads humanity to light, heavenly ladder\" and \"Now the fog of wickedness begins to grow less; for the living cloud of the sun has dawned from barren loins\". \"As we see her today in the bosom of Anne, leaping for joy, with faithful Joachim\" \"Let us offer praise to the Redeemer, the Lord who from a barren womb gave us the Mother of God\" and \"In gladness today with joy sing the praise of the nativity of the Mother of God\".",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

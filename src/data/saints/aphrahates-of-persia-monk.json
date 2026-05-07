@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Aphrahates of Persia, monk (370).",
+  "name": "The Monk Aphraates",
   "slug": "aphrahates-of-persia-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 29"
+  ],
+  "life": "The Monk Aphraates, by descent a Persian, having come to believe in Christ, disavowed his illustrious lineage and departed his pagan countrymen by going to Edessa, and then to Antioch, where by his holy life he attracted many and preached them the Word of God. He died in the year 370.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

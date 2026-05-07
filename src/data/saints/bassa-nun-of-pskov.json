@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Bassa, nun, of Pskov (1473).",
+  "name": "St. Bassa, nun, of Pskov (1473)",
   "slug": "bassa-nun-of-pskov",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "March 19"
+  ],
+  "life": "The Venerable Bassa of the Caves or Pskov, the wife of St. Jonah, the founder of the first caves, died as a nun about 1473 and was buried in the Pskov Monastery of the Caves.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

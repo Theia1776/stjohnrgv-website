@@ -1,9 +1,11 @@
 {
-  "name": "Icons of the Most Holy Theotokos \"Akathist\" and \"The Milk-giver\".",
+  "name": "The \"Akafistnaya / Akathist\" Icon of the Mother of God",
   "slug": "icons-of-the-most-holy-theotokos-akathist-and-the-milk-giver",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 12"
+  ],
+  "life": "The \"Akafistnaya / Akathist\" Icon of the Mother of God is located in the Khilendaria cathedral iconostasis. It received the designation \"Akathist\" because, during a fire at the cathedral in 1837 an akathist was read before it, and it remained unharmed – to the solace of the monks.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

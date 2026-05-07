@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nectarius, abbot, of Bezhetsk (1492).",
+  "name": "The Monk Nektarii of Bezhetsk",
   "slug": "nectarius-abbot-of-bezhetsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 3"
+  ],
+  "life": "The Monk Nektarii of Bezhetsk was a monastic of the Trinity-Sergiev monastery. In the mid XV Century he settled in a dense forest in the upper part of the Bezhetsk region, where he built himself a cell. The deeds and the spiritual wisdom of the monk attracted to him many, that wanted to live under his guidance. In a short while the monks built a church in honour of the Vvedenie-Entry into the Temple of the Most Holy Mother of God, and they enclosed it about with a fence. The new monastery was one of the poorest, and which in the expression of the chronicler, was built \"with tears, fasting and vigil\". By common accord of all the brethren of the monastery, its founder the Monk Nektarii was chosen as hegumen. The Monk Nektarii died on 3 April 1492.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Theodore of Byzantium, at Mitylene (1795) (Greek).",
+  "name": "The Holy Martyr Theodore the Byzantine",
   "slug": "new-martyr-theodore-of-byzantium-at-mitylene",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 17"
+  ],
+  "life": "The Holy Martyr Theodore the Byzantine was a native of the settlement Neokhoreia near Constantinople. In childhood they seduced him into Mahometanism. For his return to the Christian faith he was hung by the Turks in the city of Mytilene in 1795.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

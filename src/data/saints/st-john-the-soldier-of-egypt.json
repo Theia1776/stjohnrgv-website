@@ -1,8 +1,10 @@
 {
-  "name": "St. John the Soldier of Egypt (6th-7th c.).",
+  "name": "St. John the Soldier of Egypt (6th-7th c.)",
   "slug": "st-john-the-soldier-of-egypt",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "June 12"
+  ],
+  "life": "St. John the warrior, an Egyptian ascetic of the end of the Sixth or the beginning of the Seventh Century.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

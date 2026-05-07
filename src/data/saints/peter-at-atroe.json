@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Peter at Atroe (9th C).",
+  "name": "The Monk Peter from Atroe",
   "slug": "peter-at-atroe",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 13"
+  ],
+  "life": "The Monk Peter from Atroe was from childhood dedicated to God and spent his whole life in exploits of fasting and unceasing prayer. He pursued asceticism in the city of Atroe, near Asian Olympos. A distinctive feature of the holy ascetic was his extreme temperance. While still during his lifetime the saint worked many miracles and peacefully reposed during the time or rule of the Patriarch of Constantinople Tarasios (784-806).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Monk-martyr Christopher of Mar Sabbas (797).",
+  "name": "The Holy Martyr Christophoros Savvaites",
   "slug": "martyr-christopher-of-mar-sabbas",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 14"
+  ],
+  "life": "The Holy Martyr Christophoros Savvaites was murdered by Saracens in the VIII Century in Palestine.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

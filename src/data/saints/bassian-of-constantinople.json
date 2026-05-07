@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Bassian of Constantinople (ca. 458).",
+  "name": "St. Bassian of Constantinople (ca. 458)",
   "slug": "bassian-of-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 10"
+  ],
+  "life": "Born in Syria, he built a monastery in Constantinople during the reign of Emperor Marcian in which were gathered up to 300 disciples. He died in his monastery between the years 453 and 458.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

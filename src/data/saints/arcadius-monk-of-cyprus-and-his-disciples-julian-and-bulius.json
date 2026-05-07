@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Arcadius, monk, of Cyprus (361), and his disciples Julian and Bulius.",
+  "name": "The Monk Arkadios",
   "slug": "arcadius-monk-of-cyprus-and-his-disciples-julian-and-bulius",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 6"
+  ],
+  "life": "The Monk Arkadios from the time of his youth devoted himself to monastic efforts. The saint asceticised on the Island of Cyprus during the time of the emperor Constantine the Great (206-337). He was teacher of the holy Martyrs Julian the Physician and Eubolos, executed under Julian the Apostate (361-363). Bewailing the martyr's death of his students and having consigned their bodies to earth, the Monk Arkadios himself soon peacefully expired to the Lord.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

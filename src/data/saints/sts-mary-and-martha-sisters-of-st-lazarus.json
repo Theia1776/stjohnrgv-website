@@ -1,8 +1,10 @@
 {
-  "name": "Sts. Mary and Martha, sisters of St. Lazarus (1st c.) (movable holiday on the Sunday of Myrrh-Bearing Women).",
+  "name": "Sts. Mary and Martha, sisters of St. Lazarus (1st c.)",
   "slug": "sts-mary-and-martha-sisters-of-st-lazarus",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "June 4"
+  ],
+  "life": "Mary and Martha, with their brother Lazarus, were especially devoted disciples of our Lord; their story up to the time of the Resurrection can be found in Luke 10 and John 11-12. Mary and Martha were among the Myrrh-bearing women. They, with their brother, reposed in Cyprus, where Lazarus became first Bishop of Kition after he was raised from death by Christ.\nAn ancient tradition holds that Lazarus was thirty years old when he was restored to life by the Lord, and that he lived another thirty years. After he was raised from the dead, he never again laughed; but once, when he saw someone stealing a clay pot, he smiled and said, 'Clay stealing clay.' His name is a Greek version of Eleazar, meaning 'God has helped.'",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

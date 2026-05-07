@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Joseph and Pior, disciples of St. Anthony the Great (4th c.).",
+  "name": "The Monks Joseph the Wilderness-Dweller and Pior",
   "slug": "joseph-and-pior-disciples-of-st-anthony-the-great",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 17"
+  ],
+  "life": "The Monks Joseph the Wilderness-Dweller and Pior pursued asceticism in the IV Century, and were students of the Monk Anthony the Great (Comm. 17 January).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

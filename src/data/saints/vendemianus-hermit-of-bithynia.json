@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Vendemianus (Bendemianus), hermit of Bithynia (512).",
+  "name": "The Monk Vendimian",
   "slug": "vendemianus-hermit-of-bithynia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 1"
+  ],
+  "life": "The Monk Vendimian was born in Myzia. In his youth he was a disciple of Saint Auxentios, one of the fathers of the Fourth OEcumenical Council. Having settled in the monastery, founded by the Monk Auxentios (Comm. 14 February) on Mount Oxea – not far from Chalcedon (Asia Minor), he pursued asceticism for 42 years in fasting and prayer at the cell of his teacher – in the crevice of a cliff, undergoing temptation from demons. For his deeds the monk was granted a gift of healing. He died in about the year 512.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

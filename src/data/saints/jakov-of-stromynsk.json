@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Jakov (James) of Stromynsk.",
+  "name": "The Monk Jakov (James) of Stromynsk",
   "slug": "jakov-of-stromynsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 21"
+  ],
+  "life": "The Monk Jakov (James) of Stromynsk was a disciple of the Monk Sergei of Radonezh (Comm. 25 September). He was hegumen of the Stromynsk monastery in the Name of the Life-originating Trinity. The Monk Sergei himself founded this monastery in 1380 at the request of GreatPrince Dimitrii Donskoi (1363-1389) in memory the victory of Kulikovo Pole (Field). At this monastery there was as hegumen also the Monk Savva of Svenigorod (1381-1392, Comm. 3 December). The Monk Jakov was buried in the monastery church.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

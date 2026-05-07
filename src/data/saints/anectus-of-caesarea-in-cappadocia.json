@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Anectus of Caesarea in Cappadocia (304).",
+  "name": "The Holy Martyr Anektos of Caesarea",
   "slug": "anectus-of-caesarea-in-cappadocia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 27"
+  ],
+  "life": "The Holy Martyr Anektos of Caesarea was beheaded by the sword for his confession of faith in Christ during the persecution by Diocletian (284-305).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

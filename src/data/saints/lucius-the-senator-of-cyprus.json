@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Lucius the Senator of Cyprus (ca. 310).",
+  "name": "The Martyr Lucius",
   "slug": "lucius-the-senator-of-cyprus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 20"
+  ],
+  "life": "The Martyr Lucius, a senator, for confessing faith in Christ was beheaded by the sword on the island of Crete in the year 310.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

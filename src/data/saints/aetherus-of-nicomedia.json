@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Aetherus of Nicomedia (305).",
+  "name": "The Holy Martyr Etherios",
   "slug": "aetherus-of-nicomedia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 18"
+  ],
+  "life": "The Holy Martyr Etherios was beheaded in about the year 305 for his confession of faith in Christ during the time of the persecution against Christians under the emperor Diocletian (284-305).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

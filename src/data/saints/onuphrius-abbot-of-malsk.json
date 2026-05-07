@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Onuphrius, abbot of Malsk (Pskov) (1492).",
+  "name": "The Monk Onuphrii of Mal'sk and Pskov (Izborsk)",
   "slug": "onuphrius-abbot-of-malsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 12"
+  ],
+  "life": "The Monk Onuphrii of Mal'sk and Pskov (Izborsk) founded a monastery in honour of the Nativity of the Mother of God at Mala, four versts from Izborsk and 56 versts from Pskov. The saint died on 12 June 1592 and was buried in the Nativity church, in a chapel named for him. The memory of the Monk Onuphrii is celebrated likewise on the so-called \"Mal'sk Sunday\" – the 1st Sunday after the Peter and Paul fast.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

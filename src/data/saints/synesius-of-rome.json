@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Synesius of Rome (3rd c.).",
+  "name": "The Holy Martyr Cynecius (Razumnik)",
   "slug": "synesius-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 12"
+  ],
+  "life": "The Holy Martyr Cynecius (Razumnik) (Cynecius is derived from the Greek word \"synetos\", – meaning \"man of reason\") was by birth a Roman, and was a reader in the Roman Church under Pope Sixtus (257-258). He was subjected to tortures and then beheading for his brave confession of faith during the time of the emperor Aurelian (270‑275).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

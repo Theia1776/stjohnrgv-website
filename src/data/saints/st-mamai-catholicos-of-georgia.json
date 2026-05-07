@@ -1,9 +1,11 @@
 {
-  "name": "St. Mamai, Catholicos of Georgia (744) (Georgia).",
+  "name": "St. Mamai, Catholicos of Georgia",
   "slug": "st-mamai-catholicos-of-georgia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 3"
+  ],
+  "life": "Saint Mamai served as chief shepherd of the Georgian faithful from 731 to 744.\nThe information we have about his life is scarce, but it is known that St.Mamai was abbot of Zedazeni Monastery and died a martyr for Christ.\nOutstanding in his achievements and endowed with profound spiritual wisdom, St. Mamai was enthroned as Catholicos of Georgia at a time when the catholicos and the Georgian king were frequently the first victims of invading armies.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

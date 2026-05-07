@@ -1,9 +1,11 @@
 {
-  "name": "Hieromartyr Terence (Tertius), bishop of Iconium (1st c.).",
+  "name": "The PriestMartyr Terence, Bishop of Iconium",
   "slug": "terence-bishop-of-iconium",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 21"
+  ],
+  "life": "The PriestMartyr Terence, Bishop of Iconium, accepted a martyr's death for Christ in the I Century. They impaled him on a sharp piece of wood.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

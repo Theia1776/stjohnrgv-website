@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Sergius the Obedient of the Kiev Caves (13th c.).",
+  "name": "St. Sergius the Obedient of the Kiev Caves (13th c.)",
   "slug": "sergius-the-obedient-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 7"
+  ],
+  "life": "In the hand-written books of the saints the Ven. Sergius is called the \"Faster\". He practiced asceticism in the Kievan Monastery of the Caves in the XIII Century. His relics are in the St. Anthony cave.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

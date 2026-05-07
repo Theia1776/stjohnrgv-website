@@ -1,9 +1,11 @@
 {
-  "name": "Venerable James of Old Torzhok in Galich, Kostroma (15th-16th c.).",
+  "name": "The Monk Jakov of Galich",
   "slug": "james-of-old-torzhok-in-galich-kostroma",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 4"
+  ],
+  "life": "The Monk Jakov of Galich asceticised during the XV-XVI Centuries at the Starotorzhsk monastery in the city of Galich in the Kostroma district, nearby the Stolbischa marker, or Staroe-town. They suggest, that the Starotorshzk monastery was founded by the Monk Jakov of Zhelesnoborovsk (Comm. 11 April). The Monk Jakov died a schema-monk and was buried beneathe the altar of the monastery church in honour of Saints Boris and Gleb. His image was written similar to that of the Monk Zosima of Solovetsk (Comm. 17 April).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

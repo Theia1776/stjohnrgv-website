@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Nicholas of Metsovo, whose relics are at Meteora (1617) (Greek).",
+  "name": "The NewMartyr Nicholas",
   "slug": "new-martyr-nicholas-of-metsovo-whose-relics-are-at-meteora",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 16"
+  ],
+  "life": "The NewMartyr Nicholas (from Mechebos) was burned by the Turks in the year 1617. His head is situated at the Varlaam monastery in Meteora.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

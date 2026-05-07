@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Peter, monk, of Korisha, Serbia (1275) (Serbia).",
+  "name": "The Monk Peter",
   "slug": "peter-monk-of-korisha-serbia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 5"
+  ],
+  "life": "The Monk Peter, a Serb by descent, asceticised from his youthful years at the Korisha monastery near Prizren during the time of the emperor Saint Dushan (1337‑1351). The holy relics of the monk, situated at the Crna Reka monastery, were transferred to the church of the Archangel Michael in the city of Kolasin.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

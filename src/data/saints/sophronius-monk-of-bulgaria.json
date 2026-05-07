@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sophronius, monk, of Bulgaria (1510) (Bulgaria).",
+  "name": "The Monk Sophronii",
   "slug": "sophronius-monk-of-bulgaria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 28"
+  ],
+  "life": "The Monk Sophronii (in the world Stefan) – was a native of the village of Penkovets in Bulgaria. He accepted monastic tonsure at a monastery near Rus' along the River Danube/Dunaj, where he asceticised in deeds of fasting and prayerful vigilance. In 1510 the monk was murdered by his own servant. His relics were found undecayed after three years, and afterwards the Vita-Life of the saint was compiled.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

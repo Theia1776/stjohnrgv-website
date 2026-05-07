@@ -1,8 +1,10 @@
 {
-  "name": "The Adoration of the Magi: Melchior, Caspar, and Balthasar. Commemoration of the shepherds in Bethlehem who were watching their flocks and came to see the Lord.",
+  "name": "The Adoration of the Magi: Melchior, Caspar, and Balthasar",
   "slug": "adoration-of-the-magi-melchior-caspar-and-balthasar",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 25"
+  ],
+  "life": "See Matthew ch. 2. According to the verses of the Feast and most of the Holy Fathers, the Magi were astrologers from Persia or Babylonia (The Scripture says only that they came \"from the east.\") The star which they followed was no inanimate object, but one of the Angelic Powers of heaven, appointed to lead them to the Savior. From the very beginning, the Good News of Christ was proclaimed to the nations.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

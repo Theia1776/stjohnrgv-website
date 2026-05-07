@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sergius, monk, of Shukhtom (1609).",
+  "name": "The Monk Sergei of Shukhtomsk",
   "slug": "sergius-monk-of-shukhtom",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 19"
+  ],
+  "life": "The Monk Sergei of Shukhtomsk, in the world Stefan, was born at Kazan. It is known that for three years he walked about the holy places of Palestine and Greece, studying the monastic life. He returned then to Novgorod, from whence he went to the Solovetsk monastery. In 1603 he accepted the monastic schema from archimandrite Isaia, who afterwards wrote the icon of the Monk Sergei of Shukhtomsk. Having accepted the schema, the monk imposed strict ascetic activity upon himself, going day and night without sleep kneeling in prayer. For his holy life the Lord bestowed upon the saint gifts of wonderworking and prophecy. The Monk Sergei of Shukhtomsk reposed on 19 May 1609.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

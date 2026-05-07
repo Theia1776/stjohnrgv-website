@@ -1,9 +1,11 @@
 {
-  "name": "\"Cyprus\" Icon of the Most Holy Theotokos from the village Staromniy, Moscow region (movable holiday on the 1st Sunday of the Great Lent).",
+  "name": "The Cypriot Icon of the Mother of God",
   "slug": "cyprus-icon-of-the-most-holy-theotokos-from-the-village",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 9"
+  ],
+  "life": "The Cypriot Icon of the Mother of God appears thus: the Mother of God sits upon a throne with the Divine-Infant in Her arms, and at Her sides are two angels, holding branches.\nThe holy icon manifest itself in the year 392 on the Island of Cyprus, and is situated there in a monastery. Reknown venerable copies from it are at the Moscow Uspensky cathedral, and in the Nikolo-Golutvinsk church in the village of Stromyna, Moscow diocese.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

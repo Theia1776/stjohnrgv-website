@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Peter of Blachernae (Greek).",
+  "name": "The Holy Martyr Peter",
   "slug": "peter-of-blachernae",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 16"
+  ],
+  "life": "The Holy Martyr Peter suffered in the year 761 for icon-veneration at Blakhernae under the emperor Constantine Copronymos (he was whipped to death).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

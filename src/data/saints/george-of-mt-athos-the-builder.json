@@ -1,9 +1,11 @@
 {
-  "name": "Venerable George of Mt. Athos, the Builder (1033) (Georgia).",
+  "name": "Venerable George of Mt. Athos, the Builder",
   "slug": "george-of-mt-athos-the-builder",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 28"
+  ],
+  "life": "The venerable George the Builder was the third abbot of the Iveron Monastery on Mt. Athos. According to some sources, he was a nephew of St. John, the founder and first abbot of the Iveron Monastery.\nGeorge was elevated to the rank of abbot after St. Ekvtime left the monastery to travel to Jerusalem. Under his leadership, the main church of the Dormition of the Most Holy Theotokos was constructed. An inscription on the wall of the church reads: “I established these columns and they will not be shaken unto the ages. Monk George the Georgian, Builder.”\nFor most of his life Abbot George was highly respected and even revered in the imperial court of Byzantium, but he was eventually slandered, accused of treason, and exiled to the island of Monovatia, where he reposed in the year 1029.\nThe exile of Abbot George proved fatal for the Iveron Monastery: his persecutors followed that act by stealing and desecrating all the treasures of the monastery, which had been purchased by the blood and sweat of the holy fathers. (The rightful property of the Iveron Monastery was later recovered during the reign of the pious Emperor Michael.)\nThe Georgian monks translated St. George’s incorrupt relics from the island of Monovatia to Athos and buried them there in a marble tomb.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

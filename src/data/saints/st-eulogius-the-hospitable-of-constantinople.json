@@ -1,9 +1,11 @@
 {
-  "name": "St. Eulogius the Hospitable of Constantinople (6th c.).",
+  "name": "Righteous Eulogios the Hospitable-to-Strangers",
   "slug": "st-eulogius-the-hospitable-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 27"
+  ],
+  "life": "Righteous Eulogios the Hospitable-to-Strangers lived during the IV Century in the Thebaid. He bore the ascetic deed of service to wanderers.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

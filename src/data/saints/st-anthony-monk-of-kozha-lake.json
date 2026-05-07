@@ -1,9 +1,11 @@
 {
-  "name": "St. Anthony (in schema Abramius), monk, of Kozha Lake (1634).",
+  "name": "The Monk Antonii of Kensk (Kozheezersk),",
   "slug": "st-anthony-monk-of-kozha-lake",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 7"
+  ],
+  "life": "The Monk Antonii of Kensk (Kozheezersk), with schema-monk name Avramii, was a disciple and successor of the Monk Serapion (Comm. 27 June) in the guiding of the Kozheezersk (\"Leather-tanning Lake\") monastery. He reposed peacefully to the Lord on 27 June 1592.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

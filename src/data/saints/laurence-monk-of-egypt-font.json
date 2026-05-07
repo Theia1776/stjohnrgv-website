@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Laurence, monk, of Egypt (6th c.).</font",
+  "name": "St. Laurence, monk, of Egypt (6th c.)",
   "slug": "laurence-monk-of-egypt-font",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "May 10"
+  ],
+  "life": "St Lawrence, monk, was tonsured in Egypt in the VI century, and was known for his unusual humility.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

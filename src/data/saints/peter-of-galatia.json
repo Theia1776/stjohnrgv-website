@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Peter of Galatia (9th c.).",
+  "name": "St. Peter of Galatia (9th c.)",
   "slug": "peter-of-galatia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 9"
+  ],
+  "life": "First he served in the army of Emperor Theophilus and he was awarded various military honors for valor from the latter. But then he accepted monasticism in the monastery of Daphne. After long charitable ascetical efforts he peacefully died in the Monastery of St. Phocas, during the reign of Emperor Basil in the ninth century.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

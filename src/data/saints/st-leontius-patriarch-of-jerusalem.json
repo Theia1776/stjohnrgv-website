@@ -1,9 +1,11 @@
 {
-  "name": "St. Leontius, patriarch of Jerusalem (1175).",
+  "name": "Saint Leontios, Patriarch of Jerusalem",
   "slug": "st-leontius-patriarch-of-jerusalem",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 14"
+  ],
+  "life": "Saint Leontios, Patriarch of Jerusalem, by the account of Saint Gregory Palamas, was Patriarch during the years 1223-1261. His life was similarly described by Theodore, a monk of Constantinople. This Vita was translated in abridged form from the Greek into the Russian language. It was translated a second time more fully by the Monk Nikodemos of the Holy Mountain, who indicates the death of the Patriarch was instead actually in the year 1175.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

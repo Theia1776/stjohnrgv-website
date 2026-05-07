@@ -1,9 +1,11 @@
 {
-  "name": "Martyr John of Wallachia, at Constantinople (1662).",
+  "name": "The Holy Martyr John Vlakhos",
   "slug": "john-of-wallachia-at-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 12"
+  ],
+  "life": "The Holy Martyr John Vlakhos, born of a boyar, at age fifteen fell into captivity to the Turks and was taken to Constantinople. For his refusal to violate Christianity and accept Islam, he was hung by the Turks after fierce tortures on 12 May 1662 at Parmak‑kapi.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

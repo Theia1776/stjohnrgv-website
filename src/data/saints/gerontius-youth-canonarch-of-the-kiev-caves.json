@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gerontius, youth, canonarch of the Kiev Caves (14th c.).",
+  "name": "The Monk Gerontii",
   "slug": "gerontius-youth-canonarch-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 1"
+  ],
+  "life": "The Monk Gerontii asceticised during the XIV Century. He was a monk of the Kievo-Pechersk monastery and fulfilled the obedience of canonarch (arranger of church-canon song). He spent all his life at the monastery, in ascetic deeds of abstinence, obedience and prayer. The Monk Gerontii was buried in the Farther Caves. His memory is celebrated also together with the Sobor-Assemblage of the Monks of the Farther Caves, on 28 August.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

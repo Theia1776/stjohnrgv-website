@@ -1,8 +1,10 @@
 {
-  "name": "Holy Myrrh-bearer Salome.",
+  "name": "Holy Myrrh-bearer Salome",
   "slug": "myrrh-bearer-salome",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "August 3"
+  ],
+  "life": "She was the mother of the Apostles James and John, the wife of Zebedee, and the daughter of Joseph the Betrothed, who was a widower when he became betrothed to the Mother of God. She was a disciple of the Lord and one of the Myrrh-bearing women who first brought tidings of the Resurrection to the world.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

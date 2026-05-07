@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Gabriel at Constantinople (1676) (Greek).",
+  "name": "New Martyr Gabriel at Constantinople (1676)",
   "slug": "new-martyr-gabriel-at-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "February 2"
+  ],
+  "life": "Venerable Martyr Gabriel, after being tortured, was beheaded by the Turks in Constantinople on February 2, 1672.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

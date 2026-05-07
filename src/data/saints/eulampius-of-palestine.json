@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Eulampius of Palestine.",
+  "name": "The Holy Martyr Eulampios",
   "slug": "eulampius-of-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 5"
+  ],
+  "life": "The Holy Martyr Eulampios lived in Palestine. He was beheaded for his faith in Christ.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

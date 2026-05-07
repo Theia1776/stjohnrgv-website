@@ -1,9 +1,11 @@
 {
-  "name": "St. Sabbatius, monk, of Tver (1434), and his disciple St. Euphrosynus (1460).",
+  "name": "The Monk Savvatii of Tver'",
   "slug": "st-sabbatius-monk-of-tver-and-his-disciple-st-euphrosynus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 2"
+  ],
+  "life": "The Monk Savvatii of Tver' pursued asceticism with the blessing of Sainted Arsenii, Bishop of Tver', at a distance 15 versts from Tver'. The monk Savvatii established a monastery there, known for the strictness and holiness of its rule. To it came to learn monastic activity such ascetics as the Monk Joseph of Volotsk (Comm. 9 September) and the Monk Kornilii of Komel'sk (Comm. 19 May). The chains, found in the cave where Saint Savvatii practised silence, testify to his ascetic deeds. He died not later than the year 1434.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

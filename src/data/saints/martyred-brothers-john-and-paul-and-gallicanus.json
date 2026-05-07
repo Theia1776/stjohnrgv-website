@@ -1,9 +1,11 @@
 {
   "name": "The Holy Martyred Brothers John and Paul, and Gallicanus",
   "slug": "martyred-brothers-john-and-paul-and-gallicanus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 26"
+  ],
+  "life": "The Holy Martyred Brothers John and Paul, and Gallicanus were illustrious Romans. Gallicanus had twice been chosen consul of Rome. The holy martyrs suffered under Julian the Apostate (361-363).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

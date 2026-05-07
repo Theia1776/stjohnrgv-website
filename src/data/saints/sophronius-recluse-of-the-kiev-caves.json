@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sophronius, recluse of the Kiev Caves (13th c.).",
+  "name": "The Monk Sophronii the Hermit, of Pechersk",
   "slug": "sophronius-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 11"
+  ],
+  "life": "The Monk Sophronii the Hermit, of Pechersk, asceticised in the Farther Caves (the Theodosiev Caves), during the XIII Century. The holy ascetic wore an hairshirt and an heavy iron belt. The monk daily read through the whole Psalter.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

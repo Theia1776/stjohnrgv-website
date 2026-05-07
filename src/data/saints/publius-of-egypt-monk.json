@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Publius of Egypt, monk (4th c.).",
+  "name": "The Monk Puplios",
   "slug": "publius-of-egypt-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 5"
+  ],
+  "life": "The Monk Puplios pursued asceticism in the Egyptian wilderness during the reign of the emperor Julian the Apostate (361-363). Before the military campaign against the Persians, the emperor sent a devil to explore the way for the army to go. The Monk Puplios foresaw in spirit the intent of the emperor. He stood at prayer with up-raised hands, praying thus day and night, and blocked the path of the devil. For ten days the evil spirit waited until the monk concluded his prayer. Unable to proceed, he returned to the emperor and reported about his thwarting. In a rage against the Monk Puplios, Julian the Apostate gave an oath to avenge himself on the saint upon his return from the campaign. But he did not fulfill his oath, since he soon perished.\nAfter the death of Julian, one of his military commanders distributed his effects and took monastic vows at the hand of the Monk Puplios.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

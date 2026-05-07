@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Ananias the Iconographer of Novgorod (1581).",
+  "name": "The Monk Ananii of Novgorod",
   "slug": "ananias-the-iconographer-of-novgorod",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 17"
+  ],
+  "life": "The Monk Ananii of Novgorod, an iconographer of the Novgorod Antoniev monastery, asceticised during the XVI Century. An account about him is included in the narration about the miracles of the Monk Antonii the Roman, from which it is known, that the iconographer Ananii wrote \"marvelous icons of many holy wonderworkers\" and, fulfilling a monastic vow, not once in 33 years did he go outside the monastery walls. Historical records impute the time of his blessed end as the year 1581.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

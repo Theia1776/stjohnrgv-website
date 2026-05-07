@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Patapius of Thebes (7th c.).",
+  "name": "The Monk Patapios",
   "slug": "patapius-of-thebes",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 8"
+  ],
+  "life": "The Monk Patapios was born at Thebes into a pious Christian family. Reaching the age of maturity, he had but scorn for the vanities of the world and so went off into the Egyptian wilderness. He became known for his ascetic deeds after the passing of many years. When people began to come to him for advice, he instead wished to dwell in silence. He went eventually to Constantinople, where he obtained a cell at the city wall, near the Blakhernae church. But here also he quickly became known. The sick began to throng about, and he having been vouchsafed the gift of healing, began to help all the needy.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

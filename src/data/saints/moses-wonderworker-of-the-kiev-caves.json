@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Moses, wonderworker of the Kiev Caves (14th c.).",
+  "name": "The Monk Moisei (Moses)",
   "slug": "moses-wonderworker-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 28"
+  ],
+  "life": "The Monk Moisei (Moses) pursued asceticism at the Kievo-Pechersk Lavra (XIII-XIV) in the Farther (Theodosiev) Caves; he wore chains and an heavy copper cross. The monk possessed the graced gift of wonderworking.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Florus, bishop of Amisus (7th c.).",
+  "name": "The Monk Phloros, Bishop of Ameia",
   "slug": "florus-bishop-of-amisus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 18"
+  ],
+  "life": "The Monk Phloros, Bishop of Ameia, was the son of the Christians Phloros and Euthymia, who provided him a fine education. He entered courtly service for the Byzantine emperor and was elevated to the dignity of patrician; he was also married and had children. After his wife and children died from smallpox, he left the world and withdrew to the outskirts of Constantinople, where he led a solitary and pious life. Later on he was chosen bishop of Ameia (in Asia Minor). Saint Phloros wisely guided his flock and died peacefully at the beginning of the VII Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

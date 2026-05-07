@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Alexander of Thessalonica, who suffered at Smyrna (1794) (Greek).",
+  "name": "The Holy Martyr Alexander",
   "slug": "new-martyr-alexander-of-thessalonica-who-suffered-at-smyrna",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 26"
+  ],
+  "life": "The Holy Martyr Alexander was a dervish (a musselman begging monk) in the city of Soluneia (Thessalonika), but he converted to Christ. For a confession of Christian faith the Turks beheaded him in the city of Smyrna in the year 1794.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

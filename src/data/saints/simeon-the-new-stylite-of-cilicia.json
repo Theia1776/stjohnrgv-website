@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Simeon the New Stylite of Cilicia.",
+  "name": "The Account about the Monk Simeon the New Stylite of Cilicia",
   "slug": "simeon-the-new-stylite-of-cilicia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 27"
+  ],
+  "life": "The Account about the Monk Simeon the New Stylite of Cilicia is located in the 56th Chapter of the \"Spiritual Meadow\" of the Monk John Moskhos.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Sisinius the confessor, bishop of Cyzicus (ca. 325).",
+  "name": "The Holy Martyr Sisinias, Bishop of Kyzika",
   "slug": "st-sisinius-the-confessor-bishop-of-cyzicus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 23"
+  ],
+  "life": "The Holy Martyr Sisinias, Bishop of Kyzika, suffered for Christ during the reign of Diocletian (284-305) under the governor of Kyzika, Alexander. After many and terrible torments the martyr was beheaded.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

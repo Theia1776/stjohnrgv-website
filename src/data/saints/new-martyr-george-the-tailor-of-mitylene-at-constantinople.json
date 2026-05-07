@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr George the Tailor of Mitylene, at Constantinople (1693) (Greek).",
+  "name": "New Martyr George the Tailor of Mitylene, at Constantinople (1693)",
   "slug": "new-martyr-george-the-tailor-of-mitylene-at-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "February 14"
+  ],
+  "life": "A tailor in the city of Mitylene, the Turks beheaded him after torturing him for his faith and confession in Jesus Christ, and refusal to accept Islam in Constantinople in 1693.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

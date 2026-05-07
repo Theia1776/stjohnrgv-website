@@ -1,9 +1,11 @@
 {
-  "name": "Repose of St. John Chrysostom (407).",
+  "name": "The Repose of Sainted John Zlatoust'/Chrysostomos:",
   "slug": "repose-of-st-john-chrysostom",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 14"
+  ],
+  "life": "The Repose of Sainted John Zlatoust'/Chrysostomos: Saint John Chrysostom died on 14 September 407, but because of the feast of the Exaltation of the Life-Creating Cross of the Lord, the commemoration of the saint was transferred to 13 November, where the account about him is located. On 27 January is made a commemoration of the transfer of the holy relics of Saint John Chrysostom from Komaneia to Constantinople, and on 30 January – is the celebration of the Sobor/Assemblage of the Three OEcumenical Hierarchs.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

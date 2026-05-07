@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Anthony of Chernoezersk, monk (16th c.).",
+  "name": "The Monk Antonii (Anthony) of Chernoezersk",
   "slug": "anthony-of-chernoezersk-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 17"
+  ],
+  "life": "The Monk Antonii (Anthony) of Chernoezersk founded the Mother of God monastery at BlackLake (Chernoezero) in the Novgorod holdings, not far from the city of Chernopovets. The monastery was situated on an island of the Schirsk countryside. The monastery twice suffered a complete destruction: in 1581 – from the Lithuanians, and in 1682 – from the Swedes. In 1764 the monastery was closed.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

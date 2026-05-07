@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gregory, hermit of the Kiev Caves (14th c.).",
+  "name": "The Monk Gregory, Hermit of Pechersk",
   "slug": "gregory-hermit-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 8"
+  ],
+  "life": "The Monk Gregory, Hermit of Pechersk, lived during the XIV Century. In the \"Accounts of the Lives of the Saints, Reposed in the Cave of the Monk Theodosii\", it says, that uncooked grass served as the food of the Monk Gregory all his life. He gave this grass to those coming to him, and the sick were healed. His memory is also 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

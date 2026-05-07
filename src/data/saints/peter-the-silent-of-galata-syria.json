@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Peter the Silent, of Galata, Syria (429).",
+  "name": "The Monk Peter the Silent, of Galatia",
   "slug": "peter-the-silent-of-galata-syria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 25"
+  ],
+  "life": "About the Monk Peter of Galatia is known, that at nine years of age and yearning for the spiritual life, he left his parental abode, and set off first to Jerusalem, and then to Antioch. There he enclosed himself in a cave, devoted himself to deeds of prayer and strict abstinence, taking bread and water only after the daytime. In these exploits he was granted from God the gift of wonderworking, healing infirmities and expelling devils. The monk died in about the year 429 at the age of ninety-nine, of which he served God incessantly for ninety years.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

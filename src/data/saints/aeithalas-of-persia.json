@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Aeithalas of Persia (380).",
+  "name": "The Holy Martyr Haifal the Deacon",
   "slug": "aeithalas-of-persia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 1"
+  ],
+  "life": "The Holy Martyr Haifal the Deacon by order of the Persian emperor Sapor II was killed by stoning in the year 380, for confessing the Name of Christ.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

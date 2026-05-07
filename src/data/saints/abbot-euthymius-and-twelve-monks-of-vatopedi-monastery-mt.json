@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Abbot Euthymius and Twelve Monks of Vatopedi Monastery, Mt. Athos (1285) (Greek).",
+  "name": "The MonkMartyr Euthymios, Hegumen of the Batopedeia Monastery, and with him 12 Monks",
   "slug": "abbot-euthymius-and-twelve-monks-of-vatopedi-monastery-mt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 4"
+  ],
+  "life": "The MonkMartyr Euthymios, Hegumen of the Batopedeia Monastery, and with him 12 Monks suffered on Athos in the XIII Century for denouncing as heretical the Latinisers patriarch Michael Paleologos (1261-1281) and patriarch John Bekkas (1275‑1282). The hegumen was drowned in the sea, and the monks – were hung.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Anatolius, recluse of the Kiev Caves (12th c.).",
+  "name": "St. Anatolius, recluse of the Kiev Caves (12th c.)",
   "slug": "anatolius-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 31"
+  ],
+  "life": "He was an ascetic hermit in the Kievan Monastery of the Caves in the 12th Century. His relics are in the St. Anthony Cave.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

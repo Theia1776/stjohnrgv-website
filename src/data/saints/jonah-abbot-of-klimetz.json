@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Jonah, abbot of Klimetz (1534).",
+  "name": "The Monk Jona of Klimetsk",
   "slug": "jonah-abbot-of-klimetz",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 6"
+  ],
+  "life": "The Monk Jona of Klimetsk, in the world John, accepted monasticism and founded the Klimetsk Trinity monastery in accordance with a vow.\nIn the year 1490 he had been caught by a storm on Lake Onega. When however there was no hope for survival, John cried out to the Lord, beseeching Him to preserve him alive for repentance and service to God. The boat was thrown by the waves onto a coastal sandbar. There he heard the voice of the Lord, commanding him to form a monastery in the Name of the Life-Creating Trinity, and on a juniper tree he miraculously discovered Its holy icon. The monk fulfilled the will of the Lord and built a monastery with two temples – one in the Name of the MostHoly Trinity and the other in honour of Saint Nicholas, protector of those sailing and those journeying. Having refused the dignity of hegumen, the Monk Jona remained at the monastery a simple monk. The monk died on 6 June 1534. Over his relics afterwards was built a church in honour of Saints Zachariah and Elizabeth.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

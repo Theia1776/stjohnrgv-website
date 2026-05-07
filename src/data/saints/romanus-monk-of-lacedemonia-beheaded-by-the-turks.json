@@ -1,8 +1,10 @@
 {
-  "name": "Hieromartyr Romanus, monk of Lacedemonia, beheaded by the Turks (1695) (Greek).",
+  "name": "Hieromartyr Romanus, monk of Lacedemonia, beheaded by the Turks (1695)",
   "slug": "romanus-monk-of-lacedemonia-beheaded-by-the-turks",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "January 6"
+  ],
+  "life": "Hieromartyr Roman, born in Lacedaemon, suffered for his confession of Christ and the Turks beheaded him for this in the year 1695.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

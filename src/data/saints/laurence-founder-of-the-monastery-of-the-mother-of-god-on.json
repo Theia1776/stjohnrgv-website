@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Laurence, founder of the monastery of the Mother of God on Salamis (1707) (Greek).",
+  "name": "The Monk Laurentios",
   "slug": "laurence-founder-of-the-monastery-of-the-mother-of-god-on",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 7"
+  ],
+  "life": "The Monk Laurentios was churchwarden of a monastery in honour of the Most Holy Mother of God on the island of Salamis. He reposed on 6 March 1770, and his memory is made on 7 March.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Barlaam of Keret Lake near the White Sea (16th c.).",
+  "name": "The Monk Varlaam of Keretsk",
   "slug": "barlaam-of-keret-lake-near-the-white-sea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 15"
+  ],
+  "life": "The Monk Varlaam of Keretsk served during the XVI Century as a priest in the Keretsk area of the Kol'sk peninsula on the White Sea. He was venerated as the patron of White Sea industrial workers and sea-farers. He was glorified by posthumous miracles, saving the drowning.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

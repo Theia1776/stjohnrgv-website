@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Leontius (14 c.) and Sabbas (1392) of Stromyn.",
+  "name": "The Monk Leontii of Stromynsk",
   "slug": "leontius-and-sabbas-of-stromyn",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 20"
+  ],
+  "life": "The Monk Leontii of Stromynsk was the first hegumen of the Stromynsk Uspenie monastery, founded by the Monk Sergei of Radonezh at the request of GreatPrince Dimitrii Donskoi (1363-1389) – in honour of the victory over the Tatars 50 versts from Moscow, on the way to Yur'ev. The Monk Sergei established as hegumen of the monastery his student, the Monk Leontii. The Monk Leontii died at the end of the XIV Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Hebarestes.",
+  "name": "Saint Hebarestes",
   "slug": "st-hebarestes",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 15"
+  ],
+  "life": "Saint Hebarestes was steward of a church located in Jerusalem.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

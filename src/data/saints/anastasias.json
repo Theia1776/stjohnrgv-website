@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Anastasias.",
+  "name": "Martyr Anastasias",
   "slug": "anastasias",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 5"
+  ],
+  "life": "After torture for Christ he was beheaded and thrown into the sea.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

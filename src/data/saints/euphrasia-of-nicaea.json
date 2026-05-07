@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Euphrasia of Nicaea (Greek).",
+  "name": "The Holy Martyress Euphrasia",
   "slug": "euphrasia-of-nicaea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 18"
+  ],
+  "life": "The Holy Martyress Euphrasia was a native of the city of Nicea. She accepted death for Christ at the time of the emperors Diocletian and Maximian – at the end of the III or beginning IV Century. Subjected to many tortures, the martyress was drowned in the sea.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

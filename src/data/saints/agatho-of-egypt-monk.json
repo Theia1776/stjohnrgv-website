@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Agatho of Egypt, monk (4th c.)",
+  "name": "St. Agatho of Egypt, monk (4th c.)",
   "slug": "agatho-of-egypt-monk",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "January 8"
+  ],
+  "life": "St. Agatho practiced asceticism in Egypt in the 4th Century and died in peace.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

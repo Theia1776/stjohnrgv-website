@@ -1,9 +1,11 @@
 {
-  "name": "Virgin Potamia of Alexandria.",
+  "name": "The Monastic Martyress Potamia the Wonderworker",
   "slug": "virgin-potamia-of-alexandria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 7"
+  ],
+  "life": "The Monastic Martyress Potamia the Wonderworker died under the sword. But sometimes the saint is incorrectly listed as the Monk Potamius the Wonderworker.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

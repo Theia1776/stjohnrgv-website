@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Charitina, princess of Lithuania (1281).",
+  "name": "The Nun Kharitina, Princess of Lithuania",
   "slug": "charitina-princess-of-lithuania",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 5"
+  ],
+  "life": "The Nun Kharitina, Princess of Lithuania, pursued asceticism in a Novgorod women's monastery in honour of the holy apostles Peter and Paul, built in Sinich hill.\nHaving resolved to dedicate her life to the Lord, she accepted monasticism. For her virtuous life the nun was made hegumeness of the monastery. And until the time of her death, she was a sister to all by way of humility, purity and strict temperance. She reposed in the year 1281 and was buried in the Petropavlov (Peter and Paul) monastery church.\nIn the Iconographic Original it says: \"The holy and righteous Kharitina, head of the Petrovsk maidens monastery, at Novgorod. She was born of Lithuanian royalty; by likeness a maiden of simple appearance, in a single garb without mantle\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

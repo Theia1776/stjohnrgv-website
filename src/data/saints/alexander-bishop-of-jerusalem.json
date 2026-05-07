@@ -1,9 +1,11 @@
 {
-  "name": "Hieromartyr Alexander, bishop of Jerusalem (251).",
+  "name": "The PriestMartyr Alexander, Bishop of Jerusalem",
   "slug": "alexander-bishop-of-jerusalem",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 12"
+  ],
+  "life": "The PriestMartyr Alexander, Bishop of Jerusalem, was a student of the great teacher and writer of the Church, presbyter Clement of Alexandria (+ c. 217). At the beginning of the III Century he was chosen bishop of Cappadocian Flavia. Under the emperor Septimus Severus (193-211) he was locked up in prison and spent three years there. After his release from prison he set off to Jerusalem to venerate at the holy places there, and through a revelation from above, he was chosen there as co-administrator to the quite elderly Patriarch Narcissos (in the year 212). This was an unusually rare occurrence in the practice of the ancient Church. In this dignity he governed the Jerusalem Church for 38 years, toiling much at Christian enlightenment. A large library of the works of Christian writers was gathered by him at Jerusalem. He died in prison during the time of the persecution under the emperor Decius.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

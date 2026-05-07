@@ -1,9 +1,11 @@
 {
-  "name": "\"Kasperov\" Icon of the Most Holy Theotokos (movable holiday on the Wednesday of the Bright Week).",
+  "name": "The Kasperovsk Icon of the Most Holy Mother of God",
   "slug": "kasperov-icon-of-the-most-holy-theotokos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 1"
+  ],
+  "life": "The Kasperovsk Icon of the Most Holy Mother of God during the War of 1853‑1855 defended the city of Odessa against an incursion of hostile forces. Under archbishop Innokentii (Borisov) it was directed \"that this event should not be forgotten in the teaching of posterity\", and to make celebration on 1 October. The icon had already been acknowledged as wonderworking and glorified by the Most Holy Synod in 1840, after investigation of a whole series of miracles. Before this, the image had been kept by the landowner Juliania Ioannovna Kasperova, who received it inheritance as a sacred family heirloom in 1809.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

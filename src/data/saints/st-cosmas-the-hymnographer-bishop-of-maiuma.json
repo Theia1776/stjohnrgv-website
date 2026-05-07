@@ -1,8 +1,10 @@
 {
-  "name": "St. Cosmas the Hymnographer, bishop of Maiuma (787) (Greek).",
+  "name": "St. Cosmas the Hymnographer, bishop of Maiuma (787)",
   "slug": "st-cosmas-the-hymnographer-bishop-of-maiuma",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 14"
+  ],
+  "life": "He was from Jerusalem. An orphan, he was adopted into the family of St John of Damascus (commemorated December 4). He became Bishop of Maiuma, a city on the coast of Palestine, which was later named Constantia. Like his adoptive brother he became a noted hymnographer: The Canon of the Cross (Sept. 14) and the Canon for Christ's Nativity, \"Christ is born, give ye glory...\" are his compositions.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

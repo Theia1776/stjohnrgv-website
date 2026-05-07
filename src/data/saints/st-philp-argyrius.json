@@ -1,9 +1,11 @@
 {
-  "name": "St. Philp Argyrius (Silversmith) (395-408).",
+  "name": "Saint Philp Argyrius (Silversmith)",
   "slug": "st-philp-argyrius",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 12"
+  ],
+  "life": "Saint Philp Argyrius (Silversmith) was a deacon, and then presbyter during the reign of the emperor Arcadius (395-408). For his holiness of life he was vouchsafed the gift of casting out demons. The saint of God died at the beginning of the V Century, and his body was buried in the city of Arcironum in Sicily.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

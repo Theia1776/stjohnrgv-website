@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Palladius the Hermit of Antioch (4th c.).",
+  "name": "The Monk Palladios the Wilderness Dweller",
   "slug": "palladius-the-hermit-of-antioch",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 28"
+  ],
+  "life": "The Monk Palladios the Wilderness Dweller asceticised in a certain mountain cave near Syrian Antioch. For his ascetic life, he received from the Lord a gift of wonderworking. One time near his cave was found a merchant murdered by robbers. People accused Saint Palladios of the murder, but through the prayer of the saint, the dead man rose up and named his murderers. The monk died at the end of the IV Century, leaving behind him several edifying works.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

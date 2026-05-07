@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Menas, David, and John of Palestine (630).",
+  "name": "The MonkMartyrs Minas, David and John",
   "slug": "menas-david-and-john-of-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 12"
+  ],
+  "life": "The MonkMartyrs Minas, David and John asceticised in Palestine. They received a martyr's death in the VII Century from the Arabs, who shot them through with arrows (+ post 636, when Jerusalem was captured by the Arabs).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

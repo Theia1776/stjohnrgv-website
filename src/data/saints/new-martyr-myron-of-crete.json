@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Myron of Crete (1793).",
+  "name": "The Martyr Myron of Crete",
   "slug": "new-martyr-myron-of-crete",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 20"
+  ],
+  "life": "The Martyr Myron of Crete suffered under the Turks for his refusal to accept Islam in the year 1793.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

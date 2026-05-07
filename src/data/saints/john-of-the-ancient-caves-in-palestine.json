@@ -1,9 +1,11 @@
 {
-  "name": "Venerable John of the Ancient Caves in Palestine (8th c.).",
+  "name": "The Monk John of the Old-Cave",
   "slug": "john-of-the-ancient-caves-in-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 19"
+  ],
+  "life": "The Monk John of the Old-Cave is called such because he asceticised during the VIII Century in the Laura of the Monk Chariton (+ 450, Comm. 28 September). This was called the \"Old\", or ancient one, as among the oldest of Palestinian monasteries. The Laura was situated not far from Bethlehem, near the Dead Sea. Saint John in his early years left the world, went to venerate at the holy places of Jerusalem and settled at the Laura, where he attained high spiritual accomplishment. He was ordained to the dignity of presbyter and glorified by his ascetic life.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

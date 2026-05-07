@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Theomistocles of Myra in Lycia (251).",
+  "name": "The Holy Martyr Themistokles",
   "slug": "theomistocles-of-myra-in-lycia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 21"
+  ],
+  "life": "The Holy Martyr Themistokles lived in the city of Lycian Myra during the reign of the persecutor of Christians, Decius (249-251). Themistokles was a shepherd. During the time of persecution he concealed within his home a certain Christian named Dioskorides, while he himself went out to the pursuers. They tortured him cruelly, and he accepted a martyr's crown for Christ in the year 251.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

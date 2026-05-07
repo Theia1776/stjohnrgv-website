@@ -1,9 +1,11 @@
 {
-  "name": "The Feast to the All-Merciful Saviour and the Most Holy Mother of God.",
+  "name": "The Feast to the All-Merciful Saviour and the Most Holy Mother of God",
   "slug": "feast-to-the-all-merciful-saviour-and-the-most-holy-mother",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 1"
+  ],
+  "life": "The Feast to the All-Merciful Saviour and the Most Holy Mother of God was established on the occasion of portents from icons of the Saviour, the Most Holy Mother of God and the Venerable Cross during the time of a battle of holy Prince Andrei Bogoliubsky (1157-1174) with the Volga Bulgars in 1164.\nThis is the first of three feastdays of the All-Merciful Saviour, celebrated in August. The second – is the Transfiguration (Preobrazhenie, Metamorphosis) of our Lord God and Saviour Jesus Christ (Comm. 6 August). The third – is the Transfer from Edessa to Constantinople of the Not-Wrought-by-Hand Image of the Lord Jesus Christ (Comm. 16 August, during the Afterfeast of the Dormition of the Most Holy Mother of God). These three feasts, as it were, connect together the Dormition-Uspenie Fast.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

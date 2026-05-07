@@ -1,9 +1,11 @@
 {
-  "name": "The Byzantine Icon of the Mother of God.",
+  "name": "The Byzantine Icon of the Mother of God",
   "slug": "byzantine-icon-of-the-mother-of-god",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 7"
+  ],
+  "life": "The Byzantine Icon of the Mother of God appeared on 7 April 732. It was transferred to Russia from Rome.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

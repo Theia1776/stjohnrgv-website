@@ -1,9 +1,11 @@
 {
-  "name": "Sts. Peter (826) and Paul (9th c.), bishops of Nicaea.",
+  "name": "Saints Peter and Paul",
   "slug": "sts-peter-and-paul-bishops-of-nicaea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 10"
+  ],
+  "life": "Saints Peter and Paul were bishops at Nicea. Saint Peter defended the Orthodox faith against the iconoclasts during the reign of Leo the Isaurian (813-820) and endured suffering for this. He died no earlier than the year 823: four Letters of Saint Theodore the Studite to Saint Peter are known of, written in the years 816-823. No account about the life of holy Bishop Paul of Nicea has been preserved. The first that his name is met with is in the so-called \"Petrine\" Greek Prologue of the XI Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Cornelius, abbot of Palei Island (Valaam) (1420), and his disciple St. Abramius.",
+  "name": "The Monk Kornilii of Paleostrovsk",
   "slug": "cornelius-abbot-of-palei-island-and-his-disciple-st-abramius",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 21"
+  ],
+  "life": "The Monk Kornilii of Paleostrov and Olonetsk, born at Pskov, was the founder of monastic life on Pali island in Lake Onega at the end of the XIV Century. Despite the desolation of the island, brethren soon gathered to him, – for whom he built a church in honour of the Nativity of the Most Holy Mother of God and a refectory church in honour of the holy Prophet Ilias. The monk spent the final years of his life in a cave half a verst from the monastery, in unceasing prayer. The ascetic added to his effort by the wearing of heavy chains. The blessed repose of the monk occurred about the year 1420, and his remains were transferred to the monastery temple by his disciple, the Monk Avraam of Paleostrov (Comm. 21 August), who likewise was glorified by an ascetic life and later was buried alongside his spiritual guide in the Paleostrov monastery.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

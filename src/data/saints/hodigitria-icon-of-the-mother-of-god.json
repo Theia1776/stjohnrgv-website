@@ -1,9 +1,11 @@
 {
-  "name": "The Hodigitria Icon of the Mother of God.",
+  "name": "The Hodegetria Icon of the Mother of God",
   "slug": "hodigitria-icon-of-the-mother-of-god",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 18"
+  ],
+  "life": "The Hodegetria Icon of the Mother of God, situated in the Mela monastery near Trapezund was written, by tradition, by the Evangelist Luke.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

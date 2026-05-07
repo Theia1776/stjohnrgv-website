@@ -1,9 +1,11 @@
 {
-  "name": "Venerable John, abbot of Cathares Monastery at Constantinople (832).",
+  "name": "The Monk John, Hegumen of the Katharoi Monastery",
   "slug": "john-abbot-of-cathares-monastery-at-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 27"
+  ],
+  "life": "The Monk John, Hegumen of the Katharoi Monastery, was born at Eirenopolis in the year 778. He was a monk at Constantinople, and afterwards at Dalmatia monastery. Under emperor Nicephoras I (802-811), he became hegumen of the monastery of the Katharoi (chistikh or pure), – which had been founded under the emperor Justin (518-527) near Nicea. The monk underwent persecution for venerating holy icons under the emperor Leo the Armenian (813-820), and was banished to the island of Athusia, where he died in about the years 832-839.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

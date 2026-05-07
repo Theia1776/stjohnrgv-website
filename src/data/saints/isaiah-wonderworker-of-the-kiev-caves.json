@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Isaiah, wonderworker of the Kiev Caves (1115).",
+  "name": "The Monk Isaiah",
   "slug": "isaiah-wonderworker-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 15"
+  ],
+  "life": "The Monk Isaiah was among the other Kievo-Pechersk Saints that asceticised during the XI and beginning XII Centuries. His basic exploit in life was his quietness and his unflagging toil, for which he is named a \"lover-of-work\". The holy ascetic died in the year 1115, and his relics are in the Nearer Caves of the Kievo-Pechersk Lavra. The celebration of the Monk Isaiah is made on 15 May, 28 September and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

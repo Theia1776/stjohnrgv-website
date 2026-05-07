@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicander, monk, of Gorodets (Novgorod) (1603).",
+  "name": "The Monk Nikandr of Gorodnoezersk",
   "slug": "nicander-monk-of-gorodets",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 15"
+  ],
+  "life": "The Monk Nikandr of Gorodnoezersk at the beginning of the XVII Century founded a wilderness monastery at the shore of Lake Gorodna (47 versts from the city of Borovich, 4 versts from the country-church at Sherokhovich). Earlier at this place was the Resurrection monastery. When it was founded is unknown, but in the year 1581 it said in the monastery records, that in the 10 cells lived but 3 elders. The Monk Nikandr was buried in the monastery restored by him. In a church of the monastery vacated in 1764 was a chapel in the name of the Monk Nikandr of Gorodnoezersk.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

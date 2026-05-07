@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Christopher, abbot of Mt. Mela Monastery (1694) (Greek).",
+  "name": "The Monk Christopher",
   "slug": "christopher-abbot-of-mt-mela-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 18"
+  ],
+  "life": "The Monk Christopher was born in the locale of Gazara, near Trapezund. He was the head of a monastery on Mount Mela in the second half of the VII Century (641‑668).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

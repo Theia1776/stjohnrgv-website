@@ -1,9 +1,11 @@
 {
-  "name": "\"Okonsk\" Icon of the Most Holy Theotokos.",
+  "name": "The Okonsk Icon of the Mother of God",
   "slug": "okonsk-icon-of-the-most-holy-theotokos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 30"
+  ],
+  "life": "The Okonsk Icon of the Mother of God, by tradition, was received by the Gruzian (Georgian) emperor Vakhtang IV from Jerusalem and initially it was situated at the Gaenat monastery in Gruzia. The Gruzian emperor's son George Alexandrovich transferred the holy icon to the cathedral church of the village of Lyskov, Nizhegorod diocese.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

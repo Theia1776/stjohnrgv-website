@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Laurence the Recluse (13th-l4th c.) and Venerable Euthymius the Silent (14th c.), of the Kiev Caves.",
+  "name": "The SchemaMonk Evthymii of Pechersk",
   "slug": "laurence-the-recluse-and-venerable-euthymius-the-silent-of",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 20"
+  ],
+  "life": "The SchemaMonk Evthymii of Pechersk (XIV Century), imposed upon himself a vow of silence, opening his mouth only for Divine-services and for prayer. The silent schema-monk priest ate only herbs. He was buried in the Farther Feodosiev Cave of the Kievo-Pechersk monastery. His memory is also 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

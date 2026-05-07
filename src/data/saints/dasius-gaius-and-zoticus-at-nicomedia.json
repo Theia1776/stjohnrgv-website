@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Dasius, Gaius, and Zoticus at Nicomedia (303).",
+  "name": "The Holy Martyrs Dasias, Caius and Zoticus",
   "slug": "dasius-gaius-and-zoticus-at-nicomedia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 21"
+  ],
+  "life": "The Holy Martyrs Dasias, Caius and Zoticus accepted a martyr's end in the year 303, under the emperor Diocletian (284-305), for the destruction of an idolous temple. After tortures the martyred were drowned in the sea.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

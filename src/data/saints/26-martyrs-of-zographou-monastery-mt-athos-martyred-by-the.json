@@ -1,8 +1,10 @@
 {
-  "name": "The 26 Martyrs of Zographou Monastery, Mt. Athos, martyred by the Latins (1284) (Greek).",
+  "name": "The 26 Martyrs of Zographou Monastery, Mt. Athos, martyred by the Latins (1284)",
   "slug": "26-martyrs-of-zographou-monastery-mt-athos-martyred-by-the",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 22"
+  ],
+  "life": "They suffered from Emperor Michael Palaeologus and Patriarch John Beccus for the charge of Latinism by the latter. All of them were burned in a tower. Of them the following are known by name: Hegumen Thomas, the monks Barsanuphius, Cyril, Micah, Simon, Hilarion, James, Job, Cyprian, Sabbas, James, Martinian, Cosmas, Sergius, Menas, Joasaph, Joannicius, Paul, Anthony, Euthymius, Dometian, Parthenius and four laymen.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

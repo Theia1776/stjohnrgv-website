@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Mercurius, bishop of Smolensk (Kiev Caves) (1239).",
+  "name": "The Monk Merkurii of Pechersk",
   "slug": "mercurius-bishop-of-smolensk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 28"
+  ],
+  "life": "The Monk Merkurii of Kievo-Pechersk pursued asceticism in the Farther Caves in the XIV Century, and was strict at fasting. During his lifetime the Monk Merkurii had a deep spiritual friendship with the Monk Paisii, and at death they were buried in the same grave. The 24 November memory of the monk is made because of his name in common with the holy GreatMartyr Mercurius. Also on 28 August – together with the Sobor (Assemblage) of the Farther Cave; and on the 2nd Sunday of Great Lent – with the Sobor of all the monastic fathers of Kievo-Pechersk.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

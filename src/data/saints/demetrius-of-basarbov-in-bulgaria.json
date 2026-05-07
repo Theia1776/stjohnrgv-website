@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Demetrius of Basarbov in Bulgaria (1685).",
+  "name": "The Monk Dimitrii of Basarbovsk",
   "slug": "demetrius-of-basarbov-in-bulgaria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 26"
+  ],
+  "life": "The Monk Dimitrii of Basarbovsk pursued asceticism in the wilderness, in Bulgaria, near the city of Ruschuk. He died in 1685. On 8 July 1779 his relics were transferred to Bucharest.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

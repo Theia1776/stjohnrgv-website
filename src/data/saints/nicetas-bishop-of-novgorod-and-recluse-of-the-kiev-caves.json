@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicetas, bishop of Novgorod and recluse of the Kiev Caves (1108).",
+  "name": "The Monk Nikita, Hermit of Kievo-Pechersk, Bishop of Novgorod (+ 1109):",
   "slug": "nicetas-bishop-of-novgorod-and-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 14"
+  ],
+  "life": "The Monk Nikita, Hermit of Kievo-Pechersk, Bishop of Novgorod (+ 1109): The memory of Sainted Nikita was earliest celebrated on 14 May by Novgorod, where his relics are situated. The memory of the saint is also celebrated on 31 January, the Day of His Repose, and on 30 April, the Day of the Uncovering of Relics (1558).\nThe account about him is located under 31 January.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

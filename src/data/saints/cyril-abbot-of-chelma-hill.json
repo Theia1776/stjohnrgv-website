@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Cyril, abbot of Chelma Hill (1367).",
+  "name": "The Monk Kirill of Chelmogorsk",
   "slug": "cyril-abbot-of-chelma-hill",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 8"
+  ],
+  "life": "The Monk Kirill of Chelmogorsk, Enlightener of the Chudian People, was born at the city of Beloozero [White-Lake]. He took vows at the monastery of the Monk Antonii the Roman, where for 6 years he passed through various obediences. Then, after a three year wandering through the wilderness, he settled in a wild region of Kargopol'sk. And here, by a command from on high, he chose for his constant abode Mount Chelma. Many of the afflicted from among the Chud people came to check out the Monk Kirill, whose luminant ascetic life and kindly preachings moved many to an acceptance of holy Baptism. Towards the end of his life, the Monk Kirill established a monastery and church in honour of the Theophany (Bogoyavlenie) of the Lord. The monk dwelt upon Mount Chelma for 52 years and died at the advanced age of 82.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

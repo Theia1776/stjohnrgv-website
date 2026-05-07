@@ -1,9 +1,11 @@
 {
-  "name": "New Monk-martyr Romanus of Carpenision, who suffered at Constantinople(1694).",
+  "name": "The MonkMartyr Romanos from Karpeniseia",
   "slug": "new-monk-martyr-romanus-of-carpenision-who-suffered-at",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 5"
+  ],
+  "life": "The MonkMartyr Romanos from Karpeniseia was born in Moreia. He was a monk on Athos, and suffered for Christ at Tsar'grad, beheaded with a sword by the Turks in the year 1694.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

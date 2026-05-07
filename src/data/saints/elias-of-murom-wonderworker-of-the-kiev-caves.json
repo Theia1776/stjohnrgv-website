@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Elias of Murom, wonderworker of the Kiev Caves (1188).",
+  "name": "The Monk Ilya Muromets of Pechersk",
   "slug": "elias-of-murom-wonderworker-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 19"
+  ],
+  "life": "The Monk Ilya Muromets of Pechersk, nicknamed \"Chobotok\" (\"Shoemaker\" or \"Cobbler\"), was from the city of Murom, and popular legend identifies him with the famous bogatyr-warrior hero Ilya Muromets, about whom were sung Russian byliny‑ballads.\nAbout the Monk Ilya is known, that he died with the fingers of his right hand formed for prayer in the position accepted even today in the Orthodox Church – the first three fingers together, and the two outermost last fingers contracted into the palm [in contrast to the hand formation in making the sign of the Cross used by the \"Old Ritualist\" \"Staroverie\" \"Old Believers\"]. In the period of the struggle with the Old Ritualist (\"Staroobryadnyi\") Schism (end XVII - XIX Cent.), this fact from the life of the saint served as a powerful proof in the useage of the present hand formation.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

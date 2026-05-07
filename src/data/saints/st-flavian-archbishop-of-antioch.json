@@ -1,9 +1,11 @@
 {
-  "name": "St. Flavian, Archbishop of Antioch (381-404).",
+  "name": "Saint Flavian",
   "slug": "st-flavian-archbishop-of-antioch",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 16"
+  ],
+  "life": "Saint Flavian, Archbishop of Antioch (381-404), was a contemporary of Sainted John Chrysostom (+ 407). It is known of him, that he attempted by the power of gentle persuasion to obtain from the emperor Theodosius (379-395) a pardon for the citizens of Antioch, who had angered the emperor by destroying his statue. The end of the monk was peaceful and without illness. His commemoration is also on 27 September.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Illyricus of Mt. Myrsinon in the Peloponnesus.",
+  "name": "The Monk Illyrikos the Wonderworker",
   "slug": "illyricus-of-mt-myrsinon-in-the-peloponnesus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 3"
+  ],
+  "life": "The Monk Illyrikos the Wonderworker asceticised on Mount Marsion in the Peloponessus. His date of life and deeds are unknown.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Cyril of Astrakhan (1576).",
+  "name": "The Monk Kirill (Cyril) of Astrakhan",
   "slug": "cyril-of-astrakhan",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 18"
+  ],
+  "life": "The Monk Kirill (Cyril) of Astrakhan was archimandrite of the Trinity monastery in Astrakhan. He had been sent as hegumen to the newly-built monastery in the year 1568. The monk constructed at the monastery temples in honour of the Most Holy Trinity, the Entry of the Most Holy Mother of God into the Temple, and Saint Nicholas. He zealously concerned himself with the enlightening of the Astrakhan region, and by his meekness and piety he gained the respect of even the Mahometans, – who called him the Kara-Daud (the Black David) in distinction from the holy Prophet King David. The monk died in about the year 1576. The icon of the saint was written in 1676 through a vow of Emel'yan Paphent'ev, whom the Monk Kirill had saved when he was drowning in the Volga. The Vita (Life of the saint was compiled in the year 1790, and a tropar and kondak to him is known. The Church established the feastday in memory of the Monk Kirill under 18 March [probably on the basis of his name-in-common with Saint Cyril of Jerusalem].",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Joachim, monk, of Osogovo and Sarandapor (11th c.).",
+  "name": "The Monk Joakim of Osogovsk",
   "slug": "joachim-monk-of-osogovo-and-sarandapor",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 16"
+  ],
+  "life": "The Monk Joakim of Osogovsk was one of four great hermits of Bulgaria, having inspired by his ascetic efforts hundreds and thousands of people to Christian asceticism. He lived in the XI Century, unknown by anyone, in a cave on the Osogovsk heights. Just before his death he chanced to encounter two hunters, whom he blessed for a successful hunt. The demise of the monk followed, as he revealed in a posthumous vision, \"during a great darkness (i.e. an eclipse) eight years previous\", i.e. approximately in the year 1115. A monastery was afterwards built on the place of his ascetic deeds.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

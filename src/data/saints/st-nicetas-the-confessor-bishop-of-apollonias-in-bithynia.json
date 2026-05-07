@@ -1,9 +1,11 @@
 {
-  "name": "St. Nicetas the Confessor, bishop of Apollonias in Bithynia (813).",
+  "name": "Saint Nikita (Nicetas) the Confessor, Archbishop of Apolloniada",
   "slug": "st-nicetas-the-confessor-bishop-of-apollonias-in-bithynia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 20"
+  ],
+  "life": "Saint Nikita (Nicetas) the Confessor, Archbishop of Apolloniada, was noted for his profound knowledge of Sacred Scripture, and was as well a pious and kindly man. During the reign of the Iconoclast emperor Leo the Armenian (813-820), the saint stood up firmly for the veneration of holy icons, and so was exiled and died imprisoned.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

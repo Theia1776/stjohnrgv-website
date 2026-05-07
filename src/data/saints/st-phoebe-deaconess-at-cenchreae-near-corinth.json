@@ -1,9 +1,11 @@
 {
-  "name": "St. Phoebe, deaconess at Cenchreae near Corinth (1st c.).",
+  "name": "Saint Phoebe the Deaconess",
   "slug": "st-phoebe-deaconess-at-cenchreae-near-corinth",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 3"
+  ],
+  "life": "Saint Phoebe the Deaconess is mentioned by the holy Apostle Paul in his Epistle to the Romans (Rom. 16: 1-2).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable James, monk of Galich Monastery (15th c.).",
+  "name": "The Monk Yakov (James) of Galich",
   "slug": "james-monk-of-galich-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 30"
+  ],
+  "life": "The Monk Yakov (James) of Galich pursued asceticism in the XV Century and was buried in the Galich Starotorzhsk monastery, beneathe the altar of the church in honour of the holy Passion-Bearers Boris and Gleb. The holy saint of God was glorified by miracles after his death.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Timothy of Symbola in Bithynia (795).",
+  "name": "The Monk Timothy the Wilderness-Dweller",
   "slug": "timothy-of-symbola-in-bithynia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 21"
+  ],
+  "life": "The Monk Timothy the Wilderness-Dweller, an Italian by descent, from youth asceticised at a monastery, called \"Symboleia\", in Asia Minor near Mount Olympos. The archimandrite of the monastery was the Monk Theoktistos. Saint Timothy was his disciple and co-student of the Monk Platon, a Studite Confessor (+ 814, Comm. 5 April). Attaining an high degree of spiritual perfection, he received from God the gift of healing the sick and casting out unclean spirits. The monk spent many years as an hermit, roaming the wilderness, the mountains and forests, both day and night offering up prayer to the Lord God. He died in extreme old age, in the year 795.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

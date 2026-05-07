@@ -1,8 +1,10 @@
 {
-  "name": "Hieromartyr Julian of Galatia (4th c.).",
+  "name": "Hieromartyr Julian of Galatia (4th c.)",
   "slug": "julian-of-galatia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 12"
+  ],
+  "life": "This is the same saint as on September 12.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

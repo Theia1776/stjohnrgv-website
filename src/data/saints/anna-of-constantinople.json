@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Anna (known as Euphemianus) of Constantinople (826).",
+  "name": "The Nun Anna",
   "slug": "anna-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 29"
+  ],
+  "life": "The Nun Anna and her son Saint John lived in Byzantium, and Saint Anna was the daughter of a deacon of the Blakhernae church in Constantinople. After the death of her husband, dressed in men's clothing and using the name Euthymian, together with her son Saint John she began to pursue asceticism in one of the Bythinian monasteries, near Olympos. The Nun Anna died in Constantinople in 826.\nHer memory is celebrated a second time on 13 June.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

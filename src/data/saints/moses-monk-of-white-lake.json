@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Moses, monk, of White Lake (1480).",
+  "name": "The Monk Moisei (Moses) of Belozersk",
   "slug": "moses-monk-of-white-lake",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 23"
+  ],
+  "life": "The Monk Moisei (Moses) of Belozersk was an ascetic at the Troitsky / Trinity monastery at Beloozero (White Lake) at end of XV – beginning XVI Century. The Trinity Ustishekhansk in which the monk Moisei practised asceticism, was transferred by him from the mouth of the river Sheksna to the environs of Belozersk in about the year 1480. About the monk Moisei is known, that he was distinguished by the gift of perspicacity.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

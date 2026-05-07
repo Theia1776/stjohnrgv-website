@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Isaiah and Nikanor of Arkhangel'sk.",
+  "name": "The Monks Isaiah and Nikanor of Arkhangel'sk",
   "slug": "isaiah-and-nikanor-of-arkhangel-sk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 30"
+  ],
+  "life": "The Monks Isaiah and Nikanor of Arkhangel'sk were glorified in the exploit of wilderness-dwelling on the banks of the River Rucha in the Arkhangel'sk frontier region.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

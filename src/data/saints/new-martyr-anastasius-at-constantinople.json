@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Anastasius at Constantinople (1743) (Greek).",
+  "name": "New Martyr Anastasius at Constantinople (1743)",
   "slug": "new-martyr-anastasius-at-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 8"
+  ],
+  "life": "Born in Janina, a parish hieromonk of a suburban church near Constantinople, he was decapitated in 1743 by the Turks for his confession of Christ and censure by Islam.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

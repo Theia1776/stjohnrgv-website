@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Dionysius, recluse of the Kiev Caves (15th c.).",
+  "name": "The Monk Dionysii, Hermit of Pechersk",
   "slug": "dionysius-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 3"
+  ],
+  "life": "The Monk Dionysii, Hermit of Pechersk, called Schepa, was a presbyter. In the year 1463 at the time of the Pachal Matins, Dionysii made the rounds of the relics of each of the God-pleasing ones buried in the Antoniev Caves. When the monk cried out: \"Holy fathers and brethren! Christ is Risen!\", – like thunder there resounded the reply: \"In Truth He is Risen!\" On this very day the Monk Dionysii went into seclusion as an hermit and after many labours he expired to the Lord. The miracle involving Saint Dionysii is spoken of in the 8th Ode of the Canon of the Kievo-Pechersk Saints. His memory is observed also on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "St. Achaemonides, (or Hormisdas), confessor, of Persia (4th).",
+  "name": "St. Achaemonides, (or Hormisdas), confessor, of Persia (4th)",
   "slug": "st-achaemonides-confessor-of-persia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "He suffered for Christ in the IV Century during the reign of King Yazdgird I in Persia.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

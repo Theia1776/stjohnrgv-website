@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Polycarp of Alexandria (4th c.).",
+  "name": "The Holy Martyr Polycarp",
   "slug": "polycarp-of-alexandria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 2"
+  ],
+  "life": "The Holy Martyr Polycarp suffered for his bold denunciation of the emperor Maxmian (305-313) for the spilling of innocent Christian blood in the city of Alexandria.\nHe openly confessed himself a Christian and went to voluntary torture. After cruel sufferings the martyr was beheaded.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr John of the isle of Thasos (1652) (Greek).",
+  "name": "The Holy Martyr the Lad John",
   "slug": "new-martyr-john-of-the-isle-of-thasos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 20"
+  ],
+  "life": "The Holy Martyr the Lad John was born on the island of Paphos in the village of Mariesa. In his youth he was seized by the Turks and accused of offending Mahometanism. They tried to force him to accept Islam, but he would not agree to renouncing the Christian faith, for which he was beheaded at Constantinople at a mere 13 years of age in the year 1652.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

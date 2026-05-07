@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Damian of Esphigmenou, Mt. Athos (1280) (Greek).",
+  "name": "The Monk Damian",
   "slug": "damian-of-esphigmenou-mt-athos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 23"
+  ],
+  "life": "The Monk Damian practised silence on Athos, in the skete Esthigmena monastery, on a mountain in Samaria, and in one of the caves wherein asceticism had been pursued by the Father of Russian Monasticism – the Monk Antonii of Pechersk (Comm. 10 July). Blessed Damian enjoyed the especial friendship of Saint Kozma of Zografsk (Comm. 22 September). Having been a true obedient and having kept firmly the injunctions of the fathers, the monk was glorified upon his death by a miraculous fragrance, which issued from his grave during the course of 40 days.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "Uncovering of the relics of St. Acacius the Confessor, bishop of Melitene (257).",
+  "name": "Uncovering of the relics of St. Acacius the Confessor, bishop of Melitene (257)",
   "slug": "uncovering-of-the-relics-of-st-acacius-the-confessor-bishop",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 15"
+  ],
+  "life": "St. Acacius was subjected to severe torture for his confession of Christ and then was imprisoned from which he was later released, and died in peace. He should not be confused with the Ven. Acacius remembered on April 17.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Mocius (Mucian) and Mark (4th c.).",
+  "name": "The Holy Martyrs Mokios and Mark",
   "slug": "mocius-and-mark",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 3"
+  ],
+  "life": "The Holy Martyrs Mokios and Mark were arrested as Christians and brought to trial by the governor Maximian. They refused to offer sacrifice to idols, for which they suffered death by beheading by the sword (IV Century).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

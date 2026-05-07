@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Dimitri of Tornada (564).",
+  "name": "Martyr Dimitri of Tornada (564)",
   "slug": "dimitri-of-tornada",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "March 19"
+  ],
+  "life": "The Turks beheaded the Martyr Dimitri Tornaras in 1564 on the false charge of insulting the Mohammedan religion and refusing to convert to Islam.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

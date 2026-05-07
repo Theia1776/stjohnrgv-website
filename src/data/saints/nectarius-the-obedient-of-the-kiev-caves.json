@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nectarius the Obedient of the Kiev Caves (12th c.).",
+  "name": "The Monk Nektarii of Pechersk",
   "slug": "nectarius-the-obedient-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 29"
+  ],
+  "life": "The Monk Nektarii of Pechersk, a monk of the Kievo-Pechersk monastery, pursued asceticism during the XII Century. For his unquestioning obedience to the will of elder brethren and his zeal for work he was termed \"the Obedient\". The monk Nektarii was buried in the Antoniev Cave. His memory is also 28 September and the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

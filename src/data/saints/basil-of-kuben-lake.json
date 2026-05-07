@@ -1,9 +1,11 @@
 {
-  "name": "Blessed Basil of Kuben Lake (1472).",
+  "name": "Blessed Vasilii of Kamensk",
   "slug": "basil-of-kuben-lake",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 2"
+  ],
+  "life": "Blessed Vasilii of Kamensk lived during the XV Century, was a monk at the Saviour-Kamen monastery, situated on an island of Lake Kuben (not far from Vologda). At the shrine of his relics, – built afterwards in a church in honour of Saint Vasilii (Basil) of Moscow, is an icon in full stature of Saint Vasilii of Kamensk, with heavy iron chains and a cap of iron strips.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

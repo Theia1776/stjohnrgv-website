@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Euthymius of Syanzhemsk (1470).",
+  "name": "The Monk Evthymii of Syanzhemsk and Vologda",
   "slug": "euthymius-of-syanzhemsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 20"
+  ],
+  "life": "The Monk Evthymii of Syanzhemsk and Vologda – was born in Vologda, and took monastic vows at the Saviour-Stone monastery at Lake Kuben. For some time he lived in a solitary cell on the River Kuben, and then gave over the place to the Monk Alexandr of Kushtsk and moved to Syanzhem, where he founded the Voznesenie / Ascension monastery and became its hegumen.\nThe monk died in about the year 1465, having established as his successor the Monk Khariton (Comm. 28 September). The account about the appearance of his relics was recorded in the XVI Century by the Vologda bishop Ioasaph, a noted hagiographer of his time.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

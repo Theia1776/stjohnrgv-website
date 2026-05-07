@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Bede the Venerable (735) (Celtic & British).",
+  "name": "St. Bede the Venerable (735)",
   "slug": "bede-the-venerable",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "May 27"
+  ],
+  "life": "He spent almost his entire life as a monk in England, and is known primarily for his many writings. He entered the monastery at Wearmouth at the age of seven, and later moved (perhaps as one of the founders) to the monastery of Jarrow, where he spent the remainder of his life. He was ordained to the priesthood in his thirtieth year. In addition to many works of biblical exegesis, very popular in the middle ages, he compiled the Ecclesiastical History, still the primary source for the history of Christianity's establishment in the British isles. He reposed in peace.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

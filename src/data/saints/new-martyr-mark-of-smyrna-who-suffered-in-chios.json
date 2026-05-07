@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Mark of Smyrna, who suffered in Chios (1801) (Greek).",
+  "name": "The Holy Martyr Mark",
   "slug": "new-martyr-mark-of-smyrna-who-suffered-in-chios",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 5"
+  ],
+  "life": "The Holy Martyr Mark was a native of the city of Smyrna. For his confession of Christianity, the Turks beheaded him with a sword on the island of Chios in the year 1801.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

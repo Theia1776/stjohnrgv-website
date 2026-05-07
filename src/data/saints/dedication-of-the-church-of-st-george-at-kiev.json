@@ -1,9 +1,11 @@
 {
-  "name": "Dedication of the Church of St. George at Kiev (1051).",
+  "name": "The Consecration of the Church of the GreatMartyr George at Kiev",
   "slug": "dedication-of-the-church-of-st-george-at-kiev",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 26"
+  ],
+  "life": "The Consecration of the Church of the GreatMartyr George at Kiev: Beginning with Equal-to-the-Apostles Prince Vladimir (Comm. 15 July), there existed the pious custom among Russian princes to build a church in honour of their patron saint. Thus, Equal-to-the-Apostles Vladimir, in Baptism Vasilii (Basil) built at Kiev and also Vyshgorod temples in the name of Sainted Basil the Great (Comm. 1 and 30 January). Prince Izyaslav I (1054-1068), in Baptism Dimitrii, built at Kiev a temple and monastery in the name of the holy GreatMartyr Demetrios (Comm. 26 October). Prince Yaroslav the Wise (1019-1054), in holy Baptism Georgii, made the beginnings of a church and men's monastery in honour of his patron saint – the GreatMartyr George (Comm. 23 April), and likewise he built a church in the name of the GreatMartyress Irene (Comm. 5 May), the patron saint of his wife. The temple in honour of the GreatMartyr George was consecrated by Saint Ilarion, Metropolitan of Kiev (Comm. 21 October), and there was established a yearly commemoration in honour of this event.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Christodulus (1777) (Greek).",
+  "name": "Martyr Christodulus (1777)",
   "slug": "christodulus",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 27"
+  ],
+  "life": "He was born in the village of Valta, district of Cassandra, and was engaged in the craft of tailor in Salonica. For his accusation of the apostasy of a Bulgarian and for being unwilling to accept Islam, after torture the Turks hanged him in 1777.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

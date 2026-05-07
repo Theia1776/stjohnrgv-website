@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Leontius, monk, of Monemdasia in the Peloponnesus (1450).",
+  "name": "St. Leontius, monk, of Monemdasia in the Peloponnesus (1450)",
   "slug": "leontius-monk-of-monemdasia-in-the-peloponnesus",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 11"
+  ],
+  "life": "He was born in Monemvasia, Peloponnese and died in peace in Vostitsa, Peloponnese on or about the year 1450.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

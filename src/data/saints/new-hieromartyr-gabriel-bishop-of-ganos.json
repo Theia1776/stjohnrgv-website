@@ -1,8 +1,10 @@
 {
-  "name": "New Hieromartyr Gabriel, bishop of Ganos (1659) (Greek).",
+  "name": "New Hieromartyr Gabriel, bishop of Ganos (1659)",
   "slug": "new-hieromartyr-gabriel-bishop-of-ganos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 3"
+  ],
+  "life": "The Turks hanged him in the city of Prousa, in 1659, on the false charge of baptizing a Mohammedan.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

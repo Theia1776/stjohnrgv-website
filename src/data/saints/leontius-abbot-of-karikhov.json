@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Leontius, abbot of Karikhov (Novgorod) (1492).",
+  "name": "The Monk Leontii",
   "slug": "leontius-abbot-of-karikhov",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 18"
+  ],
+  "life": "The Monk Leontii was the founder of the Karikhov monastery, near Novgorod. He expired to the Lord on 18 July 1429.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

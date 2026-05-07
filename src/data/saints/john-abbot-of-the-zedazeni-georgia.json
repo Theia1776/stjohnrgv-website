@@ -1,9 +1,11 @@
 {
-  "name": "Martyr John, abbot of the Zedazeni, Georgia (9th c.) (Georgia).",
+  "name": "Martyr John, Abbot of the Zedazeni Monastery",
   "slug": "john-abbot-of-the-zedazeni-georgia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 12"
+  ],
+  "life": "The life of the holy martyr John, Abbot of Zedazeni Monastery, has not been preserved, but the list recalling “the names of the holy fathers who reposed at Zedazeni Monastery after John of Zedazeni,” which was compiled by Catholicos Arsenius II, tells us that Abbot John was “murdered at Zedazeni by Muslims.” St. John was martyred in the 9th century.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

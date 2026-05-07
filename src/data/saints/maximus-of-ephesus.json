@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Maximus of Ephesus.",
+  "name": "The Holy Martyr Maximos",
   "slug": "maximus-of-ephesus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 30"
+  ],
+  "life": "The Holy Martyr Maximos suffered for his faith in Christ and was run through the chest with a sword.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

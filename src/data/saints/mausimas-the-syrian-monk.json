@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Mausimas the Syrian, monk (4th c.).",
+  "name": "The Monk Mausima the Syrian",
   "slug": "mausimas-the-syrian-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 23"
+  ],
+  "life": "The Monk Mausima the Syrian lived in Syria, near the city of Cyr or Cyrtha. For the salvation of soul he took upon himself voluntary poverty and devoted his life to the service of neighbour. The doors of his hut were always open to anyone who had need of him. In his hut there constantly stood two vessels: one with bread, and the other with oil. Anyone needing it came to him and received the food from his hand. These vessels never became empty. The monk died at the end of the IV Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

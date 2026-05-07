@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sergius of Crete.",
+  "name": "The Monk Sergios the Magister",
   "slug": "sergius-of-crete",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 28"
+  ],
+  "life": "The Monk Sergios the Magister founded a monastery in honour of the Most Holy Mother of God at the Bay of Nicomedia. The monastery was named the Nikitian, since the monk came from the Paphlagonian city of Nikitia. The monk died on the island of Crete in the IX Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

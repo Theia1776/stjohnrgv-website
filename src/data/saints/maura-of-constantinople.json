@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Maura of Constantinople (436).",
+  "name": "The Nun Maura",
   "slug": "maura-of-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 31"
+  ],
+  "life": "The Nun Maura pursued asceticism at Tsargrad, where she founded a monastery, and at which she died in the V Century.\n© 1996-2001 by translator Fr. S. Janos.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

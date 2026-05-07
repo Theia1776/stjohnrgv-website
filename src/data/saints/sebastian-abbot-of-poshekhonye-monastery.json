@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Sebastian, abbot of Poshekhonye Monastery (Vologda) (1500).",
+  "name": "The Monk Sevastian of Sokhotsk, Poshekhonsk",
   "slug": "sebastian-abbot-of-poshekhonye-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 18"
+  ],
+  "life": "The Monk Sevastian of Sokhotsk, Poshekhonsk, founded a monastery in honour of the Transfiguration of the Lord, located at the River Sokhota, 90 versts from the city of Romanov (now Tutaev) in the Yaroslavsk district. The monks of the monastery themselves cultivated the soil and ate through the work of their own hands. The founder of the monastery taught the ascetics this by his own example and guidance. The Monk Sevastian reposed in about the year 1500.\nThe Transfiguration monastery on the River Sokhota was later annexed to the Cherepovetsk Ascension monastery, and in 1764 closed down. In the mid XIX Century over the relics of the Monk Sevastian was built a stone church. Commemoration of the saint is likewise made on 26 February.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

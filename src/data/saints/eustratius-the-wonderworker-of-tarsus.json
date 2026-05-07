@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Eustratius the Wonderworker of Tarsus (821).",
+  "name": "The Monk Eustratios",
   "slug": "eustratius-the-wonderworker-of-tarsus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 9"
+  ],
+  "life": "The Monk Eustratios hailed from the city of Tarsis. At 20 years of age he secretly left the home of his parents and settled in the Abgarite monastery (on Olympos in Asia Minor). There he lived a strict ascetic life, eating only bread and water, and spending the nights at prayer. After a certain while he was chosen head of the monastery. During the reign of the Iconoclast Leo the Armenian (813-820), the Monk Eustratios in hiding from pursuit roamed the hills and the wilds, and after the death of the emperor he returned to the monastery. Prayer never left his lips, and he incessantly repeated the words: \"Lord, have mercy!\"\nBefore his death he gave an instruction to the monks: not to be attracted towards earthly blessings, and constantly to think about the future life. Signing himself with the sign of the Cross, he pronounced the words: \"Into Thine hands, O Lord, I commend my spirit\" and he died peacefully, at age 95.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

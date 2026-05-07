@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Panagiotes of Caesarea in Cappadocia (1765) (Greek).",
+  "name": "The Holy Martyr Panagiotes of Caesarea",
   "slug": "new-martyr-panagiotes-of-caesarea-in-cappadocia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 24"
+  ],
+  "life": "The Holy Martyr Panagiotes of Caesarea suffered under the Turks at Constantinople in the year 1765. He was buried at the cemetery \"the Life-Bearing Fount\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

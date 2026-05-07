@@ -1,9 +1,11 @@
 {
-  "name": "St. Ephraim, patriarch of Serbia (1400).",
+  "name": "Sainted Ephrem, Patriarch of Serbia",
   "slug": "st-ephraim-patriarch-of-serbia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 15"
+  ],
+  "life": "Sainted Ephrem, Patriarch of Serbia, pursued asceticism on Mount Athos, and afterwards became hegumen of the Serbian Ibrovsk monastery. After the death of Patriarch Savva III in 1376, he was chosen to the patriarchal throne. Aspiring to silence, the saint left the throne and for 9 years dwelt at the Archangel Dushanovsk monastery. After the Battle of Kossovo he returned to the throne. He died peacefully at age 88 in the year 1400. The saint was buried in the Patriarchal church.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

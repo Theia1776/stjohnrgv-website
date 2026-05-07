@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Hilarion of the Kiev Caves (1067).",
+  "name": "The Monk Ilarion, Schema-monk of Pechersk",
   "slug": "hilarion-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 21"
+  ],
+  "life": "The Monk Ilarion, Schema-monk of Pechersk, a strict ascetic, was a student and co-ascetic with the Monk Theodosii (+ 1074, Comm. 3 May). Copying the example of his teacher, the Monk Ilarion day and night prayed to God with tears, amidst the observing of a strict fast. His contemporaries knew him as a book-copyist, who day and night toiled over the copying of books in the cell of the Monk Theodosii. During this time his teacher intoned psalms and spun wool. The Monk Ilarion asceticised during the XI Century. His memory is made both on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

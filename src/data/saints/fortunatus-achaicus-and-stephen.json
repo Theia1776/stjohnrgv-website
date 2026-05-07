@@ -1,9 +1,11 @@
 {
-  "name": "Apostles Fortunatus, Achaicus, and Stephen (Greek).",
+  "name": "About the Holy Disciple Stephen",
   "slug": "fortunatus-achaicus-and-stephen",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 15"
+  ],
+  "life": "About the Holy Disciple Stephen the Holy Apostle Paul recollects in the 1st Epistle to the Corinthians (1 Cor. 16: 15-18). The Apostle Paul wrote: \"I am joyful in the arrival of Stephen, Fortunatus and Achaecus: they have made up for me your deficiencies, wherefore they have set at rest both my spirit and your spirit. Respect such\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

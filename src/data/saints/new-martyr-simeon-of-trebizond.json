@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Simeon of Trebizond (1653) (Greek).",
+  "name": "New Martyr Simeon of Trebizond (1653)",
   "slug": "new-martyr-simeon-of-trebizond",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "August 14"
+  ],
+  "life": "For his unwillingness to convert to Islam, after imprisonment and torture, the Turks hanged him in 1653 in Constantinople.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

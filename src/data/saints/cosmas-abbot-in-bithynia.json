@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Cosmas, abbot in Bithynia (10th c.).",
+  "name": "St. Cosmas, abbot in Bithynia (10th c.)",
   "slug": "cosmas-abbot-in-bithynia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 5"
+  ],
+  "life": "Ven. Cosmas, the hegumen of the monastery on the Sangarius River, Bithynia, died in the 10th century.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

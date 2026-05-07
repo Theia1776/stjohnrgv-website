@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Abraham and St. Coprius, monks, of Pechenga (Vologda) (15th c.).",
+  "name": "The Monks Avraamii (Abraham) and Koprii of Pechengsk",
   "slug": "abraham-and-st-coprius-monks-of-pechenga",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 4"
+  ],
+  "life": "The Monks Avraamii (Abraham) and Koprii of Pechengsk in 1492 founded the Saviour wilderness monastery at the River Pechenga, in Gryazovetsk district, 21 versts from Vologda. There was much work and need also to transport in the necessities to the wilderness spot, which was lacking in means, so as to build the monastery and set everything in proper order. The blessed toilers did not spare themselves, zealously asceticising right up to their very end.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Julian of Anazarbus (305).",
+  "name": "The PriestMartyr Julian of Anazauria",
   "slug": "julian-of-anazarbus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 16"
+  ],
+  "life": "The PriestMartyr Julian of Anazauria suffered for Christ in Syrian Antioch under the emperor Maximian Galerius (305-311). His relics were glorified by miracles during the time of Sainted John Chrysostomos (+ 407). Sainted John Chrysostom speaks about the martyr in his 47th homily.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

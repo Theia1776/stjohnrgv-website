@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Aphrodisius in Cilicia.",
+  "name": "The Holy Martyr Aphrodysios",
   "slug": "aphrodisius-in-cilicia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 21"
+  ],
+  "life": "The Holy Martyr Aphrodysios was beheaded with the sword at Cilicia (Asia Minor) for his faith in Christ the Saviour.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

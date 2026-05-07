@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Theoctistus, abbot at Cucomo in Sicily (800).",
+  "name": "The Monk Theoktistos",
   "slug": "theoctistus-abbot-at-cucomo-in-sicily",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 4"
+  ],
+  "life": "The Monk Theoktistos founded a monastery in the city of Kucuma on the island of Sicily, where he became hegumen. At his monastery lived Greek monks, having fled persecution by the iconoclasts. The monk died in the year 800.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

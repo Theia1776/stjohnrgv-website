@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Constantine of Hydra (Mt. Athos) (1800) (Greek).",
+  "name": "New Martyr Constantine of Hydra (Mt. Athos) (1800)",
   "slug": "new-martyr-constantine-of-hydra",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 14"
+  ],
+  "life": "Born on the island of Hydra, he owing to temptation accepted the Moslem faith in Rhodes, but soon deeply repented this and left for Mount Athos and there by strict monastic ascetical efforts tried to smooth out his heavy sin. Not satisfied with this, he appeared again in Rhodes and openly confessed himself to being a Christian and was beheaded for this in 1800.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

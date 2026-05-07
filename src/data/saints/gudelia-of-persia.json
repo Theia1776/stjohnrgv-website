@@ -1,8 +1,10 @@
 {
-  "name": "Holy Martyr Gudelia of Persia (4th c.).",
+  "name": "Holy Martyr Gudelia of Persia (4th c.)",
   "slug": "gudelia-of-persia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 29"
+  ],
+  "life": "Martyr Gudelia suffered for Christ in Persia in the fourth century. By command of Shapur, King of Persia, she was nailed to a tree.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

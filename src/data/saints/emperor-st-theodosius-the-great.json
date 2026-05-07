@@ -1,9 +1,11 @@
 {
-  "name": "Emperor St. Theodosius the Great (395).",
+  "name": "The Holy Emperor Theodosius the Great",
   "slug": "emperor-st-theodosius-the-great",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 17"
+  ],
+  "life": "The Holy Emperor Theodosius the Great during the period of his reign (379‑395) delivered a decisive blow to paganism: he issued a legal edict, under which any sort of service to the pagan gods was considered a transgression. The zealous proponent of Orthodoxy issued many laws in defense of the Church and against heretics. The Second OEcumenical Council (381) was convened by him.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Sanctus, Maturus, Attalus, Blandina, Vivlia, Vetius, Epagathus, Ponticus, Alexander and others at Lyons (177) (Gaul).",
+  "name": "The Holy Martyrs Sactus (Sanctus), Maturus, Attalus, Blandina, Biblius (Viblius), Vittius, Epagathus, Pontinus, Alexander and 43 Others",
   "slug": "sanctus-maturus-attalus-blandina-vivlia-vetius-epagathus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 25"
+  ],
+  "life": "The Holy Martyrs Sactus (Sanctus), Maturus, Attalus, Blandina, Biblius (Viblius), Vittius, Epagathus, Pontinus, Alexander and 43 Others were tortured by the pagans for their belief in Christ in the city of Lyons (then named Lugdunum) under the emperor Marcus Aurelius (161-180), in the year 177. After a vicious death, their bodies were burned, and the ashes thrown into the River Rhone.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Constantine, monk, of Synnada (9th c.).",
+  "name": "The Monk Constantine of Synada",
   "slug": "constantine-monk-of-synnada",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 26"
+  ],
+  "life": "The Monk Constantine of Synada, a native of the city of Synada and by descent Jewish, from the time of his youth he felt an inclination towards the Christian faith. An attentive attitude to the teachings of Christ set aflame his heart, and in his early youth he left his parents to become a monastic. He was baptised with the name Constantine and took monastic tonsure. When they brought him the holy cross, he kissed it with love and placed it to his head. The image of the holy cross impressed itself upon him throughout all his life. Having spent his God-pleasing life in strict asceticism, Saint Constantine peacefully reposed to God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Marinus, soldier, at Caesarea in Palestine (260).",
+  "name": "Saint Marin",
   "slug": "marinus-soldier-at-caesarea-in-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 17"
+  ],
+  "life": "Saint Marin, inspired by ardent love for Christ the Saviour, destroyed the altar in an idolous temple on one of the feasts, trampling underfoot the sacrifices and confessed himself a christian in front of everyone. After cruel tortures the saint was beheaded.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

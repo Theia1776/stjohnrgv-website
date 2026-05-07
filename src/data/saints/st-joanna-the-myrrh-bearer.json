@@ -1,9 +1,11 @@
 {
-  "name": "St. Joanna the Myrrh-bearer (1st c.).",
+  "name": "Saint Joanna the Myhrbearer",
   "slug": "st-joanna-the-myrrh-bearer",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 27"
+  ],
+  "life": "Saint Joanna the Myhrbearer, wife of Chuza, – the household steward of king Herod, was one of the women following and attending the Lord Jesus Christ during the time of His preaching and public ministry. And together with the other Myhrbearing Women, after the death on the Cross of the Saviour, Saint Joanna went to the Sepulchre to anoint with myrh the Holy Body of the Lord, and she heard from the Angels the joyful proclamation of His All-Glorious Resurrection.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

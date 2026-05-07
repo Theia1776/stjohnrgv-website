@@ -1,9 +1,11 @@
 {
-  "name": "The Armatian Icon of the Mother of God.",
+  "name": "The Armatian Icon of the Mother of God",
   "slug": "armatian-icon-of-the-mother-of-god",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 17"
+  ],
+  "life": "The Armatian Icon of the Mother of God was situated in Constantinople at the Armatian monastery. The place, where the monastery was located, was called \"Armation\" or \"of the Armatians\" and received suchlike a name from the military magister Armatias, nephew of the tyrant Basiliskos and a contemporary of the emperor Zenon (474-491). The celebration of the wonderworking icon was established to commemorate deliverance from the Iconoclast heresy. The VII OEcumenical Council in the year 787 drew up dogmatic determinations about icon-veneration based on the foundations of Holy Scripture and Church Tradition.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

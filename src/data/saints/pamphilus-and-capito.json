@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Pamphilus and Capito.",
+  "name": "The Martyrs Pamphylos and Kapiton",
   "slug": "pamphilus-and-capito",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 12"
+  ],
+  "life": "The Martyrs Pamphylos and Kapiton were beheaded by the sword in the locale of Oliurea near Constantinople.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

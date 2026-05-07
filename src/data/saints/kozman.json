@@ -1,9 +1,11 @@
 {
-  "name": "Hieromartyr Kozman (1630) (Georgia).",
+  "name": "Hieromartyr Kozman",
   "slug": "kozman",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 18"
+  ],
+  "life": "Over the centuries the monastic complex founded by St. David of Gareji became a spiritual and cultural center for all of Georgia. Many of the faithful flocked there with a desire to serve Christ.\nAmong them was the hieromonk Kozman, who would end his earthly life as a martyr.\nFew details of the life of Holy Martyr Kozman have been preserved. According to the Georgian catholicos Anton, St. Kozman was a learned and righteous ascetic, well-versed in the canons of the Orthodox Church.\nSt. Kozman composed a set of “Hymns to the Great-Martyr Queen Ketevan” but his work has not been preserved. According to the 19th-century historian Platon Ioseliani, Hieromonk Kozman was taken captive and tortured to death in the year 1630, when the Dagestanis were carrying out a raid on the Davit-Gareji Wilderness.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

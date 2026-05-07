@@ -1,9 +1,11 @@
 {
-  "name": "Hieromartyr Philoneides, bishop of Kurion in Cyprus (306).",
+  "name": "The PriestMartyr Philonides, Bishop of Cureia",
   "slug": "philoneides-bishop-of-kurion-in-cyprus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 17"
+  ],
+  "life": "The PriestMartyr Philonides, Bishop of Cureia, suffered martyrdom on Cyprus in about the year 306 in a persecution under the emperor Maximian Galerius (305-311).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

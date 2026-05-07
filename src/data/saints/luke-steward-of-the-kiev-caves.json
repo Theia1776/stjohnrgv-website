@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Luke, steward of the Kiev Caves (13th c.).",
+  "name": "St. Luke, steward of the Kiev Caves (13th c.)",
   "slug": "luke-steward-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 6"
+  ],
+  "life": "The time of his asceticism is not known with precision. His incorrupt relics repose in the St. Anthony Cave.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

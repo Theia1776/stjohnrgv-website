@@ -1,8 +1,10 @@
 {
-  "name": "St. Snandulia of Persia (380).",
+  "name": "St. Snandulia of Persia (380)",
   "slug": "st-snandulia-of-persia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "She was a pious Persian Christian woman who gave much assistance from her wealthy estate to captive Christians held in prisons in Persia during the reign of Shapur II. She died either in 350 or 380.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

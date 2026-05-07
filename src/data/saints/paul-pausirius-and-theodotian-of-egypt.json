@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Paul, Pausirius, and Theodotian, of Egypt (3rd c.).",
+  "name": "The Holy Martyrs Paul, Pausyrios and Theodotion",
   "slug": "paul-pausirius-and-theodotian-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 24"
+  ],
+  "life": "The Holy Martyrs Paul, Pausyrios and Theodotion were brothers by birth. They suffered in the III Century in Egypt under Diocletian (284-305).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

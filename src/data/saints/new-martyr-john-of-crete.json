@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr John of Crete (1811) (Greek).",
+  "name": "The NewMartyr John of Crete",
   "slug": "new-martyr-john-of-crete",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 15"
+  ],
+  "life": "The NewMartyr John of Crete suffered in the year 1811 under the Turks at New Ephesus.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

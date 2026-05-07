@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gerontius, founder of the Skete of St. Anne, Mt. Athos (13th c.) (Greek).",
+  "name": "The Monk Gerontios",
   "slug": "gerontius-founder-of-the-skete-of-st-anne-mt-athos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 26"
+  ],
+  "life": "The Monk Gerontios founded a skete monastery in honour of Saint Anna on Mount Athos.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

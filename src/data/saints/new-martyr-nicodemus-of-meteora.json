@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Nicodemus of Meteora (1551) (Greek).",
+  "name": "The MonkMartyr Nikodemos of Meteoreia",
   "slug": "new-martyr-nicodemus-of-meteora",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 16"
+  ],
+  "life": "The MonkMartyr Nikodemos of Meteoreia asceticised in Thessaly, and suffered in the year 1551.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Elias the Hermit of Egypt (4th c.).",
+  "name": "The Monk Ilias the Egyptian",
   "slug": "elias-the-hermit-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 8"
+  ],
+  "life": "The Monk Ilias the Egyptian, having accepted monasticism, pursued asceticism for 75 years on a desolate mountain in a stone cave, and he died in the IV Century at age 110.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

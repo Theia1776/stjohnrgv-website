@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gregory of St. Athanasius monastery on Mt. Athos, instructor of St. Gregory Palamas (1308).",
+  "name": "The Monk Gregory",
   "slug": "gregory-of-st-athanasius-monastery-on-mt-athos-instructor",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 6"
+  ],
+  "life": "The Monk Gregory was a native of Byzantium, and pursued an ascetic life on Athos in the Laura of the Monk Athanasios (Comm. 5 July). He was the spiritual guide of Sainted Gregory Palamas (+ c. 1360; Comm. 14 November).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Righteous Virgin Glyceria of Novgorod (1522).",
+  "name": "Righteous Saint Glykeria, Novgorod Maiden",
   "slug": "virgin-glyceria-of-novgorod",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 13"
+  ],
+  "life": "Righteous Saint Glykeria, Novgorod Maiden, daughter of Panteleimon, a starosta of Legoscha Street in Novgorod. The saint died in about the year 1522. Her incorrupt relics, based on the testimony of the second Novgorod Chronicle, were uncovered on 14 July 1572 near the stone church in honour of Sts. Florus and Laurus. The Novgorod archbishop Leonid with an assemblage of clergy gave them solemn burial in this church. During the time of interment, healings occurred from the relics of the saint.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

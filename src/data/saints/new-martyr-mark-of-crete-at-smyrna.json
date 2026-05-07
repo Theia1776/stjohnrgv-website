@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Mark of Crete, at Smyrna (1643) (Greek).",
+  "name": "The Holy Martyr Mark of Crete",
   "slug": "new-martyr-mark-of-crete-at-smyrna",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 14"
+  ],
+  "life": "The Holy Martyr Mark of Crete was beheaded by the Turks in the year 1643 for confessing faith in Christ.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

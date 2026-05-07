@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Simon the Myrrh-gusher, founder of Simonopetra Monastery, Mt. Athos (1287).",
+  "name": "The Monk Simon the Myrh-bearing",
   "slug": "simon-the-myrrh-gusher-founder-of-simonopetra-monastery-mt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 28"
+  ],
+  "life": "The Monk Simon the Myrh-bearing pursued asceticism on Athos in exploits of ascetic life, and was glorified by many miracles. He was the founder of the New-Bethlehem monastery, now called the Simon-Peter. Having reached old age, he reposed in the year 1287. The holy relics of the monk exude myrh.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Anthony of Apamea (5th c.).",
+  "name": "The Holy Martyr Anthony",
   "slug": "anthony-of-apamea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 9"
+  ],
+  "life": "The Holy Martyr Anthony, a Syrian, lived during the V Century and was a stone-mason. With the blessing of the bishop of the Syrian city of Apameia, he began to construct a church in the Name of the Holy Trinity. Pagan townspeople, having learned of this, rushed by night into his house and murdered him with a sword.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

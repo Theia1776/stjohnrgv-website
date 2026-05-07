@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gerasimus, abbot, of Sourvia (1740).",
+  "name": "The Monk Gerasimos",
   "slug": "gerasimus-abbot-of-sourvia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 15"
+  ],
+  "life": "The Monk Gerasimos founded a monastery in honour of the Holy Trinity near Makrinitsa in Zagora (Mizia). This monastery received the name Zurvia (Survias).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

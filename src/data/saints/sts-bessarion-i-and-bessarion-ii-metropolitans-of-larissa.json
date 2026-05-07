@@ -1,9 +1,11 @@
 {
-  "name": "Sts. Bessarion I and Bessarion II (1540), metropolitans of Larissa (Greek).",
+  "name": "Sainted Bessarion, Archbishop of Larissa",
   "slug": "sts-bessarion-i-and-bessarion-ii-metropolitans-of-larissa",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 15"
+  ],
+  "life": "Sainted Bessarion, Archbishop of Larissa, lived during the XVI Century and founded the Dusika monastery in Thessaly.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "The Eighty Holy Martyrs of Byzantium (4th c.).",
+  "name": "The Eighty Holy Martyrs of Byzantium (4th c.)",
   "slug": "eighty-holy-martyrs-of-byzantium",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 29"
+  ],
+  "life": "Martyrs of Byzantium (about 80 of them), were burnt in a marine vessel for their firmness in Orthodoxy during the reign of Emperor Valens.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

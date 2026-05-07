@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Longinus the Gate-keeper of the Kiev Caves (13th c.).",
+  "name": "The Monk Longin, Gate-Keeper of Pechersk",
   "slug": "longinus-the-gate-keeper-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 16"
+  ],
+  "life": "The Monk Longin, Gate-Keeper of Pechersk, made his monastic obedience at the Kievo-Pechersk monastery. His prayerful fervour and humble love for work were rewarded by the Lord. The Pechersk gatesman was vouchsafed the gift of perspicacity. People that were come to the Lavra with good intent he gave encouragement, but the wickedly inclined he denounced and urged to repentance. He was buried in the Farther Caves. His memory is also on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

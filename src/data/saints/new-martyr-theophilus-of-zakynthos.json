@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Theophilus of Zakynthos (1635) (Greek).",
+  "name": "New Martyr Theophilus of Zakynthos (1635)",
   "slug": "new-martyr-theophilus-of-zakynthos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 24"
+  ],
+  "life": "Born on the Island of Zakinthos, he served on a sea merchant vessel against his will under the Turks. He however did not wish to be known as a Moslem and for his firm confession of Christ after torture he was burnt alive by the Turks on the Island of Chios on July 24, 1635.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

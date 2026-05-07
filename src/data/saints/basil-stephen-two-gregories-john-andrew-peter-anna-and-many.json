@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Basil, Stephen, two Gregories, John (near Constantinople), Andrew, Peter, Anna, and many others (741-775).",
+  "name": "The Holy Martyrs Stephen, Basil, Gregory, another Gregory, John and many others",
   "slug": "basil-stephen-two-gregories-john-andrew-peter-anna-and-many",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 28"
+  ],
+  "life": "The Holy Martyrs Stephen, Basil, Gregory, another Gregory, John and many others suffered for the veneration of holy icons with the MonkMartyr Stephen the New, with whom they languished together in prison. After his martyr's death, they were executed.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

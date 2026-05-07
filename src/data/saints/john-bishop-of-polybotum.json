@@ -1,9 +1,11 @@
 {
-  "name": "Venerable John, bishop of Polybotum (716).",
+  "name": "The Monk John, Bishop of Polyboteia",
   "slug": "john-bishop-of-polybotum",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 4"
+  ],
+  "life": "The Monk John, Bishop of Polyboteia (in Phyrgia), was known as a denouncer of the heresy and impiety of the emperor Leo the Isaurian. The saint died at the beginning of the VIII Century. For his holy life he was granted by the Lord the gift to heal the infirm and cast out evil spirits.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

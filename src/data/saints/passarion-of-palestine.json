@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Passarion of Palestine.",
+  "name": "The Monk Passarion",
   "slug": "passarion-of-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 11"
+  ],
+  "life": "The Monk Passarion pursued asceticism in the first half of the V Century. He founded a monastery in Jerusalem. He was \"chor-episkop\" (vicar-bishop) of Palestine, and conversant with the Monk Euthymios the great (Comm. 20 January).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

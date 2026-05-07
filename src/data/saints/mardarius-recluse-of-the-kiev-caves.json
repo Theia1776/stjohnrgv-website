@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Mardarius, recluse of the Kiev Caves (13th c.).",
+  "name": "The Monk Mardarii, Hermit of Pechersk",
   "slug": "mardarius-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 13"
+  ],
+  "life": "The Monk Mardarii, Hermit of Pechersk, asceticised in the Farther Caves during the XIII Century. According to the manuscript calendar, in the tropar and kondak he is called \"non-covetous\", and by the superscription over the relics – \"without cell\". His name is remembered in the 7th Ode of the Service of the Sobor-Assemblage of the Fathers of the Farther Caves (28 August) together with the Monk Ammon (Comm. 4 October), where he is called a \"zealot of poverty\". He was buried in the Farther Caves. His memory is celebrated also on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Manuel of Crete (1792) (Greek).",
+  "name": "The Holy Martyr Manuel of Crete",
   "slug": "new-martyr-manuel-of-crete",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 15"
+  ],
+  "life": "The Holy Martyr Manuel of Crete in his childhood was taken into captivity by the Turks, who converted him to Mahometanism. Having grown up, the saint returned to Christ, confessed his faith in Him, and was beheaded on the island of Chios in the year 1792.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

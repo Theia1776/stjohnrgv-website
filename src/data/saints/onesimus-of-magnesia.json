@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Onesimus, of Magnesia (4th c.).",
+  "name": "Monk-martyr Onesimus, of Magnesia (4th c.)",
   "slug": "onesimus-of-magnesia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 14"
+  ],
+  "life": "He suffered for the name of Christ during the reign of Diocletian. He died in Magnesia (in Asia Minor), where he founded a monastery.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

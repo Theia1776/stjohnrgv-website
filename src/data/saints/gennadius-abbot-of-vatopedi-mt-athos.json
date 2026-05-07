@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Gennadius, abbot of Vatopedi, Mt. Athos (14th c.).",
+  "name": "St. Gennadius, abbot of Vatopedi, Mt. Athos (14th c.)",
   "slug": "gennadius-abbot-of-vatopedi-mt-athos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 17"
+  ],
+  "life": "Gennadius of Vatopedi occupied the position of dochiar (i.e. economos, treasurer) in the Vatopedi Monastery on Mount Athos. He was witness to the wonderful multiplication of olive oil in the empty vessels placed before the Mother of God.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

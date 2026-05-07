@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Paul the Obedient of the Kiev Caves (13th c.).",
+  "name": "The Monk Paul the Obedient (XIII-XIV)",
   "slug": "paul-the-obedient-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 10"
+  ],
+  "life": "The Monk Paul the Obedient (XIII-XIV), was an ascetic in the Farther Caves at Kiev. Upon assuming the monastic form at the Pechersk monastery, the monk without a murmur underwent very burdensome obediences, on which the monastery head had sent him. He was never idle, and when he was not at an obedience, he ground the grain under the millstone, wearing down his body by this heavy work and keeping unceasing inner prayer. The Church honours his memory on 10 September, on the day of his name in common with Sainted Paul, Bishop of Nicea (X).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

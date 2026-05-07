@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Serapion, bishop of Thmuis in Lower Egypt, friend of St. Anthony the Great (358).",
+  "name": "St. Serapion, bishop of Thmuis in Lower Egypt, friend of St. Anthony the Great (358)",
   "slug": "serapion-bishop-of-thmuis-in-lower-egypt-friend-of-st",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "March 21"
+  ],
+  "life": "'A companion of St Antony the Great, he lived in the Nitrian desert, in charge of the monastery of Arsina which contained 11,000 monks. Palladius and Sozomenes gave him the title \"the Great\". He entered into rest in about 366. St Serapion wrote: \"Do not think that sickness is grave; only sin is grave... Sickness leads us only to the tomb, but sin follows the sinner beyond it\".' (Prologue)",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

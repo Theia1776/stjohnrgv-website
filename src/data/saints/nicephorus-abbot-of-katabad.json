@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicephorus, abbot of Katabad.",
+  "name": "The Monk Nicephoros",
   "slug": "nicephorus-abbot-of-katabad",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 19"
+  ],
+  "life": "The Monk Nicephoros was born at Constantinople into a rich and illustrious family. His parents, Andrew and Theodora, raised their son in the Christian faith. After their death, young Nicephoros distributed all his wealth to the poor and set off to Chalcedon. The strict manner of monastic life at the monastery of Saint Andrew appealed to Nicephoros, and he remained amidst the brethren there.\nFrom the very start the monk displayed an unusual fervour in prayer and at work. He had such strength of endurance at asceticism, that soon the hegumen sent the saint to a Phoenician island for preaching faith in Christ, and he was made hegumen of a monastery in honour of the Most Holy Mother of God.\nThe Monk Nicephoros dwelt on the island for thirty-three years and he brought many pagans to Christ. On the place of a pagan-temple on the island was built a church of God.\nSensing the approach of death, the monk gave orders to carry him to a ship and said to the ship-captain: \"Take care, since I do expire to the Lord, but carry off my body to Chalcedon to the monastery of Saint Andrew\". With these words he died. The ship made fine voyage to Chalcedon, and the brethren of the monastery of Saint Andrew reverently buried the body of the holy ascetic.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

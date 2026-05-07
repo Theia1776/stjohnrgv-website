@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Bucolus, bishop of Smyrna (ca. 100).",
+  "name": "The Monk Bukolos, Bishop of Smyrna",
   "slug": "bucolus-bishop-of-smyrna",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 6"
+  ],
+  "life": "The Monk Bukolos, Bishop of Smyrna, was a disciple of the holy Apostle and Evangelist John the Theologian, and was established by him as the first bishop of the Smyrna Church (Asia Minor).\nBy the grace of God, Saint Bukolos converted to Christ and baptised many of the pagans, and as an experienced and wise guide he defended his flock from the darkness of heresy. He died at peace in about the years 100-105. He passed his flock on to Saint Polycarp (Comm. 23 February), one of the apostolic fathers, who likewise was a disciple of the holy Apostle John the Theologian. At the grave of Saint Bukolos grew a myrtle tree, which healed the sick.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Romanus, Meletius and Euplius.",
+  "name": "Saint Euplos",
   "slug": "romanus-meletius-and-euplius",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 30"
+  ],
+  "life": "Saint Euplos died a martyr's death sewn up in an ox skin beneathe the harsh rays of the sun.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

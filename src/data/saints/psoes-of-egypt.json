@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Psoes of Egypt (4th c.).",
+  "name": "The Monk Psoe",
   "slug": "psoes-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 9"
+  ],
+  "life": "The Monk Psoe was a disciple of the Monk Pakhomios the Great (Comm. 15 May) and lived during the IV Century in the Egyptian wilderness.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

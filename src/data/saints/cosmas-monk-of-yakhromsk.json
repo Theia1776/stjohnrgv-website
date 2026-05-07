@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Cosmas, monk, of Yakhromsk (1492).",
+  "name": "The Monk Kosma of Yakhromsk",
   "slug": "cosmas-monk-of-yakhromsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 18"
+  ],
+  "life": "The Monk Kosma of Yakhromsk was the servant of a certain boyar-noble, during whose prolonged illness he comforted, by reading him books. And so, in travelling from city to city, they happened to stop at the River Yakhroma. Here within the woods there appeared to Kosma an icon of the Uspenie (Dormition) of the Most Holy Mother of God, and from it he heard a voice, commanding him to be a monk and build a monastery. His sick master thereupon received healing from the icon, and Kosma set off to Kiev and in the Pechersk monastery he accepted tonsure. Then with the icon of the Mother of God, and on an inspiration from above, he again set off to the Yakhroma – 40 versts distant from the city of Vladimir, constructing with the help of some good Christians a temple in honour of the Uspenie of the Most Holy Mother of God. Brethren began to gather around the monk, and a monastery was formed. The Monk Kosma was chosen hegumen. News about the monastic efforts of the monk during these times reached even the greatprince. The Monk Kosma died in advanced old age on 18 February 1492, and was buried in the monastery founded by him. His memory is celebrated also on 14 October – on the day of the celebration of the Yakhromsk Icon of the Mother of God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Anna of Novgorod, wife of Yaroslav I (1050).",
+  "name": "The NobleBorn Princess Anna of Novgorod",
   "slug": "st-anna-of-novgorod-wife-of-yaroslav-i",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 10"
+  ],
+  "life": "The NobleBorn Princess Anna of Novgorod, spouse of GreatPrince Yaroslav the Wise, gave a true Christian upbringing to her children, marked by a strong faith in God, love of work, integrity and learning. Her son Mstislav became afterwards GreatPrince of Kiev, and her daughter – queen of a West-European realm. The princess herself, having left the world, went into a monastery, where she finished her days in strict obedience and prayer in the year 1056.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

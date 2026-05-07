@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Naucratius, abbot of the Studion (848).",
+  "name": "The Monk Naukratios",
   "slug": "naucratius-abbot-of-the-studion",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 8"
+  ],
+  "life": "The Monk Naukratios, a student of the Monk Theodore the Studite (Comm. 11 November), because of his devotion to Orthodoxy and veneration of holy icons, was subjected to persecution by the iconoclasts. After the condemnation of the Iconoclast heresy he returned from exile and was made hegumen of the Studite monastery. he died in 848.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

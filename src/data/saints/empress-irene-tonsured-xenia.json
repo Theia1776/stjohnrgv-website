@@ -1,8 +1,10 @@
 {
-  "name": "Empress Irene, tonsured Xenia (12th c.).",
+  "name": "Empress Irene, tonsured Xenia (12th c.)",
   "slug": "empress-irene-tonsured-xenia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "August 13"
+  ],
+  "life": "She was the pious wife of the Emperor John II Comnenus (reigned 1118-1143), but retired into monastic life. She founded the Monastery of the Pantokrator in Constantinople.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

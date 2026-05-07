@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Agatho, pope of Rome (682).",
+  "name": "The Monk Agathon, Pope of Rome",
   "slug": "agatho-pope-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 20"
+  ],
+  "life": "The Monk Agathon, Pope of Rome, was the descendant of a rich family and of pious Christian parents, who provided him an excellent education. After their death Saint Agathon distributed away his inheritance to the poor and accepted monasticism. His virtuous life did not remain concealed from people. In the year 679 he was elevated to head the Roman Church, and he remained upon his cathedra-chair until his demise (+ 682).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

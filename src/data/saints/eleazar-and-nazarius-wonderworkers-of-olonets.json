@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Eleazar and Nazarius, wonderworkers of Olonets (15th c.).",
+  "name": "The Monks Eleazar and Nazarii of Olonets",
   "slug": "eleazar-and-nazarius-wonderworkers-of-olonets",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 4"
+  ],
+  "life": "The Monks Eleazar and Nazarii of Olonets were founders of the monastery of Saint John the Forerunner on the island of Murma in Lake Onega. In the manuscripts of the saints they are sometimes termed Greeks, which allows them possibly to be considered disciples of the Monk Lazar of Murmansk, who had come from Constantinople.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

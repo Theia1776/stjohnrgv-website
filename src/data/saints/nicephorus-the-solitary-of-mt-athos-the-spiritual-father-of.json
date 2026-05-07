@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicephorus the Solitary of Mt. Athos, the spiritual father of St. Gregory Palamas (1340) (Greek).",
+  "name": "The Monk Nicephoros",
   "slug": "nicephorus-the-solitary-of-mt-athos-the-spiritual-father-of",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 4"
+  ],
+  "life": "The Monk Nicephoroswas the teacher of Saint Gregory Palamas (Comm. 14 November). Saint Nicephoros pursued asceticism on Athos in the XIV Century and left after him the profound spiritual work \"The Wise Method of the Jesus Prayer\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

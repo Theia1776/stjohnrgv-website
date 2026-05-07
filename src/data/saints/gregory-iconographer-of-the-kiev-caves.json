@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gregory, iconographer of the Kiev Caves (12th c.).",
+  "name": "The Monk Gregory, Iconographer of Pechersk",
   "slug": "gregory-iconographer-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 8"
+  ],
+  "life": "The Monk Gregory, Iconographer of Pechersk, was a colleague of the Monk Alypii of Pechersk (Comm. 17 August). In the \"Accounts about the holy iconographers\" it says, that he wrote many a wonderworking icon located throughout the Russian Land. In the 9th Ode of the Canon of the Service to the Sobor-Assemblage of the Kievo-Pechersk Monastics, Reposed within the Nearer Caves (Comm. 28 September) – the Monk Gregory is termed a \"byzantine\". This signifies possibly that he was among the number of iconographers who had come from Constantinople to Kiev for the embellishing of the Great Church of the monastery, in honour of the Dormition-Uspenie of the Most Holy Mother of God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Jordan of Trebizond (1650) (Greek).",
+  "name": "New Martyr Jordan of Trebizond (1650)",
   "slug": "new-martyr-jordan-of-trebizond",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "February 2"
+  ],
+  "life": "Martyr Jordan of Trebizond was beheaded by the Turks in 1650, for the accusation of Mohammedism and nonacceptance of Islam, in the Galata District of Constantinople.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

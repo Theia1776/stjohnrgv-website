@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Mark the Faster of Egypt (5th c.).",
+  "name": "The Monk Mark",
   "slug": "mark-the-faster-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 5"
+  ],
+  "life": "The Monk Mark asceticised during the V Century in the Nitreian wilderness (Lower Egypt). From the time of his youth the fondest pursuit for him was the reading of Holy Scripture. There is an account, that he knew the whole Bible by heart. It is known also, that the Monk Mark heard the preaching of Saint John Chrysostomos. Many a discourse written by Saint Mark has come down to us. The monk was noted for his gentleness, purity of soul and abstinence, for which he was called a \"fast-keeper\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

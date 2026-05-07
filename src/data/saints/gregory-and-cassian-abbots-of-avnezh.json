@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Gregory and Cassian, abbots of Avnezh (Vologda) (1392) (translation of the relics, 1524).",
+  "name": "The Monks Gregory and Kassian of Avnezh",
   "slug": "gregory-and-cassian-abbots-of-avnezh",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 15"
+  ],
+  "life": "The Monks Gregory and Kassian of Avnezh pursued asceticism at the River Sukhona in the Vologda land. On 15 June 1392 they died as martyrs at Avnezh monastery during an incursion by Tatars. The relics of the monk-martyrs were uncovered in the year 1524. In 1560, with the blessing of Makarii, – Metropolitan of Moscow and All Russia (+ 1564), the hegumen of Makrisch monastery Varlaam composed an account about the sanctity of the monk-martyrs.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

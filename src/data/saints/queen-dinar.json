@@ -1,9 +1,11 @@
 {
-  "name": "Holy Queen Dinar (10th c.) (Georgia).",
+  "name": "Holy Queen Dinar",
   "slug": "queen-dinar",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 30"
+  ],
+  "life": "The Russian Church has preserved chronicles of the life of Queen Dinar, a woman who achieved much on behalf of the Christian Faith. For years scholars have disputed about the historical figure discussed in great depth in the Russian Church. Many believed that the sources described Holy Queen Tamar, but the period of Tamar’s rule does not match that of the figure described in the chronicles. The Georgian chronicle Life of Kartli, however, has preserved information about a certain Dinar, Queen of Hereti (southeastern Georgia), who, along with her son Ishkhanik, converted Hereti to the Orthodox Faith and delivered its people from the Monophysite heresy in the 10th century. Queen Dinar’s story resembles that recounted in the Russian Chronicles more closely than any other.\nAccording to the Armenian historian Moses of Kalankaytuk, Slavic tribes that carried out incursions in the southernmost Caucasus often journeyed through the Transcaucasus, and it was with these tribes that the story of Queen Dinar made its way to Russia. The Georgian Church renders great honor to Holy Queen Dinar. As a result of her zealous labors and achievements, a large part of the eastern Transcaucasus was saved from the Monophysite heresy that dominated the region.\nToday, on the north wall of the Throne Hall in the Moscow Kremlin, there hangs an image of Holy Queen Dinar mounted on a white horse, victorious over the enemy.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

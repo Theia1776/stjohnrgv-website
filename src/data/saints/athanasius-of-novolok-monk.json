@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Athanasius of Novolok, monk (16th-17th c.).",
+  "name": "Righteous Athanasii (Afanasii) of Navolotsk",
   "slug": "athanasius-of-novolok-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 18"
+  ],
+  "life": "Righteous Athanasii (Afanasii) of Navolotsk went at the end of the XVI Century from the Kargopol' region to the Olonets land, where he founded a monastery 78 versts from what later emerged as the city of Petrozavodsk. The saint died near the Verkholedsk suburb not far from Shenkursk.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

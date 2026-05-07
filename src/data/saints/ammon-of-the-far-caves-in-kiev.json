@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Ammon of the Far Caves in Kiev (13th c.).",
+  "name": "The Monk Ammon, Hermit of Pechersk",
   "slug": "ammon-of-the-far-caves-in-kiev",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 4"
+  ],
+  "life": "The Monk Ammon, Hermit of Pechersk (XIII Century), was given the title Work-Lover. The saint went to Athos and to Jerusalem. Upon his return he became famed for his exploits, and he was an image of holy life for the brethren. He was buried in the Farther Caves. His memory is also 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

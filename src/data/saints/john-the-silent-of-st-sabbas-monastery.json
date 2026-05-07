@@ -1,9 +1,11 @@
 {
-  "name": "Venerable John the Silent of St. Sabbas monastery (558).",
+  "name": "The Monk John the Silent",
   "slug": "john-the-silent-of-st-sabbas-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 30"
+  ],
+  "life": "The Monk John the Silent – Bishop of the city of Koloneia, was an exemplary example of a good Christian life for his flock. Persecuted by the governor, he was deprived of the archbishop's cathedra and withdrew to the monastery of Saint Sava the Sanctified, where he was glorified in ascetic deeds of silence, prayer, and dwelling in the wilderness. The monk died at age 104 (+ 558).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

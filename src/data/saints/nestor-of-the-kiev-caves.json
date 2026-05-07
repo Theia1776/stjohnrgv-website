@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nestor (not the Chronicler) of the Kiev Caves (14th c.).",
+  "name": "The Monk Nestor the NonBookish",
   "slug": "nestor-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 27"
+  ],
+  "life": "The Monk Nestor the NonBookish, named thus in distinction from the Monk Nestor the Chronicler, asceticised in the Farther Caves. His memory is celebrated 28 October.\nThe name of the Monk Nestor the NonBookish is mentioned in the General Service to the Monks of the Farther Caves: \"The Word of God, comprehended of man, taught thee not by bookish wisdom, O holy Nestor, but from on high; thou hast beheld it through the prayers of the Angel, and thy end thou did foresee; may we with thee be made partakers, we pray, in honouring thine memory\". His memory is celebrated also on 28 August and on the 3rd Sunday of great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "Martyrs Diodorus, Didymus, and Diomedes of Laodicea (4th c.).",
+  "name": "Martyrs Diodorus, Didymus, and Diomedes of Laodicea (4th c.)",
   "slug": "diodorus-didymus-and-diomedes-of-laodicea",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 11"
+  ],
+  "life": "They were born in Laodicea, Syria where they zealously spread the Christian faith among pagans. After severe tortures for confessing Christ they died as a result of scourging.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

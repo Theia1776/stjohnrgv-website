@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Xenophon, abbot of Robeika (Novgorod) (1262).",
+  "name": "Monk Ksenofont of Robeiki",
   "slug": "xenophon-abbot-of-robeika",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 26"
+  ],
+  "life": "The Monk Xenophont of Robeisk was a student of the Monk Varlaam of Khutinsk (+ 1192, Comm. 6 November). He was the head of the Khutinsk monastery after the hegumen Isidor (+ 1243). Resigning as hegumen, the Monk Xenophont founded the Trinity Monastery on the banks of the Robeika River (not far from Novgorod). And here he reposed blessedly on 28 June 1262.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

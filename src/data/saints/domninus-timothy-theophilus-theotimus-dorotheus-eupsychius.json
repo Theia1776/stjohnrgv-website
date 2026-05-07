@@ -1,8 +1,10 @@
 {
-  "name": "Martyrs Domninus, Timothy, Theophilus, Theotimus, Dorotheus, Eupsychius, Carterius, Pamphilius, Agathangelus, and Castorus of Palestine (307).",
+  "name": "Martyrs Domninus, Timothy, Theophilus, Theotimus, Dorotheus, Eupsychius, Carterius, Pamphilius, Agathangelus, and Castorus of Palestine (307)",
   "slug": "domninus-timothy-theophilus-theotimus-dorotheus-eupsychius",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 5"
+  ],
+  "life": "Martyr Domninus died for his faith in Christ by fire in 307 in Palestine.\nTimothy, Theophilus and Theotimus, from the militia of Domninus. They died being beaten to death by fists.\nPresbyter Dorotheus, from the militia of Domninus, was torn to pieces by animals.\nEupsychius and Karetrius, from the militia of Domninus, died from the cutting off of the hidden parts.\nPamphilus, from the militia of Martyr Domninus, died in prison.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

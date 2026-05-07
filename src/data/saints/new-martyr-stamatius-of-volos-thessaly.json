@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Stamatius of Volos, Thessaly (1680) (Greek).",
+  "name": "The Martyr Stamatios",
   "slug": "new-martyr-stamatius-of-volos-thessaly",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 16"
+  ],
+  "life": "The Martyr Stamatios was a native of the city of Boleia (Thessaly). They slandered him as having accepted Islam, but he bravely confessed himself a Christian and was beheaded by the sword at Constantinople in 1680.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

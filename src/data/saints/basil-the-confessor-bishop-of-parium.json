@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Basil the Confessor, bishop of Parium (760).",
+  "name": "The Monk Basil the Confessor, Bishop of Para",
   "slug": "basil-the-confessor-bishop-of-parium",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 12"
+  ],
+  "life": "The Monk Basil the Confessor, Bishop of Para, lived during the VIII Century. He was chosen to the bishop's chair by the inhabitants of Para, who venerated the saint as a true pastor of the flock of Christ.\nWhen the Iconoclast heresy broke out, Saint Basil resolutely came out on the side of icon veneration and refused to sign the directives for their abolition (the \"Iniquitous Scroll\" of the Council of 754 which had convened under the emperor Constantine V Copronymos (741-775). The saint shunned any contact with the heretics and did not permit them into his diocese. For his zeal he suffered much persecution, hunger and deprivation.\nTo the very end of his life Saint Basil was faithful to the Orthodox confession.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

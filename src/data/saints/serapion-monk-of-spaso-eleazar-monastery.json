@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Serapion, monk, of Spaso-Eleazar Monastery (Pskov) (1480).",
+  "name": "St. Serapion, monk, of Spaso-Eleazar Monastery (Pskov) (1480).",
   "slug": "serapion-monk-of-spaso-eleazar-monastery",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "September 8"
+  ],
+  "life": "He was born in (what is now) Lithuania, but entered monastic life in the Pskov district. His spiritual father was St Euphrosynus (May 15), under whose care he lived for more than fifty-five years. He became known for his exceptional humility and asceticism. He tried never to be idle, giving any free moment to prayer and reading of Scripture. He emphasized the importance of the common prayer of the Church, saying that reciting the entire Twelve Psalm rule in one's cell was not worth one Kyrie Eleison chanted by the brethren assembled together in church. His knowledge of Lithuanian and Finnish allowed him to strengthen the faith among the peoples of those lands. When he died, at the age of ninety, his clothing was so threadbare that no one wanted it. Soon after his repose, a blind man recovered his sight at St Serapion's tomb, which has been the site of many miracles ever since.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

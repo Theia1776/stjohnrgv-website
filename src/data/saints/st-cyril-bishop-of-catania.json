@@ -1,9 +1,11 @@
 {
-  "name": "St. Cyril, bishop of Catania (2nd c.).",
+  "name": "Sainted Cyril",
   "slug": "st-cyril-bishop-of-catania",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 21"
+  ],
+  "life": "Sainted Cyril was born in Antioch. He was a disciple of the Apostle Peter (Comm. 29 June, 16 January), who installed him as bishop in the city of Catania in Sicily. Saint Cyril wisely guided his flock; he was pious, and was granted by the Lord the gift of wonderworking. By his prayer the bitter water in a certain spring was rendered drinkable and lost its bitterness: this miracle converted many pagans to Christianity. Saint Cyril died in old age and was buried in Sicily.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

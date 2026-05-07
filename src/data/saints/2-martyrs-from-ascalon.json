@@ -1,9 +1,11 @@
 {
-  "name": "2 Martyrs from Ascalon.",
+  "name": "2 Martyrs from Ascalon",
   "slug": "2-martyrs-from-ascalon",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 6"
+  ],
+  "life": "On this day are commemorated 2 Martyrs from Ascalon, buried up to their loins.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

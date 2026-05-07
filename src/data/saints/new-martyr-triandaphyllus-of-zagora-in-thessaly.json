@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Triandaphyllus of Zagora in Thessaly (1680) (Greek).",
+  "name": "The Martyr Triandaphilos",
   "slug": "new-martyr-triandaphyllus-of-zagora-in-thessaly",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 8"
+  ],
+  "life": "The Martyr Triandaphilos, a native of Transmondane Thessalonika, was beheaded by the Turks at Constantinople in the year 1680 for his refusal to reject Christ and accept Islam.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

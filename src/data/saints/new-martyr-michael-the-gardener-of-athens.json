@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr Michael (Paknanas) the Gardener, of Athens (1770) (Greek).",
+  "name": "The Martyr Michael the Gardener",
   "slug": "new-martyr-michael-the-gardener-of-athens",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 30"
+  ],
+  "life": "The Martyr Michael the Gardener suffered under the Turks for confessing the Christian faith at Athens in the year 1770.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

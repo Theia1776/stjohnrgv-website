@@ -1,8 +1,10 @@
 {
-  "name": "Forefeast of the Dormition.",
+  "name": "Forefeast of the Dormition",
   "slug": "forefeast-of-the-dormition",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "August 14"
+  ],
+  "life": "These excerpts are from the church hymns for this day. \"Acclaiming the Feast of Exodus in anticipation\", \"let us praise the honorable repose of the Mother of God\": \"For the Mother of God, the Golden ark, now prepares to pass over from earth to heaven\", and, \"For tomorrow the Queen of all, bound for the mansions of Heaven, commits her soul into the hands of the Son\". Singing \"the Forefeast\" hymns and \"celebrating the all-splendid memory of your honored Dormition\", \"Coming to the tomb of the Virgin let us faithful begin striving to offer up divine incense\", \"at Her divine burial with one mind with the heavenly hosts\" \"let us sing a hymn at her burial\".",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

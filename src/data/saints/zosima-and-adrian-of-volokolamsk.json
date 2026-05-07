@@ -1,9 +1,11 @@
 {
-  "name": "The Monks Zosima and Adrian of Volokolamsk (15-16th c.).",
+  "name": "The Monks Zosima and Adrian of Volokolamsk",
   "slug": "zosima-and-adrian-of-volokolamsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 8"
+  ],
+  "life": "The Monks Zosima and Adrian of Volokolamsk, founders of the Sestrinsk monastery on the banks of the River Sestra, pursued asceticism during the XV-XVI Centuries. Their remains were buried in the Uspenie-Dormition church of the monastery founded by them.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

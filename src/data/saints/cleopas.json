@@ -1,8 +1,10 @@
 {
-  "name": "Apostle Cleopas (1st c.) (Greek).",
+  "name": "Apostle Cleopas (1st c.)",
   "slug": "cleopas",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 30"
+  ],
+  "life": "He is numbered among the Seventy. On the day of the Resurrection, Cleopas and St Luke were walking on the road from Jerusalem to Emmaus when the Risen Christ appeared to them, as recounted in the twenty-fourth chapter of St Luke's Gospel.\nThe Gospel account does not name St Cleopas' companion, but the holy tradition of the Church tells us that it was St Luke himself, and thus that the story is a first-hand account.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

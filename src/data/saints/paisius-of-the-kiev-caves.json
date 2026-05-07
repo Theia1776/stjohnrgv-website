@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Paisius of the Kiev Caves (14th c.).",
+  "name": "The Monk Paisii of Pechersk",
   "slug": "paisius-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 19"
+  ],
+  "life": "The Monk Paisii of Pechersk was a monk of the Kievo-Pechersk monastery. From the general canon to the Kievo-Pechersk monks, venerated in the Farther Caves, it is known, that he was connected by oneness of mind and brotherly love with the Monk Merkurii (the account about him is under 24 November). Both saints were inseparable, they lived in the same cell, and after death were put into the same grave. At the present time their relics rest in separate reliquaries.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

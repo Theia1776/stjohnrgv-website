@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Benjamin, deacon, of Persia (ca. 424).",
+  "name": "The Holy Martyr Benjamin the Deacon",
   "slug": "benjamin-deacon-of-persia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 13"
+  ],
+  "life": "The Holy Martyr Benjamin the Deacon converted many pagan Persians to Christianity, and for his zeal and evangelic preaching he suffered in Persia during the V Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

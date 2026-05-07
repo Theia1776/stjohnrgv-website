@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Basil of Ancyra (ca. 362).",
+  "name": "Martyr Basil of Ancyra (ca. 362)",
   "slug": "basil-of-ancyra",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "January 1"
+  ],
+  "life": "He suffered for his firm confession of faith in Christ about the year 362. After various severe tortures in Ancyra and Constantinople, he was torn apart by lions in Caesarea.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

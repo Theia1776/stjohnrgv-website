@@ -1,9 +1,11 @@
 {
-  "name": "St. Theodosius of Mt. Athos, metropolitan of Trebizond (14th c.) (Greek).",
+  "name": "Sainted Theodosios, Hegumen of Athos, Metropolitan of Trapezund",
   "slug": "st-theodosius-of-mt-athos-metropolitan-of-trebizond",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 11"
+  ],
+  "life": "Sainted Theodosios, Hegumen of Athos, Metropolitan of Trapezund, was born in the village of Koritsa, near the Kastorian hills. At 18 years of age he accepted monasticism at Constantinople and set off to Athos, to the Philotheion monastery, in which he led a strict ascetic life. He was chosen hegumen of the monastery, and afterwards was made metropolitan of the Trapezund Church, and he died in the city of Trapezund in the XIV Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

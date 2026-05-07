@@ -1,8 +1,10 @@
 {
-  "name": "Venerable John, faster of the Kiev Caves (12th c.)..",
+  "name": "St. John, faster of the Kiev Caves",
   "slug": "john-faster-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 7"
+  ],
+  "life": "His relics are in the St. Anthony caves in Kiev.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

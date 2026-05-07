@@ -1,9 +1,11 @@
 {
-  "name": "Venerable James the Confessor, bishop, of the Studium (late 8th c.).",
+  "name": "The Monk James, Bishop and Confessor",
   "slug": "james-the-confessor-bishop-of-the-studium",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 21"
+  ],
+  "life": "The Monk James, Bishop and Confessor, had from his early years yearned towards the ascetic life. Saint James left the world and withdrew to the Studite monastery, where he was monasticised. He led a strict life, full of works, fasting and prayer. Pious as a monk and remarkably learned in Holy Scripture, the Monk James was elevated to the bishop's cathedra-seat of the Church in Catania (Sicily). During the reign of the iconoclast emperor Constantine V Kopronymos (741-775), Saint James was repeatedly urged in vain towards a renunciation of holy icons. They exhausted him in prison, starved him with hunger, and they beat him, but he bravely endured all the suffering. The holy Bishop James died in exile.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Polycarp, monk, of Briansk (1620-21).",
+  "name": "The Monk Polykarp of Bryansk",
   "slug": "polycarp-monk-of-briansk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 23"
+  ],
+  "life": "The Monk Polykarp of Bryansk, so they conjecture, was in the world prince Peter Ivanovich Boryatinsky, a descendant of Saint Michael, Prince of Chernigov (Comm. 20 September). This supposition has been put forward because of the Boryatinsky in the destiny of the Bryansk Saviour Transfiguration (Spaso-Preobrazhensk) monastery. His life transpired during the course of the XVI Century. The name of prince Peter Boryatinsky is often encountered in documents of the XVI Century. Thus, he was among those sent off to wage war against the Swedish king at the river Sestra. In 1576 he was named voevoda at Tula. In 1580 Boryatinsky, having been appointed voevoda at Kholm, was captured by the Lithuanians under a siege headed by Panin. Upon his release from captivity under Boris Godinov, Boryatinsky returned in disgrace. In 1591 he was named voevoda at Tiumen', but after several years he left the world, settled at Bryansk and took monastic vows with the name Polykarp. From his means the monk built a monastery of the Transfiguration of the Lord and established in it strict ascetic life. Saint Polykarp was the first head of this monastery. He died and was buried there in 1620 or 1621.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Demetrius of Thrace (307).",
+  "name": "Martyr Demetrius of Thrace (307)",
   "slug": "demetrius-of-thrace",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 15"
+  ],
+  "life": "Martyr Demetrius, born a Slav, in the village of Doad, in Thrace, was beheaded for his fervent confession of Christ, in about 307, during the reign of the Emperor Maximian.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Maron, hermit of Syria (423).",
+  "name": "The Monk Maron",
   "slug": "maron-hermit-of-syria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 14"
+  ],
+  "life": "The Monk Maron lived during the IV Century not far from the city of Cyr in Syria. He spent almost all the time beneathe the open sky – at prayer, vigil, works and strict fasting. Soon he was glorified by a gift of healing the sick and casting out devils. Those that turned to him for edification he counselled to be temperate, to be concerned about salvation, and to guard against avarice and anger. Some disciples of the Monk Maron were – James the Hermit (Comm. 26 November), Limnios (Comm. 23 February), and Domninos (Comm. 1 March). Saint Maron founded many monasteries in the Cyr region.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

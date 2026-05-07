@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Luke, monk, of Sicily (820).",
+  "name": "The Monk Luke of Tauromenium",
   "slug": "luke-monk-of-sicily",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 6"
+  ],
+  "life": "The Monk Luke of Tauromenium was a native of the Sicilian city of Tauromenium. In his youth he left his parents and fiancee and went into the wilderness, where he spent many years in fasting and prayer. He asceticised at Mount Aetna. Towards the end of his life the Monk Luke, through a revelation to him, founded a monastery. In order to become familiar with the ustav/rule and life of other monasteries, the monk visited many other cities. During the time of one of these journeys he died at Corinth at the beginning of the IX Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

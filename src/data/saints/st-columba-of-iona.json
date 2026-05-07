@@ -1,8 +1,10 @@
 {
-  "name": "St. Columba of Iona (597) (Celtic & British).",
+  "name": "St. Columba of Iona (597)",
   "slug": "st-columba-of-iona",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "June 9"
+  ],
+  "life": "He was born to a prominent noble family, the Ui-Niall clan of Ireland, but he forsook all worldly things and became a monk at a young age. He founded the monasteries of Derry and Durrow, and traveled as a missionary in Ireland for almost twenty years. In 565 he settled on the island of Iona, off the coast of Scotland; there he remained for 32 years, establishing the famous monastery of Iona and continuing in his missionary labors. He reposed in peace at Iona.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

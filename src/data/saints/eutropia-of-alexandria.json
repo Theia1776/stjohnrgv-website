@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Eutropia of Alexandria (220).",
+  "name": "The Martyress Eutropia",
   "slug": "eutropia-of-alexandria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 30"
+  ],
+  "life": "The Martyress Eutropia suffered for Christ in Alexandria in about the year 250. Often visiting Christians locked up in prison, she encouraged them to the patient endurance of suffering. For this the saint was arrested. At her trial she firmly confessed her faith in Christ and she died after grievous tortures.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

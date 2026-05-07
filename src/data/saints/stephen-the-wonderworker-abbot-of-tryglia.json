@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Stephen the Wonderworker, abbot of Tryglia (815).",
+  "name": "The Monk Stephen the Confessor, Hegumen of Trigleion Monastery",
   "slug": "stephen-the-wonderworker-abbot-of-tryglia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 28"
+  ],
+  "life": "The Monk Stephen the Confessor, Hegumen of Trigleion Monastery, suffered under the iconoclast emperor Leo the Armenian (813-820). From the time of his youth the holy ascetic dedicated his life to God and accepted monastic tonsure. He later became head of the Trigleion monastery near Constantinople. When persecution again began against holy icons, the saintly hegumen was summoned to an interrogation, where they tried to force him to sign to a rejection of icon-veneration. The Monk Stephen steadfastly refused to betray Orthodoxy and he boldly denounced the emperor for impiety. They subjected the saint to cruel torments, after which they sent him off into imprisonment in the year 815. Weakened and sick, the holy Confessor Stephen soon died in prison from his sufferings.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

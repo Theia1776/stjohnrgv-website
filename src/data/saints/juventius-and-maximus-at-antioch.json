@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Juventius and Maximus at Antioch (4th c.).",
+  "name": "The Holy Martyrs Euventios (Juventinus) and Maximos",
   "slug": "juventius-and-maximus-at-antioch",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 9"
+  ],
+  "life": "The Holy Martyrs Euventios (Juventinus) and Maximos were body-guards of the emperor Julian the Apostate (361-363). Having arrived in Antioch, the emperor gave orders to sprinkle with idol-worship blood all the food-stuffs in the marketplace and the water in the wells. Saints Euventios and Maximos opposed this edict, and Julian ordered them executed.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "St. Gregory of Ochrid, bishop of Moesia (1012) (Bulgaria).",
+  "name": "St. Gregory of Ochrid, bishop of Moesia (1012)",
   "slug": "st-gregory-of-ochrid-bishop-of-moesia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "January 8"
+  ],
+  "life": "After judicial duty he was vested as the Bishop of Pelagonia and Prilep and died in peace in the year 1012.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Zacharias the Recluse of Egypt (4th c.).",
+  "name": "The Monk Zakharios the Monastic",
   "slug": "zacharias-the-recluse-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 24"
+  ],
+  "life": "The Monk Zakharios the Monastic for his especial concern about the poor and homeless was entitled \"to the outcast\". In the printed Menaion his memory is designated as \"our monastic father Zakharios\" – from whence there is an erroneous distinction in the Mesyatseslov of Zakarios with the monk Zakharios the Monastic.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

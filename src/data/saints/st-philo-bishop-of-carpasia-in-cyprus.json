@@ -1,9 +1,11 @@
 {
-  "name": "St. Philo, bishop of Carpasia in Cyprus (5th c.).",
+  "name": "Sainted Philonos, Bishop of Kolpasteia",
   "slug": "st-philo-bishop-of-carpasia-in-cyprus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 24"
+  ],
+  "life": "Sainted Philonos, Bishop of Kolpasteia (island of Crete): He died peacefully in the V Century. To him they attribute a commentary on the Pentateuch of Moses, and an Excursus on the \"Song of Songs\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

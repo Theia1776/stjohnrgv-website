@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Theophanes, faster of the Kiev Caves (12th c.).",
+  "name": "St. Theophanes, faster of the Kiev Caves (12th c.)",
   "slug": "theophanes-faster-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 11"
+  ],
+  "life": "The Venerable Theophanes, Faster of the Kievan Caves, was tonsured in the Kievan Monasteries of the Caves in the Twelfth Century. His relics openly repose in the St. Anthony Cave.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

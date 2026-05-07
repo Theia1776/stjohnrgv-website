@@ -1,9 +1,11 @@
 {
-  "name": "Holy Martyr Kallinikos.",
+  "name": "The Holy Martyr Kallinikos",
   "slug": "kallinikos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 4"
+  ],
+  "life": "The Holy Martyr Kallinikos was torn apart by wild beasts.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

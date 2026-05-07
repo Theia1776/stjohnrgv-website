@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Zeno the Faster of the Kiev Caves (14th c.).",
+  "name": "The Monk Zinon, Fast-Keeper and Toil-Lover, of Pechersk in the Farther Caves",
   "slug": "zeno-the-faster-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 30"
+  ],
+  "life": "The Monk Zinon, Fast-Keeper and Toil-Lover, of Pechersk in the Farther Caves: In the Third Ode of the Canon to the Monks of the Farther Caves, he is acclaimed as \"resplendid in fast\". His memory is celebrated also on 28 August and the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

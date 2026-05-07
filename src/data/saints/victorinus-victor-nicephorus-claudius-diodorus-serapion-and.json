@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Victorinus, Victor, Nicephorus, Claudius, Diodorus, Serapion, and Papias of Egypt (251).",
+  "name": "The Holy Martyrs Victorinus, Victor, Nicephorus, Claudius, Diodorus, Serapion and Papias",
   "slug": "victorinus-victor-nicephorus-claudius-diodorus-serapion-and",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 31"
+  ],
+  "life": "The Holy Martyrs Victorinus, Victor, Nicephorus, Claudius, Diodorus, Serapion and Papias suffered at Corinth, in a persecution under the emperor Decius (249-251), in the year 251. Saints Victorinus, Victor and Nicephorus were secured into a stone mortar and died under the crushing of an huge stone pestle. Saint Claudius died after the cutting off of his hands and feet. Saint Diodorus was burnt, Saint Serapion beheaded, and Saint Papias they drowned in the sea.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

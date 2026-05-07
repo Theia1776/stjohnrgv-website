@@ -1,9 +1,11 @@
 {
-  "name": "New Hieromartyr Seraphim, bishop of Phanar (Greek).",
+  "name": "The PriestMonk Seraphim, Bishop of the Phanar:",
   "slug": "new-hieromartyr-seraphim-bishop-of-phanar",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 4"
+  ],
+  "life": "The PriestMonk Seraphim, Bishop of the Phanar: Native to the village of Bezila, Agrapheia diocese, he asceticised at first as a monk at the Studite monastery, and later was chosen as bishop of the Phanar and Neokhoreia. For his refusal to accept Islam, after beatings he was impaled by the Turks, in 1601. His head is situated at the Studite monastery and was glorified by numerous miracles.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

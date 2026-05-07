@@ -1,9 +1,11 @@
 {
-  "name": "St. Eubula, mother of St. Panteleimon (304).",
+  "name": "Saint Eubola, Mother of the GreatMartyr Panteleimon",
   "slug": "st-eubula-mother-of-st-panteleimon",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 30"
+  ],
+  "life": "Saint Eubola, Mother of the GreatMartyr Panteleimon (Comm. 27 July), died peacefully in about the year 303 before the martyrdom of her son.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

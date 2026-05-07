@@ -1,9 +1,11 @@
 {
-  "name": "St. Prochorus, abbot in Vranski Desert on the river Pchinja in Bulgaria (10th c.) (Serbia).",
+  "name": "The Monk Prokhor of Pshinsk",
   "slug": "st-prochorus-abbot-in-vranski-desert-on-the-river-pchinja",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 15"
+  ],
+  "life": "The Monk Prokhor of Pshinsk pursued asceticism in the Bransk wilderness at the River Pshina, and he founded there a monastery. He is reknown as one of the most strict ascetics of monastic life. He died at the end of the X Century. From the relics of the monk occurred miracles. According to the Serbian Chronicles, the pious king Miliutin (1276-1320) built a church in the name of the Monk Prokhor.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

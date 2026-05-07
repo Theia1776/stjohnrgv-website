@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Tryphon, bishop of Rostov (1468).",
+  "name": "Sainted Tryphon, Bishop of Rostov",
   "slug": "tryphon-bishop-of-rostov",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 1"
+  ],
+  "life": "Sainted Tryphon, Bishop of Rostov, before ordination to bishop was head of the Moscow Novospassky monastery and was confessor to GreatPrince Vasilii Vasil'evich the Dark. On 23 May 1462 he was ordained to the Rostov cathedra-chair by the Metropolitan of Moscow Theodosii. In 1466 he retired to the Saviour monastery in Yaroslavl', where he died on 30 December 1468 (certain local documents point to the year 1466). His memory was transferred to 1 February, it seems, because of his name in common with the Martyr Tryphon. At this monastery also was buried Saint Prokhor – as schemamonk Tryphon, also a bishop of Rostov, having died in the year 1328 (Comm. 7 September).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

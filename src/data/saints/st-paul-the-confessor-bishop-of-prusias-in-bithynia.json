@@ -1,9 +1,11 @@
 {
-  "name": "St. Paul the Confessor, bishop of Prusias in Bithynia (850).",
+  "name": "Sainted Paul the Confessor",
   "slug": "st-paul-the-confessor-bishop-of-prusias-in-bithynia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 7"
+  ],
+  "life": "Sainted Paul the Confessor was bishop of the city of Prusiada (a province of Bithynia in Asia Minor) at a time, when the iconoclasts raged against the faith of Christ. Zealously having entered into the defense of Christian holy things on the basis of the word of Holy Scripture, Saint Paul was subjected to harassment and persecution together with Saint Theophylaktos (Comm. 8 March). The holy confessor reposed in about the year 850.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

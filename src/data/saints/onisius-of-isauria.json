@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Onisius of Isauria (2nd c.).",
+  "name": "The Holy Martyr Onysios",
   "slug": "onisius-of-isauria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 5"
+  ],
+  "life": "The Holy Martyr Onysios lived in Palestine. He was beheaded with the sword for confessing faith in Christ.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

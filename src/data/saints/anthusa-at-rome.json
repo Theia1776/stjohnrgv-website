@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Anthusa at Rome (5th C).",
+  "name": "The Holy Martyress Anthysa",
   "slug": "anthusa-at-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 8"
+  ],
+  "life": "The Holy Martyress Anthysa, wife of a Roman official, was baptised by Sainted Ambrose of Mediolanum (Milan). She recoiled from the offer of the city-governor's wife Sunilda to accept Arian baptism, and so was committed to the fire.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

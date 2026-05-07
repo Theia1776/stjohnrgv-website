@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Pambo, recluse of the Kiev Caves (1241).",
+  "name": "The Monk Pamva, a Kievo-Pechersk Hermit and PriestMonk",
   "slug": "pambo-recluse-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 18"
+  ],
+  "life": "The Monk Pamva, a Kievo-Pechersk Hermit and PriestMonk, fulfilled the exploit of confessor. Caught while on a monastic obedience, he was taken off by Tatars and for many years suffered from them for his refusal to renounce the Christian faith. The monk was afterwards miraculously transported from captivity and put within his own cell. He died in seclusion in 1241. His relics rest in the Theodosiev Caves.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Saint Sophronios, Archbishop of Cyprus (6th C).",
+  "name": "The Monk Sophronios, Archbishop of Cyprus",
   "slug": "sophronios-archbishop-of-cyprus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 9"
+  ],
+  "life": "The Monk Sophronios, Archbishop of Cyprus, was born into a Christian family on Cyprus, and he studied many a science, but most of all he devoted himself to the reading of Holy Scripture. He became so accomplished in piety and good works, that he was vouchsafed of the Lord the gift of wonderworking. Following the death of the bishop of the Cypriot Church, Saint Damian, the Monk Sophronios, at the wish of all the people, was ordained in place of the deceased. In occupying the bishop's cathedra-chair, he proved himself a true father to his flock.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

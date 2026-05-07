@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Gorgonia, sister of St. Gregory the Theologian (372) (Greek).",
+  "name": "Saint Gorgonea, Sister of Sainted Gregory the Theologian",
   "slug": "gorgonia-sister-of-st-gregory-the-theologian",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 23"
+  ],
+  "life": "Saint Gorgonea, Sister of Sainted Gregory the Theologian, was distinguished for her great virtue, piety, meekness, sagacity and toil. Her house was ever an haven for the poor. She died at age 39 in about the year 372 with the words of the psalm: \"In peace I do both fall asleep and expire\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr John (or Nannus) at Smyrna (1802).",
+  "name": "The Holy Martyr John (Nannos) of Soluneia (Thessalonika)",
   "slug": "new-martyr-john-at-smyrna",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 29"
+  ],
+  "life": "The Holy Martyr John (Nannos) of Soluneia (Thessalonika) was martyred by the Turks in the year 1802 in the city of Smyrna.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

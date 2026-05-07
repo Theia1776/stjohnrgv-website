@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Elias of Egypt.",
+  "name": "St. Elias of Egypt.",
   "slug": "elias-of-egypt",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "For 70 years he practiced asceticism as a hermit on a mountain near the city of Antinous, Egypt and died in peace.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

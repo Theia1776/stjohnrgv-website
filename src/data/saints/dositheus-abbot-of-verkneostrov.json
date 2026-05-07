@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Dositheus, abbot of Verkneostrov (Pskov) (1482).",
+  "name": "The Monk Dosiphei of Verkhneostrovsk and Pskov –",
   "slug": "dositheus-abbot-of-verkneostrov",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 8"
+  ],
+  "life": "The Monk Dosiphei of Verkhneostrovsk and Pskov – was a disciple of the Monk Evphrosyn of Spasoeleazarovsk and Pskov (Comm. 15 May). In 1470 he founded the Petropavlovsk Verkhneostrov monastery at Lake Pskova, where he was hegumen.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. Hypatius the Healer of the Kiev Caves (14th c.).",
+  "name": "The Monk Ipatii, Healer of Pechersk,",
   "slug": "st-hypatius-the-healer-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 31"
+  ],
+  "life": "The Monk Ipatii, Healer of Pechersk, attained glory in the exploit of severe fasting and constant prayerful vigilance. By night he stood at prayer, slept very little, and ate only bread and water. The monk Ipatii devoted himself entirely to the service of the sick and for his self-denying act received from God the graced gift of miraculous healings. Those sick with various illnesses often hastened to his prayerful intercession. The memory of the monk Ipatii is celebrated also on 28 August, on the Sobor / Assemblage of the Saints of the Farther Caves.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

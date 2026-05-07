@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Barnabus and his nephew Venerable Sophronius, monks of Mt. Mela near Trebizond (412) (Greek).",
+  "name": "The Monk Barnabas and his nephew Sophronios",
   "slug": "barnabus-and-his-nephew-venerable-sophronius-monks-of-mt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 18"
+  ],
+  "life": "The Monk Barnabas and his nephew Sophronios were Athenians, saved upon Mount Mela near Trapezund in Asia Minor. They died in the year 412.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

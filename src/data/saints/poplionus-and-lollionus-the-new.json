@@ -1,9 +1,11 @@
 {
-  "name": "Holy Martyrs Poplionus and Lollionus the New.",
+  "name": "About the Holy Martyrs Poplionus and Lollionus the New",
   "slug": "poplionus-and-lollionus-the-new",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 27"
+  ],
+  "life": "About the Holy Martyrs Poplionus and Lollionus the New is known only that the first was beheaded with a sword, and the second accepted a martyr's death by being dragged along the ground. Accounts about the time and place of their acts have not been preserved.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Elisha, monk, of Suma (Solovki) (15th- 16th c.).",
+  "name": "The Monk Elisei of Sumsk",
   "slug": "elisha-monk-of-suma",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 14"
+  ],
+  "life": "The Monk Elisei of Sumsk – took monastic vows at the Solovetsk monastery. He was occupied with the plaiting of fishing nets. Before death he became a schemamonk. In 1688 miracles began from the grave of the monk, resting beneathe a crypt in the Nikol'sk church of the city of Suma, Archangel'sk diocese.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

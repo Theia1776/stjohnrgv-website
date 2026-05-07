@@ -1,8 +1,10 @@
 {
-  "name": "St. Augustine of Canterbury, evangelizer of England (ca. 605) (Celtic & British).",
+  "name": "St. Augustine of Canterbury, evangelizer of England (ca. 605)",
   "slug": "st-augustine-of-canterbury-evangelizer-of-england",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "May 26"
+  ],
+  "life": "He is the founder of the Church in southern England, which at that time was almost entirely pagan, though Christianity thrived in the Celtic lands of Ireland, Wales and parts of Scotland. Augustine, a monk at the monastery of St Andrew in Rome, was chosen by Pope Gregory I to lead a mission to England. He and a party of about forty monks landed in England in 597; they were received warmly by King Aethelbert, who was baptised by Augustine and thus became the first Christian king of the Anglo-Saxon people. In 601 Pope Gregory made Augustine Archbishop of Britain, and he established his cathedral at Canterbury, where he also established a monastery. Saint Augustine worked unsuccessfully to unite his churches with those of the Irish monks and hierarchs, who followed different liturgical practices, kept a different date of Pascha, and disapproved of the less severe Roman monastic practices introduced by the Archbishop. He reposed in peace.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

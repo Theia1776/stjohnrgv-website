@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Isaurus the Deacon, Innocent, Felix, Hermias, Basil, Peregrinus, Rufus, and Rufinus of Apollonia in Macedonia (283-284).",
+  "name": "The Holy Martyrs Isaurios the Deacon, Innocent, Felix, Hermias, Basil, Peregrinus",
   "slug": "isaurus-the-deacon-innocent-felix-hermias-basil-peregrinus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 6"
+  ],
+  "life": "The Holy Martyrs Isaurios the Deacon, Innocent, Felix, Hermias, Basil, Peregrinus, – were Athenians, suffering for Christ in the Macedonian city of Apollonia under the emperor Numerian (283-284). Beheaded with them for believing in Christ were two city-governors – Ruphus and Ruphinus.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

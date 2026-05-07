@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Theophilus and James, abbots of Omutch on Pskov Lake (1412).",
+  "name": "The Monks Theophil and Iakov (James) of Omucha",
   "slug": "theophilus-and-james-abbots-of-omutch-on-pskov-lake",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 21"
+  ],
+  "life": "The Monks Theophil and Iakov (James) of Omucha asceticised on the island of Konevetsa together with the Monk Arsenii (Comm. 12 June). In the year 1396 in Pskov diocese at the River Omucha, not far from the city of Porkhov, Saints Theophil and Iakov established a wilderness monastery in honour of the Uspenie-Dormition of the Most Holy Mother o God. Their demise occurred later in about the year 1412.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

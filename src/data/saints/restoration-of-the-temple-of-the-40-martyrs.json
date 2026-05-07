@@ -1,9 +1,11 @@
 {
-  "name": "The Restoration of the Temple of the 40 Martyrs.",
+  "name": "The Restoration of the Temple of the 40 Martyrs",
   "slug": "restoration-of-the-temple-of-the-40-martyrs",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 9"
+  ],
+  "life": "The Restoration of the Temple of the 40 Martyrs is celebrated on this day. At Tsar'grad two churches were built to them: one, by the emperor Anastasias I (491-518), and the other, by the emperor Tiberius (578-582). For this feastday is known a service in the Greek Meneion of the XIII Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

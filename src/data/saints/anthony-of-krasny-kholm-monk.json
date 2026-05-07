@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Anthony of Krasny Kholm, monk (1481).",
+  "name": "The Monk Antonii (Anthony) of Krasnokholmsk",
   "slug": "anthony-of-krasny-kholm-monk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 17"
+  ],
+  "life": "The Monk Antonii (Anthony) of Krasnokholmsk was initially a wilderness-dweller in the Belozersk (WhiteLake) lands. Having already the dignity of priestmonk, he arrived in the Tver' land and settled near \"Pretty Hillock\" (\"Krasnyi kholm\"), at the bank of the River Mologa, building there a chapel and cell. After the discovery of an icon of Saint Nicholas, a stone church was built and a monastery founded, headed by the monk, who taught the brethren both by word and by example throughout his life. The Monk Antonii died in the year 1481.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

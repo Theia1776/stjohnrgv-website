@@ -1,8 +1,10 @@
 {
-  "name": "Martyrs Atticus, Agapius, Eudoxius, Carterius, Istucarius (Styrax), Pactobius (Tobias), and Nictopolion, at Sebaste (320).",
+  "name": "Martyrs Atticus, Agapius, Eudoxius, Carterius, Istucarius (Styrax), Pactobius (Tobias), and Nictopolion, at Sebaste (320)",
   "slug": "atticus-agapius-eudoxius-carterius-istucarius-pactobius-and",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "They suffered during the reign of Emperor Decius in the city of Sebaste. They were warriors and for their confession of Christ, after enduring diverse torments were burned.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

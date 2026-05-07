@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Athanasius, recluse of the Kiev Caves whose relics are in the Far Caves (13th c.).",
+  "name": "The Monk Athanasii (Afanasii), Hermit of Pechersk in the Farther Caves",
   "slug": "athanasius-recluse-of-the-kiev-caves-whose-relics-are-in",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 2"
+  ],
+  "life": "The Monk Athanasii (Afanasii), Hermit of Pechersk in the Farther Caves: His name is mentioned in the 4th ode of the general canon of Monastic Fathers of the Farther Caves. In the \"Sayings about the Lives of the Saints, at Repose in the Cave of the Monk Theodosii\", it says, that for the Monk Athanasii there was no need of candle in the cave, since an Heavenly brilliance shone for him. To all, who approach him with faith, he grants healing. The memory of the Monk Athanasii is celebrated also on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

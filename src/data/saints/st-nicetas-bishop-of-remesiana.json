@@ -1,9 +1,11 @@
 {
-  "name": "St. Nicetas, bishop of Remesiana (414) (Neth.).",
+  "name": "Sainted Nikita",
   "slug": "st-nicetas-bishop-of-remesiana",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 24"
+  ],
+  "life": "Sainted Nikita, a native and afterwards bishop of the city of Remesianum (Remeshek, now Nirot), was born a Slav. All his life was devoted to the spread of Christianity among the Slavic tribes. He died peacefully in about the year 420.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

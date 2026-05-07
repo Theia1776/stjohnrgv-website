@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Achilles, bishop of Larissa (330).",
+  "name": "Sainted Achilles, Bishop of Lariseia",
   "slug": "achilles-bishop-of-larissa",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 15"
+  ],
+  "life": "Sainted Achilles, Bishop of Lariseia, lived during the IV Century, during the reign of Equal-to-the-Apostles Constantine the Great. Glorified by his sanctity of life and erudition, he was made bishop of the city of Lariseia in Thessaly. Saint Achilles was a participant in the First OEcumenical Council, where he boldly denounced the heretic Arius. In his city he zealously cultivated Christianity, destroying idolous pagan-temples, and he built and adorned churches. Saint Achilles had the gift of healing sickness, especially demonic-possession, and he worked many miracles. The saint died peacefully in about the year 330. His relics since the year 978 are in Bulgaria at the city of Prespa (at present – the village of Akhila, called such in honour of the deceased saint).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

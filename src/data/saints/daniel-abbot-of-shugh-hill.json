@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Daniel, abbot of Shugh Hill (Novgorod) (16th c.).",
+  "name": "The Monk Daniel of Shuzhgorsk",
   "slug": "daniel-abbot-of-shugh-hill",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 21"
+  ],
+  "life": "The Monk Daniel of Shuzhgorsk was born in the Moscow dominion in the XVI Century. He asceticised in northern Rus', where he took vows at the Komel'sk monastery, founded by the Monk Kornilii of Komel'sk in 1498. The Monk Daniel left the monastery and continued solitary ascetic life in the unpopulated and forested locale of the Belozersk hinterland, on a mountain named Shuzhgor. Here the holy ascetic founded his monastery in honour of the Transfiguration of the Lord. The Monk Daniel was buried at a temple in honour of the Transfiguration of the Lord at the monastery founded by him. In 1764 the monastery was turned into a parish.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

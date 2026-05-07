@@ -1,9 +1,11 @@
 {
-  "name": "St. George of Matskveri Monastery (9th c.) (Georgia).",
+  "name": "St. George of Matskveri Monastery",
   "slug": "st-george-of-matskveri-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 2"
+  ],
+  "life": "A few biographical details about St. George of Atsquri have been preserved in the writings of the famous 10th-century Georgian hagiographers George Merchule and Basil of Zarzma.\nSt. George of Atsquri lived at the end of the 9th and the beginning of the 10th centuries. A member of the aristocratic and pious Shuartqeli family, St. George was raised and educated in the environs of Georgia’s renowned Opiza Monastery in Klarjeti.\nFour years after the death of the great feudal lord George Chorchaneli, St. George succeeded him as ruler of the Samtskhe region. At that time a bitter conflict arose over who was the rightful heir to Chorchaneli’s inheritance.\n\nWhile serving as the chief political leader of Samtskhe, St. George also directed the region’s spiritual life, wisely administering the ancient Atsquri diocese for many years. According to tradition, the diocese of Atsquri was founded by the holy Apostle Andrew the First-called, who left there the “Not-Made-By-Hands” icon of the Most Holy Theotokos (known as the Atsquri Icon of the Mother of God) as an offering to the Georgian Church.\nThough his literary works have not been preserved, St. George is also commemorated as a great writer of the Church.\nIn his book The Life of St. Grigol of Khandzta, St. George Merchule notes that St. George of Atsquri made some of the most significant contributions to the biographical writings on St. Grigol of Khandzta. St. George of Atsquri was a close companion of St. Serapion of Zarzma. He was present at his burial and contributed much to the hagiographical writings on his life and works.",
+  "attribution": "© 2006 St. Herman of Alaska Brotherhood.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

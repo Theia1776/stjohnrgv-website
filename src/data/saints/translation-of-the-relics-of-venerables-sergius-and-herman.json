@@ -1,9 +1,11 @@
 {
-  "name": "Translation of the relics of Venerables Sergius and Herman of Valaam.",
+  "name": "The Monks Sergei and German of Valaamo",
   "slug": "translation-of-the-relics-of-venerables-sergius-and-herman",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 11"
+  ],
+  "life": "The Monks Sergei and German of Valaamo settled on the island of Valaamo in 1329. The brethren gathered by them shone forth the light of Orthodoxy in this frontier land. The Karelian people began to regard Christianity with renewed suspicion, with its authority in the XIII Century being undermined by the Swedes, who sought to spread Catholicism by means of the sword. The Monks Sergei and German died in about the year 1353. A second commemoration of them is on 11 September.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

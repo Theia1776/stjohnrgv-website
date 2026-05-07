@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Domnina of Anazarbus (286).",
+  "name": "The Holy Martyress Domnica",
   "slug": "domnina-of-anazarbus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 12"
+  ],
+  "life": "The Holy Martyress Domnica suffered for confessing Christianity in the year 286. Domnica lived in the region of Cilicia. By order of the governor Licius they beat her for a long time, and burnt her with fire. All tormented, Saint Domnica was thrown into prison, where she died.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

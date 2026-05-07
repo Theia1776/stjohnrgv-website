@@ -1,9 +1,11 @@
 {
-  "name": "Pechersk Not-Wrought-by-Hand (1085), \"Pechersk\" (with Sts. Anthony and Theodosius) (1085), \"Sven-Caves\" (1288), \"Yaskinsky\" and Vlakhernsky\" Icons of the Mother of God",
+  "name": "The Pechersk Not-Wrought-by-Hand Icon of the Mother of God",
   "slug": "pechersk-not-wrought-by-hand-pechersk-sven-caves-yaskinsky",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 3"
+  ],
+  "life": "The Pechersk Not-Wrought-by-Hand Icon of the Mother of God appeared in the Great church of the Kievo-Pechersk monastery in the year 1085.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

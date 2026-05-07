@@ -1,9 +1,11 @@
 {
-  "name": "Sts. Phosterius the Hermit and Menas of Sinai (6th c.).",
+  "name": "The Monk Phosterios the Wanderer",
   "slug": "sts-phosterius-the-hermit-and-menas-of-sinai",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 5"
+  ],
+  "life": "The Monk Phosterios the Wanderer pursued asceticism on an high mountain. By his powerful working of miracles and saintly life, he restored many from heresy.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

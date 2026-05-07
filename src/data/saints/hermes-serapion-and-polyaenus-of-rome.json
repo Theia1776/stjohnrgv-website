@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Hermes, Serapion, and Polyaenus of Rome (2nd c.).",
+  "name": "The Martyrs Hermas, Serapion and Polienus",
   "slug": "hermes-serapion-and-polyaenus-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 18"
+  ],
+  "life": "The Martyrs Hermas, Serapion and Polienus were Romans, and they suffered for Christ in the II Century. They were thrown into prison, and when under interrogation they firmly confessed their faith in Christ and refused to offer sacrifice to idols, the martyrs were dragged through crowds and impassable places. Struck by stones and other material, they died, taking up their heavenly crowns.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

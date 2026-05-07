@@ -1,9 +1,11 @@
 {
-  "name": "New Martyr John-Raiko of Shumena, Bulgaria (1802)) (Greek).",
+  "name": "The Holy Martyr John the Bulgarian",
   "slug": "new-martyr-john-raiko-of-shumena-bulgaria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 14"
+  ],
+  "life": "The Holy Martyr John the Bulgarian was martyred by the Turks as a Christian in the year 1802.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

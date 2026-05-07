@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Apollonius of Sardis (3rd c.).",
+  "name": "The Holy Martyr Apollonias",
   "slug": "apollonius-of-sardis",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 10"
+  ],
+  "life": "The Holy Martyr Apollonias came from the city of Sardes, located in Lydia (Asia Minor). He declared himself a Christian and was arrested. When they demanded that he swear an oath on the name of the emperor, he refused, saying that it was improper to swear on the name of a mortal man. They tortured Saint Apollonias for a long time and then crucified him on a cross. This occurred at Iconium either under the emperor Decius (249-251) or the emperor Valerian (253-259).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Acepsimas, hermit of Cyrrhus in Syria (4th c.).",
+  "name": "The Monk Akepsimos",
   "slug": "acepsimas-hermit-of-cyrrhus-in-syria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 3"
+  ],
+  "life": "The Monk Akepsimos (IV) dwelt for sixty years in the wilderness, not far from Cyrrhus, Syria. He concerned himself with fasting, silence and prayer. At the command of the patriarch, he came out of solitude and was ordained a bishop. He died in extreme old age.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

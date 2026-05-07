@@ -1,9 +1,11 @@
 {
-  "name": "The Monk Leo, Cappadocian Monastic.",
+  "name": "The Monk Leo, Cappadocian Monastic:",
   "slug": "leo-cappadocian-monastic",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "February 29"
+  ],
+  "life": "The Monk Leo, Cappadocian Monastic: He fulfilled the commandment about love for neighbour, by suggesting to the Saracens who had taken captive three sickly monks, that they replace the infirm captives with himself, since he was healthy and capable of work. During a time of journeying in the desert the Monk Leo weakened and was not able to go further. He was beheaded with the sword, having given up his soul \"for his neighbour\".",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nektarius of Bitel'sk (1500).",
+  "name": "The Monk Nektarii of Bitel'sk",
   "slug": "nektarius-of-bitel-sk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 15"
+  ],
+  "life": "The Monk Nektarii of Bitel'sk was born in the small town of Bitl' (or Butili) in Bulgaria. In the world he was named Nikolai. Before the occurrence of a Turkish invasion he mother had a vision: the Most Holy Virgin Herself appeared and bid her to flee and go into hiding with her husband and children. Nikolai's father, having taken the boy with him, withdrew to a monastery dedicated to the UnMercenaries, not far from Bitel', where he accepted monasticism with the name Pakhomii. Nikolai, having reach adolescent age, went on to Athos. The perspicacious elder Philothei accepted him and endowed him into the Angelic form with the name Nektarii. The monk suffered for a long time from the envy and spite of one of the novices, but he showed him in return total humility. The monk distinguished himself by his charity: money that he obtained from his handicraft he distributed to the poor. The Monk Nektarii died in the year 1500.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

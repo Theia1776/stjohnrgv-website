@@ -1,9 +1,11 @@
 {
-  "name": "Five Martyrs of Nicomedia (Greek).",
+  "name": "5 Nikomedian and 40 Roman Martyrs",
   "slug": "five-martyrs-of-nicomedia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 16"
+  ],
+  "life": "On this day also is celebrated the memory of 5 Nikomedian and 40 Roman Martyrs. The time of their suffering is unknown.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

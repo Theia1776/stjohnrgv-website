@@ -1,9 +1,11 @@
 {
-  "name": "St. Sergius, patriarch of Constantinople (1019).",
+  "name": "Sainted Sergios, Patriarch of Constantinople",
   "slug": "st-sergius-patriarch-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 12"
+  ],
+  "life": "Sainted Sergios, Patriarch of Constantinople, a monk from the monastery of Saint Manuel, directed the Church from 999 to 1019.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

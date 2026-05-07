@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Troadius of Neo-Caesarea (3rd c.).",
+  "name": "The Holy Martyr Troades",
   "slug": "troadius-of-neo-caesarea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 2"
+  ],
+  "life": "The Holy Martyr Troades suffered for Christ in Pontine Neocaesarea under the emperor Decius (249-251), having endured terrible tortures. Saint Gregory of Neocaesarea (Comm. 17 November) witnessed his sufferings, having foretold his martyr's exploit.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

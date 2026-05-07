@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Simon, abbot of Soiga Monastery (Vologda) (1561).",
+  "name": "The Monk Simon of Soiginsk",
   "slug": "simon-abbot-of-soiga-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 24"
+  ],
+  "life": "The Monk Simon of Soiginsk belonged to the Komel'sk branch of students of the Monk Sergei of Radonezh. He was born at Sol'vychegodsk, and took monastic vows under the Monk Kornilii (Comm. 19 May) at the Komel'sk monastery. He passed through his obediences amidst such ascetics and disciples of Kornilii of Komel'sk as – Gennadii of Liubimsk (Comm. 23 January), Kirill of Novoezersk (Comm. 4 February), Irodion of Iloezersk (Comm. 28 September), Adrian of Poshekhonsk (Comm. 5 March), Lavrentii of Komel'sk (Comm. 16 May). After the death of his preceptor the Monk Kornilii, the Monk Simon for a certain while was companion of the Monk Longin (Comm. 10 February) – the founder of the Koryazhemsk monastery, and went off together with him into wilderness-life. After this he settled at the River Soiga, 60 versts from Koryazhma. There he established a church in honour of the Transfiguration of the Lord, consecrated on 17 May 1541. Having founded a monastery by this church, the monk was chosen hegumen by the brethren. The Monk Simon died on 24 November 1562 and was buried in the monastery founded by him in a church named for the holy GreatMartyr Catherine, whose memory likewise is observed on 24 November.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

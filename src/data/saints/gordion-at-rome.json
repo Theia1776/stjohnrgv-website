@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Gordion at Rome (362).",
+  "name": "The Holy Martyr Gordian",
   "slug": "gordion-at-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 9"
+  ],
+  "life": "The Holy Martyr Gordian was beheaded with a sword in the year 362 under Julian the Apostate (361-363) at Rome. His relics rest in the Roman catacombs.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "St. George the Confessor of Constantinople, with his wife and children (ca. 842).",
+  "name": "The Holy Confessor George",
   "slug": "st-george-the-confessor-of-constantinople-with-his-wife-and",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 13"
+  ],
+  "life": "The Holy Confessor George suffered for the veneration of holy icons at Constantinople in the first half of the IX Century. The emperor Theophilos demanded that Saint George renounce the veneration of holy icons, but the brave confessor refused the order, and declared to the impious emperor, that in venerating holy icons, we give worship to their eternal Primal-Image {i.e. Christ the Logos]. For his disobedience, the emperor gave orders to take away and seize the property of Saint George, and with a rope about his neck to drag him through the streets of Constantinople and then cast him into prison. After this, Saint George was sent off into exile, together with his wife Irene and their children. Having suffered in exile much affliction, the holy Confessor George died.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

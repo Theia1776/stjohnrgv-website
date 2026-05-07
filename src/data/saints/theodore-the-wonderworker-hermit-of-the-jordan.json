@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Theodore the Wonderworker, hermit of the Jordan (583).",
+  "name": "The Monk Theodore the Wonderworker",
   "slug": "theodore-the-wonderworker-hermit-of-the-jordan",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 5"
+  ],
+  "life": "The Monk Theodore the Wonderworker lived during the VI Century. In his youth he left the world, accepted monasticism and withdrew into the Jordanian wilderness. He received from God the gift of wonderworking. Thus, one time while journeying on a ship to Constantinople, the Monk Theodore besought the Lord, that water drawn from the sea be made fresh to quench the thirst of his companions. To those thanking him for this the monk said, that it was God working such a miracle, compassionate to the intense thirst of mankind, rather than by his unworthy prayer.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

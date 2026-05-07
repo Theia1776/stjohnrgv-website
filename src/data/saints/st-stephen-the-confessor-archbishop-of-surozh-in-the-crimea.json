@@ -1,9 +1,11 @@
 {
-  "name": "St. Stephen the Confessor, archbishop of Surozh in the Crimea (790).",
+  "name": "Sainted Stephen the Confessor, Archbishop of Surozh",
   "slug": "st-stephen-the-confessor-archbishop-of-surozh-in-the-crimea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 15"
+  ],
+  "life": "Sainted Stephen the Confessor, Archbishop of Surozh, was a native of Cappadocia and was educated at Constantinople. Having taken monastic vows, he withdrew into the wilderness, where he passed the time for 30 years in ascetic deeds. Patriarch Germanos, through some particular revelation, ordained him bishop of the city of Surozh (presently the city of Sudak in the Crimea). Under the iconoclast emperor Leo III the Isaurian (716-741), Saint Stephen underwent tortures and imprisonment in Constantinople, from which he emerged after the death of the emperor. Already quite advanced in years, he returned to his flock in Surozh, where he died.\nThere is preserved an account how, at the beginning of the IX Century during the time of a campaign into the Crimea, and influenced by miracles at the crypt of the saint, the Russian prince Bravlin accepted Baptism.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

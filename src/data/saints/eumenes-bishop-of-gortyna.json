@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Eumenes, bishop of Gortyna (7th c.).",
+  "name": "The Monk Eumenios",
   "slug": "eumenes-bishop-of-gortyna",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 18"
+  ],
+  "life": "The Monk Eumenios from the time of his youth was noted for his virtuous life. He strove to serve the One God and therefore he shunned worldly temptations. Concerned about salvation of soul, he distributed all his substance to the poor. By the blessing of God the Monk Eumenios was chosen and elevated to the dignity of bishop of the Gortineia Church on the Island of Crete. The saint like a compassionate father comforted his flock in their sorrows, and cared for the orphaned and indigent. He prayers were so strong before God, that once during the time of drought he called forth abundant rain upon the earth. Saint Eumenios wisely and zealously defended the Orthodox faith against the then arising Monophysite heresy. For his opposition to the heresy the saint was banished to the Thebaid, where he died in the VII Century. His body was then transferred and buried in Gortineia.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

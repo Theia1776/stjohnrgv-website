@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Oleg, prince of Briansk (1285).",
+  "name": "Holy Nobleborn Prince Oleg Romanovich of Bryansk",
   "slug": "oleg-prince-of-briansk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 20"
+  ],
+  "life": "Holy Nobleborn Prince Oleg Romanovich of Bryansk (in Baptism Leontii) was grandson of the holy Martyr-prince Michael of Chernigov. According to the chronicle histories it is known, that noble prince Oleg in 1274 together with his father, prince Roman Mikhailovich of Bryansk, participated in a war against Lithuania. After 1274 he resigned as prince and took monastic vows with the name Vasilii at the Bryansk Petropavlovsk monastery, built on his means. At this monastery the holy nobleborn prince died as a strict ascetic in about the year 1285 and was buried in the monastery church.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

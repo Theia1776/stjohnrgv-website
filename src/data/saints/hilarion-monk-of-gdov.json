@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Hilarion, monk, of Gdov (Pskov) (1476).",
+  "name": "The Monk Ilarion of Gdovsk and Pskovoezersk (\"Pskov-Lake\")",
   "slug": "hilarion-monk-of-gdov",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 28"
+  ],
+  "life": "The Monk Ilarion of Gdovsk and Pskovoezersk (\"Pskov-Lake\"), was a disciple of the Monk Evphrosyn of Pskov (Comm. 15 May). In 1460 on the banks of the River Zhelcha, not far from Gdov, he founded the Ozersk (Lake) Pokrov (Protection of the Mother of God) monastery. The monastery was situated on the boundary with the Livonian Knights order, and the monks constantly suffered the incursions of the military order. Despite the harsh conditions and insufficiency of means, the Monk Ilarion maintained an high degree of reverence at the monastery, and made great efforts to adorn and build up the monastery.\nThe Monk Ilarion reposed on 28 March 1476 and was buried at the north doors of the iconostas in the church of the Protection of the Most Holy Mother of God, in the monastery founded by him. Afterwards at the monastery was built a temple in honour of the Nativity of Christ, the left chapel of which was dedicated in the name of the founder of the Gdovsk monastery. The commemoration of the Monk Ilarion of Gdov is made also on 21 October, on the day of saint-name in common.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

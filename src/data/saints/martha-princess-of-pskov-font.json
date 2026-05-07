@@ -1,8 +1,10 @@
 {
-  "name": "Righteous Martha, princess of Pskov (1300).</font",
+  "name": "Righteous Martha, princess of Pskov (1300)",
   "slug": "martha-princess-of-pskov-font",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 8"
+  ],
+  "life": "Martha of Pskov, the wife of St. Dovmont (Timothy), Prince of Pskov (May 20), was tonsured a nun in the Pskov Forerunner Monastery. She died in 1300.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

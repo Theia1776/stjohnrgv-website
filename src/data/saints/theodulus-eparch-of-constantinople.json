@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Theodulus, eparch of Constantinople (440).",
+  "name": "St. Theodulus, eparch of Constantinople (440)",
   "slug": "theodulus-eparch-of-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "December 3"
+  ],
+  "life": "He was the eparch of Constantinople during the reign of Theodosius the Great (379-395). After the death of his spouse, he left for the city of Edessa and there practiced asceticism on a pillar for 8 years.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

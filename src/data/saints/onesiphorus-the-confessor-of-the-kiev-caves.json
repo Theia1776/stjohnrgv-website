@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Onesiphorus the Confessor of the Kiev Caves (1148).",
+  "name": "The Monk Onisiphor of Pechersk",
   "slug": "onesiphorus-the-confessor-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 9"
+  ],
+  "life": "The Monk Onisiphor of Pechersk pursued asceticism at the Kievo-Pechersk monastery. He was a presbyter and had the gift of perspicacity. He died in the year 1148 and was buried in the Nearer Caves alongside the Monk Spiridon. His memory is also 28 September and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

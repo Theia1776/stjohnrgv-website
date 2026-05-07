@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Galacteon, Juliana, and Saturninus of Constantinople.",
+  "name": "The Holy Martyrs Galaction, Juliania and Saturninus:",
   "slug": "galacteon-juliana-and-saturninus-of-constantinople",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 22"
+  ],
+  "life": "The Holy Martyrs Galaction, Juliania and Saturninus: Saint Galaction was drowned in the sea for confessing faith in Christ, and Saint Juliania together with her son Saturninus was burnt.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

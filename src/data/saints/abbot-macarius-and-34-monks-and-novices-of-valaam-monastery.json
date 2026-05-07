@@ -1,8 +1,10 @@
 {
-  "name": "Abbot Macarius and 34 monks and novices of Valaam Monastery martyred by the Lutherans: hieromonk Titus, schemamonk Tikhon, monks Gelasius, Sergius, Varlaam, Sabbas, Conon, Silvester, Cyprian, Pimen, John, Simonas, Jonah, David, Cornelius, Niphon, Athanasius, and Serapion, and novices Varlaam, Athanasius, Anthony, Luke, Leontius, Thomas, Dionysius, Philip, Ignatius, Basil, Pachomius, Basil, Theophilus, John, Theodore, and John (1578).",
+  "name": "Abbot Macarius and 34 monks and novices of Valaam Monastery martyred by the Lutherans: hieromonk Titus, schemamonk Tikhon, monks Gelasius, Sergius, Varlaam, Sabbas, Conon, Silvester, Cyprian, Pimen, John, Simonas, Jonah, David, Cornelius, Niphon, Athanasius, and Serapion, and novices Varlaam, Athanasius, Anthony, Luke, Leontius, Thomas, Dionysius, Philip, Ignatius, Basil, Pachomius, Basil, Theophilus, John, Theodore, and John (1578)",
   "slug": "abbot-macarius-and-34-monks-and-novices-of-valaam-monastery",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "February 20"
+  ],
+  "life": "These thirty-four venerable fathers of the Monastery of the Transfiguration at Valaam on Lake Ladoga were massacred by a party of converts to Lutheranism who besieged the monastery and attempted to make the brethren renounce the Orthodox Faith.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Christodulus, wonderworker of Patmos (1093).",
+  "name": "The Monk Christodoulos the WonderWorker",
   "slug": "christodulus-wonderworker-of-patmos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 16"
+  ],
+  "life": "The Monk Christodoulos the WonderWorker was a native of Bythnian Nicea. At first he pursued asceticism as a monk on Mount Latra in Bythnia, and afterwards he was hegumen of a monastery on the island of Cos. In the year 1089 the monk requested the emperor Alexis Comnena to grant his monastery the island of Patmos in return for the land on the island of Cos and at the shores of Caria. The monk established a monastery on a mountain near the cave where, according to tradition, the holy Apostle John the Theologian wrote the Apocalypse during the years 68-69. In the year 1110 the monk was forced to flee from Patmos together with his disciples to the island of Eubeios because of raidings by sea robbers. He died there in the year 1111. His disciples took his relics to the island of Patmos.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

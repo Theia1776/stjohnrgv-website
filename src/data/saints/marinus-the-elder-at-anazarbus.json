@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Marinus the Elder at Anazarbus (4th c.).",
+  "name": "The Holy Martyr Marin",
   "slug": "marinus-the-elder-at-anazarbus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 18"
+  ],
+  "life": "The Holy Martyr Marin was from Cilicia (Asia Minor). For his confession of faith in Christ the elder was subjected to fierce beatings, and then killed on the orders of Lysias, governor of Tarsus, during the reign of the emperor Diocletian (284-305).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

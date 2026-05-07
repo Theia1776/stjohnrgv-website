@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Dometius of Philotheou, Mt. Athos (16th c.).",
+  "name": "The Monk Dometios",
   "slug": "dometius-of-philotheou-mt-athos",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 7"
+  ],
+  "life": "The Monk Dometios was an Athonite elder. He pursued silence at the Philotheos monastery together with the MonkMartyr Damian the Philotheite (Comm. 23 February), who suffered under cruel tortures by the Turks in the year 1568.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

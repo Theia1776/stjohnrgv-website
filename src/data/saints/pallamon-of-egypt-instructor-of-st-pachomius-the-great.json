@@ -1,8 +1,10 @@
 {
-  "name": "Venerable Pallamon of Egypt, instructor of St. Pachomius the Great.",
+  "name": "St. Pallamon of Egypt, instructor of St. Pachomius the Great",
   "slug": "pallamon-of-egypt-instructor-of-st-pachomius-the-great",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "August 12"
+  ],
+  "life": "The Venerable Palamon, guide of the Venerable Pachomius, was tonsured at the beginning of the Fourth Century in Egypt.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

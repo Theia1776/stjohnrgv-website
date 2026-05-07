@@ -1,8 +1,10 @@
 {
-  "name": "Hieromartyrs John the Bishop and James the Presbyter, of Persia (345).",
+  "name": "Hieromartyrs John the Bishop and James the Presbyter, of Persia (345)",
   "slug": "john-the-bishop-and-james-the-presbyter-of-persia",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "November 1"
+  ],
+  "life": "Hieromartyr John, bishop and James, presbyter, for their zealous sermon on Christ, were beheaded in Persia during the reign of Shapur II in the Fourth Century.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

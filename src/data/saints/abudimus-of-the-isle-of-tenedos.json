@@ -1,8 +1,10 @@
 {
-  "name": "Martyr Abudimus of the isle of Tenedos (4th c.).",
+  "name": "Martyr Abudimus of the isle of Tenedos (4th c.)",
   "slug": "abudimus-of-the-isle-of-tenedos",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 15"
+  ],
+  "life": "He was born on the island Tenedos and suffered under Diocletian.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

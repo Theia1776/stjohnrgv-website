@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Silvanus of the Far Caves in Kiev (14th c.).",
+  "name": "The Monk Siluan, Kievo-Pechersk SchemaMonk",
   "slug": "silvanus-of-the-far-caves-in-kiev",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 10"
+  ],
+  "life": "The Monk Siluan, Kievo-Pechersk SchemaMonk, asceticised in the Farther Caves during the XIII-XIV Centuries. One time, by the power of his prayer, he held fast to the spot robbers, who had come into the monastery garden, and for three days they were not able to move. When they repented, the monk then freed them. The memory of the Monk Siluan is celebrated also on 28 August and on the 2nd Sunday of Great Lent.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

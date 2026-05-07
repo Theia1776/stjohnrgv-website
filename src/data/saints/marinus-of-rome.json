@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Marinus of Rome (283).",
+  "name": "The Martyr Marinus",
   "slug": "marinus-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 16"
+  ],
+  "life": "The Martyr Marinus suffered in Rome in about the year 283 (other sources suggest the years 217-218). Refusing to offer sacrifice to idols, Saint Marinus was beheaded after cruel tortures.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

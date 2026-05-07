@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Elpidephorus, Dius, Bithonius, and Galycus (3rd c.).",
+  "name": "The Holy Martyrs Elpidiphoros, Dios, Bythonios and Galikos",
   "slug": "elpidephorus-dius-bithonius-and-galycus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 3"
+  ],
+  "life": "The Holy Martyrs Elpidiphoros, Dios, Bythonios and Galikos suffered for their confession of faith in Jesus Christ. They cut off the head of Saint Elpidiphoros with a sword. Saint Dios they stoned. Saint Bythonios was drowned in the sea, and the Martyr Galikos was sent for devouring by wild beasts.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Menignus at Parium (250).",
+  "name": "The Holy Martyr Menignos",
   "slug": "menignus-at-parium",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 22"
+  ],
+  "life": "The Holy Martyr Menignos was a simple artisan, occupied in the making of linen. The Lord granted him His especial mercy. Twice in his life he heard a voice from Heaven, calling on him to suffer for Christ. During the time of the persecution of Christians under the emperor Decius (249-251) there occurred a miracle: an Angel led Christians out of prison. Having learned of this, Saint Menignos rejoiced and loved the Saviour with all his heart. Calling to mind the Heavenly summons to suffer for Christ, he therewith destroyed the decree of the impious Decius which hung in the city square, and which ordered the persecution of Christians. The saint declared himself a follower of Christ. For this he was arrested and after fierce tortures he was beheaded (+ 250). From the mouth of the martyr flew out a snow-white dove.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

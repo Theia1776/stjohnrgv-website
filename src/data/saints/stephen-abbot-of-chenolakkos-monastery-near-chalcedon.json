@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Stephen, abbot of Chenolakkos Monastery near Chalcedon (716).",
+  "name": "The Monk Stephen",
   "slug": "stephen-abbot-of-chenolakkos-monastery-near-chalcedon",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 14"
+  ],
+  "life": "The Monk Stephen lived during the VIII Century. Impressed by the lives of the great ascetics, he made the rounds of many a monastery in Palestine, and in the wilderness visited also the great fathers – Euthymios the Great (Comm. 20 January), Sava the Sanctified (Comm. 5 December) and Theodosios the Great (Comm. 11 January). Tonsured into monasticism, the Monk Stephen founded his own monastery in Bithynia, near Mount Oxos nigh unto Chalcedon. At the monastery, which was called \"khenolakkos\" (\"by the goose-pond\"), many monks gathered.\nThe holy ascetic foresaw his own end, and certain of the brethren were granted to behold his glorious departure with the Angels unto the regions on high.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

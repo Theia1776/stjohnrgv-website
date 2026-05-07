@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Batas of Nisibis (395).",
+  "name": "The Martyr Bata",
   "slug": "batas-of-nisibis",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 1"
+  ],
+  "life": "The Martyr Bata, a monastic, lived during the IV Century in Persia and asceticised there in one of the monasteries. During a time of persecution against Christians, initiated by the Persian emperor, the holy martyr was killed in the city of Niziba for confessing the Christian faith.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

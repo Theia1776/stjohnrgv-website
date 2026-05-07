@@ -1,9 +1,11 @@
 {
-  "name": "Holy Apostle James, son of Alphaeus (1st c.).",
+  "name": "Saint James Alphaeus",
   "slug": "james-son-of-alphaeus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 9"
+  ],
+  "life": "Saint James Alphaeus – one of the Twelve Apostles, was brother of the holy Evangelist Matthew. After the Descent of the Holy Spirit, the Apostle James Alphaeus, together with the Apostle Andrew the First-Called (Comm. 30 November), made missionary journeys preaching in Judea, Edessa, Gaza, Eleutheropolis, and converting many on the path of salvation. In the Egyptian city of Ostrazin Saint James finished his apostolic work with a martyr's death on the cross.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,9 +1,11 @@
 {
-  "name": "Venerable John, recluse of the Pskov Caves (1616).",
+  "name": "The Monk John, Hermit of Pskov",
   "slug": "john-recluse-of-the-pskov-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 24"
+  ],
+  "life": "The Monk John, Hermit of Pskov, asceticised during a terrible time of military troubles: in 1592 the Swedes besieged the city of Pskov, and from 1608 for seven years Polish forces made attack under the head of Lisovskii. It was only in the week before the death of the monk, through the intercession of the Pskovo-Pechersk Icon of the Mother of God and the Pskov Saints, that Pskov was delivered from the besieging army of the Swedish king Gustavus Adolphus. The Monk John, as the chronicle relates, \"lived within the city walls for 23 years; rancid was his fish and bread he ate not; he lived within the city as though in a wilderness, in great silence\", and he died on 24 October 1616.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

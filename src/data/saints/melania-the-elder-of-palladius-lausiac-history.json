@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Melania the Elder, of Palladius' Lausiac History (Greek).",
+  "name": "The Nun Melania",
   "slug": "melania-the-elder-of-palladius-lausiac-history",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "June 8"
+  ],
+  "life": "The Nun Melania was by birth the grandmother of Saint Melania the Roman (+ 431, Comm. 31 December).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

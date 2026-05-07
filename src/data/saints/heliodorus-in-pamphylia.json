@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Heliodorus in Pamphylia (273).",
+  "name": "The Holy Martyr Heliodoros",
   "slug": "heliodorus-in-pamphylia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 19"
+  ],
+  "life": "The Holy Martyr Heliodoros lived during the reign of the emperor Aurelian (270-275) in the city of Magidum (Pamphylia). The city-governor Aetius subjected the saint to fierce tortures for his faith in Christ and had him beheaded (+ c. 273).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

@@ -1,8 +1,10 @@
 {
-  "name": "New Martyr Athanasius of Nicaea (1670) (Greek).",
+  "name": "New Martyr Athanasius of Nicaea (1670)",
   "slug": "new-martyr-athanasius-of-nicaea",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "July 24"
+  ],
+  "life": "Born in the village of Chios, Diocese of Nicaea, slandered as wishing to accept Islam, he was arraigned in Constantinople, and here for his firm confession of Christ was beheaded in 1670.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

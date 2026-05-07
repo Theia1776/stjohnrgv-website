@@ -1,9 +1,11 @@
 {
-  "name": "Venerables Sabbas (13th c.) and Alexis the Hermit of the Kiev Caves.",
+  "name": "The Monk Savva of Pechersk",
   "slug": "sabbas-and-alexis-the-hermit-of-the-kiev-caves",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 24"
+  ],
+  "life": "The Monk Savva of Pechersk asceticised in the Nearer Caves of the Kievo‑Pechersk monastery during the XIII Century. In the manuscripts of the Saints, in the \"Book about the Saints\", and in the Canon of Services to the Kievo-Pechersk Monks, he is called a wonderworker. His memory is celebrated 24 April because of his name-in-common (tezoimenstvo) with the holy Martyr Sava Stratilates. The memory of the Monk Savva is also celebrated together with the Sobor-Assemblage of the Monastic Fathers of the Nearer Caves (28 September), and in the Sobor-Assemblage of all the Kievo-Pechersk Wonderworkers (Second Sunday of Great Lent).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

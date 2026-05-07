@@ -1,9 +1,11 @@
 {
-  "name": "St. Barsanuphius, bishop of Tver (1576).",
+  "name": "Sainted Varsonophii of Tver",
   "slug": "st-barsanuphius-bishop-of-tver",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 11"
+  ],
+  "life": "Sainted Varsonophii of Tver was born in the year 1495. In 1567 he was ordained bishop of Tver. He died at the Transfiguration monastery founded by him in the city of Kazan in the year 1576.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

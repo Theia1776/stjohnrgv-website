@@ -1,9 +1,11 @@
 {
-  "name": "St. George II, bishop of Mitylene (842).",
+  "name": "Sainted George",
   "slug": "st-george-ii-bishop-of-mitylene",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 16"
+  ],
+  "life": "Sainted George was made bishop of Mytilene in the years 820-829, during the time of the Iconoclast disturbance. He died in the year 842 at Mytilene. In the XII Century his holy relics were seen by the Russian hegumen Daniel, journeying through the East and recording an account of his journey.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

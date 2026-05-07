@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Philip, monk of Sukhonsk, Yankovsk (Vologda) (1662).",
+  "name": "The Monk Philip of Sukhonsk",
   "slug": "philip-monk-of-sukhonsk-yankovsk",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 17"
+  ],
+  "life": "The Monk Philip of Sukhonsk was an hermit on Yankovsk hill, on the left bank of the Sukhona River – two versts from the city of Ustiug. The Ustiug inhabitants built up a monastery at the place of his ascetic deeds, so as to learn monastic life under his guidance, and in the year 1654 they built a church in honour of the Znamenie (Sign) Mother of God with a chapel in the name of the then-glorified Metropolitan of Moscow, Sainted Philip. Brethren soon gathered. The Monk Philip, refusing no one his guidance, in his humility would not accept the dignity of hegumen and he died at the monastery as a simple monk on 17 August 1662.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

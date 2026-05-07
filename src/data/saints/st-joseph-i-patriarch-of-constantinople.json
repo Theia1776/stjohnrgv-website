@@ -1,8 +1,10 @@
 {
-  "name": "St. Joseph I, Patriarch of Constantinople (1283) (Greek).",
+  "name": "St. Joseph I, Patriarch of Constantinople (1283)",
   "slug": "st-joseph-i-patriarch-of-constantinople",
-  "feasts": [],
-  "life": "",
+  "feasts": [
+    "October 30"
+  ],
+  "life": "Once a married priest, he entered monastic life when his wife died, and became the spiritual father of the Emperor Michael VIII Paleologus, during whose reign he was elevated to the Patriarchate. Despite this patronage, St Joseph's integrity was inviolable: At his first Divine Liturgy as Patriarch, he required the Emperor publicly to confess and repent of several sins before admitting him to Communion. He fiercely opposed the Emperor's expedient policy of union with Rome, and was therefore deposed, retiring once more to monastic life. In old age, he was restored to the Patriarchal throne upon the death of Emperor Michael, but died a few months later.",
   "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
   "troparion": "",
   "kontakion": "",

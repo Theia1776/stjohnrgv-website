@@ -1,9 +1,11 @@
 {
-  "name": "\"Rudensk\" (1687) Icon of the Mother of God.",
+  "name": "The Rudensk Icon of the mother of God",
   "slug": "rudensk-icon-of-the-mother-of-god",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "July 11"
+  ],
+  "life": "The Rudensk Icon of the mother of God appeared in the year 1687 in the Rudno locale of Mogilevsk diocese. In 1712 the icon was transferred to the Florovsk Ascension monastery in Kiev, where now it is situated.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

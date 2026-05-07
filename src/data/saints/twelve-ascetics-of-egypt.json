@@ -1,9 +1,11 @@
 {
-  "name": "Twelve Ascetics of Egypt (Greek).",
+  "name": "12 Egyptian Ascetics",
   "slug": "twelve-ascetics-of-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "August 8"
+  ],
+  "life": "On this day also are commemorated 10 Egyptian Ascetics – having died at sea, and 2 Tyrian Martyrs – dragged over the ground.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

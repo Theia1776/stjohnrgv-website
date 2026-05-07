@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Daniel the Confessor (in schema Stephen) of Spain and Egypt (10th c.).",
+  "name": "The Monk Daniel the Confessor, in the Schema Stephen",
   "slug": "daniel-the-confessor-of-spain-and-egypt",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 17"
+  ],
+  "life": "The Monk Daniel the Confessor, in the Schema Stephen, was a Spanish dignitary, and ruler of the island of Niverta. Disdaining worldly glory, he accepted monasticism at Rome and set out to the holy places at Constantinople and Jerusalem, where he became a schema-monk. For his refusal to accept Islam he perished as a martyr under the Saracens in the X Century.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

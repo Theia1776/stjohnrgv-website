@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Macarius of Pisemsk and Kostroma (14c).",
+  "name": "The Monk Makarii of Pisemsk and Kostroma",
   "slug": "macarius-of-pisemsk-and-kostroma",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 10"
+  ],
+  "life": "The Monk Makarii of Pisemsk and Kostroma – was a co-ascetic of the Monk Paul of Obnorsk. He was the founder, in the second half of the XIV Century, of the Makar'ev Transfiguration wilderness monastery at the River Pis'ma in the Kostroma outskirts.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

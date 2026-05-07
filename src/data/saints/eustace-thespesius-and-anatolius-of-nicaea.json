@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Eustace, Thespesius, and Anatolius of Nicaea (312).",
+  "name": "The Holy Martyrs Eustathios, Thespasios and Anatolios",
   "slug": "eustace-thespesius-and-anatolius-of-nicaea",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 20"
+  ],
+  "life": "The Holy Martyrs Eustathios, Thespasios and Anatolios, natives of the city of Gangra, were the children of a rich merchant. They were baptised by bishop Anthymos of Nicomedia. They died as martyrs at Nicea, having suffered quite fierce tortures (+ 312).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

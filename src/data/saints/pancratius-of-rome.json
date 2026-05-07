@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Pancratius of Rome (304).",
+  "name": "The Holy Martyr Pancratius",
   "slug": "pancratius-of-rome",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 12"
+  ],
+  "life": "The Holy Martyr Pancratius was a native of Phrygia, and as a fourteen year old youth he suffered martyrdom at Rome for his faith in Christ during the time of the persecution under Diocletian (284-305). His relics were buried in a Roman church, named in his honour. The Martyr Pancratius is especially venerated by the Western Church.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

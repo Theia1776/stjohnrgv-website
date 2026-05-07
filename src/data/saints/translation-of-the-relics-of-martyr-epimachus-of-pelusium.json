@@ -1,9 +1,11 @@
 {
-  "name": "Translation of the relics of Martyr Epimachus of Pelusium to Constantinople (250).",
+  "name": "The Transfer of the Relics of the Martyr Epimakhos to Constantinople:",
   "slug": "translation-of-the-relics-of-martyr-epimachus-of-pelusium",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 11"
+  ],
+  "life": "The Transfer of the Relics of the Martyr Epimakhos to Constantinople: the account about the saint is located under 31 October.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

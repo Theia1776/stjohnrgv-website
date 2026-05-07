@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Nicholas, who lived in Vuneni, of Larissa in Thessaly (1400).",
+  "name": "The MonkMartyr Nicholas of Bunenia",
   "slug": "nicholas-who-lived-in-vuneni-of-larissa-in-thessaly",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "May 9"
+  ],
+  "life": "The MonkMartyr Nicholas of Bunenia suffered from the Arabs in Thessaly, near the city of Larissa.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

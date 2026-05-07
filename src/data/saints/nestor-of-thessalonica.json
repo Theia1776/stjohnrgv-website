@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Nestor of Thessalonica (306).",
+  "name": "The Holy Martyr Nestor",
   "slug": "nestor-of-thessalonica",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 27"
+  ],
+  "life": "The Holy Martyr Nestor suffered in the year 306 in the city of Soluneia together with the GreatMartyr Demetrios of Soluneia (comm. 26 October).",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

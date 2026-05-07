@@ -1,9 +1,11 @@
 {
-  "name": "Venerable David, abbot, of Serpukhov (1520).",
+  "name": "The Monk David of Serpukhov",
   "slug": "david-abbot-of-serpukhov",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 18"
+  ],
+  "life": "The Monk David of Serpukhov, a student of the Monk Paphnutii of Borovsk (Comm. 1 May), lived as an hermit at the River Lopasna, 23 versts from Serpukhov. In 1515 on the right bank of the river he built a church in memory of the Ascension, and set in place the foundations of the Davidov wilderness monastery.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

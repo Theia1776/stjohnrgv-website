@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Thaddeus, confessor, of the Studion (818).",
+  "name": "The Monk Thaddeos the Confessor",
   "slug": "thaddeus-confessor-of-the-studion",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "December 29"
+  ],
+  "life": "The Monk Thaddeos the Confessor, a disciple of Theodore the Studite, was a defender of the veneration of holy icons. He suffered during the reign of Leo V (813-820). During these times of iconoclast rule he was brought to trial. The heretics, in making mockery over Saint Thaddeos, put an icon of the Saviour on the ground and, forcibly shoving the saint, compelled him to tread upon it. After this the judge said: \"Thou hast trampled upon the icon of Christ, now join together with us\". But Thaddeos boldly answered that he would rather venerate and kiss the holy icon of the Saviour, and that the treading had been accomplished deliberately against his will. he proceeded to curse the impiety of the iconoclasts. For this they beat him with canes. They then dragged the breathless martyr by the legs and threw him beyond the city walls. But he was still alive. A certain Christian took him into his own home and washed off the grime. Saint Thaddeos lived yet another three days, and then gave up his soul to God.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

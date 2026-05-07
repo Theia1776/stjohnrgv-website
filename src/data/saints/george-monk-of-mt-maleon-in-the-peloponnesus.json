@@ -1,9 +1,11 @@
 {
-  "name": "Venerable George, monk, of Mt. Maleon in the Peloponnesus (9th c.).",
+  "name": "The Monk George",
   "slug": "george-monk-of-mt-maleon-in-the-peloponnesus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "April 4"
+  ],
+  "life": "The Monk George lived during the IX Century. He pursued asceticism at a monastery on Mount Malea in the Peloponessus, and here also he died. In the service to him, the Monk George is supplicated as an earthly Angel and wonderworker.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

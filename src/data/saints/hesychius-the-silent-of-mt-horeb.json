@@ -1,9 +1,11 @@
 {
-  "name": "Blessed Hesychius the Silent of Mt. Horeb (6thc.).",
+  "name": "Blessed Hesykhios Khorebites the Hesychiast (\"Bezmolvnik\")",
   "slug": "hesychius-the-silent-of-mt-horeb",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 3"
+  ],
+  "life": "Blessed Hesykhios Khorebites the Hesychiast (\"Bezmolvnik\"), lived during the VI Century at one of the monasteries on Athos, and at first he was not very fervent a monk. After a serious illness Hesykhios died, but through a wondrous act of Divine Providence, after an hour he came back to life. After this the blessed saint secluded himself in his cell as an hermit, and for 12 years he dwelt in complete solitude. The brethren heard only the singing of Psalms and penitent weeping. Before his death, Blessed Hesykhios said to the gathered monks: \"Forgive me, brethren. He that is mindful of death sinneth no more\".\nWith the name Hesykhios is connected the Athonite skete-form of the Hesychiasts (\"Bezmolvni\" or \"Silents\"), striving after an unique experience by the mental Jesus Prayer.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

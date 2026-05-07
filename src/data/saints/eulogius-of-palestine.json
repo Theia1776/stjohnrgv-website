@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Eulogius of Palestine.",
+  "name": "The Holy Martyr Eulogios",
   "slug": "eulogius-of-palestine",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "March 5"
+  ],
+  "life": "The Holy Martyr Eulogios was a native of Palestine. After the death of his pagan parents he gave away all his inheritance to the poor, and he himself became a wanderer and went about through Palestine, converting pagans to Christianity. During the time of a persecution he was arrested, subjected to terrible tortures and beheaded.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

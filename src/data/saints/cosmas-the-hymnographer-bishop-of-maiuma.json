@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Cosmas the Hymnographer, bishop of Maiuma (787).",
+  "name": "The Monk Kosma, Bishop of Maium, Author of Kanons",
   "slug": "cosmas-the-hymnographer-bishop-of-maiuma",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 12"
+  ],
+  "life": "The Monk Kosma, Bishop of Maium, Author of Kanons, was a native of Jerusalem. He was raised by the parents of the Monk John of Damascus (Comm. 4 December) together with their son, and he received a fine education. When Saint Kosma came of age, he set out to one of the monasteries of Palestine, where he attained reknown for monastic exploits. During a time of persecution against holy icons the Monk Kosma, together with the Monk John, came forth for the defence of Orthodoxy. In the year 743 Kosma was made bishop of Maium. He died in old age (+ c. 787), leaving behind many canons for feastdays and a triode for four days of Holy Week.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

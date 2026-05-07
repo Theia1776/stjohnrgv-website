@@ -1,9 +1,11 @@
 {
-  "name": "Martyr Tryphaenes at Cyzicus (1st c.).",
+  "name": "The Holy Martyress Tryphena",
   "slug": "tryphaenes-at-cyzicus",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 31"
+  ],
+  "life": "The Holy Martyress Tryphena came from the city of Kyzikos. She voluntarily gave herself over to suffering for Christ. They threw her into a red-hot oven, tied her from an high tree, threw her from an height onto sharp spears, and then took her away for devouring by beasts, but the Lord preserved her unharmed. Finally, she was torn apart by a mad bull.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

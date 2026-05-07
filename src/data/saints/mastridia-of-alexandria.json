@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Mastridia of Alexandria (1060).",
+  "name": "The Nun Mastridia",
   "slug": "mastridia-of-alexandria",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "November 24"
+  ],
+  "life": "The Nun Mastridia lived in Egyptian Alexandria. She gave a vow of virginity and, keeping the fasts and silence, she dwelt in unceasing prayer. The pure life of the holy virgin was beset by trials. A certain young man, attracted to her with impure desire, began to pursue her such that she could not go from her home even for church. Grieving over the fact that she had unwillingly led the youth into temptation, and being zealous for his salvation, the saint invited him into her home. Knowing that it was her pretty eyes especially that attracted him, the nun with complete selflessness put them out with a linen weaving instrument. Having saved herself and the youth from temptation, Saint Mastridia brought him to repentance. He accepted monasticism and lived as a strict ascetic, and Saint Mastridia finished her life in works for the Lord.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

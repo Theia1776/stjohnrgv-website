@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Athanasius of Medikion Monastery (814).",
+  "name": "The Monk Athanasias of Mydicea",
   "slug": "athanasius-of-medikion-monastery",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "October 26"
+  ],
+  "life": "The Monk Athanasias of Mydicea by love for the monastic life secretly left his parental home, but was forcibly returned by his father. But after a certain while Athanasias with the consent of his father entered the Mydicea monastery in Bythnia. He was a companion of the Monk Nikita (Comm. 3 April) and he died about the year 814. On his grave grew up a cypress tree, from which by the grace of God, occurred healings.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

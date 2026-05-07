@@ -1,9 +1,11 @@
 {
-  "name": "Martyrs Romanus, James, Philotheus, Hyperechius, Abibus, Julian and Paregorius at Samosata (297)",
+  "name": "The Holy Martyrs Romanos, James, Philotheos, Hyperichios, Habib, Julian and Parigoreas",
   "slug": "romanus-james-philotheus-hyperechius-abibus-julian-and",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "January 29"
+  ],
+  "life": "The Holy Martyrs Romanos, James, Philotheos, Hyperichios, Habib, Julian and Parigoreas suffered in the year 297, during the persecution by Diocletian (284-305), in the city of Samosata (in Syria on the River Euphrates). They bravely denounced the foolish serving of idols, for which they were arrested and given over to various terrible tortures: they cut at their bodies with iron, they hung on their necks heavy iron fetters, they locked them up in prison, and finally, nailed their heads while suspended on a cross.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""

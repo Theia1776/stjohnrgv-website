@@ -1,9 +1,11 @@
 {
-  "name": "Venerable Procopius, abbot, of Sazava in Bohemia (1053).",
+  "name": "The Monk Procopius",
   "slug": "procopius-abbot-of-sazava-in-bohemia",
-  "feasts": [],
-  "life": "",
-  "attribution": "Holy Trinity Orthodox Mission, holytrinityorthodox.com",
+  "feasts": [
+    "September 16"
+  ],
+  "life": "The Monk Procopius was born in Bohemia, in the village of Hotun. In his dignity of priest he toiled much for the propagating of the Christian faith in Czechia. By the River Zasava he founded a monastery in the name of Saint John the Precursor, at which he died in the year 1053.",
+  "attribution": "© 1996-2001 by translator Fr. S. Janos.",
   "troparion": "",
   "kontakion": "",
   "iconSlug": ""
