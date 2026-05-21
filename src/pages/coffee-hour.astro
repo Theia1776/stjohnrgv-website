@@ -1,0 +1,396 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Coffee Hour"
+  description="Sign up to bring food for an upcoming Sunday coffee hour."
+>
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold mb-2">Coffee Hour</h1>
+    <p class="text-text-secondary mb-8">
+      Sign up to bring food for an upcoming Sunday. Everyone signed up appears below
+      so we don't end up with eight loaves of bread and no salad.
+    </p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div id="error-banner" class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm" role="alert"></div>
+
+    <div id="sundays" class="space-y-6 hidden"></div>
+  </main>
+</Layout>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // Types & state
+  // ---------------------------------------------------------------------------
+
+  type Signup = {
+    id: string;
+    user_id: string;
+    sunday_date: string; // YYYY-MM-DD
+    display_name: string;
+    item: string;
+  };
+
+  const SUNDAYS_AHEAD = 8;
+
+  let currentUserId: string | null = null;
+  let signups: Signup[] = [];
+  let prefilledName = "";
+
+  // ---------------------------------------------------------------------------
+  // Date helpers — mirror the UTC math in functions/api/coffee-hour.ts
+  // ---------------------------------------------------------------------------
+
+  function todayUtc(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+
+  function upcomingSundays(count: number): Date[] {
+    const today = todayUtc();
+    const daysToNextSunday = (7 - today.getUTCDay()) % 7;
+    const first = new Date(today);
+    first.setUTCDate(today.getUTCDate() + daysToNextSunday);
+    const out: Date[] = [];
+    for (let i = 0; i < count; i++) {
+      const d = new Date(first);
+      d.setUTCDate(first.getUTCDate() + i * 7);
+      out.push(d);
+    }
+    return out;
+  }
+
+  function isoDate(d: Date): string {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatSunday(d: Date): string {
+    // "Sunday, May 24, 2026"
+    return d.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  }
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Network
+  // ---------------------------------------------------------------------------
+
+  function showError(message: string) {
+    const banner = document.getElementById("error-banner");
+    if (!banner) return;
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+  }
+
+  function hideError() {
+    document.getElementById("error-banner")?.classList.add("hidden");
+  }
+
+  async function loadAll() {
+    // Pull signups (and the current user id) + the profile name in parallel.
+    const [signupsRes, profileRes] = await Promise.all([
+      fetch("/api/coffee-hour", { credentials: "same-origin", cache: "no-store" }),
+      fetch("/api/profile", { credentials: "same-origin", cache: "no-store" }),
+    ]);
+
+    if (signupsRes.status === 401 || profileRes.status === 401) {
+      window.location.assign("/login/?next=/coffee-hour/");
+      return;
+    }
+
+    if (!signupsRes.ok) {
+      showError(`Couldn't load signups (${signupsRes.status}).`);
+      return;
+    }
+
+    const data = await signupsRes.json();
+    signups = Array.isArray(data.signups) ? (data.signups as Signup[]) : [];
+    currentUserId = typeof data.current_user_id === "string" ? data.current_user_id : null;
+
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      const parts = [profile.first_name, profile.last_name].filter(
+        (s: unknown) => typeof s === "string" && s.trim() !== "",
+      );
+      prefilledName = parts.join(" ");
+    }
+
+    render();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------------------
+
+  function render() {
+    const loading = document.getElementById("loading");
+    const container = document.getElementById("sundays");
+    if (!container) return;
+
+    loading?.classList.add("hidden");
+    container.classList.remove("hidden");
+
+    const sundays = upcomingSundays(SUNDAYS_AHEAD);
+    container.innerHTML = sundays
+      .map((d) => renderSunday(d, signups.filter((s) => s.sunday_date === isoDate(d))))
+      .join("");
+
+    attachHandlers();
+  }
+
+  function renderSunday(date: Date, dateSignups: Signup[]): string {
+    const dateIso = isoDate(date);
+    const heading = formatSunday(date);
+
+    const rows = dateSignups
+      .map((s) => renderSignupRow(s))
+      .join("");
+
+    const emptyNote = dateSignups.length === 0
+      ? `<p class="text-sm text-text-secondary italic mb-4">No one is signed up yet.</p>`
+      : "";
+
+    return `
+      <section class="border border-brand-tan bg-cream-card p-6 shadow-sm" data-sunday="${dateIso}">
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">${escapeHtml(heading)}</h2>
+
+        ${emptyNote}
+        <ul class="space-y-2 mb-4">${rows}</ul>
+
+        <div data-signup-area>
+          <button type="button" class="btn btn-secondary" data-action="open-form" data-sunday="${dateIso}">
+            + Sign up
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderSignupRow(s: Signup): string {
+    const isMine = currentUserId !== null && s.user_id === currentUserId;
+    const mineBadge = isMine
+      ? `<span class="text-xs uppercase tracking-widest text-brand-blue-dark ml-2">you</span>`
+      : "";
+    const controls = isMine
+      ? `
+        <div class="flex gap-3 ml-3 shrink-0">
+          <button type="button" class="text-sm text-brand-blue-dark hover:underline" data-action="edit" data-id="${s.id}">✎ Edit</button>
+          <button type="button" class="text-sm text-brand-blue-dark hover:underline" data-action="delete" data-id="${s.id}">✕ Remove</button>
+        </div>`
+      : "";
+
+    return `
+      <li class="flex items-start justify-between gap-3" data-row="${s.id}">
+        <div class="flex-1 min-w-0">
+          <span class="font-semibold">${escapeHtml(s.display_name)}</span>${mineBadge}
+          <span class="text-text-secondary"> — ${escapeHtml(s.item)}</span>
+        </div>
+        ${controls}
+      </li>
+    `;
+  }
+
+  function renderInlineForm(dateIso: string, opts: { mode: "create" | "edit"; signup?: Signup }): string {
+    const isEdit = opts.mode === "edit";
+    const nameValue = isEdit ? opts.signup!.display_name : prefilledName;
+    const itemValue = isEdit ? opts.signup!.item : "";
+    const submitLabel = isEdit ? "Save" : "Sign up";
+    const idAttr = isEdit ? `data-id="${opts.signup!.id}"` : "";
+
+    return `
+      <form class="space-y-3 border-t border-border-soft pt-4 mt-2"
+            data-form-mode="${opts.mode}" data-sunday="${dateIso}" ${idAttr}>
+        <div>
+          <label class="block text-sm font-medium mb-1">Your name</label>
+          <input type="text" name="display_name" required maxlength="100"
+                 value="${escapeHtml(nameValue)}"
+                 class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">What you're bringing</label>
+          <input type="text" name="item" required maxlength="200"
+                 placeholder="e.g., Salad and bread"
+                 value="${escapeHtml(itemValue)}"
+                 class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+        </div>
+        <div class="flex items-center gap-3">
+          <button type="submit" class="btn btn-primary">${submitLabel}</button>
+          <button type="button" class="btn btn-secondary" data-action="cancel-form">Cancel</button>
+        </div>
+      </form>
+    `;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Event wiring (delegated)
+  // ---------------------------------------------------------------------------
+
+  function attachHandlers() {
+    const container = document.getElementById("sundays");
+    if (!container) return;
+
+    container.addEventListener("click", onClick);
+    container.addEventListener("submit", onSubmit);
+  }
+
+  function onClick(event: Event) {
+    const target = event.target as HTMLElement;
+    const btn = target.closest<HTMLElement>("[data-action]");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+
+    if (action === "open-form") {
+      const dateIso = btn.dataset.sunday!;
+      const area = btn.closest("[data-signup-area]") as HTMLElement | null;
+      if (!area) return;
+      area.innerHTML = renderInlineForm(dateIso, { mode: "create" });
+      area.querySelector<HTMLInputElement>("input[name='item']")?.focus();
+      return;
+    }
+
+    if (action === "cancel-form") {
+      const area = btn.closest("[data-signup-area]") as HTMLElement | null;
+      const section = btn.closest<HTMLElement>("section[data-sunday]");
+      if (area && section) {
+        area.innerHTML = `
+          <button type="button" class="btn btn-secondary" data-action="open-form" data-sunday="${section.dataset.sunday}">
+            + Sign up
+          </button>`;
+      } else {
+        // Edit-mode form sits inside the row, not the signup area — just re-render.
+        render();
+      }
+      return;
+    }
+
+    if (action === "edit") {
+      const id = btn.dataset.id!;
+      const signup = signups.find((s) => s.id === id);
+      if (!signup) return;
+      const row = btn.closest<HTMLElement>(`li[data-row='${id}']`);
+      if (!row) return;
+      row.innerHTML = renderInlineForm(signup.sunday_date, { mode: "edit", signup });
+      row.querySelector<HTMLInputElement>("input[name='item']")?.focus();
+      return;
+    }
+
+    if (action === "delete") {
+      const id = btn.dataset.id!;
+      void handleDelete(id);
+      return;
+    }
+  }
+
+  async function onSubmit(event: Event) {
+    const form = event.target as HTMLFormElement;
+    if (!form || form.tagName !== "FORM") return;
+    event.preventDefault();
+
+    const mode = form.dataset.formMode as "create" | "edit" | undefined;
+    if (!mode) return;
+
+    const formData = new FormData(form);
+    const displayName = (formData.get("display_name") as string | null)?.trim() ?? "";
+    const item = (formData.get("item") as string | null)?.trim() ?? "";
+    if (!displayName || !item) return;
+
+    if (mode === "create") {
+      const sundayDate = form.dataset.sunday!;
+      await handleCreate(sundayDate, displayName, item);
+    } else {
+      const id = form.dataset.id!;
+      await handleEdit(id, displayName, item);
+    }
+  }
+
+  async function handleCreate(sundayDate: string, displayName: string, item: string) {
+    hideError();
+    const res = await fetch("/api/coffee-hour", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sunday_date: sundayDate, display_name: displayName, item }),
+    });
+    if (res.status === 401) {
+      window.location.assign("/login/?next=/coffee-hour/");
+      return;
+    }
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      showError(detail ? `Couldn't sign up: ${detail}` : `Couldn't sign up (${res.status}).`);
+      return;
+    }
+    const data = await res.json();
+    if (data.signup) signups.push(data.signup as Signup);
+    render();
+  }
+
+  async function handleEdit(id: string, displayName: string, item: string) {
+    hideError();
+    const res = await fetch("/api/coffee-hour", {
+      method: "PATCH",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, display_name: displayName, item }),
+    });
+    if (res.status === 401) {
+      window.location.assign("/login/?next=/coffee-hour/");
+      return;
+    }
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      showError(detail ? `Couldn't save: ${detail}` : `Couldn't save (${res.status}).`);
+      return;
+    }
+    const data = await res.json();
+    if (data.signup) {
+      const idx = signups.findIndex((s) => s.id === id);
+      if (idx >= 0) signups[idx] = data.signup as Signup;
+    }
+    render();
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Remove this signup?")) return;
+    hideError();
+    const res = await fetch("/api/coffee-hour", {
+      method: "DELETE",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.status === 401) {
+      window.location.assign("/login/?next=/coffee-hour/");
+      return;
+    }
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      showError(detail ? `Couldn't remove: ${detail}` : `Couldn't remove (${res.status}).`);
+      return;
+    }
+    signups = signups.filter((s) => s.id !== id);
+    render();
+  }
+
+  loadAll();
+</script>
