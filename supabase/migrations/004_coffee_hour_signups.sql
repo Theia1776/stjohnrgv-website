@@ -48,3 +48,18 @@ create policy "coffee_hour_signups: authenticated read"
 -- service-role key in functions/api/coffee-hour.ts which enforces
 -- ownership in code.
 
+-- =============================================================
+-- Table-level GRANTs.
+--
+-- RLS controls *which rows* a role can touch; GRANTs control whether
+-- the role can attempt the operation at all. Without these, even the
+-- service-role key gets "permission denied" on the table.
+--
+-- service_role: full access — used by functions/api/coffee-hour.ts.
+-- authenticated: DML access — defense-in-depth so a future direct-from-
+--   client query (anon-key respecting RLS) would also work. Anon
+--   intentionally gets nothing; this page is parishioners-only.
+-- =============================================================
+grant all on table public.coffee_hour_signups to service_role;
+grant select, insert, update, delete on table public.coffee_hour_signups to authenticated;
+
