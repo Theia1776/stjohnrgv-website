@@ -14,6 +14,7 @@
     "import-saints": "node scripts/import-htc-saints.mjs"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.2",
     "@supabase/supabase-js": "^2.105.3",
     "@tailwindcss/vite": "^4.2.4",
     "astro": "^6.2.1",

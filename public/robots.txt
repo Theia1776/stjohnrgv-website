@@ -1,0 +1,20 @@
+# robots.txt for St. John of Kronstadt Orthodox Mission
+# https://stjohnrgv.org
+
+User-agent: *
+Allow: /
+
+# Parishioner-private paths — don't index personal data, login forms,
+# the parish directory, or admin tools. The /api/ paths return JSON
+# only and have no SEO value either way.
+Disallow: /account/
+Disallow: /directory/
+Disallow: /coffee-hour/
+Disallow: /admin/
+Disallow: /login/
+Disallow: /api/
+
+# Internal preview page — not part of the public site.
+Disallow: /seasons-preview/
+
+Sitemap: https://stjohnrgv.org/sitemap-index.xml
