@@ -98,6 +98,24 @@ import Layout from "../layouts/Layout.astro";
     banner.classList.remove("hidden");
   }
 
+  // Extract `error` field from a JSON error response if possible; fall
+  // back to the raw text. Returns "" if there's nothing usable.
+  async function readErrorDetail(res: Response): Promise<string> {
+    try {
+      const text = await res.text();
+      if (!text) return "";
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.error === "string") return parsed.error;
+      } catch {
+        // Not JSON — return the raw text.
+      }
+      return text;
+    } catch {
+      return "";
+    }
+  }
+
   function hideError() {
     document.getElementById("error-banner")?.classList.add("hidden");
   }
@@ -115,7 +133,10 @@ import Layout from "../layouts/Layout.astro";
     }
 
     if (!signupsRes.ok) {
-      showError(`Couldn't load signups (${signupsRes.status}).`);
+      const detail = await readErrorDetail(signupsRes);
+      showError(detail
+        ? `Couldn't load signups (${signupsRes.status}): ${detail}`
+        : `Couldn't load signups (${signupsRes.status}).`);
       return;
     }
 
@@ -334,7 +355,7 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
     if (!res.ok) {
-      const detail = await res.text().catch(() => "");
+      const detail = await readErrorDetail(res);
       showError(detail ? `Couldn't sign up: ${detail}` : `Couldn't sign up (${res.status}).`);
       return;
     }
@@ -357,7 +378,7 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
     if (!res.ok) {
-      const detail = await res.text().catch(() => "");
+      const detail = await readErrorDetail(res);
       showError(detail ? `Couldn't save: ${detail}` : `Couldn't save (${res.status}).`);
       return;
     }
@@ -384,7 +405,7 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
     if (!res.ok) {
-      const detail = await res.text().catch(() => "");
+      const detail = await readErrorDetail(res);
       showError(detail ? `Couldn't remove: ${detail}` : `Couldn't remove (${res.status}).`);
       return;
     }

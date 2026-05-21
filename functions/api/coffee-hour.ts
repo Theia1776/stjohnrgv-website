@@ -93,23 +93,30 @@ export async function onRequestGet(
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
-  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
-  if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return wrap(jsonResponse({ error: "Server not configured." }, 500));
+  try {
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    const supabase = getSupabase(context.env);
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
+      .gte("sunday_date", todayIso())
+      .lte("sunday_date", sundayHorizonIso(MAX_SUNDAYS_AHEAD - 1))
+      .order("sunday_date", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+
+    return wrap(jsonResponse({ signups: data ?? [], current_user_id: session.user.id }, 200));
+  } catch (err) {
+    console.error("coffee-hour GET failed:", err);
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
   }
-
-  const supabase = getSupabase(context.env);
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
-    .gte("sunday_date", todayIso())
-    .lte("sunday_date", sundayHorizonIso(MAX_SUNDAYS_AHEAD - 1))
-    .order("sunday_date", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (error) return wrap(jsonResponse({ error: error.message }, 500));
-
-  return wrap(jsonResponse({ signups: data ?? [], current_user_id: session.user.id }, 200));
 }
 
 // ============================================================================
@@ -122,49 +129,56 @@ export async function onRequestPost(
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
-  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
-  if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return wrap(jsonResponse({ error: "Server not configured." }, 500));
-  }
-
-  let body: Record<string, unknown>;
   try {
-    body = await context.request.json();
-  } catch {
-    return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch {
+      return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    }
+
+    const sundayDate = parseIsoDate(body.sunday_date);
+    if (!sundayDate) {
+      return wrap(jsonResponse({ error: "sunday_date must be a YYYY-MM-DD date" }, 400));
+    }
+    if (!isSunday(sundayDate)) {
+      return wrap(jsonResponse({ error: "sunday_date must be a Sunday" }, 400));
+    }
+    if (sundayDate.toISOString().slice(0, 10) < todayIso()) {
+      return wrap(jsonResponse({ error: "sunday_date must be today or later" }, 400));
+    }
+
+    const displayName = trimToLen(body.display_name, MAX_NAME_LEN);
+    if (!displayName) return wrap(jsonResponse({ error: "display_name is required" }, 400));
+
+    const item = trimToLen(body.item, MAX_ITEM_LEN);
+    if (!item) return wrap(jsonResponse({ error: "item is required" }, 400));
+
+    const supabase = getSupabase(context.env);
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        user_id: session.user.id,
+        sunday_date: sundayDate.toISOString().slice(0, 10),
+        display_name: displayName,
+        item,
+      })
+      .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
+      .single();
+
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    return wrap(jsonResponse({ signup: data }, 200));
+  } catch (err) {
+    console.error("coffee-hour POST failed:", err);
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
   }
-
-  const sundayDate = parseIsoDate(body.sunday_date);
-  if (!sundayDate) {
-    return wrap(jsonResponse({ error: "sunday_date must be a YYYY-MM-DD date" }, 400));
-  }
-  if (!isSunday(sundayDate)) {
-    return wrap(jsonResponse({ error: "sunday_date must be a Sunday" }, 400));
-  }
-  if (sundayDate.toISOString().slice(0, 10) < todayIso()) {
-    return wrap(jsonResponse({ error: "sunday_date must be today or later" }, 400));
-  }
-
-  const displayName = trimToLen(body.display_name, MAX_NAME_LEN);
-  if (!displayName) return wrap(jsonResponse({ error: "display_name is required" }, 400));
-
-  const item = trimToLen(body.item, MAX_ITEM_LEN);
-  if (!item) return wrap(jsonResponse({ error: "item is required" }, 400));
-
-  const supabase = getSupabase(context.env);
-  const { data, error } = await supabase
-    .from(TABLE)
-    .insert({
-      user_id: session.user.id,
-      sunday_date: sundayDate.toISOString().slice(0, 10),
-      display_name: displayName,
-      item,
-    })
-    .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
-    .single();
-
-  if (error) return wrap(jsonResponse({ error: error.message }, 500));
-  return wrap(jsonResponse({ signup: data }, 200));
 }
 
 // ============================================================================
@@ -177,62 +191,69 @@ export async function onRequestPatch(
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
-  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
-  if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return wrap(jsonResponse({ error: "Server not configured." }, 500));
-  }
-
-  let body: Record<string, unknown>;
   try {
-    body = await context.request.json();
-  } catch {
-    return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch {
+      return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    }
+
+    const id = typeof body.id === "string" ? body.id : "";
+    if (!id) return wrap(jsonResponse({ error: "id is required" }, 400));
+
+    const updates: Record<string, unknown> = {};
+    if (body.display_name !== undefined) {
+      const v = trimToLen(body.display_name, MAX_NAME_LEN);
+      if (!v) return wrap(jsonResponse({ error: "display_name cannot be empty" }, 400));
+      updates.display_name = v;
+    }
+    if (body.item !== undefined) {
+      const v = trimToLen(body.item, MAX_ITEM_LEN);
+      if (!v) return wrap(jsonResponse({ error: "item cannot be empty" }, 400));
+      updates.item = v;
+    }
+    if (Object.keys(updates).length === 0) {
+      return wrap(jsonResponse({ error: "Nothing to update" }, 400));
+    }
+    updates.updated_at = new Date().toISOString();
+
+    const supabase = getSupabase(context.env);
+
+    // Ownership check.
+    const { data: existing, error: fetchErr } = await supabase
+      .from(TABLE)
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr || !existing) {
+      return wrap(jsonResponse({ error: "Signup not found" }, 404));
+    }
+    if (existing.user_id !== session.user.id) {
+      return wrap(jsonResponse({ error: "You can only edit your own signups" }, 403));
+    }
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(updates)
+      .eq("id", id)
+      .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
+      .single();
+
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    return wrap(jsonResponse({ signup: data }, 200));
+  } catch (err) {
+    console.error("coffee-hour PATCH failed:", err);
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
   }
-
-  const id = typeof body.id === "string" ? body.id : "";
-  if (!id) return wrap(jsonResponse({ error: "id is required" }, 400));
-
-  const updates: Record<string, unknown> = {};
-  if (body.display_name !== undefined) {
-    const v = trimToLen(body.display_name, MAX_NAME_LEN);
-    if (!v) return wrap(jsonResponse({ error: "display_name cannot be empty" }, 400));
-    updates.display_name = v;
-  }
-  if (body.item !== undefined) {
-    const v = trimToLen(body.item, MAX_ITEM_LEN);
-    if (!v) return wrap(jsonResponse({ error: "item cannot be empty" }, 400));
-    updates.item = v;
-  }
-  if (Object.keys(updates).length === 0) {
-    return wrap(jsonResponse({ error: "Nothing to update" }, 400));
-  }
-  updates.updated_at = new Date().toISOString();
-
-  const supabase = getSupabase(context.env);
-
-  // Ownership check.
-  const { data: existing, error: fetchErr } = await supabase
-    .from(TABLE)
-    .select("user_id")
-    .eq("id", id)
-    .single();
-
-  if (fetchErr || !existing) {
-    return wrap(jsonResponse({ error: "Signup not found" }, 404));
-  }
-  if (existing.user_id !== session.user.id) {
-    return wrap(jsonResponse({ error: "You can only edit your own signups" }, 403));
-  }
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(updates)
-    .eq("id", id)
-    .select("id, user_id, sunday_date, display_name, item, created_at, updated_at")
-    .single();
-
-  if (error) return wrap(jsonResponse({ error: error.message }, 500));
-  return wrap(jsonResponse({ signup: data }, 200));
 }
 
 // ============================================================================
@@ -245,38 +266,45 @@ export async function onRequestDelete(
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
-  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
-  if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return wrap(jsonResponse({ error: "Server not configured." }, 500));
-  }
-
-  let body: Record<string, unknown>;
   try {
-    body = await context.request.json();
-  } catch {
-    return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch {
+      return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    }
+
+    const id = typeof body.id === "string" ? body.id : "";
+    if (!id) return wrap(jsonResponse({ error: "id is required" }, 400));
+
+    const supabase = getSupabase(context.env);
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from(TABLE)
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr || !existing) {
+      return wrap(jsonResponse({ error: "Signup not found" }, 404));
+    }
+    if (existing.user_id !== session.user.id) {
+      return wrap(jsonResponse({ error: "You can only remove your own signups" }, 403));
+    }
+
+    const { error } = await supabase.from(TABLE).delete().eq("id", id);
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+
+    return wrap(jsonResponse({ ok: true }, 200));
+  } catch (err) {
+    console.error("coffee-hour DELETE failed:", err);
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
   }
-
-  const id = typeof body.id === "string" ? body.id : "";
-  if (!id) return wrap(jsonResponse({ error: "id is required" }, 400));
-
-  const supabase = getSupabase(context.env);
-
-  const { data: existing, error: fetchErr } = await supabase
-    .from(TABLE)
-    .select("user_id")
-    .eq("id", id)
-    .single();
-
-  if (fetchErr || !existing) {
-    return wrap(jsonResponse({ error: "Signup not found" }, 404));
-  }
-  if (existing.user_id !== session.user.id) {
-    return wrap(jsonResponse({ error: "You can only remove your own signups" }, 403));
-  }
-
-  const { error } = await supabase.from(TABLE).delete().eq("id", id);
-  if (error) return wrap(jsonResponse({ error: error.message }, 500));
-
-  return wrap(jsonResponse({ ok: true }, 200));
 }
