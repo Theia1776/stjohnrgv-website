@@ -29,6 +29,11 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
+// Roles an admin is allowed to assign via the inline directory toggle.
+// Admin promotion deliberately stays manual (SQL in the Supabase dashboard)
+// to keep the UI from accidentally minting new admins.
+const ASSIGNABLE_ROLES = new Set(["catechumen", "member"]);
+
 export async function onRequestGet(
   context: { request: Request; env: Env },
 ): Promise<Response> {
@@ -44,6 +49,16 @@ export async function onRequestGet(
     const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
+
+    // Look up the viewer's role so the client knows whether to render the
+    // admin-only role toggle next to each entry.
+    const { data: viewer, error: viewerError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    if (viewerError) return wrap(jsonResponse({ error: viewerError.message }, 500));
+    const viewerIsAdmin = viewer?.role === "admin";
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
@@ -85,9 +100,82 @@ export async function onRequestGet(
       zip: p.directory_show_address ? p.zip : null,
     }));
 
-    return wrap(jsonResponse({ entries }, 200));
+    return wrap(jsonResponse({ entries, viewer_is_admin: viewerIsAdmin }, 200));
   } catch (err) {
     console.error("directory GET failed:", err);
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
+  }
+}
+
+/**
+ * PATCH /api/directory  — admin-only role flip.
+ *
+ * Body: { user_id: string, role: "catechumen" | "member" }
+ *
+ * Used by the inline toggle on /directory/. Admins can demote themselves
+ * or other admins through this endpoint only by going via 'member' or
+ * 'catechumen' — 'admin' is intentionally not in ASSIGNABLE_ROLES, so
+ * the UI cannot mint new admins (or accidentally lock everyone out by
+ * demoting the last admin). Admin assignment stays manual via SQL.
+ */
+export async function onRequestPatch(
+  context: { request: Request; env: Env },
+): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
+  try {
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch {
+      return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
+    }
+
+    const userId = typeof body.user_id === "string" ? body.user_id : "";
+    if (!userId) return wrap(jsonResponse({ error: "user_id is required" }, 400));
+
+    const newRole = typeof body.role === "string" ? body.role : "";
+    if (!ASSIGNABLE_ROLES.has(newRole)) {
+      return wrap(jsonResponse({ error: "role must be 'catechumen' or 'member'" }, 400));
+    }
+
+    const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+
+    // Admin check — must come AFTER session.user is confirmed, BEFORE we
+    // write anything.
+    const { data: viewer, error: viewerError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    if (viewerError) return wrap(jsonResponse({ error: viewerError.message }, 500));
+    if (viewer?.role !== "admin") {
+      return wrap(jsonResponse({ error: "Forbidden" }, 403));
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", userId)
+      .select("id, role")
+      .single();
+
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    if (!data) return wrap(jsonResponse({ error: "Profile not found" }, 404));
+
+    return wrap(jsonResponse({ id: data.id, role: data.role }, 200));
+  } catch (err) {
+    console.error("directory PATCH failed:", err);
     return wrap(
       jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
     );

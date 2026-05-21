@@ -67,6 +67,7 @@ import Layout from "../layouts/Layout.astro";
   };
 
   let entries: Entry[] = [];
+  let viewerIsAdmin = false;
 
   // Roles that get the three-bar Orthodox cross next to their name.
   // Admins are members too (and then some), so they qualify.
@@ -178,12 +179,36 @@ import Layout from "../layouts/Layout.astro";
     return rows.join("");
   }
 
+  function renderRoleControl(e: Entry): string {
+    if (!viewerIsAdmin) return "";
+
+    // Admins are not editable via the UI — admin promotion stays manual.
+    if (e.role === "admin") {
+      return `
+        <span class="shrink-0 text-xs font-display uppercase tracking-widest text-brand-tan-dark self-start"
+              title="Admin role can only be changed in Supabase">Admin</span>
+      `;
+    }
+
+    const currentRole = e.role === "member" ? "member" : "catechumen";
+    return `
+      <label class="shrink-0 self-start flex items-center gap-2 text-xs">
+        <span class="sr-only">Role for ${escapeHtml(fullName(e) || "(no name)")}</span>
+        <select data-role-select data-user-id="${escapeHtml(e.id)}"
+                class="border rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 bg-cream-card">
+          <option value="catechumen"${currentRole === "catechumen" ? " selected" : ""}>Catechumen</option>
+          <option value="member"${currentRole === "member" ? " selected" : ""}>Member</option>
+        </select>
+      </label>
+    `;
+  }
+
   function renderEntry(e: Entry): string {
     const name = fullName(e) || "(no name)";
     const isMember = e.role !== null && MEMBER_ROLES.has(e.role);
     const memberMark = isMember
-      ? ` <span class="text-sacred-gold ml-1" title="Full member" aria-label="Full member">${MEMBER_CROSS}</span>`
-      : "";
+      ? ` <span class="text-sacred-gold ml-1" data-member-mark title="Full member" aria-label="Full member">${MEMBER_CROSS}</span>`
+      : ` <span class="hidden text-sacred-gold ml-1" data-member-mark title="Full member" aria-label="Full member">${MEMBER_CROSS}</span>`;
 
     const contactRows = renderContactRows(e);
     const contactBlock = contactRows
@@ -192,12 +217,13 @@ import Layout from "../layouts/Layout.astro";
 
     return `
       <li class="border border-brand-tan bg-cream-card p-4 shadow-sm flex gap-4"
-          data-search="${escapeHtml(name.toLowerCase())}">
+          data-search="${escapeHtml(name.toLowerCase())}" data-entry-id="${escapeHtml(e.id)}">
         ${renderAvatar(e)}
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-text-primary">${escapeHtml(name)}${memberMark}</p>
           ${contactBlock}
         </div>
+        ${renderRoleControl(e)}
       </li>
     `;
   }
@@ -254,6 +280,70 @@ import Layout from "../layouts/Layout.astro";
   }
 
   // ---------------------------------------------------------------------------
+  // Admin role toggle
+  // ---------------------------------------------------------------------------
+
+  function attachRoleToggleHandler() {
+    const list = document.getElementById("entries");
+    if (!list) return;
+
+    list.addEventListener("change", async (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target || !target.matches("select[data-role-select]")) return;
+
+      const select = target as HTMLSelectElement;
+      const userId = select.dataset.userId;
+      if (!userId) return;
+
+      const newRole = select.value;
+      const previousRole = entries.find((e) => e.id === userId)?.role ?? "catechumen";
+      if (newRole === previousRole) return; // no-op
+
+      select.disabled = true;
+
+      const res = await fetch("/api/directory", {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, role: newRole }),
+      });
+
+      select.disabled = false;
+
+      if (res.status === 401) {
+        window.location.assign("/login/?next=/directory/");
+        return;
+      }
+
+      if (!res.ok) {
+        const detail = await readErrorDetail(res);
+        showError(detail
+          ? `Couldn't update role: ${detail}`
+          : `Couldn't update role (${res.status}).`);
+        select.value = previousRole === "member" ? "member" : "catechumen"; // revert
+        return;
+      }
+
+      const data = await res.json();
+      const updatedRole = typeof data.role === "string" ? data.role : newRole;
+
+      // Update local state.
+      const idx = entries.findIndex((e) => e.id === userId);
+      if (idx >= 0) entries[idx].role = updatedRole;
+
+      // Update the ☦ visibility for this row without a full re-render
+      // (which would lose focus / search state).
+      const row = list.querySelector<HTMLElement>(`li[data-entry-id="${CSS.escape(userId)}"]`);
+      const mark = row?.querySelector<HTMLElement>("[data-member-mark]");
+      if (mark) {
+        if (MEMBER_ROLES.has(updatedRole)) mark.classList.remove("hidden");
+        else mark.classList.add("hidden");
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Load
   // ---------------------------------------------------------------------------
 
@@ -278,9 +368,11 @@ import Layout from "../layouts/Layout.astro";
 
     const data = await res.json();
     entries = Array.isArray(data.entries) ? (data.entries as Entry[]) : [];
+    viewerIsAdmin = Boolean(data.viewer_is_admin);
 
     renderAll();
     attachSearchHandler();
+    attachRoleToggleHandler();
   }
 
   load();
