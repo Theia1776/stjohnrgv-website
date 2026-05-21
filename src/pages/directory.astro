@@ -1,0 +1,287 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Parish Directory"
+  description="Contact information for parishioners who chose to share it."
+>
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold mb-2">Parish Directory</h1>
+    <p class="text-text-secondary mb-6">
+      Contact info for parishioners who chose to share it.
+      Update what you share on the
+      <a href="/account/" class="text-brand-blue-dark hover:underline">My Account</a>
+      page.
+    </p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div id="error-banner" class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm" role="alert"></div>
+
+    <div id="content" class="hidden">
+      <label class="block mb-6">
+        <span class="sr-only">Search by name</span>
+        <input
+          id="search"
+          type="search"
+          placeholder="Search by name…"
+          autocomplete="off"
+          class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2"
+        />
+      </label>
+
+      <ul id="entries" class="space-y-4"></ul>
+
+      <p id="empty-state" class="hidden text-center text-text-secondary italic mt-8">
+        No one has added themselves to the directory yet. You can opt in on the
+        <a href="/account/" class="text-brand-blue-dark hover:underline">My Account</a>
+        page.
+      </p>
+
+      <p id="no-matches" class="hidden text-center text-text-secondary italic mt-8">
+        No parishioners match that search.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // Types & state
+  // ---------------------------------------------------------------------------
+
+  type Entry = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    role: string | null;
+    avatar_url: string | null;
+    phone: string | null;
+    email: string | null;
+    address_line1: string | null;
+    address_line2: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+  };
+
+  let entries: Entry[] = [];
+
+  // Roles that get the three-bar Orthodox cross next to their name.
+  // Admins are members too (and then some), so they qualify.
+  const MEMBER_ROLES = new Set(["member", "admin"]);
+  const MEMBER_CROSS = "☦";
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function fullName(e: Entry): string {
+    return [e.first_name, e.last_name].filter((s) => typeof s === "string" && s.trim() !== "").join(" ");
+  }
+
+  function initials(e: Entry): string {
+    const first = (e.first_name || "").trim();
+    const last = (e.last_name || "").trim();
+    const a = first ? first[0] : "";
+    const b = last ? last[0] : "";
+    return (a + b).toUpperCase() || "?";
+  }
+
+  function showError(message: string) {
+    const banner = document.getElementById("error-banner");
+    if (!banner) return;
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+  }
+
+  async function readErrorDetail(res: Response): Promise<string> {
+    try {
+      const text = await res.text();
+      if (!text) return "";
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.error === "string") return parsed.error;
+      } catch {
+        // Not JSON — return raw text.
+      }
+      return text;
+    } catch {
+      return "";
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------------------
+
+  function renderAvatar(e: Entry): string {
+    if (e.avatar_url) {
+      return `
+        <img src="${escapeHtml(e.avatar_url)}" alt=""
+             class="w-12 h-12 rounded-full object-cover border border-border-soft shrink-0" />
+      `;
+    }
+    return `
+      <div class="w-12 h-12 rounded-full bg-brand-blue text-cream-card flex items-center justify-center font-display text-base shrink-0"
+           aria-hidden="true">${escapeHtml(initials(e))}</div>
+    `;
+  }
+
+  function renderContactRows(e: Entry): string {
+    const rows: string[] = [];
+
+    if (e.phone) {
+      rows.push(`
+        <div class="flex items-baseline gap-2 text-sm">
+          <span class="text-text-secondary w-16 shrink-0">Phone</span>
+          <a href="tel:${escapeHtml(e.phone)}" class="text-brand-blue-dark hover:underline">${escapeHtml(e.phone)}</a>
+        </div>
+      `);
+    }
+
+    if (e.email) {
+      rows.push(`
+        <div class="flex items-baseline gap-2 text-sm">
+          <span class="text-text-secondary w-16 shrink-0">Email</span>
+          <a href="mailto:${escapeHtml(e.email)}" class="text-brand-blue-dark hover:underline break-all">${escapeHtml(e.email)}</a>
+        </div>
+      `);
+    }
+
+    const addressLines: string[] = [];
+    if (e.address_line1) addressLines.push(e.address_line1);
+    if (e.address_line2) addressLines.push(e.address_line2);
+    const cityState = [e.city, e.state].filter((s) => s && s.trim() !== "").join(", ");
+    const cityStateZip = [cityState, e.zip].filter((s) => s && s.trim() !== "").join(" ");
+    if (cityStateZip) addressLines.push(cityStateZip);
+
+    if (addressLines.length > 0) {
+      rows.push(`
+        <div class="flex items-baseline gap-2 text-sm">
+          <span class="text-text-secondary w-16 shrink-0">Address</span>
+          <span class="text-text-primary">${addressLines.map((line) => escapeHtml(line)).join("<br />")}</span>
+        </div>
+      `);
+    }
+
+    return rows.join("");
+  }
+
+  function renderEntry(e: Entry): string {
+    const name = fullName(e) || "(no name)";
+    const isMember = e.role !== null && MEMBER_ROLES.has(e.role);
+    const memberMark = isMember
+      ? ` <span class="text-sacred-gold ml-1" title="Full member" aria-label="Full member">${MEMBER_CROSS}</span>`
+      : "";
+
+    const contactRows = renderContactRows(e);
+    const contactBlock = contactRows
+      ? `<div class="mt-2 space-y-1">${contactRows}</div>`
+      : `<p class="mt-2 text-sm italic text-text-secondary">Name only — no contact info shared.</p>`;
+
+    return `
+      <li class="border border-brand-tan bg-cream-card p-4 shadow-sm flex gap-4"
+          data-search="${escapeHtml(name.toLowerCase())}">
+        ${renderAvatar(e)}
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-text-primary">${escapeHtml(name)}${memberMark}</p>
+          ${contactBlock}
+        </div>
+      </li>
+    `;
+  }
+
+  function renderAll() {
+    const loading = document.getElementById("loading");
+    const content = document.getElementById("content");
+    const list = document.getElementById("entries");
+    const emptyState = document.getElementById("empty-state");
+    if (!list || !content) return;
+
+    loading?.classList.add("hidden");
+    content.classList.remove("hidden");
+
+    if (entries.length === 0) {
+      list.innerHTML = "";
+      emptyState?.classList.remove("hidden");
+      // Hide the search input when the list is empty — nothing to filter.
+      document.getElementById("search")?.parentElement?.classList.add("hidden");
+      return;
+    }
+
+    list.innerHTML = entries.map(renderEntry).join("");
+    applyFilter((document.getElementById("search") as HTMLInputElement | null)?.value || "");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search / filter
+  // ---------------------------------------------------------------------------
+
+  function applyFilter(rawQuery: string) {
+    const query = rawQuery.trim().toLowerCase();
+    const list = document.getElementById("entries");
+    const noMatches = document.getElementById("no-matches");
+    if (!list) return;
+
+    const items = list.querySelectorAll<HTMLLIElement>("li[data-search]");
+    let visible = 0;
+    items.forEach((li) => {
+      const hay = li.dataset.search || "";
+      const matches = query === "" || hay.includes(query);
+      li.classList.toggle("hidden", !matches);
+      if (matches) visible++;
+    });
+
+    if (query !== "" && visible === 0) noMatches?.classList.remove("hidden");
+    else noMatches?.classList.add("hidden");
+  }
+
+  function attachSearchHandler() {
+    const input = document.getElementById("search") as HTMLInputElement | null;
+    if (!input) return;
+    input.addEventListener("input", () => applyFilter(input.value));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Load
+  // ---------------------------------------------------------------------------
+
+  async function load() {
+    const res = await fetch("/api/directory", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      window.location.assign("/login/?next=/directory/");
+      return;
+    }
+
+    if (!res.ok) {
+      const detail = await readErrorDetail(res);
+      showError(detail
+        ? `Couldn't load directory (${res.status}): ${detail}`
+        : `Couldn't load directory (${res.status}).`);
+      return;
+    }
+
+    const data = await res.json();
+    entries = Array.isArray(data.entries) ? (data.entries as Entry[]) : [];
+
+    renderAll();
+    attachSearchHandler();
+  }
+
+  load();
+</script>
