@@ -17,8 +17,11 @@ import Layout from "../../layouts/Layout.astro";
 
     <div id="app" class="hidden">
       <!-- Tab bar -->
-      <div class="flex gap-2 mb-6 no-print" role="tablist">
-        <button id="tab-contacts" type="button" class="btn btn-primary" data-tab="contacts" role="tab" aria-selected="true">
+      <div class="flex flex-wrap gap-2 mb-6 no-print" role="tablist">
+        <button id="tab-pending" type="button" class="btn btn-primary" data-tab="pending" role="tab" aria-selected="true">
+          Pending Approvals<span id="pending-count" class="ml-1 hidden"></span>
+        </button>
+        <button id="tab-contacts" type="button" class="btn btn-secondary" data-tab="contacts" role="tab" aria-selected="false">
           Contact List
         </button>
         <button id="tab-directory" type="button" class="btn btn-secondary" data-tab="directory" role="tab" aria-selected="false">
@@ -26,8 +29,29 @@ import Layout from "../../layouts/Layout.astro";
         </button>
       </div>
 
+      <!-- Pending Approvals tab -->
+      <section id="panel-pending" role="tabpanel" aria-labelledby="tab-pending">
+        <p class="text-sm text-text-secondary mb-4">
+          New registrations awaiting your approval. Approving lets them log in; rejecting removes the account so the email can sign up again later.
+        </p>
+        <div class="overflow-x-auto border border-border-soft rounded">
+          <table id="pending-table" class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-brand-blue-dark text-cream-bg text-left">
+                <th class="p-2">Name</th>
+                <th class="p-2">Email</th>
+                <th class="p-2">Registered</th>
+                <th class="p-2 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="pending-tbody"></tbody>
+          </table>
+        </div>
+        <p id="pending-empty" class="text-text-secondary mt-4 hidden">No registrations are waiting. ✓</p>
+      </section>
+
       <!-- Contacts tab -->
-      <section id="panel-contacts" role="tabpanel" aria-labelledby="tab-contacts">
+      <section id="panel-contacts" class="hidden" role="tabpanel" aria-labelledby="tab-contacts">
         <div class="flex flex-wrap gap-3 mb-4 no-print items-center">
           <input id="search" type="search" placeholder="Search by name…"
             class="flex-1 min-w-48 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
@@ -110,8 +134,19 @@ import Layout from "../../layouts/Layout.astro";
     zip: string | null;
   };
 
+  type Pending = {
+    id: string;
+    full_name: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    role: string | null;
+    created_at: string;
+  };
+
   let allContacts: Contact[] = [];
   let directoryEntries: DirEntry[] = [];
+  let pendingList: Pending[] = [];
 
   function escapeHtml(value: unknown): string {
     return String(value ?? "")
@@ -134,9 +169,10 @@ import Layout from "../../layouts/Layout.astro";
 
   async function init() {
     try {
-      const [contactsRes, dirRes] = await Promise.all([
+      const [contactsRes, dirRes, pendingRes] = await Promise.all([
         fetch("/api/admin/contacts", { credentials: "same-origin", cache: "no-store" }),
         fetch("/api/admin/directory", { credentials: "same-origin", cache: "no-store" }),
+        fetch("/api/admin/pending", { credentials: "same-origin", cache: "no-store" }),
       ]);
 
       if (contactsRes.status === 401 || contactsRes.status === 403) {
@@ -151,26 +187,41 @@ import Layout from "../../layouts/Layout.astro";
         showError(`Couldn't load directory (${dirRes.status}).`);
         return;
       }
+      if (!pendingRes.ok) {
+        showError(`Couldn't load pending registrations (${pendingRes.status}).`);
+        return;
+      }
 
       const contactsData = await contactsRes.json();
       const dirData = await dirRes.json();
+      const pendingData = await pendingRes.json();
       allContacts = contactsData.contacts ?? [];
       directoryEntries = dirData.entries ?? [];
+      pendingList = pendingData.pending ?? [];
 
       document.getElementById("loading")?.classList.add("hidden");
       document.getElementById("app")?.classList.remove("hidden");
       renderContacts(allContacts);
       renderDirectory(directoryEntries);
+      renderPending(pendingList);
     } catch (err) {
       showError(`Couldn't load admin data: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  function showTab(tab: "contacts" | "directory") {
+  function showTab(tab: "contacts" | "directory" | "pending") {
     const panelContacts = document.getElementById("panel-contacts");
     const panelDir = document.getElementById("panel-directory");
+    const panelPending = document.getElementById("panel-pending");
     const btnContacts = document.getElementById("tab-contacts");
     const btnDir = document.getElementById("tab-directory");
+    const btnPending = document.getElementById("tab-pending");
+
+    panelPending?.classList.toggle("hidden", tab !== "pending");
+    if (btnPending) {
+      btnPending.className = `btn ${tab === "pending" ? "btn-primary" : "btn-secondary"}`;
+      btnPending.setAttribute("aria-selected", String(tab === "pending"));
+    }
 
     panelContacts?.classList.toggle("hidden", tab !== "contacts");
     panelDir?.classList.toggle("hidden", tab !== "directory");
@@ -223,6 +274,119 @@ import Layout from "../../layouts/Layout.astro";
       .join("");
   }
 
+  function formatPendingDate(iso: string): string {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function pendingDisplayName(p: Pending): string {
+    if (p.full_name) return p.full_name;
+    const composed = [p.first_name, p.last_name].filter(Boolean).join(" ");
+    return composed || "(no name)";
+  }
+
+  function renderPending(list: Pending[]) {
+    const tbody = document.getElementById("pending-tbody");
+    const empty = document.getElementById("pending-empty");
+    const countEl = document.getElementById("pending-count");
+    if (!tbody || !empty) return;
+
+    if (countEl) {
+      if (list.length > 0) {
+        countEl.textContent = ` (${list.length})`;
+        countEl.classList.remove("hidden");
+      } else {
+        countEl.textContent = "";
+        countEl.classList.add("hidden");
+      }
+    }
+
+    if (list.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    tbody.innerHTML = list
+      .map(
+        (p) => `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(p.id)}">
+          <td class="p-2">${escapeHtml(pendingDisplayName(p))}</td>
+          <td class="p-2">${escapeHtml(p.email)}</td>
+          <td class="p-2 text-xs">${escapeHtml(formatPendingDate(p.created_at))}</td>
+          <td class="p-2 text-right whitespace-nowrap">
+            <button type="button" class="btn btn-primary mr-2 approve-btn" data-id="${escapeHtml(p.id)}">Approve</button>
+            <button type="button" class="btn btn-secondary reject-btn" data-id="${escapeHtml(p.id)}" data-name="${escapeHtml(pendingDisplayName(p))}">Reject</button>
+          </td>
+        </tr>`,
+      )
+      .join("");
+  }
+
+  async function approvePending(id: string) {
+    const res = await fetch("/api/admin/approve", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't approve: ${body.error ?? res.status}`);
+      return false;
+    }
+    return true;
+  }
+
+  async function rejectPending(id: string) {
+    const res = await fetch("/api/admin/reject", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't reject: ${body.error ?? res.status}`);
+      return false;
+    }
+    return true;
+  }
+
+  // Delegated handler for approve/reject clicks, since rows re-render
+  // after each action and per-row listeners would go stale.
+  document.getElementById("pending-tbody")?.addEventListener("click", async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    const approveBtn = target.closest(".approve-btn") as HTMLButtonElement | null;
+    const rejectBtn = target.closest(".reject-btn") as HTMLButtonElement | null;
+    if (!approveBtn && !rejectBtn) return;
+
+    const btn = (approveBtn ?? rejectBtn) as HTMLButtonElement;
+    const id = btn.dataset.id;
+    if (!id) return;
+
+    if (rejectBtn) {
+      const name = rejectBtn.dataset.name || "this registration";
+      if (!window.confirm(`Reject ${name}? This deletes the account so the email can sign up again later. This can't be undone from here.`)) {
+        return;
+      }
+    }
+
+    btn.disabled = true;
+    const ok = approveBtn ? await approvePending(id) : await rejectPending(id);
+    if (ok) {
+      pendingList = pendingList.filter((p) => p.id !== id);
+      renderPending(pendingList);
+    } else {
+      btn.disabled = false;
+    }
+  });
+
   function renderDirectory(list: DirEntry[]) {
     const container = document.getElementById("directory-list");
     const empty = document.getElementById("directory-empty");
@@ -251,6 +415,7 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   // Tab clicks
+  document.getElementById("tab-pending")?.addEventListener("click", () => showTab("pending"));
   document.getElementById("tab-contacts")?.addEventListener("click", () => showTab("contacts"));
   document.getElementById("tab-directory")?.addEventListener("click", () => showTab("directory"));
 
