@@ -86,7 +86,6 @@ const services = [
   { name: "Divine Liturgy", when: "Sunday · 9:00 AM", note: "All are welcome" },
   { name: "Vespers", when: "Saturday · 5:00 PM", note: "Eve of the Lord's Day" },
   { name: "Great Feasts", when: "Per Liturgical Calendar", note: "" },
-  { name: "Confession", when: "Saturday at Vespers · or Sunday 8:00–8:45 AM", note: "For urgent needs, contact Fr. Antonios" },
 ];
 
 // Local-business schema with explicit areaServed + corporate name +
@@ -300,7 +299,7 @@ const churchLocalSchema = {
         <div class="mx-auto mt-6 h-px w-16 bg-liturgical-current"></div>
       </div>
 
-      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {services.map((s) => (
           <div class="border border-border-soft bg-cream-card p-6 shadow-sm transition-colors hover:border-brand-tan">
             <div class="text-2xl text-sacred-gold" aria-hidden="true">☩</div>

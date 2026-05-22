@@ -63,7 +63,6 @@ Four cards in a grid:
 - Divine Liturgy · Sundays 9:00 AM
 - Great Feast Days · Per Julian Calendar
 - Vespers · Saturdays 6:00 PM
-- Confession · By Appointment
 
 **D. About Preview**
 - Section label: "Our Parish"
@@ -157,7 +156,6 @@ Four cards in a grid:
 |---|---|---|---|
 | Divine Liturgy | Sunday | 9:00 AM | All are welcome |
 | Vespers | Saturday | 6:00 PM | |
-| Confession | By appointment | Contact Fr. Antonios | |
 
 **B. Upcoming Feast Day Services**
 - Dynamically generated from Julian Calendar calculator
