@@ -265,7 +265,16 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2">${escapeHtml(b.author ?? "—")}</td>
           <td class="p-2">${escapeHtml(b.category)}</td>
           <td class="p-2 text-xs">${escapeHtml((b.languages ?? []).join(", "))}</td>
-          <td class="p-2 text-center" title="${b.public_access ? "Visible to non-logged-in visitors" : "Parishioners only"}">${b.public_access ? "✓" : "—"}</td>
+          <td class="p-2 text-center">
+            <button
+              type="button"
+              class="public-toggle inline-flex items-center justify-center w-8 h-8 border border-border-soft hover:border-brand-tan focus:outline-none focus:ring-2 focus:ring-brand-blue-dark transition-colors"
+              data-id="${escapeHtml(b.id)}"
+              data-current="${b.public_access ? "true" : "false"}"
+              title="${b.public_access ? "Public — click to make parishioners-only" : "Parishioners only — click to make public"}"
+              aria-label="${b.public_access ? "Currently public. Click to make parishioners-only." : "Currently parishioners only. Click to make public."}"
+            >${b.public_access ? "✓" : "—"}</button>
+          </td>
           <td class="p-2 text-right whitespace-nowrap">
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
@@ -309,16 +318,40 @@ import Layout from "../../layouts/Layout.astro";
     }
   });
 
-  // ====================== EDIT / DELETE (delegated) ======================
+  // ====================== EDIT / DELETE / TOGGLE PUBLIC (delegated) ======================
   document.getElementById("books-tbody")?.addEventListener("click", async (ev) => {
     const target = ev.target as HTMLElement | null;
     if (!target) return;
     const editBtn = target.closest(".edit-btn") as HTMLButtonElement | null;
     const deleteBtn = target.closest(".delete-btn") as HTMLButtonElement | null;
-    if (!editBtn && !deleteBtn) return;
+    const publicBtn = target.closest(".public-toggle") as HTMLButtonElement | null;
+    if (!editBtn && !deleteBtn && !publicBtn) return;
 
-    const id = (editBtn ?? deleteBtn)?.dataset.id;
+    const id = (editBtn ?? deleteBtn ?? publicBtn)?.dataset.id;
     if (!id) return;
+
+    if (publicBtn) {
+      const currentPublic = publicBtn.dataset.current === "true";
+      const next = !currentPublic;
+      publicBtn.disabled = true;
+      const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ public_access: next }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showError(`Couldn't update: ${body.error ?? res.status}`);
+        publicBtn.disabled = false;
+        return;
+      }
+      const idx = books.findIndex((b) => b.id === id);
+      if (idx !== -1) books[idx].public_access = next;
+      render();
+      return;
+    }
 
     if (editBtn) {
       const book = books.find((b) => b.id === id);
