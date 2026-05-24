@@ -1,32 +1,59 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
-import booksData from "../../../data/library/books.json";
+import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL } from "../../../lib/supabase";
+
+// SSR — the slug isn't known at build time once admins start
+// uploading via /admin/library, so we resolve it at request time
+// against the library_books table. The page is gated by the
+// /functions/learn/library middleware so anon traffic never reaches
+// this code.
+export const prerender = false;
 
 interface Book {
   slug: string;
   title: string;
-  author: string;
+  author: string | null;
   category: string;
   languages: string[];
-  description: string;
-  pdfStorageKey: string;
+  description: string | null;
+  pdf_storage_key: string;
 }
 
-export async function getStaticPaths() {
-  const books = (booksData as { books: Book[] }).books;
-  return books.map((book) => ({
-    params: { slug: book.slug },
-    props: { book },
-  }));
+const slug = Astro.params.slug ?? "";
+// runtime.env carries Cloudflare bindings in the SSR adapter. The
+// service role key is set on the Pages project; the locals proxy
+// surface in dev is wired through `platformProxy: { enabled: true }`.
+const serviceKey = (Astro.locals as { runtime?: { env?: { SUPABASE_SERVICE_ROLE_KEY?: string } } })
+  .runtime?.env?.SUPABASE_SERVICE_ROLE_KEY;
+
+let book: Book | null = null;
+let loadError: string | null = null;
+
+if (!serviceKey) {
+  loadError = "Library is not configured.";
+} else {
+  const supabase = createClient(SUPABASE_URL, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const { data, error } = await supabase
+    .from("library_books")
+    .select("slug, title, author, category, languages, description, pdf_storage_key")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) loadError = error.message;
+  else if (!data) loadError = "Book not found.";
+  else book = data as Book;
 }
 
-interface Props { book: Book; }
-const { book } = Astro.props as Props;
+if (!book) {
+  return new Response(loadError ?? "Not found", { status: loadError === "Book not found." ? 404 : 500 });
+}
 ---
 
 <Layout
   title={`${book.title} | Parish Library`}
-  description={book.description}
+  description={book.description ?? book.title}
 >
   <meta slot="head" name="robots" content="noindex,nofollow" />
 
@@ -114,7 +141,7 @@ const { book } = Astro.props as Props;
     <div
       id="pdf-viewer"
       class="mx-auto min-h-[60vh] max-w-6xl px-4 py-8 md:px-6 md:py-12"
-      data-storage-key={book.pdfStorageKey}
+      data-storage-key={book.pdf_storage_key}
     >
       <p id="pdf-loading" class="text-center font-display text-sm uppercase tracking-widest text-cream-card/70">
         Loading text…

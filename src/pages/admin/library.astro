@@ -1,0 +1,375 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="Library Admin | St. John of Kronstadt"
+  description="Upload and manage books in the parish digital library."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="font-display text-3xl text-text-primary mb-2 md:text-4xl">Parish Library</h1>
+    <p class="text-text-secondary mb-6">
+      Upload new books and edit or remove existing ones. PDFs are stored privately;
+      only logged-in parishioners can read them.
+    </p>
+
+    <div id="loading" class="text-text-secondary">Loading…</div>
+    <div id="error-msg" class="text-liturgical-red hidden mb-4" role="alert"></div>
+
+    <div id="app" class="hidden">
+      <!-- ============== UPLOAD CARD ============== -->
+      <section
+        class="mb-10 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+        aria-labelledby="upload-heading"
+      >
+        <h2 id="upload-heading" class="font-display text-xl text-text-primary mb-1">
+          Add a New Book
+        </h2>
+        <p class="text-sm text-text-secondary mb-5">
+          Drop a PDF and fill in the details. The URL slug is auto-generated from
+          the title unless you set one yourself.
+        </p>
+
+        <form id="upload-form" class="space-y-4">
+          <div>
+            <label for="pdf" class="block text-sm font-semibold mb-1">PDF file *</label>
+            <input
+              id="pdf"
+              name="pdf"
+              type="file"
+              accept="application/pdf"
+              required
+              class="block w-full text-sm text-text-primary file:mr-3 file:border file:border-border-soft file:bg-brand-blue-pale file:px-3 file:py-1.5 file:text-xs file:uppercase file:tracking-widest file:text-brand-blue-dark file:cursor-pointer hover:file:bg-brand-blue-pale/70"
+            />
+            <p class="mt-1 text-xs text-text-secondary">Up to 50 MB.</p>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label for="title" class="block text-sm font-semibold mb-1">Title *</label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                required
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+            </div>
+            <div>
+              <label for="author" class="block text-sm font-semibold mb-1">Author</label>
+              <input
+                id="author"
+                name="author"
+                type="text"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label for="category" class="block text-sm font-semibold mb-1">Category *</label>
+              <select
+                id="category"
+                name="category"
+                required
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              >
+                <option value="Hagiography">Hagiography</option>
+                <option value="Liturgical Texts">Liturgical Texts</option>
+                <option value="Patristics">Patristics</option>
+                <option value="Scripture">Scripture</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="languages" class="block text-sm font-semibold mb-1">Languages *</label>
+              <input
+                id="languages"
+                name="languages"
+                type="text"
+                required
+                value="English"
+                placeholder="English, Greek, Church Slavonic"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+              <p class="mt-1 text-xs text-text-secondary">Comma-separated.</p>
+            </div>
+          </div>
+
+          <div>
+            <label for="description" class="block text-sm font-semibold mb-1">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            ></textarea>
+          </div>
+
+          <div>
+            <label for="slug" class="block text-sm font-semibold mb-1">URL slug (optional)</label>
+            <input
+              id="slug"
+              name="slug"
+              type="text"
+              placeholder="auto-generated from title"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2"
+            />
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="upload-btn" type="submit" class="btn btn-primary">
+              Upload Book
+            </button>
+            <span id="upload-status" class="text-sm text-text-secondary"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============== MANAGE LIST ============== -->
+      <section aria-labelledby="manage-heading">
+        <h2 id="manage-heading" class="font-display text-xl text-text-primary mb-4">
+          Current Catalog (<span id="book-count">0</span>)
+        </h2>
+        <div class="overflow-x-auto border border-border-soft rounded">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-brand-blue-dark text-cream-bg text-left">
+                <th class="p-2">Title</th>
+                <th class="p-2">Author</th>
+                <th class="p-2">Category</th>
+                <th class="p-2">Languages</th>
+                <th class="p-2 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="books-tbody"></tbody>
+          </table>
+        </div>
+        <p id="books-empty" class="text-text-secondary mt-4 hidden">
+          No books in the catalog yet — upload one above.
+        </p>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Book = {
+    id: string;
+    slug: string;
+    title: string;
+    author: string | null;
+    category: string;
+    languages: string[];
+    description: string | null;
+    pdf_storage_key: string;
+    created_at: string;
+    updated_at: string;
+  };
+
+  let books: Book[] = [];
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showError(message: string) {
+    const el = document.getElementById("error-msg");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove("hidden");
+    // Auto-clear after a bit so the banner doesn't haunt later actions.
+    setTimeout(() => el.classList.add("hidden"), 8000);
+  }
+
+  function setUploadStatus(text: string, isError = false) {
+    const el = document.getElementById("upload-status");
+    if (!el) return;
+    el.textContent = text;
+    el.className = isError
+      ? "text-sm text-liturgical-red"
+      : "text-sm text-text-secondary";
+  }
+
+  async function loadBooks() {
+    const res = await fetch("/api/admin/library", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return;
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't load books: ${body.error ?? res.status}`);
+      return;
+    }
+    const data = await res.json();
+    books = (data.books ?? []) as Book[];
+    render();
+  }
+
+  function render() {
+    const tbody = document.getElementById("books-tbody");
+    const empty = document.getElementById("books-empty");
+    const countEl = document.getElementById("book-count");
+    if (!tbody || !empty) return;
+
+    if (countEl) countEl.textContent = String(books.length);
+
+    if (books.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    tbody.innerHTML = books
+      .map(
+        (b) => `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(b.id)}">
+          <td class="p-2">
+            <a href="/learn/library/${escapeHtml(b.slug)}/" class="text-brand-blue-dark hover:underline" target="_blank" rel="noopener">${escapeHtml(b.title)}</a>
+            <div class="text-xs text-text-secondary font-mono">${escapeHtml(b.slug)}</div>
+          </td>
+          <td class="p-2">${escapeHtml(b.author ?? "—")}</td>
+          <td class="p-2">${escapeHtml(b.category)}</td>
+          <td class="p-2 text-xs">${escapeHtml((b.languages ?? []).join(", "))}</td>
+          <td class="p-2 text-right whitespace-nowrap">
+            <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
+            <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
+          </td>
+        </tr>`,
+      )
+      .join("");
+  }
+
+  // ====================== UPLOAD ======================
+  document.getElementById("upload-form")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const form = ev.target as HTMLFormElement;
+    const btn = document.getElementById("upload-btn") as HTMLButtonElement;
+    const formData = new FormData(form);
+
+    btn.disabled = true;
+    setUploadStatus("Uploading…");
+
+    try {
+      const res = await fetch("/api/admin/library", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        body: formData,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUploadStatus(`Failed: ${body.error ?? res.status}`, true);
+        return;
+      }
+      setUploadStatus(`Added "${body.book?.title ?? "book"}".`);
+      form.reset();
+      // Restore the default Languages value after reset.
+      (document.getElementById("languages") as HTMLInputElement).value = "English";
+      await loadBooks();
+    } catch (err) {
+      setUploadStatus(`Upload error: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ====================== EDIT / DELETE (delegated) ======================
+  document.getElementById("books-tbody")?.addEventListener("click", async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    const editBtn = target.closest(".edit-btn") as HTMLButtonElement | null;
+    const deleteBtn = target.closest(".delete-btn") as HTMLButtonElement | null;
+    if (!editBtn && !deleteBtn) return;
+
+    const id = (editBtn ?? deleteBtn)?.dataset.id;
+    if (!id) return;
+
+    if (editBtn) {
+      const book = books.find((b) => b.id === id);
+      if (!book) return;
+      await promptEdit(book);
+      return;
+    }
+
+    if (deleteBtn) {
+      const title = deleteBtn.dataset.title || "this book";
+      if (!window.confirm(`Delete "${title}" from the library? The PDF will also be removed from storage.`)) return;
+      deleteBtn.disabled = true;
+      const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showError(`Couldn't delete: ${body.error ?? res.status}`);
+        deleteBtn.disabled = false;
+        return;
+      }
+      books = books.filter((b) => b.id !== id);
+      render();
+    }
+  });
+
+  // Browser prompt-based editor — simple enough not to need a modal,
+  // and matches the lightweight feel of the rest of the admin area.
+  async function promptEdit(book: Book) {
+    const title = window.prompt("Title:", book.title);
+    if (title === null) return;
+    const author = window.prompt("Author (blank for none):", book.author ?? "");
+    if (author === null) return;
+    const category = window.prompt("Category:", book.category);
+    if (category === null) return;
+    const languagesStr = window.prompt("Languages (comma-separated):", (book.languages ?? []).join(", "));
+    if (languagesStr === null) return;
+    const description = window.prompt("Description (blank for none):", book.description ?? "");
+    if (description === null) return;
+    const slug = window.prompt("URL slug (changing breaks existing links):", book.slug);
+    if (slug === null) return;
+
+    const res = await fetch(`/api/admin/library/${encodeURIComponent(book.id)}`, {
+      method: "PATCH",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: title.trim(),
+        author: author.trim(),
+        category: category.trim(),
+        languages: languagesStr.split(",").map((s) => s.trim()).filter(Boolean),
+        description: description.trim(),
+        slug: slug.trim(),
+      }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showError(`Couldn't save: ${body.error ?? res.status}`);
+      return;
+    }
+    // Refresh the row in place so the list reflects the new values.
+    const idx = books.findIndex((b) => b.id === book.id);
+    if (idx !== -1 && body.book) books[idx] = body.book;
+    render();
+  }
+
+  async function init() {
+    await loadBooks();
+    document.getElementById("loading")?.classList.add("hidden");
+    document.getElementById("app")?.classList.remove("hidden");
+  }
+  init();
+</script>

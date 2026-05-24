@@ -1,18 +1,41 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import booksData from "../../data/library/books.json";
+import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL } from "../../lib/supabase";
+
+// SSR so newly-uploaded books show up immediately, without waiting
+// for a rebuild. The page is gated by login (parishioner section)
+// so there's no SEO cost to dropping prerender.
+export const prerender = false;
 
 interface Book {
   slug: string;
   title: string;
-  author: string;
+  author: string | null;
   category: string;
   languages: string[];
-  description: string;
-  pdfStorageKey: string;
+  description: string | null;
 }
 
-const books = (booksData as { books: Book[] }).books;
+const serviceKey = (Astro.locals as { runtime?: { env?: { SUPABASE_SERVICE_ROLE_KEY?: string } } })
+  .runtime?.env?.SUPABASE_SERVICE_ROLE_KEY;
+
+let books: Book[] = [];
+let loadError: string | null = null;
+
+if (!serviceKey) {
+  loadError = "Library is not configured.";
+} else {
+  const supabase = createClient(SUPABASE_URL, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const { data, error } = await supabase
+    .from("library_books")
+    .select("slug, title, author, category, languages, description")
+    .order("title", { ascending: true });
+  if (error) loadError = error.message;
+  else books = (data ?? []) as Book[];
+}
 
 // Fixed filter set per spec — even categories that aren't yet present in
 // the catalog show as tabs so the shape of the library is visible.
@@ -33,6 +56,12 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
         Texts for prayer and study, available to registered members of the
         parish. Click a title to open the in-browser reader.
       </p>
+
+      {loadError && (
+        <p class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert">
+          Could not load the library: {loadError}
+        </p>
+      )}
 
       <!-- ============== FILTER TABS ============== -->
       <div

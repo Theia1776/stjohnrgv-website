@@ -21,6 +21,7 @@
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
+    "@astrojs/cloudflare": "^13.5.4",
     "wrangler": "^4.87.0"
   }
 }

@@ -95,9 +95,16 @@ renders when `/api/auth/me` confirms login.
 ### Admin-only area
 
 - **`/admin/contacts/`** — list of all registered parishioners with
-  filter/search. Code: [src/pages/admin/contacts.astro](src/pages/admin/contacts.astro).
+  filter/search, plus the Pending Approvals tab for new sign-ups.
+  Code: [src/pages/admin/contacts.astro](src/pages/admin/contacts.astro).
 - **`/admin/saints/`** — manage the saints catalog used on
   `/learn/saints/`.
+- **`/admin/library/`** — upload new books (drag-drop PDF + metadata
+  form) and edit/delete existing ones. Backed by the `library_books`
+  table; PDFs go into the existing `library` storage bucket. Code:
+  [src/pages/admin/library.astro](src/pages/admin/library.astro),
+  APIs: [functions/api/admin/library/index.ts](functions/api/admin/library/index.ts)
+  and [functions/api/admin/library/[id].ts](functions/api/admin/library/[id].ts).
 
 Admin gating: API endpoints check `profiles.role === 'admin'` server-side
 (see [functions/api/admin/directory.ts:43](functions/api/admin/directory.ts)
@@ -168,7 +175,8 @@ update public.profiles set approved = true where email = 'newperson@example.com'
   Organization: ST JOHN KRONSTADT INC.
 - **Migrations:** [supabase/migrations/](supabase/migrations/) — numbered
   `001_*.sql`, `002_*.sql`, etc.
-- **Tables:** `public.profiles`, `public.coffee_hour_signups`.
+- **Tables:** `public.profiles`, `public.coffee_hour_signups`,
+  `public.library_books`.
 - **Auth users:** `auth.users` (Supabase-managed).
 
 ### Critical: migrations are applied BY HAND
