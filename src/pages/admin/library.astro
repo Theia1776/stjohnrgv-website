@@ -124,6 +124,22 @@ import Layout from "../../layouts/Layout.astro";
             />
           </div>
 
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input
+              id="public_access"
+              name="public_access"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4"
+            />
+            <span class="text-sm">
+              <span class="font-semibold">Make publicly accessible</span>
+              <span class="block text-text-secondary text-xs">
+                Allow visitors who are NOT logged in to browse and read this book.
+                Leave unchecked for parishioners-only texts.
+              </span>
+            </span>
+          </label>
+
           <div class="flex items-center gap-3">
             <button id="upload-btn" type="submit" class="btn btn-primary">
               Upload Book
@@ -146,6 +162,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Author</th>
                 <th class="p-2">Category</th>
                 <th class="p-2">Languages</th>
+                <th class="p-2 text-center" title="Public = visible to non-logged-in visitors">Public</th>
                 <th class="p-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -170,6 +187,7 @@ import Layout from "../../layouts/Layout.astro";
     languages: string[];
     description: string | null;
     pdf_storage_key: string;
+    public_access: boolean;
     created_at: string;
     updated_at: string;
   };
@@ -247,6 +265,7 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2">${escapeHtml(b.author ?? "—")}</td>
           <td class="p-2">${escapeHtml(b.category)}</td>
           <td class="p-2 text-xs">${escapeHtml((b.languages ?? []).join(", "))}</td>
+          <td class="p-2 text-center" title="${b.public_access ? "Visible to non-logged-in visitors" : "Parishioners only"}">${b.public_access ? "✓" : "—"}</td>
           <td class="p-2 text-right whitespace-nowrap">
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
@@ -343,6 +362,13 @@ import Layout from "../../layouts/Layout.astro";
     if (description === null) return;
     const slug = window.prompt("URL slug (changing breaks existing links):", book.slug);
     if (slug === null) return;
+    const publicAccess = window.confirm(
+      book.public_access
+        ? "Currently PUBLIC (visitors can read this without logging in).\n\nClick OK to keep it public, or Cancel to make it parishioners-only."
+        : "Currently PARISHIONERS ONLY (login required to read).\n\nClick OK to keep it parishioners-only, or Cancel to make it publicly accessible.",
+    )
+      ? book.public_access
+      : !book.public_access;
 
     const res = await fetch(`/api/admin/library/${encodeURIComponent(book.id)}`, {
       method: "PATCH",
@@ -356,6 +382,7 @@ import Layout from "../../layouts/Layout.astro";
         languages: languagesStr.split(",").map((s) => s.trim()).filter(Boolean),
         description: description.trim(),
         slug: slug.trim(),
+        public_access: publicAccess,
       }),
     });
     const body = await res.json().catch(() => ({}));

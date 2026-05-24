@@ -2,14 +2,16 @@
  * Cloudflare Pages Function: GET /api/library/pdf?key=<filename>
  *
  * Returns a 60-second signed URL for a file in the Supabase Storage
- * "library" bucket. Requires a valid session cookie — defense in depth
- * alongside the page-level middleware on /learn/library/*.
+ * "library" bucket. Two access paths:
+ *   - Logged-in parishioners can read any book in the catalog.
+ *   - Anonymous visitors can read only books whose row in
+ *     library_books has public_access = true.
  *
  * Response:
  *   200 { url: string }
  *   400 { error }   — missing or empty ?key
- *   401 { error }   — no/invalid session
- *   404 { error }   — file not in bucket
+ *   403 { error }   — anonymous request for a non-public book
+ *   404 { error }   — file not in bucket / no matching book row
  *   500 { error }   — server misconfigured or upstream error
  */
 
@@ -37,10 +39,6 @@ export async function onRequestGet(
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
-  if (!session.user) {
-    return wrap(jsonResponse({ error: "Unauthorized." }, 401));
-  }
-
   const url = new URL(context.request.url);
   const key = url.searchParams.get("key")?.trim() || "";
   if (!key) {
@@ -54,6 +52,26 @@ export async function onRequestGet(
   const admin = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
+
+  // Anonymous visitors must be reading a public book. Confirm by
+  // looking up the row by storage key — there's a unique index on
+  // pdf_storage_key so this is a single-row lookup.
+  if (!session.user) {
+    const { data: book, error: lookupError } = await admin
+      .from("library_books")
+      .select("public_access")
+      .eq("pdf_storage_key", key)
+      .maybeSingle();
+    if (lookupError) {
+      return wrap(jsonResponse({ error: lookupError.message }, 500));
+    }
+    if (!book) {
+      return wrap(jsonResponse({ error: "File not found." }, 404));
+    }
+    if (!book.public_access) {
+      return wrap(jsonResponse({ error: "This text is for parishioners only. Please sign in." }, 403));
+    }
+  }
 
   const { data, error } = await admin.storage
     .from(BUCKET)

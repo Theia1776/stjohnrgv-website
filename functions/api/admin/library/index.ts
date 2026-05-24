@@ -92,7 +92,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     const { data, error } = await supabase
       .from("library_books")
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -149,6 +149,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const languagesRaw = String(formData.get("languages") ?? "English").trim();
     const description = String(formData.get("description") ?? "").trim();
     const slugRaw = String(formData.get("slug") ?? "").trim();
+    // Checkboxes submit "on" when checked, nothing when unchecked.
+    const publicAccess = formData.get("public_access") != null;
 
     if (!title) return wrap(jsonResponse({ error: "Title is required." }, 400));
 
@@ -206,8 +208,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         languages,
         description: description || null,
         pdf_storage_key: storageKey,
+        public_access: publicAccess,
       })
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, created_at, updated_at")
       .single();
 
     if (insertError) {

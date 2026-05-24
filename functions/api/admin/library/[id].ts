@@ -121,6 +121,9 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       }
       updates.slug = newSlug;
     }
+    if (typeof body.public_access === "boolean") {
+      updates.public_access = body.public_access;
+    }
 
     if (Object.keys(updates).length === 0) {
       return wrap(jsonResponse({ error: "No editable fields supplied." }, 400));
@@ -130,7 +133,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       .from("library_books")
       .update(updates)
       .eq("id", id)
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, created_at, updated_at")
       .single();
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
