@@ -31,10 +31,13 @@ const categories = [
       <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Parish Library</h1>
       <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
 
-      <p class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
+      <p id="intro-parishioner" hidden class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
         Texts for prayer and study from our parish library. Choose a category
-        to browse its texts. Most are reserved for registered parishioners;
-        a few are open to all visitors.
+        to browse its texts.
+      </p>
+      <p id="intro-visitor" hidden class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
+        A small selection of texts from our parish library, freely available
+        to all visitors.
       </p>
 
       <p id="library-error" hidden class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert"></p>
@@ -42,6 +45,19 @@ const categories = [
       <p id="library-loading" class="mt-12 text-center text-text-secondary italic">
         Loading library…
       </p>
+
+      <!-- ============== VISITOR FLAT LIST (anonymous users) ============== -->
+      <div id="visitor-grid" hidden class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+      <p id="visitor-empty" hidden class="mt-10 text-center text-text-secondary italic">
+        No texts are publicly available yet.
+      </p>
+      <div id="visitor-signin" hidden class="mt-12 border-t border-border-soft pt-8 text-center">
+        <p class="text-sm text-text-secondary">
+          Parishioners have access to the full library —
+          <a href="/login/?next=/learn/library/" class="font-semibold text-brand-blue-dark hover:underline">sign in</a>
+          to see all texts.
+        </p>
+      </div>
 
       <!-- ============== CATEGORY GATEWAY ============== -->
       <div
@@ -105,6 +121,8 @@ const categories = [
 
     const loadingEl = document.getElementById("library-loading") as HTMLParagraphElement;
     const errorEl = document.getElementById("library-error") as HTMLParagraphElement;
+    const introParishioner = document.getElementById("intro-parishioner") as HTMLParagraphElement;
+    const introVisitor = document.getElementById("intro-visitor") as HTMLParagraphElement;
     const gateway = document.getElementById("category-gateway") as HTMLDivElement;
     const detail = document.getElementById("category-detail") as HTMLDivElement;
     const detailHeading = document.getElementById("category-detail-heading") as HTMLHeadingElement;
@@ -113,6 +131,9 @@ const categories = [
     const backBtn = document.getElementById("back-to-categories") as HTMLButtonElement;
     const allCountEl = document.getElementById("all-count") as HTMLParagraphElement;
     const tiles = document.querySelectorAll<HTMLButtonElement>(".category-tile");
+    const visitorGrid = document.getElementById("visitor-grid") as HTMLDivElement;
+    const visitorEmpty = document.getElementById("visitor-empty") as HTMLParagraphElement;
+    const visitorSignin = document.getElementById("visitor-signin") as HTMLDivElement;
 
     let books: Book[] = [];
 
@@ -199,13 +220,19 @@ const categories = [
     });
     backBtn.addEventListener("click", showGateway);
 
+    function renderVisitorFlat() {
+      if (books.length === 0) {
+        visitorEmpty.hidden = false;
+      } else {
+        visitorGrid.innerHTML = books.map(bookCard).join("");
+        visitorGrid.hidden = false;
+      }
+      visitorSignin.hidden = false;
+    }
+
     (async () => {
       try {
         const res = await fetch("/api/library/books", { credentials: "same-origin", cache: "no-store" });
-        if (res.status === 401 || res.status === 403) {
-          window.location.assign(`/login/?next=${encodeURIComponent(location.pathname)}`);
-          return;
-        }
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           showError(body.error ?? `HTTP ${res.status}`);
@@ -213,9 +240,18 @@ const categories = [
         }
         const data = await res.json();
         books = (data.books ?? []) as Book[];
+        const isAuthed = !!data.viewer_authenticated;
+
         loadingEl.hidden = true;
-        gateway.hidden = false;
-        updateCounts();
+
+        if (isAuthed) {
+          introParishioner.hidden = false;
+          gateway.hidden = false;
+          updateCounts();
+        } else {
+          introVisitor.hidden = false;
+          renderVisitorFlat();
+        }
       } catch (err) {
         showError(err instanceof Error ? err.message : String(err));
       }
