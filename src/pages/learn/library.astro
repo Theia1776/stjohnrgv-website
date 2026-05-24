@@ -39,6 +39,11 @@ const categories = [
         A small selection of texts from our parish library, freely available
         to all visitors.
       </p>
+      <p id="visitor-parishioner-hint" hidden class="mt-3 max-w-2xl text-sm italic text-text-secondary">
+        Parishioners of St. John of Kronstadt with an account:
+        <a href="/login/?next=/learn/library/" class="font-semibold text-brand-blue-dark hover:underline not-italic">sign in</a>
+        to see the rest of the library.
+      </p>
 
       <p id="library-error" hidden class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert"></p>
 
@@ -116,6 +121,7 @@ const categories = [
     const errorEl = document.getElementById("library-error") as HTMLParagraphElement;
     const introParishioner = document.getElementById("intro-parishioner") as HTMLParagraphElement;
     const introVisitor = document.getElementById("intro-visitor") as HTMLParagraphElement;
+    const visitorParishionerHint = document.getElementById("visitor-parishioner-hint") as HTMLParagraphElement;
     const gateway = document.getElementById("category-gateway") as HTMLDivElement;
     const detail = document.getElementById("category-detail") as HTMLDivElement;
     const detailHeading = document.getElementById("category-detail-heading") as HTMLHeadingElement;
@@ -241,6 +247,7 @@ const categories = [
           updateCounts();
         } else {
           introVisitor.hidden = false;
+          visitorParishionerHint.hidden = false;
           renderVisitorFlat();
         }
       } catch (err) {
