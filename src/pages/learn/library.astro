@@ -51,13 +51,6 @@ const categories = [
       <p id="visitor-empty" hidden class="mt-10 text-center text-text-secondary italic">
         No texts are publicly available yet.
       </p>
-      <div id="visitor-signin" hidden class="mt-12 border-t border-border-soft pt-8 text-center">
-        <p class="text-sm text-text-secondary">
-          Parishioners have access to the full library —
-          <a href="/login/?next=/learn/library/" class="font-semibold text-brand-blue-dark hover:underline">sign in</a>
-          to see all texts.
-        </p>
-      </div>
 
       <!-- ============== CATEGORY GATEWAY ============== -->
       <div
@@ -133,7 +126,6 @@ const categories = [
     const tiles = document.querySelectorAll<HTMLButtonElement>(".category-tile");
     const visitorGrid = document.getElementById("visitor-grid") as HTMLDivElement;
     const visitorEmpty = document.getElementById("visitor-empty") as HTMLParagraphElement;
-    const visitorSignin = document.getElementById("visitor-signin") as HTMLDivElement;
 
     let books: Book[] = [];
 
@@ -227,7 +219,6 @@ const categories = [
         visitorGrid.innerHTML = books.map(bookCard).join("");
         visitorGrid.hidden = false;
       }
-      visitorSignin.hidden = false;
     }
 
     (async () => {
