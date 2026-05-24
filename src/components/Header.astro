@@ -320,10 +320,17 @@ function isActive(href: string): boolean {
         const name = escapeHtml(data.name || "Member");
         const isAdmin = data.role === "admin";
         const adminDesktopItem = isAdmin
-          ? `<a href="/admin/contacts/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Admin</a>`
+          ? `<div class="my-1 border-t border-border-soft"></div>
+             <div class="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-widest text-text-secondary">Admin</div>
+             <a href="/admin/contacts/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Contacts &amp; Approvals</a>
+             <a href="/admin/library/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Library</a>
+             <a href="/admin/saints/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Saints</a>`
           : "";
         const adminMobile = isAdmin
-          ? `<a href="/admin/contacts/" class="btn btn-secondary w-full mb-2">Admin</a>`
+          ? `<div class="mt-3 mb-1 text-xs font-semibold uppercase tracking-widest text-text-secondary">Admin</div>
+             <a href="/admin/contacts/" class="btn btn-secondary w-full mb-2">Contacts &amp; Approvals</a>
+             <a href="/admin/library/" class="btn btn-secondary w-full mb-2">Library</a>
+             <a href="/admin/saints/" class="btn btn-secondary w-full mb-2">Saints</a>`
           : "";
 
         // Desktop: name → click → dropdown panel with Account / Admin / Sign Out.
