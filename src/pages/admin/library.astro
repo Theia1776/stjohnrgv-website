@@ -149,6 +149,92 @@ import Layout from "../../layouts/Layout.astro";
         </form>
       </section>
 
+      <!-- ============== EDIT MODAL ============== -->
+      <!-- Hidden by default; .removeAttribute("hidden") to show. Backdrop -->
+      <!-- click and Escape both close. Form submit PATCHes the row.       -->
+      <div
+        id="edit-modal"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-modal-title"
+        class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
+      >
+        <div class="my-8 w-full max-w-2xl border border-border-soft bg-cream-card p-6 shadow-lg md:p-8">
+          <div class="mb-4 flex items-start justify-between gap-4">
+            <h3 id="edit-modal-title" class="font-display text-xl text-text-primary">Edit Book</h3>
+            <button
+              type="button"
+              id="edit-close"
+              aria-label="Close"
+              class="text-2xl leading-none text-text-secondary hover:text-text-primary"
+            >&times;</button>
+          </div>
+
+          <form id="edit-form" class="space-y-4">
+            <input type="hidden" id="edit-id" />
+
+            <div>
+              <label for="edit-title" class="block text-sm font-semibold mb-1">Title *</label>
+              <input id="edit-title" type="text" required class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label for="edit-author" class="block text-sm font-semibold mb-1">Author</label>
+                <input id="edit-author" type="text" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+              </div>
+              <div>
+                <label for="edit-category" class="block text-sm font-semibold mb-1">Category *</label>
+                <select id="edit-category" required class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2">
+                  <option value="Hagiography">Hagiography — lives of saints</option>
+                  <option value="Liturgical Texts">Liturgical Texts — service books, prayer books</option>
+                  <option value="Patristics">Patristics — writings of the Church Fathers</option>
+                  <option value="Scripture">Scripture — Bible texts and commentaries</option>
+                  <option value="History">History — Church history, parish history</option>
+                  <option value="Theology / Doctrine">Theology / Doctrine — catechisms, doctrinal works</option>
+                  <option value="Spiritual Life">Spiritual Life — prayer, asceticism, monastic writings</option>
+                  <option value="Other">Other — anything that doesn't fit above</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="edit-languages" class="block text-sm font-semibold mb-1">Languages *</label>
+              <input id="edit-languages" type="text" required class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+              <p class="mt-1 text-xs text-text-secondary">Comma-separated.</p>
+            </div>
+
+            <div>
+              <label for="edit-description" class="block text-sm font-semibold mb-1">Description</label>
+              <textarea id="edit-description" rows="3" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"></textarea>
+            </div>
+
+            <div>
+              <label for="edit-slug" class="block text-sm font-semibold mb-1">URL slug</label>
+              <input id="edit-slug" type="text" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2" />
+              <p class="mt-1 text-xs text-text-secondary">Changing this breaks existing links to the book.</p>
+            </div>
+
+            <label class="flex items-start gap-2 cursor-pointer">
+              <input id="edit-public" type="checkbox" class="mt-0.5 h-4 w-4" />
+              <span class="text-sm">
+                <span class="font-semibold">Publicly accessible</span>
+                <span class="block text-text-secondary text-xs">
+                  Allow non-logged-in visitors to read this book.
+                </span>
+              </span>
+            </label>
+
+            <div class="flex items-center justify-end gap-3 border-t border-border-soft pt-4">
+              <span id="edit-status" class="text-sm text-text-secondary mr-auto"></span>
+              <button type="button" id="edit-cancel" class="btn btn-secondary">Cancel</button>
+              <button type="submit" id="edit-save" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- ============== MANAGE LIST ============== -->
       <section aria-labelledby="manage-heading">
         <h2 id="manage-heading" class="font-display text-xl text-text-primary mb-4">
@@ -356,7 +442,7 @@ import Layout from "../../layouts/Layout.astro";
     if (editBtn) {
       const book = books.find((b) => b.id === id);
       if (!book) return;
-      await promptEdit(book);
+      openEditModal(book);
       return;
     }
 
@@ -380,54 +466,102 @@ import Layout from "../../layouts/Layout.astro";
     }
   });
 
-  // Browser prompt-based editor — simple enough not to need a modal,
-  // and matches the lightweight feel of the rest of the admin area.
-  async function promptEdit(book: Book) {
-    const title = window.prompt("Title:", book.title);
-    if (title === null) return;
-    const author = window.prompt("Author (blank for none):", book.author ?? "");
-    if (author === null) return;
-    const category = window.prompt("Category:", book.category);
-    if (category === null) return;
-    const languagesStr = window.prompt("Languages (comma-separated):", (book.languages ?? []).join(", "));
-    if (languagesStr === null) return;
-    const description = window.prompt("Description (blank for none):", book.description ?? "");
-    if (description === null) return;
-    const slug = window.prompt("URL slug (changing breaks existing links):", book.slug);
-    if (slug === null) return;
-    const publicAccess = window.confirm(
-      book.public_access
-        ? "Currently PUBLIC (visitors can read this without logging in).\n\nClick OK to keep it public, or Cancel to make it parishioners-only."
-        : "Currently PARISHIONERS ONLY (login required to read).\n\nClick OK to keep it parishioners-only, or Cancel to make it publicly accessible.",
-    )
-      ? book.public_access
-      : !book.public_access;
+  // ============= MODAL-BASED EDITOR =============
+  // Replaces the old chain of window.prompt() calls, which Chrome
+  // silently kills after the second prompt via its "block additional
+  // dialogs from this page" guard. The modal shows all fields at once
+  // and submits a single PATCH.
+  const editModal = document.getElementById("edit-modal") as HTMLDivElement;
+  const editForm = document.getElementById("edit-form") as HTMLFormElement;
+  const editIdEl = document.getElementById("edit-id") as HTMLInputElement;
+  const editTitleEl = document.getElementById("edit-title") as HTMLInputElement;
+  const editAuthorEl = document.getElementById("edit-author") as HTMLInputElement;
+  const editCategoryEl = document.getElementById("edit-category") as HTMLSelectElement;
+  const editLanguagesEl = document.getElementById("edit-languages") as HTMLInputElement;
+  const editDescriptionEl = document.getElementById("edit-description") as HTMLTextAreaElement;
+  const editSlugEl = document.getElementById("edit-slug") as HTMLInputElement;
+  const editPublicEl = document.getElementById("edit-public") as HTMLInputElement;
+  const editStatusEl = document.getElementById("edit-status") as HTMLSpanElement;
+  const editSaveBtn = document.getElementById("edit-save") as HTMLButtonElement;
+  const editCloseBtn = document.getElementById("edit-close") as HTMLButtonElement;
+  const editCancelBtn = document.getElementById("edit-cancel") as HTMLButtonElement;
 
-    const res = await fetch(`/api/admin/library/${encodeURIComponent(book.id)}`, {
-      method: "PATCH",
-      credentials: "same-origin",
-      cache: "no-store",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: title.trim(),
-        author: author.trim(),
-        category: category.trim(),
-        languages: languagesStr.split(",").map((s) => s.trim()).filter(Boolean),
-        description: description.trim(),
-        slug: slug.trim(),
-        public_access: publicAccess,
-      }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      showError(`Couldn't save: ${body.error ?? res.status}`);
-      return;
-    }
-    // Refresh the row in place so the list reflects the new values.
-    const idx = books.findIndex((b) => b.id === book.id);
-    if (idx !== -1 && body.book) books[idx] = body.book;
-    render();
+  function openEditModal(book: Book) {
+    editIdEl.value = book.id;
+    editTitleEl.value = book.title;
+    editAuthorEl.value = book.author ?? "";
+    editCategoryEl.value = book.category;
+    // If the row's category isn't in the dropdown (legacy data),
+    // fall back to "Other" rather than leaving an empty selection.
+    if (!editCategoryEl.value) editCategoryEl.value = "Other";
+    editLanguagesEl.value = (book.languages ?? []).join(", ");
+    editDescriptionEl.value = book.description ?? "";
+    editSlugEl.value = book.slug;
+    editPublicEl.checked = !!book.public_access;
+    editStatusEl.textContent = "";
+    editSaveBtn.disabled = false;
+    editModal.removeAttribute("hidden");
+    // Focus the title so keyboard users can immediately type.
+    setTimeout(() => editTitleEl.focus(), 0);
   }
+
+  function closeEditModal() {
+    editModal.setAttribute("hidden", "");
+    editForm.reset();
+  }
+
+  editCloseBtn.addEventListener("click", closeEditModal);
+  editCancelBtn.addEventListener("click", closeEditModal);
+  // Click on the backdrop (the modal container itself, not its inner
+  // panel) closes the modal — matches the convention people expect.
+  editModal.addEventListener("click", (ev) => {
+    if (ev.target === editModal) closeEditModal();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && !editModal.hasAttribute("hidden")) closeEditModal();
+  });
+
+  editForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const id = editIdEl.value;
+    if (!id) return;
+
+    editSaveBtn.disabled = true;
+    editStatusEl.textContent = "Saving…";
+
+    const payload = {
+      title: editTitleEl.value.trim(),
+      author: editAuthorEl.value.trim(),
+      category: editCategoryEl.value.trim(),
+      languages: editLanguagesEl.value.split(",").map((s) => s.trim()).filter(Boolean),
+      description: editDescriptionEl.value.trim(),
+      slug: editSlugEl.value.trim(),
+      public_access: editPublicEl.checked,
+    };
+
+    try {
+      const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        editStatusEl.textContent = `Failed: ${body.error ?? res.status}`;
+        editSaveBtn.disabled = false;
+        return;
+      }
+      const idx = books.findIndex((b) => b.id === id);
+      if (idx !== -1 && body.book) books[idx] = body.book;
+      render();
+      closeEditModal();
+    } catch (err) {
+      editStatusEl.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
+      editSaveBtn.disabled = false;
+    }
+  });
 
   async function init() {
     await loadBooks();
