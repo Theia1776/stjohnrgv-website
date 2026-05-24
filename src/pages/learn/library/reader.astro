@@ -1,59 +1,17 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
-import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL } from "../../../lib/supabase";
 
-// SSR — the slug isn't known at build time once admins start
-// uploading via /admin/library, so we resolve it at request time
-// against the library_books table. The page is gated by the
-// /functions/learn/library middleware so anon traffic never reaches
-// this code.
-export const prerender = false;
-
-interface Book {
-  slug: string;
-  title: string;
-  author: string | null;
-  category: string;
-  languages: string[];
-  description: string | null;
-  pdf_storage_key: string;
-}
-
-const slug = Astro.params.slug ?? "";
-// runtime.env carries Cloudflare bindings in the SSR adapter. The
-// service role key is set on the Pages project; the locals proxy
-// surface in dev is wired through `platformProxy: { enabled: true }`.
-const serviceKey = (Astro.locals as { runtime?: { env?: { SUPABASE_SERVICE_ROLE_KEY?: string } } })
-  .runtime?.env?.SUPABASE_SERVICE_ROLE_KEY;
-
-let book: Book | null = null;
-let loadError: string | null = null;
-
-if (!serviceKey) {
-  loadError = "Library is not configured.";
-} else {
-  const supabase = createClient(SUPABASE_URL, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-  const { data, error } = await supabase
-    .from("library_books")
-    .select("slug, title, author, category, languages, description, pdf_storage_key")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) loadError = error.message;
-  else if (!data) loadError = "Book not found.";
-  else book = data as Book;
-}
-
-if (!book) {
-  return new Response(loadError ?? "Not found", { status: loadError === "Book not found." ? 404 : 500 });
-}
+// Single static reader page for the parish library. Takes the book's
+// slug from a `?slug=` query param and populates the header + PDF
+// viewer at runtime, so any book in the library_books table works
+// without a per-slug rebuild. The /learn/library middleware gates
+// access; the PDF itself is served via a 60-second signed URL from
+// /api/library/pdf.
 ---
 
 <Layout
-  title={`${book.title} | Parish Library`}
-  description={book.description ?? book.title}
+  title="Parish Library Reader | St. John of Kronstadt"
+  description="Read texts from the parish digital library."
 >
   <meta slot="head" name="robots" content="noindex,nofollow" />
 
@@ -78,8 +36,8 @@ if (!book) {
           ← Parish Library
         </a>
       </p>
-      <h1 class="mt-2 font-display text-2xl text-text-primary md:text-3xl">{book.title}</h1>
-      <p class="mt-2 text-sm italic text-text-secondary">{book.author}</p>
+      <h1 id="book-title" class="mt-2 font-display text-2xl text-text-primary md:text-3xl">Loading…</h1>
+      <p id="book-author" class="mt-2 text-sm italic text-text-secondary"></p>
     </div>
 
     <div class="mx-auto max-w-6xl px-4 pb-4 md:px-6">
@@ -141,7 +99,6 @@ if (!book) {
     <div
       id="pdf-viewer"
       class="mx-auto min-h-[60vh] max-w-6xl px-4 py-8 md:px-6 md:py-12"
-      data-storage-key={book.pdf_storage_key}
     >
       <p id="pdf-loading" class="text-center font-display text-sm uppercase tracking-widest text-cream-card/70">
         Loading text…
@@ -183,9 +140,21 @@ if (!book) {
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
+    type Book = {
+      slug: string;
+      title: string;
+      author: string | null;
+      category: string;
+      languages: string[];
+      description: string | null;
+      pdf_storage_key: string;
+    };
+
     const viewer = document.getElementById("pdf-viewer") as HTMLDivElement;
     const loadingEl = document.getElementById("pdf-loading") as HTMLParagraphElement;
     const errorEl = document.getElementById("pdf-error") as HTMLParagraphElement;
+    const titleEl = document.getElementById("book-title") as HTMLHeadingElement;
+    const authorEl = document.getElementById("book-author") as HTMLParagraphElement;
     const modeScrollBtn = document.getElementById("mode-scroll") as HTMLButtonElement;
     const modeBookBtn = document.getElementById("mode-book") as HTMLButtonElement;
     const prevBtn = document.getElementById("pager-prev") as HTMLButtonElement;
@@ -214,7 +183,6 @@ if (!book) {
       if (mode === "scroll") {
         statusEl.textContent = `Page ${currentPage} of ${pdf.numPages}`;
       } else {
-        // Book mode shows a spread; report as e.g. "2-3 of 50".
         const left = currentPage;
         const right = Math.min(currentPage + 1, pdf.numPages);
         statusEl.textContent =
@@ -267,12 +235,10 @@ if (!book) {
           canvas = await renderToCanvas(i, targetWidth);
           scrollCanvases.set(i, canvas);
         }
-        // Anchor for prev/next scrolling.
         canvas.id = `pdf-page-${i}`;
         stack.appendChild(canvas);
       }
 
-      // Track current page in scroll mode by which canvas is closest to top.
       const obs = new IntersectionObserver(
         (entries) => {
           for (const e of entries) {
@@ -297,8 +263,6 @@ if (!book) {
         "pdf-spread relative grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6";
       viewer.appendChild(spread);
 
-      // Aim for each page to fill ~half the container, capped so very wide
-      // viewports don't make the pages cartoonish.
       const halfWidth = Math.min((viewer.clientWidth - 64) / 2, 700);
 
       const left = await renderToCanvas(currentPage, halfWidth);
@@ -309,10 +273,6 @@ if (!book) {
         spread.appendChild(right);
       }
 
-      // Click-edge navigation: left half = prev spread, right half = next.
-      // Overlay sits above the canvases but below the toolbar (which is in
-      // a separate section), and forwards clicks via stopPropagation only
-      // when one of the halves is hit.
       const overlay = document.createElement("div");
       overlay.className = "pointer-events-none absolute inset-0 grid grid-cols-2";
       const leftHalf = document.createElement("div");
@@ -381,18 +341,12 @@ if (!book) {
       modeBookBtn.classList.toggle("text-cream-card", !isScroll);
       modeBookBtn.classList.toggle("bg-cream-card", isScroll);
       modeBookBtn.classList.toggle("text-brand-blue-dark", isScroll);
-      // When entering book mode, snap the current page to the start of a
-      // spread (left page is always odd-indexed: 1, 3, 5, …) so the
-      // current page stays visible.
       if (!isScroll && currentPage % 2 === 0) currentPage -= 1;
       render();
     }
     modeScrollBtn.addEventListener("click", () => setMode("scroll"));
     modeBookBtn.addEventListener("click", () => setMode("book"));
 
-    // Keyboard navigation: ←/→ move the pager. Skip when the user is
-    // typing into an input — the parish library doesn't have any such
-    // inputs today, but the check is cheap.
     document.addEventListener("keydown", (e) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
@@ -401,26 +355,60 @@ if (!book) {
     });
 
     // ============================================================
-    // BOOTSTRAP — fetch signed URL, then load PDF
+    // BOOTSTRAP — read slug from URL, fetch book metadata,
+    // populate header, fetch signed PDF URL, render
     // ============================================================
     (async () => {
-      const key = viewer.dataset.storageKey || "";
+      const params = new URLSearchParams(window.location.search);
+      const slug = (params.get("slug") || "").trim();
+      if (!slug) {
+        titleEl.textContent = "No book selected";
+        showError("This reader needs a ?slug= parameter. Pick a book from the library.");
+        return;
+      }
+
       try {
-        const res = await fetch(`/api/library/pdf?key=${encodeURIComponent(key)}`, {
-          headers: { Accept: "application/json" },
+        // Look up the book in the catalog. For the parish-scale library
+        // this is fine; if the catalog grows past a few hundred we'd
+        // switch to a dedicated /api/library/books/:slug endpoint.
+        const catRes = await fetch("/api/library/books", {
+          credentials: "same-origin",
+          cache: "no-store",
         });
-        if (res.status === 401) {
-          location.assign(
-            `/login/?next=${encodeURIComponent(location.pathname)}`,
-          );
+        if (catRes.status === 401) {
+          location.assign(`/login/?next=${encodeURIComponent(location.pathname + location.search)}`);
           return;
         }
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          showError(json.error || `Could not load text (${res.status}).`);
+        if (!catRes.ok) {
+          showError(`Could not load catalog (${catRes.status}).`);
           return;
         }
-        const { url } = (await res.json()) as { url: string };
+        const { books } = (await catRes.json()) as { books: Book[] };
+        const book = (books ?? []).find((b) => b.slug === slug);
+        if (!book) {
+          titleEl.textContent = "Book not found";
+          showError(`No book with slug "${slug}".`);
+          return;
+        }
+
+        document.title = `${book.title} | Parish Library`;
+        titleEl.textContent = book.title;
+        authorEl.textContent = book.author ?? "";
+
+        const pdfRes = await fetch(`/api/library/pdf?key=${encodeURIComponent(book.pdf_storage_key)}`, {
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        if (pdfRes.status === 401) {
+          location.assign(`/login/?next=${encodeURIComponent(location.pathname + location.search)}`);
+          return;
+        }
+        if (!pdfRes.ok) {
+          const json = await pdfRes.json().catch(() => ({}));
+          showError(json.error || `Could not load text (${pdfRes.status}).`);
+          return;
+        }
+        const { url } = (await pdfRes.json()) as { url: string };
         pdf = await pdfjsLib.getDocument({ url }).promise;
         loadingEl.hidden = true;
         await render();

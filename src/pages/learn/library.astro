@@ -1,41 +1,9 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL } from "../../lib/supabase";
 
-// SSR so newly-uploaded books show up immediately, without waiting
-// for a rebuild. The page is gated by login (parishioner section)
-// so there's no SEO cost to dropping prerender.
-export const prerender = false;
-
-interface Book {
-  slug: string;
-  title: string;
-  author: string | null;
-  category: string;
-  languages: string[];
-  description: string | null;
-}
-
-const serviceKey = (Astro.locals as { runtime?: { env?: { SUPABASE_SERVICE_ROLE_KEY?: string } } })
-  .runtime?.env?.SUPABASE_SERVICE_ROLE_KEY;
-
-let books: Book[] = [];
-let loadError: string | null = null;
-
-if (!serviceKey) {
-  loadError = "Library is not configured.";
-} else {
-  const supabase = createClient(SUPABASE_URL, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-  const { data, error } = await supabase
-    .from("library_books")
-    .select("slug, title, author, category, languages, description")
-    .order("title", { ascending: true });
-  if (error) loadError = error.message;
-  else books = (data ?? []) as Book[];
-}
+// The page itself is static; book cards are populated at runtime
+// from /api/library/books so newly-uploaded titles appear without
+// a rebuild. The /learn/library middleware gates access.
 
 // Fixed filter set per spec — even categories that aren't yet present in
 // the catalog show as tabs so the shape of the library is visible.
@@ -57,11 +25,7 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
         parish. Click a title to open the in-browser reader.
       </p>
 
-      {loadError && (
-        <p class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert">
-          Could not load the library: {loadError}
-        </p>
-      )}
+      <p id="library-error" hidden class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert"></p>
 
       <!-- ============== FILTER TABS ============== -->
       <div
@@ -89,43 +53,9 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
 
       <!-- ============== CARD GRID ============== -->
       <div id="library-grid" class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {books.map((book) => (
-          <article
-            data-category={book.category}
-            class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
-          >
-            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
-              {book.category}
-            </p>
-            <h2 class="mt-2 font-display text-xl text-text-primary leading-snug">
-              {book.title}
-            </h2>
-            <p class="mt-2 text-sm italic text-text-secondary">{book.author}</p>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-              {book.languages.map((lang) => (
-                <span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">
-                  {lang}
-                </span>
-              ))}
-            </div>
-
-            <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">
-              {book.description}
-            </p>
-
-            <div class="mt-6 flex-grow"></div>
-
-            <p>
-              <a
-                href={`/learn/library/${book.slug}/`}
-                class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
-              >
-                Read →
-              </a>
-            </p>
-          </article>
-        ))}
+        <p id="library-loading" class="md:col-span-2 lg:col-span-3 text-center text-text-secondary italic">
+          Loading library…
+        </p>
       </div>
 
       <!-- Empty-state for filters that select an empty category -->
@@ -140,23 +70,80 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
   </section>
 
   <script>
-    const tabs = document.querySelectorAll<HTMLButtonElement>(".library-tab");
-    const cards = document.querySelectorAll<HTMLElement>(".library-card");
-    const empty = document.getElementById("library-empty") as HTMLParagraphElement;
+    type Book = {
+      slug: string;
+      title: string;
+      author: string | null;
+      category: string;
+      languages: string[];
+      description: string | null;
+    };
 
-    function applyFilter(filter: string) {
-      let visible = 0;
-      cards.forEach((card) => {
-        const show = filter === "All" || card.dataset.category === filter;
-        card.hidden = !show;
-        if (show) visible++;
-      });
-      empty.hidden = visible !== 0;
+    const grid = document.getElementById("library-grid") as HTMLDivElement;
+    const loadingEl = document.getElementById("library-loading") as HTMLParagraphElement;
+    const errorEl = document.getElementById("library-error") as HTMLParagraphElement;
+    const emptyEl = document.getElementById("library-empty") as HTMLParagraphElement;
+    const tabs = document.querySelectorAll<HTMLButtonElement>(".library-tab");
+
+    let currentFilter = "All";
+    let books: Book[] = [];
+
+    function escapeHtml(value: unknown): string {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderCards() {
+      const visible = currentFilter === "All"
+        ? books
+        : books.filter((b) => b.category === currentFilter);
+
+      emptyEl.hidden = visible.length !== 0;
+
+      if (visible.length === 0) {
+        grid.innerHTML = "";
+        return;
+      }
+
+      grid.innerHTML = visible
+        .map(
+          (book) => `<article
+            data-category="${escapeHtml(book.category)}"
+            class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+          >
+            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">${escapeHtml(book.category)}</p>
+            <h2 class="mt-2 font-display text-xl text-text-primary leading-snug">${escapeHtml(book.title)}</h2>
+            <p class="mt-2 text-sm italic text-text-secondary">${escapeHtml(book.author ?? "")}</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              ${(book.languages ?? []).map((lang) => `<span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">${escapeHtml(lang)}</span>`).join("")}
+            </div>
+            <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">${escapeHtml(book.description ?? "")}</p>
+            <div class="mt-6 flex-grow"></div>
+            <p>
+              <a
+                href="/learn/library/reader/?slug=${encodeURIComponent(book.slug)}"
+                class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+              >Read →</a>
+            </p>
+          </article>`,
+        )
+        .join("");
+    }
+
+    function showError(message: string) {
+      loadingEl.hidden = true;
+      grid.innerHTML = "";
+      errorEl.textContent = `Could not load the library: ${message}`;
+      errorEl.hidden = false;
     }
 
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
-        const filter = tab.dataset.filter || "All";
+        currentFilter = tab.dataset.filter || "All";
         tabs.forEach((t) => {
           const active = t === tab;
           t.setAttribute("aria-selected", String(active));
@@ -165,8 +152,34 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
           t.classList.toggle("border-transparent", !active);
           t.classList.toggle("text-text-secondary", !active);
         });
-        applyFilter(filter);
+        renderCards();
       });
     });
+
+    (async () => {
+      try {
+        const res = await fetch("/api/library/books", { credentials: "same-origin", cache: "no-store" });
+        if (res.status === 401 || res.status === 403) {
+          // Middleware should already have redirected — fall through to login as a safety net.
+          window.location.assign(`/login/?next=${encodeURIComponent(location.pathname)}`);
+          return;
+        }
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          showError(body.error ?? `HTTP ${res.status}`);
+          return;
+        }
+        const data = await res.json();
+        books = (data.books ?? []) as Book[];
+        loadingEl.remove();
+        if (books.length === 0) {
+          grid.innerHTML = `<p class="md:col-span-2 lg:col-span-3 text-center text-text-secondary italic">The library is empty. Check back soon.</p>`;
+          return;
+        }
+        renderCards();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : String(err));
+      }
+    })();
   </script>
 </Layout>

@@ -3,7 +3,6 @@ import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
-import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,19 +10,6 @@ export default defineConfig({
   // absolute URLs (e.g. https://stjohnrgv.org/about/) rather than
   // relative paths. Also benefits canonical URL helpers.
   site: 'https://stjohnrgv.org',
-
-  // Per-page rendering: the vast majority of pages stay prerendered
-  // (the default), and pages that need request-time data opt in
-  // with `export const prerender = false`. Right now only the
-  // library reader (/learn/library/[slug]) is dynamic so it can
-  // resolve any slug the admin uploads without rebuilding.
-  output: 'static',
-  adapter: cloudflare({
-    // Pages Functions in /functions still handle our REST API; the
-    // Astro adapter only owns the routes that opt out of prerender.
-    platformProxy: { enabled: true },
-  }),
-
   integrations: [
     sitemap({
       // Exclude pages that are parishioner-private or have no SEO value.

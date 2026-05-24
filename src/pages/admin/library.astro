@@ -238,7 +238,7 @@ import Layout from "../../layouts/Layout.astro";
       .map(
         (b) => `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(b.id)}">
           <td class="p-2">
-            <a href="/learn/library/${escapeHtml(b.slug)}/" class="text-brand-blue-dark hover:underline" target="_blank" rel="noopener">${escapeHtml(b.title)}</a>
+            <a href="/learn/library/reader/?slug=${encodeURIComponent(b.slug)}" class="text-brand-blue-dark hover:underline" target="_blank" rel="noopener">${escapeHtml(b.title)}</a>
             <div class="text-xs text-text-secondary font-mono">${escapeHtml(b.slug)}</div>
           </td>
           <td class="p-2">${escapeHtml(b.author ?? "—")}</td>
