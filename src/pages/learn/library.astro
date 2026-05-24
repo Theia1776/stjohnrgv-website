@@ -5,9 +5,20 @@ import Layout from "../../layouts/Layout.astro";
 // from /api/library/books so newly-uploaded titles appear without
 // a rebuild. The /learn/library middleware gates access.
 
-// Fixed filter set per spec — even categories that aren't yet present in
-// the catalog show as tabs so the shape of the library is visible.
-const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scripture"];
+// The canonical category list. Must match the admin upload
+// dropdown ([src/pages/admin/library.astro]) — drift here would
+// leave books invisible to the gateway because their category
+// wouldn't be a known tile.
+const categories = [
+  "Hagiography",
+  "Liturgical Texts",
+  "Patristics",
+  "Scripture",
+  "History",
+  "Theology / Doctrine",
+  "Spiritual Life",
+  "Other",
+];
 ---
 
 <Layout
@@ -22,50 +33,62 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
 
       <p class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
         Texts for prayer and study, available to registered members of the
-        parish. Click a title to open the in-browser reader.
+        parish. Choose a category to browse its texts.
       </p>
 
       <p id="library-error" hidden class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert"></p>
 
-      <!-- ============== FILTER TABS ============== -->
+      <p id="library-loading" class="mt-12 text-center text-text-secondary italic">
+        Loading library…
+      </p>
+
+      <!-- ============== CATEGORY GATEWAY ============== -->
       <div
-        role="tablist"
-        aria-label="Filter library by category"
-        class="mt-10 flex flex-wrap gap-x-1 gap-y-2 border-b border-border-soft"
+        id="category-gateway"
+        hidden
+        class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+        aria-label="Library categories"
       >
-        {categories.map((cat, i) => (
+        {categories.map((cat) => (
           <button
             type="button"
-            role="tab"
-            data-filter={cat}
-            aria-selected={i === 0 ? "true" : "false"}
-            class:list={[
-              "library-tab -mb-px border-b-2 px-3 py-2 font-display text-sm font-semibold uppercase tracking-widest",
-              i === 0
-                ? "border-brand-blue-dark text-brand-blue-dark"
-                : "border-transparent text-text-secondary hover:text-text-primary",
-            ]}
+            data-category={cat}
+            class="category-tile flex flex-col items-start border border-border-soft bg-cream-card p-6 text-left shadow-sm transition-colors hover:border-brand-tan focus:outline-none focus:ring-2 focus:ring-brand-blue-dark md:p-7"
           >
-            {cat}
+            <span class="text-2xl text-sacred-gold" aria-hidden="true">☩</span>
+            <h2 class="mt-3 font-display text-xl text-text-primary">{cat}</h2>
+            <p class="mt-2 text-sm text-text-secondary category-count">0 texts</p>
           </button>
         ))}
+        <button
+          type="button"
+          data-category="__all__"
+          class="category-tile flex flex-col items-start border border-border-soft bg-cream-card p-6 text-left shadow-sm transition-colors hover:border-brand-tan focus:outline-none focus:ring-2 focus:ring-brand-blue-dark md:p-7"
+        >
+          <span class="text-2xl text-sacred-gold" aria-hidden="true">☩</span>
+          <h2 class="mt-3 font-display text-xl text-text-primary">All Texts</h2>
+          <p class="mt-2 text-sm text-text-secondary" id="all-count">0 texts</p>
+        </button>
       </div>
 
-      <!-- ============== CARD GRID ============== -->
-      <div id="library-grid" class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <p id="library-loading" class="md:col-span-2 lg:col-span-3 text-center text-text-secondary italic">
-          Loading library…
+      <!-- ============== CATEGORY DETAIL ============== -->
+      <div id="category-detail" hidden class="mt-10">
+        <button
+          type="button"
+          id="back-to-categories"
+          class="mb-6 inline-flex items-center gap-1 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:underline"
+        >
+          ← Back to categories
+        </button>
+        <h2 id="category-detail-heading" class="font-display text-2xl text-text-primary md:text-3xl">Category</h2>
+        <div class="mt-6 h-px w-16 bg-liturgical-current"></div>
+
+        <div id="library-grid" class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+
+        <p id="library-empty" hidden class="mt-10 text-center text-text-secondary italic">
+          No texts in this category yet.
         </p>
       </div>
-
-      <!-- Empty-state for filters that select an empty category -->
-      <p
-        id="library-empty"
-        hidden
-        class="mt-10 text-center text-text-secondary italic"
-      >
-        No texts in this category yet.
-      </p>
     </div>
   </section>
 
@@ -79,13 +102,17 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
       description: string | null;
     };
 
-    const grid = document.getElementById("library-grid") as HTMLDivElement;
     const loadingEl = document.getElementById("library-loading") as HTMLParagraphElement;
     const errorEl = document.getElementById("library-error") as HTMLParagraphElement;
+    const gateway = document.getElementById("category-gateway") as HTMLDivElement;
+    const detail = document.getElementById("category-detail") as HTMLDivElement;
+    const detailHeading = document.getElementById("category-detail-heading") as HTMLHeadingElement;
+    const grid = document.getElementById("library-grid") as HTMLDivElement;
     const emptyEl = document.getElementById("library-empty") as HTMLParagraphElement;
-    const tabs = document.querySelectorAll<HTMLButtonElement>(".library-tab");
+    const backBtn = document.getElementById("back-to-categories") as HTMLButtonElement;
+    const allCountEl = document.getElementById("all-count") as HTMLParagraphElement;
+    const tiles = document.querySelectorAll<HTMLButtonElement>(".category-tile");
 
-    let currentFilter = "All";
     let books: Book[] = [];
 
     function escapeHtml(value: unknown): string {
@@ -97,70 +124,84 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
         .replace(/'/g, "&#39;");
     }
 
-    function renderCards() {
-      const visible = currentFilter === "All"
-        ? books
-        : books.filter((b) => b.category === currentFilter);
+    function bookCard(book: Book): string {
+      return `<article
+        data-category="${escapeHtml(book.category)}"
+        class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      >
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">${escapeHtml(book.category)}</p>
+        <h3 class="mt-2 font-display text-xl text-text-primary leading-snug">${escapeHtml(book.title)}</h3>
+        <p class="mt-2 text-sm italic text-text-secondary">${escapeHtml(book.author ?? "")}</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          ${(book.languages ?? []).map((lang) => `<span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">${escapeHtml(lang)}</span>`).join("")}
+        </div>
+        <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">${escapeHtml(book.description ?? "")}</p>
+        <div class="mt-6 flex-grow"></div>
+        <p>
+          <a
+            href="/learn/library/reader/?slug=${encodeURIComponent(book.slug)}"
+            class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+          >Read →</a>
+        </p>
+      </article>`;
+    }
 
-      emptyEl.hidden = visible.length !== 0;
+    function updateCounts() {
+      // Per-category counts on each tile (filtered) + the All Texts total.
+      tiles.forEach((tile) => {
+        const cat = tile.dataset.category || "";
+        if (cat === "__all__") return;
+        const count = books.filter((b) => b.category === cat).length;
+        const countEl = tile.querySelector(".category-count") as HTMLParagraphElement | null;
+        if (countEl) countEl.textContent = `${count} ${count === 1 ? "text" : "texts"}`;
+      });
+      allCountEl.textContent = `${books.length} ${books.length === 1 ? "text" : "texts"}`;
+    }
+
+    function showGateway() {
+      detail.hidden = true;
+      gateway.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showCategory(category: string) {
+      const visible = category === "__all__"
+        ? books
+        : books.filter((b) => b.category === category);
+      const heading = category === "__all__" ? "All Texts" : category;
+      detailHeading.textContent = heading;
 
       if (visible.length === 0) {
         grid.innerHTML = "";
-        return;
+        emptyEl.hidden = false;
+      } else {
+        emptyEl.hidden = true;
+        grid.innerHTML = visible.map(bookCard).join("");
       }
 
-      grid.innerHTML = visible
-        .map(
-          (book) => `<article
-            data-category="${escapeHtml(book.category)}"
-            class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
-          >
-            <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">${escapeHtml(book.category)}</p>
-            <h2 class="mt-2 font-display text-xl text-text-primary leading-snug">${escapeHtml(book.title)}</h2>
-            <p class="mt-2 text-sm italic text-text-secondary">${escapeHtml(book.author ?? "")}</p>
-            <div class="mt-4 flex flex-wrap gap-2">
-              ${(book.languages ?? []).map((lang) => `<span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">${escapeHtml(lang)}</span>`).join("")}
-            </div>
-            <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">${escapeHtml(book.description ?? "")}</p>
-            <div class="mt-6 flex-grow"></div>
-            <p>
-              <a
-                href="/learn/library/reader/?slug=${encodeURIComponent(book.slug)}"
-                class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
-              >Read →</a>
-            </p>
-          </article>`,
-        )
-        .join("");
+      gateway.hidden = true;
+      detail.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function showError(message: string) {
       loadingEl.hidden = true;
-      grid.innerHTML = "";
       errorEl.textContent = `Could not load the library: ${message}`;
       errorEl.hidden = false;
     }
 
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        currentFilter = tab.dataset.filter || "All";
-        tabs.forEach((t) => {
-          const active = t === tab;
-          t.setAttribute("aria-selected", String(active));
-          t.classList.toggle("border-brand-blue-dark", active);
-          t.classList.toggle("text-brand-blue-dark", active);
-          t.classList.toggle("border-transparent", !active);
-          t.classList.toggle("text-text-secondary", !active);
-        });
-        renderCards();
+    tiles.forEach((tile) => {
+      tile.addEventListener("click", () => {
+        const cat = tile.dataset.category || "__all__";
+        showCategory(cat);
       });
     });
+    backBtn.addEventListener("click", showGateway);
 
     (async () => {
       try {
         const res = await fetch("/api/library/books", { credentials: "same-origin", cache: "no-store" });
         if (res.status === 401 || res.status === 403) {
-          // Middleware should already have redirected — fall through to login as a safety net.
           window.location.assign(`/login/?next=${encodeURIComponent(location.pathname)}`);
           return;
         }
@@ -171,12 +212,9 @@ const categories = ["All", "Hagiography", "Liturgical Texts", "Patristics", "Scr
         }
         const data = await res.json();
         books = (data.books ?? []) as Book[];
-        loadingEl.remove();
-        if (books.length === 0) {
-          grid.innerHTML = `<p class="md:col-span-2 lg:col-span-3 text-center text-text-secondary italic">The library is empty. Check back soon.</p>`;
-          return;
-        }
-        renderCards();
+        loadingEl.hidden = true;
+        gateway.hidden = false;
+        updateCounts();
       } catch (err) {
         showError(err instanceof Error ? err.message : String(err));
       }
