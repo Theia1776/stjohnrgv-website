@@ -222,6 +222,14 @@ const contactSchema = {
             </div>
           </form>
 
+          <!-- Privacy notice — keeps the consent disclosure adjacent to the
+               point of submission, satisfies CYA expectations, and points
+               visitors at the page that hosts our SMS + data policy. -->
+          <p class="mt-4 text-xs italic text-text-secondary">
+            By submitting this form or calling our parish line, you agree to
+            our <a href="/privacy/" class="text-brand-blue-dark hover:underline not-italic">Privacy Policy</a>.
+          </p>
+
           <!-- ============== SUCCESS MESSAGE ============== -->
           <!-- Shown after the JS handler receives a 2xx from Formspree.
                Replaces the form in-place; aria-live announces it for SR users. -->
