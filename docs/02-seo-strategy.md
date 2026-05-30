@@ -84,7 +84,7 @@ These target specific True Orthodox seekers and researchers — lower volume but
 ```
 <title>St. John of Kronstadt Orthodox Mission | Orthodox Church Rio Grande Valley, TX</title>
 
-<meta name="description" content="Orthodox Christian church serving the Rio Grande Valley in Bayview, TX. Traditional Julian Calendar services, weekly Divine Liturgy, and a welcoming parish. Priest Antonios Altermatt. Call 956-449-0225.">
+<meta name="description" content="Orthodox Christian church serving the Rio Grande Valley in Bayview, TX. Traditional Julian Calendar services, weekly Divine Liturgy, and a welcoming parish. Priest Antonios Altermatt. Call 956-434-6874.">
 
 <meta name="keywords" content="Orthodox church Rio Grande Valley, Orthodox church Texas, Eastern Orthodox Bayview TX, Julian calendar Orthodox, St John Kronstadt Texas, True Orthodox Church Texas">
 
@@ -160,7 +160,7 @@ Target keywords: "What is Orthodox Christianity," "How to become Orthodox," "Eas
 ```
 <title>Iglesia Ortodoxa en el Valle del Río Grande, Texas | San Juan de Kronstadt</title>
 
-<meta name="description" content="Misión Ortodoxa Cristiana sirviendo al Valle del Río Grande en Bayview, TX. Liturgia Divina los domingos. Padre Antonios Altermatt. Llame al 956-449-0225.">
+<meta name="description" content="Misión Ortodoxa Cristiana sirviendo al Valle del Río Grande en Bayview, TX. Liturgia Divina los domingos. Padre Antonios Altermatt. Llame al 956-434-6874.">
 
 <html lang="es">
 ```
@@ -181,7 +181,7 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
   "url": "https://stjohnrgv.org",
   "logo": "https://stjohnrgv.org/images/logo.png",
   "image": "https://stjohnrgv.org/images/og-image.jpg",
-  "telephone": "+19564490225",
+  "telephone": "+19564346874",
   "email": "contact@stjohnrgv.org",
   "address": {
     "@type": "PostalAddress",
@@ -247,7 +247,7 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
 3. Set business category: **"Orthodox Church"** (primary), "Christian Church" (secondary)
 4. Add **all service areas:** Bayview TX, Brownsville TX, McAllen TX, Harlingen TX, Rio Grande Valley TX
 5. Add **hours:** Sunday 9:00 AM – 12:00 PM, Saturday 6:00 PM – 7:30 PM
-6. Add **phone:** 956-449-0225
+6. Add **phone:** 956-434-6874
 7. Add **website:** https://stjohnrgv.org
 8. Write a **business description** (750 chars max):
 

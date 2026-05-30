@@ -84,7 +84,7 @@ Four cards in a grid:
 
 **F. Contact / Location Strip**
 - Address: 39737 Palm Drive, Bayview, TX 78566
-- Phone: 956-449-0225 (tap-to-call)
+- Phone: 956-434-6874 (tap-to-call)
 - Priest: Fr. Antonios Altermatt
 - Google Maps embed (static or interactive)
 - Contact form (name, email, inquiry type, message)
@@ -172,7 +172,7 @@ Four cards in a grid:
 - "What should I wear?" — modest dress, women's head covering optional but traditional
 - "Do I need to bring anything?" — no, just yourself
 - "Can I receive Communion?" — explanation of Orthodox communion practice (for catechumens / non-Orthodox)
-- "Who can I speak with?" — Fr. Antonios Altermatt, 956-449-0225
+- "Who can I speak with?" — Fr. Antonios Altermatt, 956-434-6874
 
 ---
 
@@ -346,7 +346,7 @@ This is the richest content opportunity on the entire site.
 
 **A. Contact Information**
 - Address (with map)
-- Phone: 956-449-0225 (large, tap-to-call)
+- Phone: 956-434-6874 (large, tap-to-call)
 - Email
 - Fr. Antonios Altermatt (pastor)
 
@@ -452,7 +452,7 @@ Bottom bar: © 2026 St. John of Kronstadt Orthodox Mission · Privacy Policy · 
 const SYSTEM_PROMPT = `You are a warm, welcoming assistant for St. John of Kronstadt Orthodox Mission in Bayview, TX (Rio Grande Valley). 
 
 You help seekers, inquirers, and visitors learn about:
-- The parish: address (39737 Palm Drive, Bayview TX 78566), phone (956-449-0225), Priest Antonios Altermatt
+- The parish: address (39737 Palm Drive, Bayview TX 78566), phone (956-434-6874), Priest Antonios Altermatt
 - Service times: Sunday Liturgy 9:00 AM, Saturday Vespers 6:00 PM
 - Orthodox Christianity: faith, practice, sacraments, the Julian Calendar
 - What to expect at a first visit
@@ -460,7 +460,7 @@ You help seekers, inquirers, and visitors learn about:
 - Our canonical communion (Orthodox Metropolia, Avlona Synod, IPC Katakomb)
 
 Always be warm, patient, and non-judgmental. Never pressure. Invite seekers to "come and see." 
-For questions you cannot answer, direct them to call Fr. Antonios at 956-449-0225.
+For questions you cannot answer, direct them to call Fr. Antonios at 956-434-6874.
 Respond in the same language the user writes in (English or Spanish).`;
 ```
 

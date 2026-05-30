@@ -6,7 +6,7 @@ const contactSchema = {
   "@type": "LocalBusiness",
   "name": "St. John of Kronstadt Orthodox Mission",
   "url": "https://stjohnrgv.org/contact/",
-  "telephone": "+1-956-449-0225",
+  "telephone": "+1-956-434-6874",
   "email": "parishoffice@stjohnrgv.org",
   "address": {
     "@type": "PostalAddress",
@@ -94,7 +94,7 @@ const contactSchema = {
             <div class="mt-5">
               <p class="text-xs font-semibold uppercase tracking-widest text-text-secondary">Phone</p>
               <p class="mt-1.5 text-text-primary/85">
-                <a href="tel:+19564490225">(956) 449-0225</a>
+                <a href="tel:+19564346874">(956) 434-6874</a>
               </p>
             </div>
 
@@ -246,7 +246,7 @@ const contactSchema = {
             <p class="mt-4 text-text-primary/85 leading-relaxed">
               Your message has been received. We will respond as soon as we are
               able. If your matter is urgent, please call
-              <a href="tel:+19564490225">(956) 449-0225</a>.
+              <a href="tel:+19564346874">(956) 434-6874</a>.
             </p>
           </div>
         </div>
@@ -317,13 +317,13 @@ const contactSchema = {
             const json = await res.json().catch(() => ({}));
             const msg =
               (Array.isArray(json?.errors) && json.errors.map((e: { message: string }) => e.message).join(" ")) ||
-              "Something went wrong sending your message. Please try again, or call (956) 449-0225.";
+              "Something went wrong sending your message. Please try again, or call (956) 434-6874.";
             errorEl.textContent = msg;
             errorEl.hidden = false;
           }
         } catch {
           errorEl.textContent =
-            "Couldn't reach the form server. Please check your connection, or call (956) 449-0225.";
+            "Couldn't reach the form server. Please check your connection, or call (956) 434-6874.";
           errorEl.hidden = false;
         } finally {
           submitBtn.disabled = false;
