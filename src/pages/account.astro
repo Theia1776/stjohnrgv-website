@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="My Account">
-  <main class="max-w-2xl mx-auto px-4 py-12">
+  <main class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold mb-8">My Account</h1>
 
     <!-- Profile Photo -->
@@ -70,7 +70,9 @@ import Layout from "../layouts/Layout.astro";
 
     <form id="profile-form" class="space-y-8">
 
-      <!-- Communications + Directory -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+      <!-- Communications + Directory (left column) -->
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
 
@@ -108,6 +110,9 @@ import Layout from "../layouts/Layout.astro";
           </div>
         </div>
       </section>
+
+      <!-- Contact info (right column) -->
+      <div class="space-y-8">
 
       <!-- Basic Info -->
       <section>
@@ -218,6 +223,9 @@ import Layout from "../layouts/Layout.astro";
             class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
         </div>
       </section>
+
+      </div><!-- /contact info (right column) -->
+      </div><!-- /grid -->
 
       <!-- Save -->
       <div class="flex items-center gap-4 pt-2">
