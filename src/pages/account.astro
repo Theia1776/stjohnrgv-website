@@ -72,7 +72,10 @@ import Layout from "../layouts/Layout.astro";
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
-      <!-- Communications + Directory (left column) -->
+      <!-- Left column: directory opt-in + Save -->
+      <div class="space-y-6">
+
+      <!-- Communications + Directory -->
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
 
@@ -110,6 +113,16 @@ import Layout from "../layouts/Layout.astro";
           </div>
         </div>
       </section>
+
+      <!-- Save -->
+      <div class="flex items-center gap-4 pt-2">
+        <button type="submit" class="btn btn-primary">
+          Save Changes
+        </button>
+        <span id="save-status" class="text-sm hidden"></span>
+      </div>
+
+      </div><!-- /left column -->
 
       <!-- Contact info (right column) -->
       <div class="space-y-8">
@@ -226,14 +239,6 @@ import Layout from "../layouts/Layout.astro";
 
       </div><!-- /contact info (right column) -->
       </div><!-- /grid -->
-
-      <!-- Save -->
-      <div class="flex items-center gap-4 pt-2">
-        <button type="submit" class="btn btn-primary">
-          Save Changes
-        </button>
-        <span id="save-status" class="text-sm hidden"></span>
-      </div>
 
     </form>
   </main>
