@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Function: POST /api/admin/update-contact
  *
- * Body: { id: string, updates: { ...profile fields, email? } }
+ * Body: { id: string, updates: { ...profile fields, email?, role? } }
  *
  * Lets an admin edit another member's contact details from the Contact
  * List. The self-service /api/profile PATCH only edits the logged-in
@@ -12,7 +12,16 @@
  * identity), not just the profile, so when it changes we update the
  * auth user too and mirror it onto profiles.email.
  *
- * Admin-only, same role check as the other admin endpoints.
+ * Permission model:
+ *   - Admin-only (role = 'admin').
+ *   - The MASTER admin (profiles.is_master_admin) is protected: no other
+ *     admin may edit, rename, re-email, demote, or otherwise touch that
+ *     account. Only the master themselves can edit their own row.
+ *   - Granting or revoking the Admin role is master-only. Ordinary
+ *     admins may move people between Catechumen and Member, but may not
+ *     create another admin or change an existing admin's role.
+ *   - Directory opt-ins are intentionally NOT editable here — a member's
+ *     public-directory choices stay exactly as they set them.
  */
 import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
@@ -24,18 +33,16 @@ interface Env {
 
 // Profile columns an admin may edit here. Mirrors the self-service
 // allow-list in functions/api/profile.ts, minus the avatar (no upload
-// path from the admin UI) and the per-field directory toggles (not
-// surfaced on the Contact List). `email` is handled separately below.
+// path from the admin UI) and the directory opt-ins (a member's
+// public-directory choices are left untouched). `email` and `role` are
+// handled separately below.
 const PATCH_ALLOWED = [
   "first_name", "last_name", "phone",
   "address_line1", "address_line2", "city", "state", "zip",
   "emergency_name", "emergency_relationship", "emergency_phone",
   "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
-  "opt_in_directory",
 ] as const;
 
-// Allowed parish roles. `role` is edited separately from PATCH_ALLOWED
-// because it needs validation and a self-change guard.
 const VALID_ROLES = ["catechumen", "member", "admin"] as const;
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -70,12 +77,26 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const { data: requester, error: requesterError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_master_admin")
       .eq("id", session.user.id)
       .single();
 
     if (requesterError) return wrap(jsonResponse({ error: requesterError.message }, 500));
     if (requester?.role !== "admin") return wrap(jsonResponse({ error: "Forbidden" }, 403));
+    const requesterIsMaster = requester?.is_master_admin === true;
+
+    // Look up the target's current role + master flag for the guards below.
+    const { data: target, error: targetError } = await supabase
+      .from("profiles")
+      .select("role, is_master_admin")
+      .eq("id", id)
+      .single();
+    if (targetError) return wrap(jsonResponse({ error: "Member not found." }, 404));
+
+    // Master protection: nobody but the master may touch the master's row.
+    if (target?.is_master_admin === true && id !== session.user.id) {
+      return wrap(jsonResponse({ error: "This account is protected and can't be edited." }, 403));
+    }
 
     // Build the profile patch from the allow-list.
     const profileUpdates: Record<string, unknown> = {};
@@ -83,14 +104,22 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       if (key in updates) profileUpdates[key] = updates[key];
     }
 
-    // Role is special: validate it, and never let an admin change their
-    // own role (guards against accidentally demoting yourself out of
-    // admin). A self role-change is ignored rather than erroring so the
-    // member's other edits still save.
+    // Role changes. Skip silently for self (you can't change your own role
+    // here — guards against demoting yourself out of admin).
     if ("role" in updates && id !== session.user.id) {
       const role = typeof updates.role === "string" ? updates.role : "";
       if (!VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
         return wrap(jsonResponse({ error: "Invalid role." }, 400));
+      }
+      // Granting Admin, or changing someone who is already an Admin, is
+      // master-only. Ordinary admins may only move people between
+      // Catechumen and Member.
+      const involvesAdmin = role === "admin" || target?.role === "admin";
+      if (involvesAdmin && !requesterIsMaster) {
+        return wrap(jsonResponse(
+          { error: "Only the master admin can grant or change the Admin role." },
+          403,
+        ));
       }
       profileUpdates.role = role;
     }

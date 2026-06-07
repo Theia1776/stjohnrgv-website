@@ -32,20 +32,25 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   // doesn't sign the user out of the UI — they just lose any admin
   // affordances until the next request succeeds.
   let role = "member";
+  let isMasterAdmin = false;
   try {
     const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
     const { data } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_master_admin")
       .eq("id", session.user.id)
       .single();
     if (data?.role) role = data.role;
+    if (data?.is_master_admin) isMasterAdmin = true;
   } catch {
     // Keep default.
   }
 
   return withSessionCookies(
-    jsonResponse({ loggedIn: true, id: session.user.id, name: getFirstName(session.user), role }, 200),
+    jsonResponse(
+      { loggedIn: true, id: session.user.id, name: getFirstName(session.user), role, is_master_admin: isMasterAdmin },
+      200,
+    ),
     session.refreshedCookies,
   );
 }

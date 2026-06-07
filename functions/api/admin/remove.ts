@@ -70,6 +70,18 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     if (requesterError) return wrap(jsonResponse({ error: requesterError.message }, 500));
     if (requester?.role !== "admin") return wrap(jsonResponse({ error: "Forbidden" }, 403));
 
+    // The master admin can't be removed by anyone through this endpoint
+    // (and can't remove themselves — caught by the self-guard above). To
+    // retire the master account, do it from the Supabase dashboard.
+    const { data: target } = await supabase
+      .from("profiles")
+      .select("is_master_admin")
+      .eq("id", id)
+      .single();
+    if (target?.is_master_admin === true) {
+      return wrap(jsonResponse({ error: "This account is protected and can't be removed." }, 403));
+    }
+
     // Best-effort avatar cleanup. Storage objects aren't covered by the
     // auth.users cascade, so list and remove anything under this user's
     // avatar folder. Failures here shouldn't block the account deletion.

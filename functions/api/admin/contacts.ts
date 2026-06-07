@@ -42,14 +42,19 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select(
-        "id, role, first_name, last_name, phone, " +
+        "id, role, is_master_admin, first_name, last_name, phone, " +
         "address_line1, address_line2, city, state, zip, " +
         "emergency_name, emergency_relationship, emergency_phone, " +
         "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
+        "opt_in_communications, " +
         "opt_in_directory, directory_show_phone, directory_show_email, directory_show_address, " +
         "avatar_url",
       )
-      .eq("opt_in_communications", true)
+      // Every registered member is listed so an admin can manage anyone.
+      // (Previously filtered to opt_in_communications = true.) Consent is
+      // still respected where it matters: "Copy All Emails" only pulls
+      // those who opted into communications, and the directory is driven
+      // separately by opt_in_directory.
       .order("last_name", { ascending: true });
 
     if (profilesError) return wrap(jsonResponse({ error: profilesError.message }, 500));
