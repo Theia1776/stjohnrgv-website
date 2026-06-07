@@ -106,7 +106,15 @@ import Layout from "../layouts/Layout.astro";
               <input id="directory_show_address" name="directory_show_address" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
               Share my mailing address
             </label>
-            <p class="text-xs text-gray-500">Choose which email to share using the checkboxes next to your Primary and Secondary email above.</p>
+            <div class="flex items-center gap-2 text-sm flex-wrap">
+              <label for="dir_email_choice">Include</label>
+              <select id="dir_email_choice" class="border rounded px-2 py-1 text-sm">
+                <option value="">no email</option>
+                <option value="primary">my primary email</option>
+                <option value="secondary">my secondary email</option>
+              </select>
+              <span>in the directory</span>
+            </div>
           </div>
         </div>
       </section>
@@ -144,20 +152,13 @@ import Layout from "../layouts/Layout.astro";
           <input id="email" name="email" type="email" autocomplete="email"
             class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
           <p class="text-xs text-gray-500 mt-1">Used to sign in and to receive password resets.</p>
-          <label class="flex items-center gap-2 text-sm cursor-pointer mt-2">
-            <input id="dir_primary" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-            Show this email in the parish directory
-          </label>
         </div>
 
         <div class="mt-4">
           <label class="block text-sm font-medium mb-1" for="public_email">Secondary Email <span class="text-gray-400 font-normal">(optional)</span></label>
           <input id="public_email" name="public_email" type="email" autocomplete="off" placeholder="e.g. parishoffice@stjohnrgv.org"
             class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
-          <label class="flex items-center gap-2 text-sm cursor-pointer mt-2">
-            <input id="dir_secondary" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-            Show this email in the parish directory instead
-          </label>
+          <p class="text-xs text-gray-500 mt-1">An optional second email you can list in the directory instead of your primary.</p>
         </div>
         <div class="mt-4">
           <label class="block text-sm font-medium mb-1" for="phone">Phone Number <span class="text-gray-400 font-normal">(optional)</span></label>
@@ -317,11 +318,13 @@ import Layout from "../layouts/Layout.astro";
     setChecked("opt_in_directory", profile.opt_in_directory);
     setChecked("directory_show_phone", profile.directory_show_phone);
     setChecked("directory_show_address", profile.directory_show_address);
-    // Email-in-directory choice: primary vs secondary (or neither).
-    const showsEmail = Boolean(profile.directory_show_email);
-    const usesSecondary = Boolean(profile.directory_use_secondary_email);
-    setChecked("dir_primary", showsEmail && !usesSecondary);
-    setChecked("dir_secondary", showsEmail && usesSecondary);
+    // Email-in-directory choice: none / primary / secondary.
+    const dirEmailSelect = document.getElementById("dir_email_choice") as HTMLSelectElement | null;
+    if (dirEmailSelect) {
+      dirEmailSelect.value = !profile.directory_show_email
+        ? ""
+        : profile.directory_use_secondary_email ? "secondary" : "primary";
+    }
 
     if (profile.opt_in_directory) {
       document.getElementById("directory-options")?.classList.remove("hidden");
@@ -340,17 +343,6 @@ import Layout from "../layouts/Layout.astro";
 
   loadProfile();
 
-  // Email-in-directory checkboxes are mutually exclusive — you can show
-  // your primary OR secondary email, not both.
-  const dirPrimary = document.getElementById("dir_primary") as HTMLInputElement | null;
-  const dirSecondary = document.getElementById("dir_secondary") as HTMLInputElement | null;
-  dirPrimary?.addEventListener("change", () => {
-    if (dirPrimary.checked && dirSecondary) dirSecondary.checked = false;
-  });
-  dirSecondary?.addEventListener("change", () => {
-    if (dirSecondary.checked && dirPrimary) dirPrimary.checked = false;
-  });
-
   // Directory opt-in: master checkbox toggles visibility of sub-options.
   // When unchecked, also clear the sub-options so a save doesn't keep
   // leaking fields the user thought they hid.
@@ -361,6 +353,8 @@ import Layout from "../layouts/Layout.astro";
     if (!dirMaster.checked) {
       setChecked("directory_show_phone", false);
       setChecked("directory_show_address", false);
+      const sel = document.getElementById("dir_email_choice") as HTMLSelectElement | null;
+      if (sel) sel.value = "";
     }
   });
 
@@ -453,6 +447,7 @@ import Layout from "../layouts/Layout.astro";
     e.preventDefault();
     const data = new FormData(form);
     const stateRaw = strOrNull(data.get("state"));
+    const dirEmailChoice = (document.getElementById("dir_email_choice") as HTMLSelectElement | null)?.value ?? "";
     const payload: Record<string, unknown> = {
       first_name: strOrNull(data.get("first_name")),
       last_name: strOrNull(data.get("last_name")),
@@ -476,8 +471,8 @@ import Layout from "../layouts/Layout.astro";
       opt_in_communications: checked("opt_in_communications"),
       opt_in_directory: checked("opt_in_directory"),
       directory_show_phone: checked("directory_show_phone"),
-      directory_show_email: checked("dir_primary") || checked("dir_secondary"),
-      directory_use_secondary_email: checked("dir_secondary"),
+      directory_show_email: dirEmailChoice !== "",
+      directory_use_secondary_email: dirEmailChoice === "secondary",
       directory_show_address: checked("directory_show_address"),
     };
 
