@@ -71,7 +71,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     return jsonResponse({ error: "Server not configured." }, 500);
   }
 
-  let body: { email?: unknown; password?: unknown; full_name?: unknown };
+  let body: { email?: unknown; password?: unknown; full_name?: unknown; phone?: unknown };
   try {
     body = await context.request.json();
   } catch {
@@ -81,9 +81,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
   const full_name = typeof body.full_name === "string" ? body.full_name.trim() : "";
+  const phone = typeof body.phone === "string" ? body.phone.trim() : "";
 
-  if (!email || !password || !full_name) {
-    return jsonResponse({ error: "Name, email, and password are required." }, 400);
+  if (!email || !password || !full_name || !phone) {
+    return jsonResponse({ error: "Name, email, phone, and password are required." }, 400);
   }
   if (password.length < MIN_PASSWORD) {
     return jsonResponse(
@@ -94,6 +95,18 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return jsonResponse({ error: "Please enter a valid email address." }, 400);
   }
+  // Require a plausible phone number — at least 10 digits once any
+  // formatting (spaces, dashes, parens, +) is stripped.
+  if (phone.replace(/\D/g, "").length < 10) {
+    return jsonResponse({ error: "Please enter a valid phone number (at least 10 digits)." }, 400);
+  }
+
+  // Split the full name into first/last so the admin Contact List and
+  // directory show a real name. First token is the first name; the
+  // remainder (if any) is the last name.
+  const nameParts = full_name.split(/\s+/);
+  const first_name = nameParts[0] ?? "";
+  const last_name = nameParts.slice(1).join(" ");
 
   const admin = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -122,6 +135,9 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     id: created.user.id,
     email,
     full_name,
+    first_name,
+    last_name,
+    phone,
     role: "catechumen",
     approved: false,
   });

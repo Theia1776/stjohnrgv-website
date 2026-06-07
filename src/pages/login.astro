@@ -136,6 +136,20 @@ import Layout from "../layouts/Layout.astro";
           </div>
 
           <div>
+            <label for="register-phone" class="block text-sm font-semibold text-text-primary">
+              Phone <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+            </label>
+            <input
+              id="register-phone"
+              name="phone"
+              type="tel"
+              required
+              autocomplete="tel"
+              class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+            />
+          </div>
+
+          <div>
             <label for="register-password" class="block text-sm font-semibold text-text-primary">
               Password <span aria-hidden="true" class="text-brand-tan-dark">*</span>
             </label>
@@ -280,6 +294,7 @@ import Layout from "../layouts/Layout.astro";
           body: JSON.stringify({
             full_name: (document.getElementById("register-name") as HTMLInputElement).value,
             email: (document.getElementById("register-email") as HTMLInputElement).value,
+            phone: (document.getElementById("register-phone") as HTMLInputElement).value,
             password: (document.getElementById("register-password") as HTMLInputElement).value,
           }),
         });
