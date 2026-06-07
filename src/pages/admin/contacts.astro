@@ -70,6 +70,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Emergency 1</th>
                 <th class="p-2">Emergency 2</th>
                 <th class="p-2">Directory</th>
+                <th class="p-2 text-right no-print">Action</th>
               </tr>
             </thead>
             <tbody id="contacts-tbody"></tbody>
@@ -261,7 +262,8 @@ import Layout from "../../layouts/Layout.astro";
           ? `${c.emergency_name_2}${c.emergency_relationship_2 ? ` (${c.emergency_relationship_2})` : ""}${c.emergency_phone_2 ? ` ${c.emergency_phone_2}` : ""}`
           : "";
 
-        return `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40">
+        const displayName = `${c.last_name ?? ""}, ${c.first_name ?? ""}`.trim().replace(/^,\s*$/, "") || c.email || "this member";
+        return `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(c.id)}">
           <td class="p-2">${escapeHtml(c.last_name ?? "")}, ${escapeHtml(c.first_name ?? "")}</td>
           <td class="p-2">${escapeHtml(c.email)}</td>
           <td class="p-2">${escapeHtml(c.phone ?? "—")}</td>
@@ -269,6 +271,9 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2 text-xs">${escapeHtml(e1 || "—")}</td>
           <td class="p-2 text-xs">${escapeHtml(e2 || "—")}</td>
           <td class="p-2 text-center">${c.opt_in_directory ? "✓" : "—"}</td>
+          <td class="p-2 text-right no-print whitespace-nowrap">
+            <button type="button" class="btn btn-secondary remove-btn" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(displayName)}">Remove</button>
+          </td>
         </tr>`;
       })
       .join("");
@@ -382,6 +387,59 @@ import Layout from "../../layouts/Layout.astro";
     if (ok) {
       pendingList = pendingList.filter((p) => p.id !== id);
       renderPending(pendingList);
+    } else {
+      btn.disabled = false;
+    }
+  });
+
+  async function removeContact(id: string): Promise<boolean> {
+    const res = await fetch("/api/admin/remove", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't remove: ${body.error ?? res.status}`);
+      return false;
+    }
+    return true;
+  }
+
+  // Delegated handler for the Remove buttons in the Contact List. Rows
+  // re-render on search/removal, so a delegated listener avoids stale
+  // per-row handlers (same approach as the pending table above).
+  document.getElementById("contacts-tbody")?.addEventListener("click", async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    const btn = target?.closest(".remove-btn") as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    if (!id) return;
+    const name = btn.dataset.name || "this member";
+
+    if (!window.confirm(
+      `Remove ${name}?\n\nThis permanently deletes their account, profile, ` +
+      `directory listing, and any coffee-hour signups. They will no longer ` +
+      `be able to sign in. This cannot be undone.`,
+    )) {
+      return;
+    }
+
+    btn.disabled = true;
+    const ok = await removeContact(id);
+    if (ok) {
+      // Drop them from the in-memory list and re-render with the current
+      // search filter applied so the row disappears immediately.
+      allContacts = allContacts.filter((c) => c.id !== id);
+      const searchEl = document.getElementById("search") as HTMLInputElement | null;
+      const q = (searchEl?.value ?? "").toLowerCase();
+      const filtered = q
+        ? allContacts.filter((c) => `${c.first_name ?? ""} ${c.last_name ?? ""}`.toLowerCase().includes(q))
+        : allContacts;
+      renderContacts(filtered);
     } else {
       btn.disabled = false;
     }
