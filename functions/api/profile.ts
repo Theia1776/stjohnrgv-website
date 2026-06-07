@@ -16,7 +16,8 @@ const PROFILE_COLUMNS =
   "emergency_name, emergency_relationship, emergency_phone, " +
   "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
   "opt_in_communications, " +
-  "opt_in_directory, directory_show_phone, directory_show_email, directory_show_address";
+  "opt_in_directory, directory_show_phone, directory_show_email, directory_show_address, " +
+  "directory_use_secondary_email";
 
 const PATCH_ALLOWED = [
   "first_name", "last_name", "phone", "avatar_url", "public_email",
@@ -25,6 +26,7 @@ const PATCH_ALLOWED = [
   "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
   "opt_in_communications",
   "opt_in_directory", "directory_show_phone", "directory_show_email", "directory_show_address",
+  "directory_use_secondary_email",
 ] as const;
 
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -81,12 +83,46 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
       return wrap(jsonResponse({ error: "Invalid JSON" }, 400));
     }
 
-    const updates: Partial<Record<typeof PATCH_ALLOWED[number], unknown>> = {};
+    const updates: Record<string, unknown> = {};
     for (const key of PATCH_ALLOWED) {
       if (key in body) updates[key] = body[key];
     }
 
     const supabase = getSupabase(context.env);
+
+    // Primary email = the sign-in (auth.users) email. When it changes we
+    // update it immediately (no confirmation code — the member is already
+    // signed in) and mirror it onto profiles.email.
+    if ("email" in body) {
+      const newEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const currentEmail = (session.user.email ?? "").toLowerCase();
+      if (newEmail && newEmail !== currentEmail) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)) {
+          return wrap(jsonResponse({ error: "Please enter a valid primary email address." }, 400));
+        }
+        const { data: taken } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", newEmail)
+          .neq("id", session.user.id)
+          .maybeSingle();
+        if (taken) {
+          return wrap(jsonResponse({ error: "Another account already uses that email." }, 409));
+        }
+        const { error: emailErr } = await supabase.auth.admin.updateUserById(session.user.id, {
+          email: newEmail,
+          email_confirm: true,
+        });
+        if (emailErr) {
+          if (/registered|exists|duplicate/i.test(emailErr.message)) {
+            return wrap(jsonResponse({ error: "Another account already uses that email." }, 409));
+          }
+          return wrap(jsonResponse({ error: `Couldn't update email: ${emailErr.message}` }, 500));
+        }
+        updates.email = newEmail;
+      }
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update(updates)

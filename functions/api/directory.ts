@@ -66,7 +66,7 @@ export async function onRequestGet(
         "id, first_name, last_name, role, avatar_url, " +
         "phone, directory_show_phone, " +
         "address_line1, address_line2, city, state, zip, directory_show_address, " +
-        "directory_show_email, public_email",
+        "directory_show_email, public_email, directory_use_secondary_email",
       )
       .eq("opt_in_directory", true)
       .order("last_name", { ascending: true })
@@ -92,9 +92,12 @@ export async function onRequestGet(
       role: p.role,
       avatar_url: p.avatar_url,
       phone: p.directory_show_phone ? p.phone : null,
-      // Prefer the member's chosen public/directory email; fall back to
-      // their sign-in email when they haven't set a separate one.
-      email: p.directory_show_email ? (p.public_email || emailMap[p.id] || "") : null,
+      // Show the email the member chose for the directory: their secondary
+      // (public_email) if they picked it, otherwise their primary (sign-in)
+      // email. Nulled out entirely when they share no email.
+      email: p.directory_show_email
+        ? (p.directory_use_secondary_email ? (p.public_email || emailMap[p.id] || "") : (emailMap[p.id] || ""))
+        : null,
       address_line1: p.directory_show_address ? p.address_line1 : null,
       address_line2: p.directory_show_address ? p.address_line2 : null,
       city: p.directory_show_address ? p.city : null,
