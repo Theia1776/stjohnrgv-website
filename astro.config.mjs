@@ -20,6 +20,7 @@ export default defineConfig({
         !page.includes('/coffee-hour') &&
         !page.includes('/admin') &&
         !page.includes('/login') &&
+        !page.includes('/reset-password') &&
         !page.includes('/seasons-preview'),
     }),
   ],

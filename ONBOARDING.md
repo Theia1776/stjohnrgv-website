@@ -208,6 +208,25 @@ Configured in the Cloudflare Pages dashboard, NOT in the repo:
 
 - `SUPABASE_SERVICE_ROLE_KEY` — used by server functions; bypasses RLS.
   Never expose to client code.
+- `RESEND_API_KEY` — secret API key from the [Resend](https://resend.com)
+  dashboard. Used by the password-reset flow
+  ([functions/api/auth/forgot.ts](functions/api/auth/forgot.ts)) to email
+  members their reset code.
+- `RESET_EMAIL_FROM` — the From address for reset emails, e.g.
+  `St. John of Kronstadt <no-reply@stjohnrgv.org>`. **The domain must be
+  verified in Resend first** (add the DKIM/SPF DNS records Resend gives
+  you for `stjohnrgv.org`). Until the domain is verified, Resend's sandbox
+  only delivers to the Resend account owner's own email, so real members
+  won't receive codes.
+
+**Password-reset setup checklist** (one-time):
+1. Create a free Resend account; add and verify the `stjohnrgv.org` domain
+   (DNS records in the Cloudflare DNS dashboard).
+2. Create an API key → set `RESEND_API_KEY` in Cloudflare Pages.
+3. Set `RESET_EMAIL_FROM` to a `@stjohnrgv.org` sender on the verified
+   domain.
+4. Apply [supabase/migrations/007_password_resets.sql](supabase/migrations/007_password_resets.sql)
+   in the Supabase SQL editor.
 
 Public Supabase constants (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `SESSION_COOKIE`, etc.) live in [src/lib/supabase.ts](src/lib/supabase.ts)
