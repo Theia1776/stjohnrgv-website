@@ -92,7 +92,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     const { data, error } = await supabase
       .from("library_books")
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -149,8 +149,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const languagesRaw = String(formData.get("languages") ?? "English").trim();
     const description = String(formData.get("description") ?? "").trim();
     const slugRaw = String(formData.get("slug") ?? "").trim();
-    // Checkboxes submit "on" when checked, nothing when unchecked.
-    const publicAccess = formData.get("public_access") != null;
+    // Visibility: "hidden" (staging, admins only) | "parish" | "public".
+    // Defaults to hidden so a bulk upload lands safely in staging until
+    // an admin promotes it.
+    const visibility = String(formData.get("visibility") ?? "").trim();
+    const hidden = visibility !== "parish" && visibility !== "public";
+    const publicAccess = visibility === "public";
 
     if (!title) return wrap(jsonResponse({ error: "Title is required." }, 400));
 
@@ -209,8 +213,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         description: description || null,
         pdf_storage_key: storageKey,
         public_access: publicAccess,
+        hidden,
       })
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, created_at, updated_at")
       .single();
 
     if (insertError) {

@@ -53,23 +53,34 @@ export async function onRequestGet(
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 
-  // Anonymous visitors must be reading a public book. Confirm by
-  // looking up the row by storage key — there's a unique index on
-  // pdf_storage_key so this is a single-row lookup.
+  // Look up the book by storage key (unique) to enforce visibility.
+  const { data: book, error: lookupError } = await admin
+    .from("library_books")
+    .select("public_access, hidden")
+    .eq("pdf_storage_key", key)
+    .maybeSingle();
+  if (lookupError) {
+    return wrap(jsonResponse({ error: lookupError.message }, 500));
+  }
+  if (!book) {
+    return wrap(jsonResponse({ error: "File not found." }, 404));
+  }
+
   if (!session.user) {
-    const { data: book, error: lookupError } = await admin
-      .from("library_books")
-      .select("public_access")
-      .eq("pdf_storage_key", key)
-      .maybeSingle();
-    if (lookupError) {
-      return wrap(jsonResponse({ error: lookupError.message }, 500));
-    }
-    if (!book) {
-      return wrap(jsonResponse({ error: "File not found." }, 404));
-    }
-    if (!book.public_access) {
+    // Anonymous: only public, non-hidden books.
+    if (!book.public_access || book.hidden) {
       return wrap(jsonResponse({ error: "This text is for parishioners only. Please sign in." }, 403));
+    }
+  } else if (book.hidden) {
+    // Hidden/staging books are readable only by admins (for review
+    // before they're promoted to parishioners or the public).
+    const { data: viewer } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    if (viewer?.role !== "admin") {
+      return wrap(jsonResponse({ error: "This text isn't available yet." }, 403));
     }
   }
 

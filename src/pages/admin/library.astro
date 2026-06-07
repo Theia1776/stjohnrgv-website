@@ -12,8 +12,9 @@ import Layout from "../../layouts/Layout.astro";
     <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
     <h1 class="font-display text-3xl text-text-primary mb-2 md:text-4xl">Parish Library</h1>
     <p class="text-text-secondary mb-6">
-      Upload new books and edit or remove existing ones. PDFs are stored privately;
-      only logged-in parishioners can read them.
+      Upload new books and edit or remove existing ones. New uploads default to
+      <strong>Hidden (staging)</strong> — stored safely but visible only to admins —
+      so you can promote each one to parishioners or the public when you're ready.
     </p>
 
     <div id="loading" class="text-text-secondary">Loading…</div>
@@ -124,21 +125,21 @@ import Layout from "../../layouts/Layout.astro";
             />
           </div>
 
-          <label class="flex items-start gap-2 cursor-pointer">
-            <input
-              id="public_access"
-              name="public_access"
-              type="checkbox"
-              class="mt-0.5 h-4 w-4"
-            />
-            <span class="text-sm">
-              <span class="font-semibold">Make publicly accessible</span>
-              <span class="block text-text-secondary text-xs">
-                Allow visitors who are NOT logged in to browse and read this book.
-                Leave unchecked for parishioners-only texts.
-              </span>
-            </span>
-          </label>
+          <div>
+            <label for="visibility" class="block text-sm font-semibold mb-1">Visibility</label>
+            <select
+              id="visibility"
+              name="visibility"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            >
+              <option value="hidden" selected>Hidden — staging (admins only)</option>
+              <option value="parish">Parishioners only (logged-in)</option>
+              <option value="public">Public (anyone, even logged-out)</option>
+            </select>
+            <p class="mt-1 text-xs text-text-secondary">
+              New books default to Hidden so they're stored safely until you promote them.
+            </p>
+          </div>
 
           <div class="flex items-center gap-3">
             <button id="upload-btn" type="submit" class="btn btn-primary">
@@ -216,15 +217,14 @@ import Layout from "../../layouts/Layout.astro";
               <p class="mt-1 text-xs text-text-secondary">Changing this breaks existing links to the book.</p>
             </div>
 
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input id="edit-public" type="checkbox" class="mt-0.5 h-4 w-4" />
-              <span class="text-sm">
-                <span class="font-semibold">Publicly accessible</span>
-                <span class="block text-text-secondary text-xs">
-                  Allow non-logged-in visitors to read this book.
-                </span>
-              </span>
-            </label>
+            <div>
+              <label for="edit-visibility" class="block text-sm font-semibold mb-1">Visibility</label>
+              <select id="edit-visibility" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2">
+                <option value="hidden">Hidden — staging (admins only)</option>
+                <option value="parish">Parishioners only (logged-in)</option>
+                <option value="public">Public (anyone, even logged-out)</option>
+              </select>
+            </div>
 
             <div class="flex items-center justify-end gap-3 border-t border-border-soft pt-4">
               <span id="edit-status" class="text-sm text-text-secondary mr-auto"></span>
@@ -248,7 +248,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Author</th>
                 <th class="p-2">Category</th>
                 <th class="p-2">Languages</th>
-                <th class="p-2 text-center" title="Public = visible to non-logged-in visitors">Public</th>
+                <th class="p-2">Visibility</th>
                 <th class="p-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -274,6 +274,7 @@ import Layout from "../../layouts/Layout.astro";
     description: string | null;
     pdf_storage_key: string;
     public_access: boolean;
+    hidden: boolean;
     created_at: string;
     updated_at: string;
   };
@@ -351,15 +352,12 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2">${escapeHtml(b.author ?? "—")}</td>
           <td class="p-2">${escapeHtml(b.category)}</td>
           <td class="p-2 text-xs">${escapeHtml((b.languages ?? []).join(", "))}</td>
-          <td class="p-2 text-center">
-            <button
-              type="button"
-              class="public-toggle inline-flex items-center justify-center w-8 h-8 border border-border-soft hover:border-brand-tan focus:outline-none focus:ring-2 focus:ring-brand-blue-dark transition-colors"
-              data-id="${escapeHtml(b.id)}"
-              data-current="${b.public_access ? "true" : "false"}"
-              title="${b.public_access ? "Public — click to make parishioners-only" : "Parishioners only — click to make public"}"
-              aria-label="${b.public_access ? "Currently public. Click to make parishioners-only." : "Currently parishioners only. Click to make public."}"
-            >${b.public_access ? "✓" : "—"}</button>
+          <td class="p-2">
+            <select class="visibility-select border border-border-soft bg-cream-bg px-2 py-1 text-xs focus:outline-none focus:ring-2" data-id="${escapeHtml(b.id)}" aria-label="Visibility">
+              <option value="hidden"${b.hidden ? " selected" : ""}>Hidden</option>
+              <option value="parish"${!b.hidden && !b.public_access ? " selected" : ""}>Parishioners</option>
+              <option value="public"${!b.hidden && b.public_access ? " selected" : ""}>Public</option>
+            </select>
           </td>
           <td class="p-2 text-right whitespace-nowrap">
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
@@ -410,34 +408,10 @@ import Layout from "../../layouts/Layout.astro";
     if (!target) return;
     const editBtn = target.closest(".edit-btn") as HTMLButtonElement | null;
     const deleteBtn = target.closest(".delete-btn") as HTMLButtonElement | null;
-    const publicBtn = target.closest(".public-toggle") as HTMLButtonElement | null;
-    if (!editBtn && !deleteBtn && !publicBtn) return;
+    if (!editBtn && !deleteBtn) return;
 
-    const id = (editBtn ?? deleteBtn ?? publicBtn)?.dataset.id;
+    const id = (editBtn ?? deleteBtn)?.dataset.id;
     if (!id) return;
-
-    if (publicBtn) {
-      const currentPublic = publicBtn.dataset.current === "true";
-      const next = !currentPublic;
-      publicBtn.disabled = true;
-      const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ public_access: next }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        showError(`Couldn't update: ${body.error ?? res.status}`);
-        publicBtn.disabled = false;
-        return;
-      }
-      const idx = books.findIndex((b) => b.id === id);
-      if (idx !== -1) books[idx].public_access = next;
-      render();
-      return;
-    }
 
     if (editBtn) {
       const book = books.find((b) => b.id === id);
@@ -466,6 +440,43 @@ import Layout from "../../layouts/Layout.astro";
     }
   });
 
+  // ====================== VISIBILITY DROPDOWN (delegated change) ======================
+  document.getElementById("books-tbody")?.addEventListener("change", async (ev) => {
+    const sel = (ev.target as HTMLElement | null)?.closest(".visibility-select") as HTMLSelectElement | null;
+    if (!sel) return;
+    const id = sel.dataset.id;
+    if (!id) return;
+
+    const v = sel.value;
+    const hidden = v === "hidden";
+    const public_access = v === "public";
+
+    sel.disabled = true;
+    try {
+      const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hidden, public_access }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showError(`Couldn't update visibility: ${body.error ?? res.status}`);
+        // Re-render to snap the dropdown back to the stored value.
+        render();
+        return;
+      }
+      const idx = books.findIndex((b) => b.id === id);
+      if (idx !== -1) {
+        books[idx].hidden = hidden;
+        books[idx].public_access = public_access;
+      }
+    } finally {
+      sel.disabled = false;
+    }
+  });
+
   // ============= MODAL-BASED EDITOR =============
   // Replaces the old chain of window.prompt() calls, which Chrome
   // silently kills after the second prompt via its "block additional
@@ -480,7 +491,7 @@ import Layout from "../../layouts/Layout.astro";
   const editLanguagesEl = document.getElementById("edit-languages") as HTMLInputElement;
   const editDescriptionEl = document.getElementById("edit-description") as HTMLTextAreaElement;
   const editSlugEl = document.getElementById("edit-slug") as HTMLInputElement;
-  const editPublicEl = document.getElementById("edit-public") as HTMLInputElement;
+  const editVisibilityEl = document.getElementById("edit-visibility") as HTMLSelectElement;
   const editStatusEl = document.getElementById("edit-status") as HTMLSpanElement;
   const editSaveBtn = document.getElementById("edit-save") as HTMLButtonElement;
   const editCloseBtn = document.getElementById("edit-close") as HTMLButtonElement;
@@ -497,7 +508,7 @@ import Layout from "../../layouts/Layout.astro";
     editLanguagesEl.value = (book.languages ?? []).join(", ");
     editDescriptionEl.value = book.description ?? "";
     editSlugEl.value = book.slug;
-    editPublicEl.checked = !!book.public_access;
+    editVisibilityEl.value = book.hidden ? "hidden" : book.public_access ? "public" : "parish";
     editStatusEl.textContent = "";
     editSaveBtn.disabled = false;
     editModal.removeAttribute("hidden");
@@ -536,7 +547,8 @@ import Layout from "../../layouts/Layout.astro";
       languages: editLanguagesEl.value.split(",").map((s) => s.trim()).filter(Boolean),
       description: editDescriptionEl.value.trim(),
       slug: editSlugEl.value.trim(),
-      public_access: editPublicEl.checked,
+      hidden: editVisibilityEl.value === "hidden",
+      public_access: editVisibilityEl.value === "public",
     };
 
     try {

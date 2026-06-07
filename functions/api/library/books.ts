@@ -41,6 +41,9 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     let query = supabase
       .from("library_books")
       .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access")
+      // Hidden/staging books never appear in the parishioner or public
+      // catalog — admins manage them from /admin/library.
+      .eq("hidden", false)
       .order("title", { ascending: true });
 
     // Anonymous visitors only see books the admin has explicitly
