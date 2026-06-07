@@ -48,7 +48,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
         "id, first_name, last_name, " +
         "phone, directory_show_phone, " +
         "address_line1, address_line2, city, state, zip, directory_show_address, " +
-        "directory_show_email",
+        "directory_show_email, public_email",
       )
       .eq("opt_in_directory", true)
       .order("last_name", { ascending: true });
@@ -69,7 +69,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       first_name: p.first_name,
       last_name: p.last_name,
       phone: p.directory_show_phone ? p.phone : null,
-      email: p.directory_show_email ? (emailMap[p.id] ?? "") : null,
+      email: p.directory_show_email ? (p.public_email || emailMap[p.id] || "") : null,
       address_line1: p.directory_show_address ? p.address_line1 : null,
       address_line2: p.directory_show_address ? p.address_line2 : null,
       city: p.directory_show_address ? p.city : null,

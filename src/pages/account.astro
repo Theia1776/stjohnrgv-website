@@ -143,10 +143,31 @@ import Layout from "../layouts/Layout.astro";
           </div>
         </div>
         <div class="mt-4">
-          <label class="block text-sm font-medium mb-1" for="email">Email</label>
-          <input id="email" type="email" disabled
-            class="w-full border rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed" />
-          <p class="text-xs text-gray-400 mt-1">Contact the parish office to change your email.</p>
+          <label class="block text-sm font-medium mb-1" for="email">Sign-in Email</label>
+          <input id="email" type="email" autocomplete="email"
+            class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          <p class="text-xs text-gray-500 mt-1">Used to sign in and to receive password resets.</p>
+          <div class="mt-2 flex items-center gap-3 flex-wrap">
+            <button type="button" id="email-update-btn" class="btn btn-secondary text-sm">Update Sign-in Email</button>
+            <span id="email-status" class="text-sm hidden"></span>
+          </div>
+          <!-- Verification step (shown for everyone except the master admin,
+               who is switched immediately) -->
+          <div id="email-verify" class="mt-3 hidden">
+            <label class="block text-sm font-medium mb-1" for="email-code">Enter the 6-digit code we emailed to your new address</label>
+            <div class="flex items-center gap-3 flex-wrap">
+              <input id="email-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+                class="w-40 border rounded-md px-3 py-2 text-sm tracking-[0.3em]" />
+              <button type="button" id="email-verify-btn" class="btn btn-primary text-sm">Verify &amp; Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1" for="public_email">Directory Email <span class="text-gray-400 font-normal">(optional)</span></label>
+          <input id="public_email" name="public_email" type="email" autocomplete="off" placeholder="e.g. parishoffice@stjohnrgv.org"
+            class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+          <p class="text-xs text-gray-500 mt-1">Shown in the parish directory instead of your sign-in email. Leave blank to use your sign-in email. (Saved with "Save Changes".)</p>
         </div>
         <div class="mt-4">
           <label class="block text-sm font-medium mb-1" for="phone">Phone Number <span class="text-gray-400 font-normal">(optional)</span></label>
@@ -269,6 +290,10 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
+  // Tracks the saved sign-in email so the change flow can tell whether
+  // the field was actually edited.
+  let currentEmail = "";
+
   async function loadProfile() {
     const res = await fetch("/api/profile", {
       credentials: "same-origin",
@@ -286,7 +311,11 @@ import Layout from "../layouts/Layout.astro";
     setInputValue("first_name", profile.first_name);
     setInputValue("last_name", profile.last_name);
     setInputValue("email", profile.email);
+    setInputValue("public_email", profile.public_email);
     setInputValue("phone", profile.phone);
+    // Remember the saved sign-in email so the email-change flow knows
+    // whether the field actually changed.
+    currentEmail = typeof profile.email === "string" ? profile.email : "";
 
     setInputValue("address_line1", profile.address_line1);
     setInputValue("address_line2", profile.address_line2);
@@ -323,6 +352,88 @@ import Layout from "../layouts/Layout.astro";
   }
 
   loadProfile();
+
+  // ---- Sign-in email change (verified, except the master admin) --------
+  const emailInput = document.getElementById("email") as HTMLInputElement;
+  const emailUpdateBtn = document.getElementById("email-update-btn") as HTMLButtonElement;
+  const emailStatus = document.getElementById("email-status") as HTMLSpanElement;
+  const emailVerify = document.getElementById("email-verify") as HTMLDivElement;
+  const emailCode = document.getElementById("email-code") as HTMLInputElement;
+  const emailVerifyBtn = document.getElementById("email-verify-btn") as HTMLButtonElement;
+
+  function setEmailStatus(msg: string, kind: "ok" | "error" | "info") {
+    emailStatus.textContent = msg;
+    emailStatus.classList.remove("hidden", "text-green-600", "text-red-600", "text-gray-500");
+    emailStatus.classList.add(
+      kind === "ok" ? "text-green-600" : kind === "error" ? "text-red-600" : "text-gray-500",
+    );
+  }
+
+  emailUpdateBtn?.addEventListener("click", async () => {
+    const newEmail = emailInput.value.trim().toLowerCase();
+    if (!newEmail) { setEmailStatus("Enter an email address.", "error"); return; }
+    if (newEmail === currentEmail.toLowerCase()) {
+      setEmailStatus("That's already your sign-in email.", "info");
+      return;
+    }
+    emailUpdateBtn.disabled = true;
+    setEmailStatus("Working…", "info");
+    try {
+      const res = await fetch("/api/account/change-email", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_email: newEmail }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.changed) {
+        currentEmail = json.email ?? newEmail;
+        emailVerify.classList.add("hidden");
+        setEmailStatus("✓ Sign-in email updated.", "ok");
+      } else if (res.ok && json.pending) {
+        emailVerify.classList.remove("hidden");
+        emailCode.focus();
+        setEmailStatus(json.message || "Code sent — check your new email (and spam).", "info");
+      } else {
+        setEmailStatus(json.error || "Couldn't update email.", "error");
+      }
+    } catch {
+      setEmailStatus("Network error. Try again.", "error");
+    } finally {
+      emailUpdateBtn.disabled = false;
+    }
+  });
+
+  emailVerifyBtn?.addEventListener("click", async () => {
+    const code = emailCode.value.trim();
+    if (!code) { setEmailStatus("Enter the code from your email.", "error"); return; }
+    emailVerifyBtn.disabled = true;
+    setEmailStatus("Verifying…", "info");
+    try {
+      const res = await fetch("/api/account/verify-email", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.changed) {
+        currentEmail = json.email ?? currentEmail;
+        emailInput.value = currentEmail;
+        emailVerify.classList.add("hidden");
+        emailCode.value = "";
+        setEmailStatus("✓ Sign-in email updated.", "ok");
+      } else {
+        setEmailStatus(json.error || "Couldn't verify the code.", "error");
+      }
+    } catch {
+      setEmailStatus("Network error. Try again.", "error");
+    } finally {
+      emailVerifyBtn.disabled = false;
+    }
+  });
 
   // Directory opt-in: master checkbox toggles visibility of sub-options.
   // When unchecked, also clear the sub-options so a save doesn't keep
@@ -430,6 +541,7 @@ import Layout from "../layouts/Layout.astro";
     const payload: Record<string, unknown> = {
       first_name: strOrNull(data.get("first_name")),
       last_name: strOrNull(data.get("last_name")),
+      public_email: strOrNull(data.get("public_email")),
       phone: strOrNull(data.get("phone")),
 
       address_line1: strOrNull(data.get("address_line1")),

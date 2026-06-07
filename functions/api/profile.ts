@@ -11,7 +11,7 @@ function getSupabase(env: Env) {
 }
 
 const PROFILE_COLUMNS =
-  "first_name, last_name, email, phone, avatar_url, " +
+  "first_name, last_name, email, public_email, phone, avatar_url, " +
   "address_line1, address_line2, city, state, zip, " +
   "emergency_name, emergency_relationship, emergency_phone, " +
   "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
@@ -19,7 +19,7 @@ const PROFILE_COLUMNS =
   "opt_in_directory, directory_show_phone, directory_show_email, directory_show_address";
 
 const PATCH_ALLOWED = [
-  "first_name", "last_name", "phone", "avatar_url",
+  "first_name", "last_name", "phone", "avatar_url", "public_email",
   "address_line1", "address_line2", "city", "state", "zip",
   "emergency_name", "emergency_relationship", "emergency_phone",
   "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
@@ -56,7 +56,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .single();
 
     if (error) return wrap(jsonResponse({ error: error.message }, 404));
-    return wrap(Response.json(data));
+    // `email` here is the sign-in identity, which lives on auth.users —
+    // the source of truth. profiles.email can drift, so override with the
+    // session user's email for display.
+    return wrap(Response.json({ ...data, email: session.user.email ?? (data as { email?: string }).email }));
   } catch (err) {
     return wrap(
       jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
