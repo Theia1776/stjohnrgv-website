@@ -107,18 +107,33 @@ import Layout from "../layouts/Layout.astro";
           </p>
         </div>
         <form id="register-form" class="space-y-5" novalidate>
-          <div>
-            <label for="register-name" class="block text-sm font-semibold text-text-primary">
-              Full Name <span aria-hidden="true" class="text-brand-tan-dark">*</span>
-            </label>
-            <input
-              id="register-name"
-              name="full_name"
-              type="text"
-              required
-              autocomplete="name"
-              class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
-            />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="register-first-name" class="block text-sm font-semibold text-text-primary">
+                First Name <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <input
+                id="register-first-name"
+                name="first_name"
+                type="text"
+                required
+                autocomplete="given-name"
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+              />
+            </div>
+            <div>
+              <label for="register-last-name" class="block text-sm font-semibold text-text-primary">
+                Last Name <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+              </label>
+              <input
+                id="register-last-name"
+                name="last_name"
+                type="text"
+                required
+                autocomplete="family-name"
+                class="mt-1.5 block w-full border border-text-secondary bg-cream-card px-3 py-2.5 text-text-primary placeholder:text-text-secondary"
+              />
+            </div>
           </div>
 
           <div>
@@ -292,7 +307,8 @@ import Layout from "../layouts/Layout.astro";
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            full_name: (document.getElementById("register-name") as HTMLInputElement).value,
+            first_name: (document.getElementById("register-first-name") as HTMLInputElement).value,
+            last_name: (document.getElementById("register-last-name") as HTMLInputElement).value,
             email: (document.getElementById("register-email") as HTMLInputElement).value,
             phone: (document.getElementById("register-phone") as HTMLInputElement).value,
             password: (document.getElementById("register-password") as HTMLInputElement).value,

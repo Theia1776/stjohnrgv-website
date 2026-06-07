@@ -71,7 +71,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     return jsonResponse({ error: "Server not configured." }, 500);
   }
 
-  let body: { email?: unknown; password?: unknown; full_name?: unknown; phone?: unknown };
+  let body: {
+    email?: unknown; password?: unknown;
+    first_name?: unknown; last_name?: unknown; phone?: unknown;
+  };
   try {
     body = await context.request.json();
   } catch {
@@ -80,11 +83,15 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
-  const full_name = typeof body.full_name === "string" ? body.full_name.trim() : "";
+  const first_name = typeof body.first_name === "string" ? body.first_name.trim() : "";
+  const last_name = typeof body.last_name === "string" ? body.last_name.trim() : "";
   const phone = typeof body.phone === "string" ? body.phone.trim() : "";
 
-  if (!email || !password || !full_name || !phone) {
-    return jsonResponse({ error: "Name, email, phone, and password are required." }, 400);
+  if (!email || !password || !first_name || !last_name || !phone) {
+    return jsonResponse(
+      { error: "First name, last name, email, phone, and password are required." },
+      400,
+    );
   }
   if (password.length < MIN_PASSWORD) {
     return jsonResponse(
@@ -101,12 +108,9 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     return jsonResponse({ error: "Please enter a valid phone number (at least 10 digits)." }, 400);
   }
 
-  // Split the full name into first/last so the admin Contact List and
-  // directory show a real name. First token is the first name; the
-  // remainder (if any) is the last name.
-  const nameParts = full_name.split(/\s+/);
-  const first_name = nameParts[0] ?? "";
-  const last_name = nameParts.slice(1).join(" ");
+  // Keep a combined full_name too — it's NOT NULL in profiles and is used
+  // by the pending-approvals view and the parish notification.
+  const full_name = `${first_name} ${last_name}`.trim();
 
   const admin = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
