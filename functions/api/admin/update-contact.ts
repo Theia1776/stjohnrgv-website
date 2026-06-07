@@ -34,6 +34,10 @@ const PATCH_ALLOWED = [
   "opt_in_directory",
 ] as const;
 
+// Allowed parish roles. `role` is edited separately from PATCH_ALLOWED
+// because it needs validation and a self-change guard.
+const VALID_ROLES = ["catechumen", "member", "admin"] as const;
+
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -77,6 +81,18 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const profileUpdates: Record<string, unknown> = {};
     for (const key of PATCH_ALLOWED) {
       if (key in updates) profileUpdates[key] = updates[key];
+    }
+
+    // Role is special: validate it, and never let an admin change their
+    // own role (guards against accidentally demoting yourself out of
+    // admin). A self role-change is ignored rather than erroring so the
+    // member's other edits still save.
+    if ("role" in updates && id !== session.user.id) {
+      const role = typeof updates.role === "string" ? updates.role : "";
+      if (!VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
+        return wrap(jsonResponse({ error: "Invalid role." }, 400));
+      }
+      profileUpdates.role = role;
     }
 
     // Handle an email change against auth.users first — if it fails

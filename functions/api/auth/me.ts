@@ -45,7 +45,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   }
 
   return withSessionCookies(
-    jsonResponse({ loggedIn: true, name: getFirstName(session.user), role }, 200),
+    jsonResponse({ loggedIn: true, id: session.user.id, name: getFirstName(session.user), role }, 200),
     session.refreshedCookies,
   );
 }

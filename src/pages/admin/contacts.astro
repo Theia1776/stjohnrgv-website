@@ -121,6 +121,16 @@ import Layout from "../../layouts/Layout.astro";
             </div>
 
             <div>
+              <label for="edit-role" class="block text-sm font-semibold text-text-primary">Role</label>
+              <select id="edit-role" class="mt-1 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-sm text-text-primary disabled:opacity-60">
+                <option value="catechumen">Catechumen</option>
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+              <p id="edit-role-note" class="mt-1 text-xs text-text-secondary" hidden>You can't change your own role here.</p>
+            </div>
+
+            <div>
               <label for="edit-phone" class="block text-sm font-semibold text-text-primary">Phone</label>
               <input id="edit-phone" type="tel" class="mt-1 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-sm text-text-primary" />
             </div>
@@ -186,6 +196,7 @@ import Layout from "../../layouts/Layout.astro";
 <script>
   type Contact = {
     id: string;
+    role: string | null;
     first_name: string | null;
     last_name: string | null;
     email: string;
@@ -229,6 +240,9 @@ import Layout from "../../layouts/Layout.astro";
   let allContacts: Contact[] = [];
   let directoryEntries: DirEntry[] = [];
   let pendingList: Pending[] = [];
+  // The logged-in admin's own user id, used to lock the role dropdown
+  // when they're editing their own account.
+  let myId = "";
 
   function escapeHtml(value: unknown): string {
     return String(value ?? "")
@@ -251,10 +265,11 @@ import Layout from "../../layouts/Layout.astro";
 
   async function init() {
     try {
-      const [contactsRes, dirRes, pendingRes] = await Promise.all([
+      const [contactsRes, dirRes, pendingRes, meRes] = await Promise.all([
         fetch("/api/admin/contacts", { credentials: "same-origin", cache: "no-store" }),
         fetch("/api/admin/directory", { credentials: "same-origin", cache: "no-store" }),
         fetch("/api/admin/pending", { credentials: "same-origin", cache: "no-store" }),
+        fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" }),
       ]);
 
       if (contactsRes.status === 401 || contactsRes.status === 403) {
@@ -280,6 +295,12 @@ import Layout from "../../layouts/Layout.astro";
       allContacts = contactsData.contacts ?? [];
       directoryEntries = dirData.entries ?? [];
       pendingList = pendingData.pending ?? [];
+
+      // Best-effort — if /me fails we just don't lock the role dropdown.
+      if (meRes.ok) {
+        const meData = await meRes.json().catch(() => ({}));
+        myId = meData.id ?? "";
+      }
 
       document.getElementById("loading")?.classList.add("hidden");
       document.getElementById("app")?.classList.remove("hidden");
@@ -543,6 +564,16 @@ import Layout from "../../layouts/Layout.astro";
       if (input) input.value = (c as Record<string, unknown>)[key] as string ?? "";
     }
     (document.getElementById("edit-opt_in_directory") as HTMLInputElement).checked = !!c.opt_in_directory;
+
+    // Role dropdown — locked when editing your own account so you can't
+    // demote yourself out of admin.
+    const roleSelect = document.getElementById("edit-role") as HTMLSelectElement;
+    const roleNote = document.getElementById("edit-role-note") as HTMLParagraphElement;
+    roleSelect.value = c.role ?? "catechumen";
+    const isSelf = !!myId && c.id === myId;
+    roleSelect.disabled = isSelf;
+    roleNote.hidden = !isSelf;
+
     const err = document.getElementById("edit-error") as HTMLParagraphElement;
     err.hidden = true;
     err.textContent = "";
@@ -580,6 +611,11 @@ import Layout from "../../layouts/Layout.astro";
       if (input) updates[key] = input.value.trim();
     }
     updates.opt_in_directory = (document.getElementById("edit-opt_in_directory") as HTMLInputElement).checked;
+
+    // Only send role if the dropdown isn't locked (i.e. not editing self).
+    // The server enforces this too, but skipping it keeps the payload clean.
+    const roleSelect = document.getElementById("edit-role") as HTMLSelectElement;
+    if (!roleSelect.disabled) updates.role = roleSelect.value;
 
     saveBtn.disabled = true;
     const original = saveBtn.textContent ?? "Save Changes";

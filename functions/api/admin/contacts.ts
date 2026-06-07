@@ -42,7 +42,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select(
-        "id, first_name, last_name, phone, " +
+        "id, role, first_name, last_name, phone, " +
         "address_line1, address_line2, city, state, zip, " +
         "emergency_name, emergency_relationship, emergency_phone, " +
         "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +
