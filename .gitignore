@@ -94,6 +94,9 @@ web_modules/
 scripts/service-role.local
 scripts/service-role.txt
 
+# Drop folder for library PDFs awaiting bulk upload. Never commit the books.
+library-incoming/
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
