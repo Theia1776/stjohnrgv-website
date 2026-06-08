@@ -63,6 +63,9 @@ function norm(name) {
 
 const folder = process.argv[2];
 const metaPath = process.argv[3] || path.join(here, "library-batch1.json");
+// Optional 4th arg: category to use for PDFs that have no metadata entry
+// (handy when a whole batch is one kind, e.g. "Hagiography").
+const defaultCategory = process.argv[4] || "Other";
 
 if (!folder || !fs.existsSync(folder)) {
   console.error(`Books folder not found: ${folder}`);
@@ -103,7 +106,7 @@ for (const file of pdfs) {
   if (!m) {
     auto = true;
     const base = file.replace(/\.pdf$/i, "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
-    m = { title: base, author: null, category: "Other", description: null };
+    m = { title: base, author: null, category: defaultCategory, description: null };
   }
 
   const slug = slugify(m.title);
