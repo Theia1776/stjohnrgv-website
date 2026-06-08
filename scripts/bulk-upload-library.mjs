@@ -78,24 +78,32 @@ const supabase = createClient(SUPABASE_URL, readServiceKey(), {
 
 const pdfs = fs.readdirSync(folder).filter((f) => /\.pdf$/i.test(f)).sort();
 
-let uploaded = 0, skippedExisting = 0, skippedBig = 0, skippedNoMeta = 0, failed = 0;
+let uploaded = 0, autoCount = 0, skippedExisting = 0, skippedBig = 0, skippedEmpty = 0, failed = 0;
 
 console.log(`Found ${pdfs.length} PDF(s) in ${folder}\n`);
 
 for (const file of pdfs) {
-  const m = metaByNorm.get(norm(file));
-  if (!m) {
-    console.log(`• SKIP (no metadata): ${file}`);
-    skippedNoMeta++;
+  const full = path.join(folder, file);
+  const size = fs.statSync(full).size;
+  if (size === 0) {
+    console.log(`• SKIP (empty/incomplete): ${file}`);
+    skippedEmpty++;
+    continue;
+  }
+  if (size > MAX_BYTES) {
+    console.log(`• SKIP (>${MAX_BYTES / 1024 / 1024}MB, ${(size / 1024 / 1024).toFixed(0)}MB): ${file}`);
+    skippedBig++;
     continue;
   }
 
-  const full = path.join(folder, file);
-  const size = fs.statSync(full).size;
-  if (size > MAX_BYTES) {
-    console.log(`• SKIP (>${MAX_BYTES / 1024 / 1024}MB, ${(size / 1024 / 1024).toFixed(0)}MB): ${m.title}`);
-    skippedBig++;
-    continue;
+  // Metadata from the JSON if present; otherwise fall back to a filename-
+  // derived title so no PDF is ever silently dropped.
+  let m = metaByNorm.get(norm(file));
+  let auto = false;
+  if (!m) {
+    auto = true;
+    const base = file.replace(/\.pdf$/i, "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    m = { title: base, author: null, category: "Other", description: null };
   }
 
   const slug = slugify(m.title);
@@ -151,11 +159,12 @@ for (const file of pdfs) {
     continue;
   }
 
-  console.log(`✓ ${m.title}  [${m.category}]`);
+  console.log(`✓ ${auto ? "(auto) " : ""}${m.title}  [${m.category}]`);
   uploaded++;
+  if (auto) autoCount++;
 }
 
 console.log(
-  `\nDone. Uploaded ${uploaded}, already-present ${skippedExisting}, ` +
-  `too-big ${skippedBig}, no-metadata ${skippedNoMeta}, failed ${failed}.`,
+  `\nDone. Uploaded ${uploaded} (${autoCount} auto-titled), already-present ${skippedExisting}, ` +
+  `too-big ${skippedBig}, empty ${skippedEmpty}, failed ${failed}.`,
 );
