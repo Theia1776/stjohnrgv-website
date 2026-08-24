@@ -45,10 +45,43 @@ const categories = [
         to see the rest of the library.
       </p>
 
+      <!-- ============== SEARCH ==============
+           Searches every text the viewer is allowed to see — title,
+           author, description, category, language — across all
+           categories at once. Clearing it returns you to whatever you
+           were looking at. Hidden until the catalog has loaded. -->
+      <div id="search-bar" hidden class="mt-8 max-w-2xl">
+        <label for="library-search" class="sr-only">Search the library</label>
+        <div class="flex items-center gap-3">
+          <input
+            id="library-search"
+            type="search"
+            autocomplete="off"
+            placeholder="Search by title, author, subject…"
+            class="min-w-0 flex-1 border border-border-soft bg-cream-card px-4 py-2.5 text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2"
+          />
+          <button
+            type="button"
+            id="search-clear"
+            hidden
+            class="shrink-0 border border-border-soft bg-cream-card px-3 py-2.5 font-display text-xs font-semibold uppercase tracking-widest text-text-secondary hover:text-brand-blue-dark"
+          >
+            Clear
+          </button>
+        </div>
+        <p id="search-count" class="mt-2 text-sm text-text-secondary" aria-live="polite"></p>
+      </div>
+
       <p id="library-error" hidden class="mt-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red" role="alert"></p>
 
       <p id="library-loading" class="mt-12 text-center text-text-secondary italic">
         Loading library…
+      </p>
+
+      <!-- ============== SEARCH RESULTS ============== -->
+      <div id="search-results" hidden class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+      <p id="search-empty" hidden class="mt-10 text-center text-text-secondary italic">
+        Nothing matched that search.
       </p>
 
       <!-- ============== VISITOR FLAT LIST (anonymous users) ============== -->
@@ -132,8 +165,18 @@ const categories = [
     const tiles = document.querySelectorAll<HTMLButtonElement>(".category-tile");
     const visitorGrid = document.getElementById("visitor-grid") as HTMLDivElement;
     const visitorEmpty = document.getElementById("visitor-empty") as HTMLParagraphElement;
+    const searchBar = document.getElementById("search-bar") as HTMLDivElement;
+    const searchInput = document.getElementById("library-search") as HTMLInputElement;
+    const searchClear = document.getElementById("search-clear") as HTMLButtonElement;
+    const searchCount = document.getElementById("search-count") as HTMLParagraphElement;
+    const searchResults = document.getElementById("search-results") as HTMLDivElement;
+    const searchEmpty = document.getElementById("search-empty") as HTMLParagraphElement;
 
     let books: Book[] = [];
+    // Whether the viewer is a signed-in parishioner decides what we
+    // return to when a search is cleared: the category gateway, or the
+    // visitor's flat list.
+    let viewerAuthenticated = false;
 
     function escapeHtml(value: unknown): string {
       return String(value ?? "")
@@ -227,6 +270,92 @@ const categories = [
       }
     }
 
+    // ============== SEARCH ==============
+    // Fold accents and lowercase, so "Nektarios" finds "Nektários" and
+    // capitalisation never matters.
+    function normalize(value: string): string {
+      return value
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
+    }
+
+    // Everything worth matching on, in one string per book.
+    function haystack(book: Book): string {
+      return normalize(
+        [book.title, book.author ?? "", book.description ?? "", book.category, ...(book.languages ?? [])].join(" "),
+      );
+    }
+
+    // Every word must appear somewhere, in any order — so "nektarios
+    // life" finds the same book as "life of nektarios".
+    function matches(book: Book, terms: string[]): boolean {
+      const hay = haystack(book);
+      return terms.every((term) => hay.includes(term));
+    }
+
+    function hideBrowseViews() {
+      gateway.hidden = true;
+      detail.hidden = true;
+      visitorGrid.hidden = true;
+      visitorEmpty.hidden = true;
+    }
+
+    // Back to whatever this viewer sees when they aren't searching.
+    function restoreBrowseView() {
+      searchResults.hidden = true;
+      searchEmpty.hidden = true;
+      searchCount.textContent = "";
+      if (viewerAuthenticated) {
+        detail.hidden = true;
+        gateway.hidden = false;
+      } else {
+        visitorGrid.hidden = books.length === 0;
+        visitorEmpty.hidden = books.length > 0;
+      }
+    }
+
+    function runSearch() {
+      const query = searchInput.value.trim();
+      searchClear.hidden = query === "";
+
+      if (!query) {
+        restoreBrowseView();
+        return;
+      }
+
+      const terms = normalize(query).split(/\s+/).filter(Boolean);
+      const found = books.filter((b) => matches(b, terms));
+
+      hideBrowseViews();
+      searchCount.textContent = `${found.length} ${found.length === 1 ? "text" : "texts"} matching “${query}”`;
+
+      if (found.length === 0) {
+        searchResults.hidden = true;
+        searchResults.innerHTML = "";
+        searchEmpty.hidden = false;
+        return;
+      }
+      searchEmpty.hidden = true;
+      searchResults.innerHTML = found.map(bookCard).join("");
+      searchResults.hidden = false;
+    }
+
+    searchInput.addEventListener("input", runSearch);
+    searchInput.addEventListener("keydown", (e) => {
+      // Escape clears the search rather than only blurring the field.
+      if (e.key === "Escape" && searchInput.value) {
+        e.preventDefault();
+        searchInput.value = "";
+        runSearch();
+      }
+    });
+    searchClear.addEventListener("click", () => {
+      searchInput.value = "";
+      searchInput.focus();
+      runSearch();
+    });
+
     (async () => {
       try {
         const res = await fetch("/api/library/books", { credentials: "same-origin", cache: "no-store" });
@@ -238,8 +367,11 @@ const categories = [
         const data = await res.json();
         books = (data.books ?? []) as Book[];
         const isAuthed = !!data.viewer_authenticated;
+        viewerAuthenticated = isAuthed;
 
         loadingEl.hidden = true;
+        // Only useful once there's something to search.
+        if (books.length > 0) searchBar.hidden = false;
 
         if (isAuthed) {
           introParishioner.hidden = false;
