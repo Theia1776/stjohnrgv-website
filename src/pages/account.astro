@@ -106,10 +106,32 @@ import Layout from "../layouts/Layout.astro";
       <section>
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">Parish Communications</h2>
 
-        <label class="flex items-start gap-3 cursor-pointer">
+        <!-- Always on, and shown as such: having an account means the
+             parish can write to you. Checked + disabled so the state is
+             plain at a glance and can't be switched off. Disabled inputs
+             aren't submitted, and nothing reads this id, so it never
+             touches the saved profile. -->
+        <label class="flex items-start gap-3">
+          <input id="parish_admin_emails" type="checkbox" checked disabled
+            class="mt-0.5 h-4 w-4 rounded border-gray-300" />
+          <span>
+            <span class="text-sm font-medium text-text-primary">Parish Administration Emails</span>
+            <span class="mt-0.5 block text-sm text-gray-500">
+              Always on. If the church needs to reach you — from the priest or the parish
+              office — we will. This comes with having an account and can't be turned off.
+            </span>
+          </span>
+        </label>
+
+        <label class="flex items-start gap-3 cursor-pointer mt-4">
           <input id="opt_in_communications" name="opt_in_communications" type="checkbox"
             class="mt-0.5 h-4 w-4 rounded border-gray-300" />
-          <span class="text-sm">Receive email updates and announcements from St. John of Kronstadt Orthodox Church</span>
+          <span>
+            <span class="text-sm font-medium text-text-primary">Announcements &amp; New Materials</span>
+            <span class="mt-0.5 block text-sm text-gray-500">
+              Optional. Email me when new catechism lessons and other materials are posted.
+            </span>
+          </span>
         </label>
 
         <div class="border border-gray-200 rounded p-4 mt-4">
