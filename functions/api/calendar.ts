@@ -13,12 +13,34 @@
  *     saints:     string[],                 // plain-text commemorations (links/img stripped)
  *     readings:   { reference, url }[],     // each scripture reading + upstream link
  *     troparia:   string,                   // raw text block with newlines preserved
+ *     fasting:    { kind, season, rule, raw },  // the day's fasting discipline
  *   }
  */
 
 interface Reading {
   reference: string;
   url: string;
+}
+
+/**
+ * The day's fasting discipline, read from the upstream calendar rather
+ * than computed here — HTC already accounts for the fixed and movable
+ * cycles, so their line is the authority.
+ *
+ *   kind   "fast" | "fish" | "none" — what the banner leads with.
+ *   season the named fast this day belongs to ("Great Lent",
+ *          "Dormition (Theotokos) Fast"), or null on an ordinary
+ *          Wednesday/Friday that belongs to no season.
+ *   rule   the discipline itself ("Strict Fast (Bread, Vegetables,
+ *          Fruits)", "Food with Oil", "Fish Allowed"), or null.
+ *   raw    the upstream line, tags stripped — kept so the page can
+ *          fall back to it if the split ever goes wrong.
+ */
+interface Fasting {
+  kind: "fast" | "fish" | "none";
+  season: string | null;
+  rule: string | null;
+  raw: string;
 }
 
 interface Saint {
@@ -32,6 +54,7 @@ interface CalendarData {
   saints: Saint[];
   readings: Reading[];
   troparia: string;
+  fasting: Fasting;
 }
 
 const TONE_WORDS: Record<string, number> = {
@@ -108,15 +131,74 @@ function unwrapNormaltext(s: string): string {
     .replace(/<\/span>\s*$/i, "");
 }
 
+/**
+ * Read the fasting line out of <span class="headerfast">.
+ *
+ * Upstream shapes seen across a full year:
+ *   (span absent)                                        → no fast today
+ *   "Fast. Fish Allowed"                                 → ordinary Wed/Fri, fish
+ *   "Fast. By Monastic Charter: Strict Fast (…)"         → ordinary Wed/Fri
+ *   "Great Lent. Food with Oil"
+ *   "Great Lent. By Monastic Charter - Full abstention from food"
+ *   "Dormition (Theotokos) Fast. By Monastic Charter: Strict Fast (…)"
+ *   "Nativity (St. Philip's Fast). Food with Oil"
+ *
+ * Season and rule are separated at the LAST ". " rather than the first:
+ * the Nativity Fast's own name contains "St. ", which a first-period
+ * split would tear in half.
+ */
+function parseFasting(html: string): Fasting {
+  const match = /<span\s+class="headerfast"[^>]*>([\s\S]*?)<\/span>/i.exec(html);
+  const raw = match ? stripInline(match[1]) : "";
+
+  // No span, or an empty one, means no fast is appointed — a fast-free
+  // week, or an ordinary day that isn't a Wednesday or Friday.
+  if (!raw) return { kind: "none", season: null, rule: null, raw: "" };
+
+  let season: string | null = null;
+  let rule: string | null = null;
+
+  const split = raw.lastIndexOf(". ");
+  if (split > 0) {
+    season = raw.slice(0, split).trim();
+    rule = raw.slice(split + 2).trim();
+  } else {
+    season = raw.replace(/\.\s*$/, "").trim();
+  }
+
+  // "By Monastic Charter:" / "By Monastic Charter -" is a preamble, not
+  // part of the discipline.
+  if (rule) {
+    rule = rule.replace(/^By\s+Monastic\s+Charter\s*[:\-–]\s*/i, "").trim() || null;
+  }
+
+  // A bare "Fast" names no season — that's an ordinary Wednesday or
+  // Friday, and the banner says so on its own.
+  if (season && /^fast\.?$/i.test(season)) season = null;
+
+  return { kind: /fish/i.test(raw) ? "fish" : "fast", season, rule, raw };
+}
+
 function parseCalendar(html: string): CalendarData {
+  // ---- Fasting ----
+  const fasting = parseFasting(html);
+
   // ---- Title + Tone ----
-  // Pattern: <span class="headerheader">TITLE. Tone WORD.<br>...</span>
+  // Pattern: <span class="headerheader">TITLE. Tone WORD.<br>
+  //          <span class="headerfast">FASTING</span></span>
   const headerInnerMatch = /<span\s+class="headerheader"[^>]*>([\s\S]*?)<\/span>/i
     .exec(html);
   let week_title = "";
   let tone: number | null = null;
   if (headerInnerMatch) {
-    const headerText = stripInline(headerInnerMatch[1]);
+    // Drop the nested fasting span first — on a day with no tone the
+    // title is everything that's left, and the fasting line would
+    // otherwise be swept into it.
+    const headerHtml = headerInnerMatch[1].replace(
+      /<span\s+class="headerfast"[^>]*>[\s\S]*?(?:<\/span>|$)/i,
+      "",
+    );
+    const headerText = stripInline(headerHtml);
     // Title is everything before ". Tone WORD"; tone is the WORD.
     const toneMatch = /^([\s\S]*?)\.\s*Tone\s+([\w-]+)/i.exec(headerText);
     if (toneMatch) {
@@ -194,7 +276,7 @@ function parseCalendar(html: string): CalendarData {
     troparia = stripBlock(inner);
   }
 
-  return { week_title, tone, saints, readings, troparia };
+  return { week_title, tone, saints, readings, troparia, fasting };
 }
 
 function jsonResponse(body: unknown, status: number): Response {

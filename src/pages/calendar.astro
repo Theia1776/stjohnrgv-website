@@ -28,6 +28,21 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
     <div class="mx-auto max-w-3xl">
       <p class="mb-4 font-display text-xs uppercase tracking-widest text-text-secondary">Liturgical Calendar</p>
 
+      <!-- Fasting banner for the displayed day. Filled in by
+           renderFastBanner() from the upstream calendar's own fasting
+           line, so the parish and the calendar app never disagree.
+           Hidden until the day's data arrives, and re-rendered on every
+           Prev / Next / Today. -->
+      <div
+        id="fast-banner"
+        hidden
+        role="status"
+        class="mb-8 border border-border-soft border-l-4 bg-cream-card px-5 py-4"
+      >
+        <p id="fast-banner-headline" class="font-display text-base font-bold text-text-primary"></p>
+        <p id="fast-banner-detail" class="mt-1 text-sm text-text-secondary"></p>
+      </div>
+
       <!-- Date header + navigation -->
       <div id="cal-header" class="mb-10 flex items-center gap-3">
         <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">← Prev</button>
@@ -163,10 +178,11 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
     }
 
     function apiUrl(date) { return `/api/calendar?date=${dateParam(date)}`; }
-    // v2 prefix bust: bumped from htoc-cal- so visitors with cached
-    // payloads from before saints became {name, url} objects get a
-    // fresh fetch and clickable saint links instead of plain text.
-    function dayCacheKey(date) { return `htoc-cal2-${dateParam(date)}`; }
+    // Version prefix bust: bumped to cal3 so visitors holding payloads
+    // cached before the API returned `fasting` get a fresh fetch and a
+    // banner, instead of a day with no fasting line at all. (cal2 did
+    // the same when saints became {name, url} objects.)
+    function dayCacheKey(date) { return `htoc-cal3-${dateParam(date)}`; }
     function readingCacheKey(url) { return `htoc-reading-${url}`; }
     function saintCacheKey(url) { return `htoc-saint-${url}`; }
 
@@ -300,6 +316,47 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       `;
     }
 
+    // Fasting banner. Three states, straight from the upstream calendar:
+    // a fast day, a day when fish is allowed, and a day with no fast.
+    // The colored left edge carries the same meaning as the words, for
+    // anyone scanning the page rather than reading it.
+    const FAST_STYLES = {
+      fast: { edge: 'var(--color-liturgical-purple)', headline: 'Fast Day' },
+      fish: { edge: 'var(--color-brand-blue)',        headline: 'Fish Allowed' },
+      none: { edge: 'var(--color-liturgical-green)',  headline: 'No Fast Today' },
+    };
+
+    function renderFastBanner(fasting) {
+      const banner = document.getElementById('fast-banner');
+      const headlineEl = document.getElementById('fast-banner-headline');
+      const detailEl = document.getElementById('fast-banner-detail');
+      if (!banner || !headlineEl || !detailEl) return;
+
+      // Payloads cached before the API returned `fasting`, or an upstream
+      // shape we didn't anticipate: say nothing rather than guess wrong
+      // about a fast.
+      if (!fasting || !fasting.kind || !FAST_STYLES[fasting.kind]) {
+        banner.hidden = true;
+        return;
+      }
+
+      const style = FAST_STYLES[fasting.kind];
+      headlineEl.textContent = style.headline;
+
+      // Season and rule as the upstream calendar words them — "Dormition
+      // (Theotokos) Fast", "Strict Fast (Bread, Vegetables, Fruits)". On a
+      // fish day the rule just repeats the headline, so it's dropped.
+      const parts = [];
+      if (fasting.season) parts.push(fasting.season);
+      if (fasting.rule && fasting.kind !== 'fish') parts.push(fasting.rule);
+      const detail = parts.join(' — ');
+
+      detailEl.textContent = detail;
+      detailEl.hidden = !detail;
+      banner.style.borderLeftColor = style.edge;
+      banner.hidden = false;
+    }
+
     function renderContent(data) {
       const sections = [];
 
@@ -412,6 +469,11 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       error.classList.add('hidden');
       content.classList.add('hidden');
       content.innerHTML = '';
+      // Hide the previous day's fasting state while the new day loads —
+      // showing Tuesday's banner over Wednesday's date would be worse
+      // than showing none.
+      const fastBanner = document.getElementById('fast-banner');
+      if (fastBanner) fastBanner.hidden = true;
 
       document.getElementById('cal-date').textContent = formatDate(date);
 
@@ -421,6 +483,7 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
 
       try {
         const data = await fetchDay(date);
+        renderFastBanner(data.fasting);
         renderContent(data);
         loading.classList.add('hidden');
         content.classList.remove('hidden');
