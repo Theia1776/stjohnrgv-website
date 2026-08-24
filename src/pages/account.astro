@@ -6,33 +6,6 @@ import Layout from "../layouts/Layout.astro";
   <main class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold mb-8">My Account</h1>
 
-    <!-- ============== MY LEARNING ==============
-         Catechism lessons posted by an admin from /admin/catechism/.
-         Populated at runtime from /api/catechism/lessons so a new
-         lesson shows up here the moment it's uploaded — no rebuild.
-         Lessons open in the reader at /account/lesson/?slug=…  -->
-    <section
-      class="mb-10 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
-      aria-labelledby="learning-heading"
-    >
-      <div class="flex items-baseline justify-between gap-4 border-b pb-2 mb-4">
-        <h2 id="learning-heading" class="text-lg font-semibold">My Learning</h2>
-        <span id="learning-count" class="text-xs uppercase tracking-widest text-text-secondary"></span>
-      </div>
-
-      <p class="text-sm text-gray-500 mb-4">
-        Catechism lessons shared with the parish. Click any lesson to read it here on the site.
-      </p>
-
-      <p id="learning-loading" class="text-sm text-text-secondary italic">Loading lessons…</p>
-      <p id="learning-error" hidden role="alert" class="text-sm text-liturgical-red"></p>
-      <p id="learning-empty" hidden class="text-sm text-text-secondary italic">
-        No lessons have been posted yet. They'll appear here as soon as they are.
-      </p>
-
-      <ul id="learning-list" class="divide-y divide-border-soft"></ul>
-    </section>
-
     <!-- Profile Photo -->
     <div class="flex flex-col items-center gap-3 mb-10">
       <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-brand-blue-dark bg-cream-card">
@@ -94,6 +67,167 @@ import Layout from "../layouts/Layout.astro";
       </label>
       <p id="avatar-status" class="text-sm hidden"></p>
     </div>
+
+    <!-- Quick jump. Anchors land instantly and open the section if it
+         was folded shut — same behaviour as the admin hub. -->
+    <nav
+      aria-label="Jump to section"
+      class="mb-8 flex flex-wrap gap-x-6 gap-y-2 border-y border-border-soft py-3 text-sm"
+    >
+      <a href="#section-learning" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">My Learning</a>
+      <a href="#section-library" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Parish Library</a>
+      <a href="#section-coffee" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Coffee Hour</a>
+      <a href="#section-directory" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Directory</a>
+      <a href="#section-calendar" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Calendar &amp; Saints</a>
+      <a href="#section-profile" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">My Details</a>
+    </nav>
+
+    <!-- ============== MY LEARNING ==============
+         Catechism lessons posted by an admin from /admin/catechism/.
+         Populated at runtime from /api/catechism/lessons so a new
+         lesson shows up here the moment it's uploaded — no rebuild.
+         Lessons open in the reader at /account/lesson/?slug=…  -->
+    <section
+      id="section-learning"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="learning-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="learning-heading" class="text-lg font-semibold">My Learning</h2>
+          <span id="learning-count" class="ml-auto text-xs uppercase tracking-widest text-text-secondary"></span>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="text-sm text-gray-500 mb-4">
+            Catechism lessons shared with the parish. Click any lesson to read it here on the site.
+          </p>
+
+          <p id="learning-loading" class="text-sm text-text-secondary italic">Loading lessons…</p>
+          <p id="learning-error" hidden role="alert" class="text-sm text-liturgical-red"></p>
+          <p id="learning-empty" hidden class="text-sm text-text-secondary italic">
+            No lessons have been posted yet. They'll appear here as soon as they are.
+          </p>
+
+          <ul id="learning-list" class="divide-y divide-border-soft"></ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== PARISH LIBRARY ============== -->
+    <section
+      id="section-library"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="library-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="library-heading" class="text-lg font-semibold">Parish Library</h2>
+          <span id="library-count" class="ml-auto text-xs uppercase tracking-widest text-text-secondary"></span>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="text-sm text-gray-500">
+            Prayer books, lives of the saints, patristic writings, and liturgical texts —
+            read them in your browser, no download needed.
+          </p>
+          <p class="mt-4">
+            <a href="/learn/library/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
+              Browse the library →
+            </a>
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== COFFEE HOUR ============== -->
+    <section
+      id="section-coffee"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="coffee-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="coffee-heading" class="text-lg font-semibold">Coffee Hour</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="text-sm text-gray-500">
+            Sign up to bring food on an upcoming Sunday, and see what others are bringing.
+          </p>
+          <p class="mt-4">
+            <a href="/coffee-hour/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
+              Sign up for a Sunday →
+            </a>
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== DIRECTORY ============== -->
+    <section
+      id="section-directory"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="directory-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="directory-heading" class="text-lg font-semibold">Parish Directory</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="text-sm text-gray-500">
+            Fellow parishioners who have chosen to be listed. Whether you appear, and which
+            details you share, is up to you — see <a href="#section-profile" class="jump-link text-brand-blue-dark">My Details</a> below.
+          </p>
+          <p class="mt-4">
+            <a href="/directory/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
+              Open the directory →
+            </a>
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== CALENDAR & SAINTS ============== -->
+    <section
+      id="section-calendar"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="calendar-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="calendar-heading" class="text-lg font-semibold">Calendar &amp; Saints</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="text-sm text-gray-500">
+            The day's commemorations, readings, and whether it is a fast day.
+          </p>
+          <p class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+            <a href="/calendar/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
+              Today on the calendar →
+            </a>
+            <a href="/learn/saints/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
+              Catalog of the saints →
+            </a>
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== MY DETAILS (the profile form) ============== -->
+    <section
+      id="section-profile"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="profile-heading"
+    >
+      <details class="account-fold" open>
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="profile-heading" class="text-lg font-semibold">My Details</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4">
 
     <form id="profile-form" class="space-y-8">
 
@@ -293,8 +427,35 @@ import Layout from "../layouts/Layout.astro";
       </div><!-- /grid -->
 
     </form>
+
+        </div>
+      </details>
+    </section>
   </main>
 </Layout>
+
+<style>
+  /* The summary carries the heading, so the native disclosure marker is
+     hidden in favour of our own chevron. */
+  .account-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .account-summary::-webkit-details-marker { display: none; }
+  .account-summary .fold-chevron {
+    color: var(--color-sacred-gold);
+    font-size: 0.9rem;
+    transition: transform 200ms ease;
+  }
+  .account-fold[open] > .account-summary .fold-chevron { transform: rotate(90deg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .account-summary .fold-chevron { transition: none; }
+  }
+</style>
 
 <script>
   function setInputValue(id: string, value: unknown) {
@@ -606,6 +767,77 @@ import Layout from "../layouts/Layout.astro";
       ${lesson.description ? `<p class="mt-1 text-sm text-text-primary/85">${escapeHtml(lesson.description)}</p>` : ""}
     </li>`;
   }
+
+  // ============== FOLDS + JUMPS ==============
+  // Same behaviour as the admin hub: sections remember what you left
+  // open, and the quick-jump links land instantly instead of making you
+  // watch the page scroll.
+  document.documentElement.style.scrollBehavior = "auto";
+  document.documentElement.dataset.instantScroll = "true";
+
+  const ACCOUNT_FOLD_KEY = "stjohn_account_open";
+
+  function initAccountFolds() {
+    const stored = localStorage.getItem(ACCOUNT_FOLD_KEY);
+    // First visit: everything open. After that, whatever shape you left.
+    const openSet: Set<string> | null = stored ? new Set(JSON.parse(stored) as string[]) : null;
+
+    document.querySelectorAll<HTMLElement>("section.account-section").forEach((section) => {
+      const fold = section.querySelector("details");
+      if (!fold) return;
+      if (openSet) fold.open = openSet.has(section.id);
+      fold.addEventListener("toggle", () => {
+        const open: string[] = [];
+        document.querySelectorAll<HTMLElement>("section.account-section").forEach((s) => {
+          if (s.querySelector("details")?.open) open.push(s.id);
+        });
+        localStorage.setItem(ACCOUNT_FOLD_KEY, JSON.stringify(open));
+      });
+    });
+  }
+
+  function jumpToSection(id: string) {
+    const section = document.getElementById(id);
+    if (!section) return;
+    // Jumping to a folded section would land on a closed heading and
+    // look like nothing happened.
+    const fold = section.querySelector("details");
+    if (fold && !fold.open) fold.open = true;
+    section.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" });
+  }
+
+  function initAccountJumps() {
+    document.querySelectorAll<HTMLAnchorElement>("a.jump-link").forEach((link) => {
+      link.addEventListener("click", (ev) => {
+        const id = link.getAttribute("href")?.slice(1);
+        if (!id) return;
+        ev.preventDefault();
+        history.replaceState(null, "", `#${id}`);
+        jumpToSection(id);
+      });
+    });
+    if (location.hash) jumpToSection(location.hash.slice(1));
+  }
+
+  initAccountFolds();
+  initAccountJumps();
+
+  // Library count beside its heading, so the section shows something
+  // true rather than just a link. Silent on failure — a missing count is
+  // not worth an error message on someone's account page.
+  (async () => {
+    const countEl = document.getElementById("library-count");
+    if (!countEl) return;
+    try {
+      const res = await fetch("/api/library/books", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      const n = (data.books ?? []).length;
+      if (n > 0) countEl.textContent = `${n} ${n === 1 ? "text" : "texts"}`;
+    } catch {
+      /* leave it blank */
+    }
+  })();
 
   (async () => {
     const loadingEl = document.getElementById("learning-loading") as HTMLParagraphElement | null;

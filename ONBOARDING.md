@@ -74,10 +74,14 @@ All require a logged-in Supabase session. Linked from the user-dropdown
 in [src/components/Header.astro](src/components/Header.astro), which only
 renders when `/api/auth/me` confirms login.
 
-- **`/account/`** — profile editor. Lets parishioners set their name,
-  contact info, emergency contacts, and directory opt-in preferences.
-  Also carries the **My Learning** section at the top, listing the
-  catechism lessons admins have posted from `/admin/catechism/`.
+- **`/account/`** — the member's hub, laid out like the admin hub: a
+  quick-jump bar over folding sections that remember what you leave open
+  (`localStorage` key `stjohn_account_open`), with instant jumps. The
+  sections are **My Learning** (catechism lessons posted from
+  `/admin/catechism/`), **Parish Library**, **Coffee Hour**, **Parish
+  Directory**, **Calendar & Saints**, and **My Details** — the profile
+  form (name, contact info, emergency contacts, communication and
+  directory preferences).
   Code: [src/pages/account.astro](src/pages/account.astro),
   API: [functions/api/profile.ts](functions/api/profile.ts) and
   [functions/api/catechism/lessons.ts](functions/api/catechism/lessons.ts).
