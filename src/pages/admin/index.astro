@@ -1,0 +1,525 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Parish Admin — the one place an admin lands, instead of hunting
+// through a menu for four separate tools.
+//
+// Each section is a fold that shows what's waiting (pending sign-ups,
+// the newest lessons, catalog counts) and links into the full tool.
+// The tools themselves are untouched: this page only reads from the
+// existing admin APIs, so nothing here can break contacts, library,
+// saints, or catechism.
+//
+// Navigation borrows what works on the Wolf & 60 shop manager: a
+// quick-jump bar, folds that remember what you left open, and jumps
+// that land instantly instead of making you watch the page scroll.
+
+// Saints live as JSON files in the repo (the saints admin commits them),
+// so their count is known at build time rather than from an API.
+const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).length;
+---
+
+<Layout
+  title="Parish Admin | St. John of Kronstadt"
+  description="One place for parish administration."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="font-display text-3xl text-text-primary md:text-4xl">Parish Admin</h1>
+    <div class="mt-4 h-px w-24 bg-liturgical-current"></div>
+
+    <p id="admin-status" class="mt-6 text-text-secondary">Loading…</p>
+
+    <div id="admin-body" class="hidden">
+      <!-- Quick jump. Anchors land instantly (see the script below) and
+           open the section if it was folded shut. -->
+      <nav
+        aria-label="Jump to section"
+        class="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-y border-border-soft py-3 text-sm"
+      >
+        <a href="#section-approvals" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">
+          Approvals <span id="jump-approvals-badge" class="hidden rounded-full bg-liturgical-red px-1.5 py-0.5 text-[0.65rem] font-semibold text-white"></span>
+        </a>
+        <a href="#section-members" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Members</a>
+        <a href="#section-catechism" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Catechism Lessons</a>
+        <a href="#section-library" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Parish Library</a>
+        <a href="#section-saints" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Saints</a>
+        <a href="#section-links" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Useful Links</a>
+      </nav>
+
+      <!-- ─────────────── APPROVALS ─────────────── -->
+      <section id="section-approvals" class="admin-section mt-10 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Waiting for Approval</span>
+            <span id="approvals-count" class="ml-2 text-sm font-normal text-text-secondary"></span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              New sign-ups can't log in until an admin approves them.
+            </p>
+            <p id="approvals-msg" class="mt-3 text-sm text-text-secondary italic">Loading…</p>
+            <ul id="approvals-list" class="mt-3 divide-y divide-border-soft"></ul>
+            <p class="mt-4">
+              <a href="/admin/contacts/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Approve or reject →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── MEMBERS ─────────────── -->
+      <section id="section-members" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Members &amp; Directory</span>
+            <span id="members-count" class="ml-2 text-sm font-normal text-text-secondary"></span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <dl id="members-stats" class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Registered</dt>
+                <dd id="stat-total" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Email updates</dt>
+                <dd id="stat-comms" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">In directory</dt>
+                <dd id="stat-directory" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Admins</dt>
+                <dd id="stat-admins" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+            </dl>
+            <p id="members-msg" class="mt-3 text-sm text-liturgical-red" hidden></p>
+            <p class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              <a href="/admin/contacts/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Contacts &amp; approvals →
+              </a>
+              <a href="/directory/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Parish directory →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── CATECHISM ─────────────── -->
+      <section id="section-catechism" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Catechism Lessons</span>
+            <span id="catechism-count" class="ml-2 text-sm font-normal text-text-secondary"></span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              The five most recent. Posted lessons show up under My Learning in every
+              member's account.
+            </p>
+            <p id="catechism-msg" class="mt-3 text-sm text-text-secondary italic">Loading…</p>
+            <ul id="catechism-list" class="mt-3 divide-y divide-border-soft"></ul>
+            <p class="mt-4">
+              <a href="/admin/catechism/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Upload a lesson →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── LIBRARY ─────────────── -->
+      <section id="section-library" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Parish Library</span>
+            <span id="library-count" class="ml-2 text-sm font-normal text-text-secondary"></span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <dl class="grid grid-cols-3 gap-4">
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Public</dt>
+                <dd id="stat-public" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Parishioners</dt>
+                <dd id="stat-parish" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+              <div>
+                <dt class="text-xs uppercase tracking-widest text-text-secondary">Hidden (staging)</dt>
+                <dd id="stat-hidden" class="mt-1 font-display text-2xl text-text-primary">—</dd>
+              </div>
+            </dl>
+            <p id="library-msg" class="mt-3 text-sm text-liturgical-red" hidden></p>
+            <p class="mt-4">
+              <a href="/admin/library/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Upload or manage books →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── SAINTS ─────────────── -->
+      <section id="section-saints" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Catalog of the Saints</span>
+            <span class="ml-2 text-sm font-normal text-text-secondary">({saintCount.toLocaleString()})</span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              {saintCount.toLocaleString()} saints in the catalog as of the last site build.
+              Entries are saved as files in the site itself, so a new one appears
+              a minute or two after saving.
+            </p>
+            <p class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+              <a href="/admin/saints/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Add or edit a saint →
+              </a>
+              <a href="/learn/saints/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                View the catalog →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── USEFUL LINKS ─────────────── -->
+      <section id="section-links" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Useful Links</span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              The outside services the site runs on. Each opens in a new tab and
+              asks for its own login.
+            </p>
+            <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+              <li>
+                <a href="https://supabase.com/dashboard" target="_blank" rel="noopener" class="text-brand-blue-dark no-underline hover:underline">Supabase dashboard →</a>
+                <span class="block text-xs text-text-secondary">Accounts, database, uploaded PDFs.</span>
+              </li>
+              <li>
+                <a href="https://dash.cloudflare.com" target="_blank" rel="noopener" class="text-brand-blue-dark no-underline hover:underline">Cloudflare dashboard →</a>
+                <span class="block text-xs text-text-secondary">Hosting, the domain, deploy history.</span>
+              </li>
+              <li>
+                <a href="https://resend.com/emails" target="_blank" rel="noopener" class="text-brand-blue-dark no-underline hover:underline">Resend →</a>
+                <span class="block text-xs text-text-secondary">Every email the site has sent, and whether it arrived.</span>
+              </li>
+              <li>
+                <a href="https://stjohnrgv.org/" target="_blank" rel="noopener" class="text-brand-blue-dark no-underline hover:underline">The live site →</a>
+                <span class="block text-xs text-text-secondary">What visitors see.</span>
+              </li>
+            </ul>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* Folds: the summary carries the heading, so hide the native marker
+     and use our own chevron. */
+  .admin-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .admin-summary::-webkit-details-marker { display: none; }
+  .fold-chevron {
+    color: var(--color-sacred-gold);
+    font-size: 0.9rem;
+    transition: transform 200ms ease;
+  }
+  .admin-fold[open] > .admin-summary .fold-chevron { transform: rotate(90deg); }
+  .admin-summary:hover { color: var(--color-brand-blue-dark); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fold-chevron { transition: none; }
+  }
+</style>
+
+<script>
+  // The site scrolls smoothly everywhere, which on a working page means
+  // watching five sections fly past on the way to the one you wanted.
+  // Here every jump lands instantly — including the floating back-to-top
+  // button, which reads this flag (see src/layouts/Layout.astro).
+  document.documentElement.style.scrollBehavior = "auto";
+  document.documentElement.dataset.instantScroll = "true";
+
+  type Pending = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    full_name: string | null;
+    email: string;
+    created_at: string;
+  };
+
+  type Contact = {
+    role: string | null;
+    opt_in_communications: boolean | null;
+    opt_in_directory: boolean | null;
+  };
+
+  type Lesson = {
+    slug: string;
+    title: string;
+    teacher: string | null;
+    lesson_date: string | null;
+    published: boolean;
+    notified_at: string | null;
+  };
+
+  type Book = { hidden: boolean; public_access: boolean };
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Plain YYYY-MM-DD strings — splitting avoids the day-shift the Date
+  // constructor causes in US time zones.
+  function formatLessonDate(value: string | null): string {
+    if (!value) return "";
+    const [y, m, d] = value.split("-").map(Number);
+    if (!y || !m || !d) return value;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[m - 1]} ${d}, ${y}`;
+  }
+
+  // auth.users timestamps are full ISO strings, safe for Date.
+  function formatSignupDate(value: string): string {
+    if (!value) return "";
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "";
+    return dt.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function setText(id: string, text: string) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function showSectionError(id: string, message: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.removeAttribute("hidden");
+    el.classList.remove("italic", "text-text-secondary");
+    el.classList.add("text-liturgical-red");
+  }
+
+  // ============ FOLDS: remember what you left open ============
+  const OPEN_KEY = "stjohn_admin_open";
+  function initFolds() {
+    const stored = localStorage.getItem(OPEN_KEY);
+    // First visit: everything open. After that, whatever shape you left.
+    const openSet: Set<string> | null = stored ? new Set(JSON.parse(stored) as string[]) : null;
+
+    document.querySelectorAll<HTMLElement>("section.admin-section").forEach((section) => {
+      const fold = section.querySelector("details");
+      if (!fold) return;
+      if (openSet) fold.open = openSet.has(section.id);
+      fold.addEventListener("toggle", () => {
+        const open: string[] = [];
+        document.querySelectorAll<HTMLElement>("section.admin-section").forEach((s) => {
+          if (s.querySelector("details")?.open) open.push(s.id);
+        });
+        localStorage.setItem(OPEN_KEY, JSON.stringify(open));
+      });
+    });
+  }
+
+  // ============ JUMPS: instant, and open the fold you landed on ============
+  function jumpTo(id: string) {
+    const section = document.getElementById(id);
+    if (!section) return;
+    // Jumping to a folded section would land on a closed heading and look
+    // like nothing happened.
+    const fold = section.querySelector("details");
+    if (fold && !fold.open) fold.open = true;
+    section.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" });
+  }
+
+  function initJumps() {
+    document.querySelectorAll<HTMLAnchorElement>("a.jump-link").forEach((link) => {
+      link.addEventListener("click", (ev) => {
+        const id = link.getAttribute("href")?.slice(1);
+        if (!id) return;
+        ev.preventDefault();
+        // Keep the address bar in step so Back returns you where you were.
+        history.replaceState(null, "", `#${id}`);
+        jumpTo(id);
+      });
+    });
+    // Arriving with a #hash already in the URL.
+    if (location.hash) jumpTo(location.hash.slice(1));
+  }
+
+  // ============ DATA ============
+  // Each section loads on its own. One failing API leaves the rest of the
+  // page perfectly usable.
+  // Takes the response the bootstrap gate already fetched, rather than
+  // asking the server for the same list twice.
+  async function loadApprovals(res: Response) {
+    const msg = document.getElementById("approvals-msg") as HTMLParagraphElement;
+    const list = document.getElementById("approvals-list") as HTMLUListElement;
+    const badge = document.getElementById("jump-approvals-badge") as HTMLSpanElement;
+    try {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { pending } = (await res.json()) as { pending: Pending[] };
+
+      setText("approvals-count", `(${pending.length})`);
+      if (pending.length === 0) {
+        msg.textContent = "Nobody is waiting — everyone who signed up has been dealt with.";
+        return;
+      }
+      msg.hidden = true;
+      badge.textContent = String(pending.length);
+      badge.classList.remove("hidden");
+      list.innerHTML = pending
+        .map((p) => {
+          const name = [p.first_name, p.last_name].filter(Boolean).join(" ") || p.full_name || "(no name given)";
+          const when = formatSignupDate(p.created_at);
+          return `<li class="py-2">
+            <span class="font-semibold text-text-primary">${escapeHtml(name)}</span>
+            <span class="block text-xs text-text-secondary">${escapeHtml(p.email)}${when ? ` · signed up ${escapeHtml(when)}` : ""}</span>
+          </li>`;
+        })
+        .join("");
+    } catch (err) {
+      msg.textContent = `Couldn't load sign-ups: ${err instanceof Error ? err.message : String(err)}`;
+      msg.classList.remove("italic", "text-text-secondary");
+      msg.classList.add("text-liturgical-red");
+    }
+  }
+
+  async function loadMembers() {
+    try {
+      const res = await fetch("/api/admin/contacts", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { contacts } = (await res.json()) as { contacts: Contact[] };
+
+      setText("stat-total", String(contacts.length));
+      setText("stat-comms", String(contacts.filter((c) => c.opt_in_communications).length));
+      setText("stat-directory", String(contacts.filter((c) => c.opt_in_directory).length));
+      setText("stat-admins", String(contacts.filter((c) => c.role === "admin").length));
+      setText("members-count", `(${contacts.length})`);
+    } catch (err) {
+      showSectionError("members-msg", `Couldn't load members: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  async function loadCatechism() {
+    const msg = document.getElementById("catechism-msg") as HTMLParagraphElement;
+    const list = document.getElementById("catechism-list") as HTMLUListElement;
+    try {
+      const res = await fetch("/api/admin/catechism", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { lessons } = (await res.json()) as { lessons: Lesson[] };
+
+      const posted = lessons.filter((l) => l.published).length;
+      const drafts = lessons.length - posted;
+      setText(
+        "catechism-count",
+        `(${posted} posted${drafts > 0 ? `, ${drafts} draft${drafts === 1 ? "" : "s"}` : ""})`,
+      );
+
+      if (lessons.length === 0) {
+        msg.textContent = "No lessons yet.";
+        return;
+      }
+      msg.hidden = true;
+      list.innerHTML = lessons
+        .slice(0, 5)
+        .map((l) => {
+          const meta = [l.teacher, formatLessonDate(l.lesson_date)].filter(Boolean).map(escapeHtml).join(" · ");
+          const tag = l.published
+            ? ""
+            : ` <span class="ml-1 border border-border-soft px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-text-secondary">Draft</span>`;
+          return `<li class="py-2">
+            <a href="/account/lesson/?slug=${encodeURIComponent(l.slug)}" class="font-semibold text-brand-blue-dark no-underline hover:underline">${escapeHtml(l.title)}</a>${tag}
+            ${meta ? `<span class="block text-xs text-text-secondary">${meta}</span>` : ""}
+          </li>`;
+        })
+        .join("");
+    } catch (err) {
+      msg.textContent = `Couldn't load lessons: ${err instanceof Error ? err.message : String(err)}`;
+      msg.classList.remove("italic", "text-text-secondary");
+      msg.classList.add("text-liturgical-red");
+    }
+  }
+
+  async function loadLibrary() {
+    try {
+      const res = await fetch("/api/admin/library", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { books } = (await res.json()) as { books: Book[] };
+
+      const hidden = books.filter((b) => b.hidden).length;
+      const pub = books.filter((b) => !b.hidden && b.public_access).length;
+      const parish = books.filter((b) => !b.hidden && !b.public_access).length;
+
+      setText("stat-public", String(pub));
+      setText("stat-parish", String(parish));
+      setText("stat-hidden", String(hidden));
+      setText("library-count", `(${books.length})`);
+    } catch (err) {
+      showSectionError("library-msg", `Couldn't load the library: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  // ============ BOOTSTRAP ============
+  (async () => {
+    const statusEl = document.getElementById("admin-status") as HTMLParagraphElement;
+    const bodyEl = document.getElementById("admin-body") as HTMLDivElement;
+
+    // One cheap admin call decides whether this page is for you at all.
+    // Same behaviour as the other admin pages: non-admins go home.
+    let res: Response;
+    try {
+      res = await fetch("/api/admin/pending", { credentials: "same-origin", cache: "no-store" });
+    } catch (err) {
+      statusEl.textContent = `Couldn't reach the server: ${err instanceof Error ? err.message : String(err)}`;
+      return;
+    }
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return;
+    }
+
+    statusEl.classList.add("hidden");
+    bodyEl.classList.remove("hidden");
+
+    initFolds();
+    initJumps();
+
+    // Sections fill in as their data arrives, in whatever order it lands.
+    loadApprovals(res);
+    loadMembers();
+    loadCatechism();
+    loadLibrary();
+  })();
+</script>

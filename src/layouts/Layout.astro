@@ -120,6 +120,10 @@ const liturgicalRootStyle =
       // Back-to-top: show after 600px scroll, smooth-scroll to top on click.
       // Smooth-scroll honors :root scroll-behavior, so prefers-reduced-motion
       // users get an instant jump (handled in global.css).
+      //
+      // A working page can opt out of the animation with
+      // <html data-instant-scroll="true"> (set by /admin/, where watching
+      // the page glide past six sections is a tax, not a nicety).
       const btn = document.getElementById("back-to-top");
       if (btn) {
         const threshold = 600;
@@ -129,7 +133,8 @@ const liturgicalRootStyle =
         };
         window.addEventListener("scroll", update, { passive: true });
         btn.addEventListener("click", () => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          const instant = document.documentElement.dataset.instantScroll === "true";
+          window.scrollTo({ top: 0, behavior: instant ? "auto" : "smooth" });
         });
         update();
       }

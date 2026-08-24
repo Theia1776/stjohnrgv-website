@@ -103,6 +103,18 @@ renders when `/api/auth/me` confirms login.
 
 ### Admin-only area
 
+- **`/admin/`** — the Parish Admin hub, and the only admin entry in the
+  header menu. A quick-jump bar plus one folding section per area:
+  pending approvals (listed in full), member counts, the newest catechism
+  lessons, library counts by visibility, the saints count, and links to
+  Supabase / Cloudflare / Resend. It only *reads* from the existing admin
+  APIs — each section loads independently, so one failing API leaves the
+  rest of the page usable. Jumps and the floating back-to-top land
+  instantly here (the page sets `<html data-instant-scroll="true">`,
+  which [src/layouts/Layout.astro](src/layouts/Layout.astro) honors);
+  which sections you leave open is remembered in `localStorage`
+  (`stjohn_admin_open`). Code: [src/pages/admin/index.astro](src/pages/admin/index.astro).
+
 - **`/admin/contacts/`** — list of all registered parishioners with
   filter/search, plus the Pending Approvals tab for new sign-ups.
   Code: [src/pages/admin/contacts.astro](src/pages/admin/contacts.astro).
