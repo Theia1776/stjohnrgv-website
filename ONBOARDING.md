@@ -136,6 +136,9 @@ renders when `/api/auth/me` confirms login.
   itself is the permission; that flag governs the automatic
   announcements only. Every send is recorded in `parish_emails`
   (migration 013) so "did that go out?" has an answer.
+  A "Send as" dropdown picks the parish identity — the office or
+  Fr. Antonios — which sets the From, Reply-To, and visible To, and is
+  recorded per message in `parish_emails.sent_as` (migration 014).
   Code: [src/pages/admin/email.astro](src/pages/admin/email.astro),
   API: [functions/api/admin/email.ts](functions/api/admin/email.ts).
 
@@ -256,6 +259,14 @@ Configured in the Cloudflare Pages dashboard, NOT in the repo:
   dashboard. Used by the password-reset flow
   ([functions/api/auth/forgot.ts](functions/api/auth/forgot.ts)) to email
   members their reset code.
+- `PARISH_OFFICE_EMAIL` / `PRIEST_EMAIL` — optional overrides for the two
+  identities `/admin/email/` can send as (default
+  `parishoffice@stjohnrgv.org` and `frantonios@stjohnrgv.org`). The
+  chosen one becomes the From, the Reply-To, and — on group mail — the
+  visible To. **This matters for privacy:** recipients on BCC can read
+  the To header, so group mail must never be addressed to an individual
+  admin's mailbox. Both addresses must be on a domain verified in
+  Resend.
 - `RESET_EMAIL_FROM` — the From address for reset emails, e.g.
   `St. John of Kronstadt <no-reply@stjohnrgv.org>`. **The domain must be
   verified in Resend first** (add the DKIM/SPF DNS records Resend gives

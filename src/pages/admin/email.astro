@@ -23,7 +23,9 @@ import Layout from "../../layouts/Layout.astro";
     <p class="text-text-secondary mb-6">
       Write to one member, a few, or everyone with an account. When a message goes to
       more than one person, everyone is placed on <strong>BCC</strong> — nobody sees
-      anybody else's address. Replies come back to you, not to the no-reply address.
+      anybody else's address. Choose whether the message comes from the parish office
+      or from Fr. Antonios — that name is what recipients see, and replies go back to
+      that address. No admin's personal address ever appears.
     </p>
 
     <div id="loading" class="text-text-secondary">Loading…</div>
@@ -31,8 +33,8 @@ import Layout from "../../layouts/Layout.astro";
 
     <div id="app" class="hidden">
       <p id="config-warning" hidden class="mb-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red">
-        Email isn't set up on the server yet, so nothing can be sent. (RESEND_API_KEY /
-        RESET_EMAIL_FROM in the Cloudflare dashboard.)
+        Email isn't set up on the server yet, so nothing can be sent. (RESEND_API_KEY in
+        the Cloudflare dashboard.)
       </p>
 
       <form id="send-form" class="space-y-6">
@@ -84,6 +86,18 @@ import Layout from "../../layouts/Layout.astro";
         <section class="border border-border-soft bg-cream-card p-6 shadow-sm md:p-7" aria-labelledby="message-heading">
           <h2 id="message-heading" class="font-display text-xl text-text-primary mb-4">The message</h2>
 
+          <div class="mb-4">
+            <label for="sender" class="block text-sm font-semibold mb-1">Send as</label>
+            <select
+              id="sender"
+              name="sender"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            ></select>
+            <p class="mt-1 text-xs text-text-secondary">
+              Whose name the message carries. Recipients see this, not the admin who sent it.
+            </p>
+          </div>
+
           <div>
             <label for="subject" class="block text-sm font-semibold mb-1">Subject *</label>
             <input
@@ -111,7 +125,7 @@ import Layout from "../../layouts/Layout.astro";
           </div>
 
           <p class="mt-4 text-xs text-text-secondary">
-            Replies will go to <span id="sender-email" class="font-mono"></span>.
+            Replies will go to <span id="reply-to" class="font-mono"></span>.
           </p>
         </section>
 
@@ -130,6 +144,7 @@ import Layout from "../../layouts/Layout.astro";
               <tr class="bg-brand-blue-dark text-cream-bg text-left">
                 <th class="p-2">Subject</th>
                 <th class="p-2">To</th>
+                <th class="p-2">Sent as</th>
                 <th class="p-2">Sent by</th>
                 <th class="p-2">When</th>
               </tr>
@@ -145,10 +160,12 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   type Member = { id: string; name: string; email: string; role: string | null };
+  type Sender = { key: string; label: string; address: string };
   type SentRecord = {
     id: string;
     subject: string;
     audience: string;
+    sent_as: string | null;
     recipient_count: number;
     attempted_count: number;
     error: string | null;
@@ -158,6 +175,7 @@ import Layout from "../../layouts/Layout.astro";
 
   let members: Member[] = [];
   let recent: SentRecord[] = [];
+  let senders: Sender[] = [];
   const selected = new Set<string>();
 
   function escapeHtml(value: unknown): string {
@@ -167,6 +185,12 @@ import Layout from "../../layouts/Layout.astro";
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  // Rows written before the choice existed have no sent_as; they all
+  // went out as the office, which is what they'll show.
+  function senderLabel(key: string | null): string {
+    return senders.find((s) => s.key === (key ?? "office"))?.label ?? "The parish office";
   }
 
   function showError(message: string) {
@@ -257,6 +281,7 @@ import Layout from "../../layouts/Layout.astro";
         return `<tr class="border-b border-border-soft">
           <td class="p-2">${escapeHtml(r.subject)}${shortfall}</td>
           <td class="p-2 whitespace-nowrap">${r.audience === "everyone" ? "Everyone" : "Individuals"} (${r.recipient_count})</td>
+          <td class="p-2 whitespace-nowrap">${escapeHtml(senderLabel(r.sent_as))}</td>
           <td class="p-2">${escapeHtml(r.sent_by_name ?? "—")}</td>
           <td class="p-2 whitespace-nowrap">${escapeHtml(whenText)}</td>
         </tr>`;
@@ -282,8 +307,17 @@ import Layout from "../../layouts/Layout.astro";
 
     const countEl = document.getElementById("everyone-count");
     if (countEl) countEl.textContent = `(${members.length})`;
-    const senderEl = document.getElementById("sender-email");
-    if (senderEl) senderEl.textContent = data.sender_email || "your account";
+    senders = (data.senders ?? []) as Sender[];
+    const senderSelect = document.getElementById("sender") as HTMLSelectElement | null;
+    if (senderSelect) {
+      const previous = senderSelect.value;
+      senderSelect.innerHTML = senders
+        .map((s) => `<option value="${escapeHtml(s.key)}">${escapeHtml(s.label)}</option>`)
+        .join("");
+      // Keep the admin's choice across the reload that follows a send.
+      if (previous && senders.some((s) => s.key === previous)) senderSelect.value = previous;
+      updateReplyTo();
+    }
     if (!data.email_configured) {
       document.getElementById("config-warning")?.removeAttribute("hidden");
     }
@@ -294,6 +328,14 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   // ============ WIRING ============
+  function updateReplyTo() {
+    const key = (document.getElementById("sender") as HTMLSelectElement | null)?.value ?? "office";
+    const el = document.getElementById("reply-to");
+    if (el) el.textContent = senders.find((s) => s.key === key)?.address ?? "the parish office";
+  }
+
+  document.getElementById("sender")?.addEventListener("change", updateReplyTo);
+
   document.querySelectorAll<HTMLInputElement>('input[name="audience"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       const panel = document.getElementById("people-panel");
@@ -328,6 +370,7 @@ import Layout from "../../layouts/Layout.astro";
     const body = (document.getElementById("body") as HTMLTextAreaElement).value.trim();
     const audience = currentAudience();
     const ids = [...selected];
+    const senderKey = (document.getElementById("sender") as HTMLSelectElement).value;
 
     if (!subject || !body) {
       setSendStatus("A subject and a message are both needed.", true);
@@ -342,7 +385,8 @@ import Layout from "../../layouts/Layout.astro";
     // confirmation naming the number of people.
     const count = audience === "everyone" ? members.length : ids.length;
     const who = audience === "everyone" ? `all ${count} registered members` : `${count} ${count === 1 ? "person" : "people"}`;
-    if (!window.confirm(`Send "${subject}" to ${who}? This can't be undone.`)) return;
+    const asWhom = senders.find((s) => s.key === senderKey)?.label ?? "the parish office";
+    if (!window.confirm(`Send "${subject}" to ${who}, as ${asWhom}? This can't be undone.`)) return;
 
     btn.disabled = true;
     setSendStatus("Sending…");
@@ -353,7 +397,7 @@ import Layout from "../../layouts/Layout.astro";
         credentials: "same-origin",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body, audience, ids }),
+        body: JSON.stringify({ subject, body, audience, ids, sender: senderKey }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

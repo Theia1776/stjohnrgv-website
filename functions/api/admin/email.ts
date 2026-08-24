@@ -16,11 +16,13 @@
  *
  * How addresses are protected
  * ---------------------------
- * A message with more than one recipient is addressed TO the sending
- * admin, with every member on BCC. Nobody ever sees another member's
- * address — a member who kept their email out of the parish directory
- * keeps it out of this too. Resend caps to + cc + bcc at 50 addresses
- * per message, so the BCC list is sent in batches of 50.
+ * A message with more than one recipient is addressed TO the parish
+ * identity it was sent as, with every member on BCC. Nobody ever sees
+ * another member's address — a member who kept their email out of the
+ * parish directory keeps it out of this too — and no admin's personal
+ * address appears anywhere, which matters because recipients on BCC can
+ * read the To header. Resend caps to + cc + bcc at 50 addresses per
+ * message, so the BCC list is sent in batches of 49.
  *
  * The roster itself is not copied into any table: auth.users is the
  * single source of truth, so a member who changes their address is
@@ -32,6 +34,8 @@
  *   audience   "everyone" | "individuals"
  *   ids        string[] — profile ids, required when audience is
  *              "individuals"
+ *   sender     "office" | "priest" — whose name the message carries;
+ *              sets the From, the Reply-To, and the visible To
  *
  * Admin-only, same role check as the rest of /api/admin/*.
  */
@@ -43,12 +47,49 @@ import { createClient } from "@supabase/supabase-js";
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
   RESEND_API_KEY?: string;
-  RESET_EMAIL_FROM?: string;
-  NOTIFY_EMAIL_FROM?: string;
+  /** Overrides for the two parish identities below. Set either in the
+   *  Cloudflare dashboard to change an address without a code push. */
+  PARISH_OFFICE_EMAIL?: string;
+  PRIEST_EMAIL?: string;
+}
+
+/**
+ * Who the parish is writing as. Every message carries one of these two
+ * identities, and never an individual admin's own mailbox.
+ *
+ * The chosen address is the From, the Reply-To, and — on any message
+ * with more than one recipient — the visible To. That last one matters:
+ * people on BCC can read the To header, so addressing group mail to the
+ * admin who pressed send would publish their personal address to the
+ * whole parish.
+ *
+ * Both addresses live on stjohnrgv.org, the domain already verified in
+ * Resend for password-reset mail, so either works as a From.
+ */
+const SENDERS = {
+  office: {
+    label: "The parish office",
+    name: "St. John of Kronstadt Orthodox Mission",
+    address: "parishoffice@stjohnrgv.org",
+  },
+  priest: {
+    label: "Fr. Antonios",
+    name: "Fr. Antonios — St. John of Kronstadt",
+    address: "frantonios@stjohnrgv.org",
+  },
+} as const;
+
+type SenderKey = keyof typeof SENDERS;
+
+function resolveSender(env: Env, key: SenderKey): { from: string; address: string } {
+  const sender = SENDERS[key];
+  const address =
+    (key === "priest" ? env.PRIEST_EMAIL : env.PARISH_OFFICE_EMAIL) || sender.address;
+  return { from: `${sender.name} <${address}>`, address };
 }
 
 // Resend allows 50 addresses across to + cc + bcc on one message. The
-// visible To (the sending admin) occupies one of them.
+// visible To (the parish identity) occupies one of them.
 const BCC_BATCH_SIZE = 49;
 // Resend's lower tiers allow roughly 2 requests a second.
 const BATCH_GAP_MS = 600;
@@ -163,7 +204,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     const { data: recent } = await supabase
       .from("parish_emails")
-      .select("id, subject, audience, recipient_count, attempted_count, error, sent_by_name, created_at")
+      .select("id, subject, audience, sent_as, recipient_count, attempted_count, error, sent_by_name, created_at")
       .order("created_at", { ascending: false })
       .limit(20);
 
@@ -172,11 +213,17 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
         {
           members,
           recent: recent ?? [],
-          // The page shows this so an admin knows where replies will go.
-          sender_email: session.user.email ?? "",
-          email_configured: Boolean(
-            context.env.RESEND_API_KEY && (context.env.NOTIFY_EMAIL_FROM || context.env.RESET_EMAIL_FROM),
-          ),
+          // The page offers these as the "Send as" choice and shows the
+          // address so an admin knows where replies will go. Always a
+          // parish address, never the admin's own.
+          senders: (Object.keys(SENDERS) as SenderKey[]).map((key) => ({
+            key,
+            label: SENDERS[key].label,
+            address: resolveSender(context.env, key).address,
+          })),
+          // The From now comes from the chosen parish identity, so the
+          // API key is the only thing that has to be configured.
+          email_configured: Boolean(context.env.RESEND_API_KEY),
         },
         200,
       ),
@@ -206,21 +253,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     if (!admin.ok) return wrap(jsonResponse({ error: "Forbidden" }, 403));
 
     const apiKey = context.env.RESEND_API_KEY;
-    const from = context.env.NOTIFY_EMAIL_FROM || context.env.RESET_EMAIL_FROM;
-    if (!apiKey || !from) {
+    if (!apiKey) {
       return wrap(
-        jsonResponse(
-          { error: "Email isn't set up on the server (RESEND_API_KEY / RESET_EMAIL_FROM)." },
-          500,
-        ),
+        jsonResponse({ error: "Email isn't set up on the server (RESEND_API_KEY)." }, 500),
       );
-    }
-
-    // The sending admin is the visible To on every message and the
-    // Reply-To, so replies reach a person rather than the no-reply box.
-    const senderEmail = session.user.email ?? "";
-    if (!senderEmail) {
-      return wrap(jsonResponse({ error: "Your account has no email address to send from." }, 400));
     }
 
     let payload: Record<string, unknown>;
@@ -233,6 +269,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const subject = typeof payload.subject === "string" ? payload.subject.trim() : "";
     const body = typeof payload.body === "string" ? payload.body.trim() : "";
     const audience = payload.audience === "individuals" ? "individuals" : "everyone";
+    // Which parish identity this goes out as. Anything unrecognised
+    // falls back to the office — the safer of the two to put a name to.
+    const senderKey: SenderKey = payload.sender === "priest" ? "priest" : "office";
+    const sender = resolveSender(context.env, senderKey);
     const ids = Array.isArray(payload.ids)
       ? payload.ids.filter((x): x is string => typeof x === "string")
       : [];
@@ -265,9 +305,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       // arrive looking like it was meant for somebody else.
       const result = await sendEmail({
         apiKey,
-        from,
+        from: sender.from,
         to: chosen[0].email,
-        replyTo: senderEmail,
+        replyTo: sender.address,
         subject,
         text: body,
         html,
@@ -275,17 +315,20 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       if (result.ok) delivered = 1;
       else failures.push(result.error ?? "unknown error");
     } else {
-      // Several or everyone: TO the admin, everyone else BCC, in
+      // Several or everyone: TO the parish office, everyone else BCC, in
       // batches of 49 so no message exceeds Resend's 50-address cap.
+      // The To is deliberately the parish address — recipients on BCC
+      // can read the To header, so anything else would publish a
+      // person's address to the whole list.
       const addresses = chosen.map((m) => m.email);
       for (let i = 0; i < addresses.length; i += BCC_BATCH_SIZE) {
         const batch = addresses.slice(i, i + BCC_BATCH_SIZE);
         const result = await sendEmail({
           apiKey,
-          from,
-          to: senderEmail,
+          from: sender.from,
+          to: sender.address,
           bcc: batch,
-          replyTo: senderEmail,
+          replyTo: sender.address,
           subject,
           text: body,
           html,
@@ -312,6 +355,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       subject,
       body,
       audience,
+      sent_as: senderKey,
       recipient_count: delivered,
       attempted_count: chosen.length,
       error: errorText,
@@ -331,6 +375,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
           attempted: chosen.length,
           error: errorText,
           audience,
+          sent_as: senderKey,
           log_error: logError?.message ?? null,
         },
         200,

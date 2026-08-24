@@ -35,7 +35,12 @@ interface Env {
   /** Optional override; falls back to RESET_EMAIL_FROM, the address
    *  already verified in Resend for password-reset mail. */
   NOTIFY_EMAIL_FROM?: string;
+  /** Where a reply to the announcement should land. The parish's own
+   *  address, never an individual's — see functions/api/admin/email.ts. */
+  PARISH_REPLY_TO?: string;
 }
+
+const DEFAULT_PARISH_ADDRESS = "parishoffice@stjohnrgv.org";
 
 const BUCKET = "library";
 const PREFIX = "catechism/";
@@ -171,7 +176,7 @@ async function collectRecipients(
  */
 async function sendAnnouncements(
   supabase: ReturnType<typeof createClient>,
-  mail: { apiKey: string; from: string },
+  mail: { apiKey: string; from: string; replyTo: string },
   lesson: { id: string; title: string; teacher: string | null; description: string | null },
   recipients: Recipient[],
   origin: string,
@@ -206,6 +211,9 @@ async function sendAnnouncements(
       apiKey: mail.apiKey,
       from: mail.from,
       to: r.email,
+      // A member who hits Reply should reach the parish office rather
+      // than the unattended no-reply box.
+      replyTo: mail.replyTo,
       subject: `New catechism lesson: ${lesson.title}`,
       text,
       html,
@@ -371,7 +379,7 @@ export async function onRequestPost(
           const origin = new URL(context.request.url).origin;
           const send = sendAnnouncements(
             supabase,
-            { apiKey, from },
+            { apiKey, from, replyTo: context.env.PARISH_REPLY_TO || DEFAULT_PARISH_ADDRESS },
             {
               id: inserted.id as string,
               title,
