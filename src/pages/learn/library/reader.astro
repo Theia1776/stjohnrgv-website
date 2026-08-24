@@ -64,6 +64,30 @@ import Layout from "../../../layouts/Layout.astro";
           >
             Book
           </button>
+          <button
+            id="mode-text"
+            type="button"
+            aria-pressed="false"
+            class="border border-brand-blue-dark border-l-0 bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark"
+          >
+            Text
+          </button>
+        </div>
+
+        <!-- Type size, for the text view only. -->
+        <div id="text-size-controls" hidden role="group" aria-label="Text size" class="flex items-center gap-2">
+          <button
+            type="button"
+            id="text-smaller"
+            class="border border-border-soft bg-cream-card px-2.5 py-1.5 font-display text-xs font-semibold text-text-primary"
+            aria-label="Smaller text"
+          >A&minus;</button>
+          <button
+            type="button"
+            id="text-larger"
+            class="border border-border-soft bg-cream-card px-2.5 py-1.5 font-display text-xs font-semibold text-text-primary"
+            aria-label="Larger text"
+          >A+</button>
         </div>
 
         <!-- Pager -->
@@ -94,8 +118,31 @@ import Layout from "../../../layouts/Layout.astro";
     </div>
   </section>
 
+  <!-- ============== TEXT STAGE ==============
+       The cleaned-up text version: the same book, reflowing, sized to
+       taste, on the site's normal cream background rather than the dark
+       PDF frame. Fed by /api/library/text. -->
+  <section id="text-stage" hidden class="bg-cream-bg">
+    <div class="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      <p id="text-loading" class="text-center font-display text-sm uppercase tracking-widest text-text-secondary">
+        Loading text…
+      </p>
+      <p
+        id="text-unavailable"
+        hidden
+        class="mx-auto max-w-xl border border-brand-tan bg-cream-card p-5 text-center text-sm text-text-primary/85"
+      ></p>
+      <div
+        id="text-body"
+        hidden
+        class="mx-auto max-w-2xl whitespace-pre-wrap text-text-primary/90"
+        style="font-size: 1.05rem; line-height: 1.8;"
+      ></div>
+    </div>
+  </section>
+
   <!-- ============== READER STAGE ============== -->
-  <section class="pdf-stage">
+  <section id="pdf-stage-section" class="pdf-stage">
     <div
       id="pdf-viewer"
       class="mx-auto min-h-[60vh] max-w-6xl px-4 py-8 md:px-6 md:py-12"
@@ -157,14 +204,29 @@ import Layout from "../../../layouts/Layout.astro";
     const authorEl = document.getElementById("book-author") as HTMLParagraphElement;
     const modeScrollBtn = document.getElementById("mode-scroll") as HTMLButtonElement;
     const modeBookBtn = document.getElementById("mode-book") as HTMLButtonElement;
+    const modeTextBtn = document.getElementById("mode-text") as HTMLButtonElement;
+    const textStage = document.getElementById("text-stage") as HTMLElement;
+    const pdfStage = document.getElementById("pdf-stage-section") as HTMLElement;
+    const textBody = document.getElementById("text-body") as HTMLDivElement;
+    const textLoading = document.getElementById("text-loading") as HTMLParagraphElement;
+    const textUnavailable = document.getElementById("text-unavailable") as HTMLParagraphElement;
+    const textSizeControls = document.getElementById("text-size-controls") as HTMLDivElement;
     const prevBtn = document.getElementById("pager-prev") as HTMLButtonElement;
     const nextBtn = document.getElementById("pager-next") as HTMLButtonElement;
     const statusEl = document.getElementById("pager-status") as HTMLSpanElement;
 
-    type Mode = "scroll" | "book";
+    type Mode = "scroll" | "book" | "text";
     let mode: Mode = "scroll";
     let pdf: PDFDocument | null = null;
     let currentPage = 1;
+    let currentSlug = "";
+    // Fetched once per book, then kept — flipping between views should
+    // not re-download it.
+    let textLoaded = false;
+    // Remembered across books and visits, so a reader who needs larger
+    // type sets it once.
+    const TEXT_SIZE_KEY = "htoc-reader-text-size";
+    let textSize = Number(localStorage.getItem(TEXT_SIZE_KEY) || "1.05");
     // Cache rendered scroll-mode canvases so toggling modes doesn't
     // re-render every page.
     const scrollCanvases = new Map<number, HTMLCanvasElement>();
@@ -327,29 +389,98 @@ import Layout from "../../../layouts/Layout.astro";
     prevBtn.addEventListener("click", goPrev);
     nextBtn.addEventListener("click", goNext);
 
+    // ============================================================
+    // TEXT VIEW — the cleaned-up text stored with the book
+    // ============================================================
+    function applyTextSize() {
+      textBody.style.fontSize = `${textSize}rem`;
+      localStorage.setItem(TEXT_SIZE_KEY, String(textSize));
+    }
+
+    async function loadText() {
+      if (textLoaded) return;
+      textLoading.hidden = false;
+      textUnavailable.hidden = true;
+      textBody.hidden = true;
+
+      try {
+        const res = await fetch(`/api/library/text?slug=${encodeURIComponent(currentSlug)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        const data = await res.json().catch(() => ({}));
+        textLoading.hidden = true;
+
+        if (!res.ok) {
+          // 409 means the book has no text — a scan, or not yet
+          // prepared. Say which, and point back to the pages.
+          textUnavailable.textContent = data.error || `Could not load the text (${res.status}).`;
+          textUnavailable.hidden = false;
+          return;
+        }
+
+        textBody.textContent = data.text ?? "";
+        applyTextSize();
+        textBody.hidden = false;
+        textLoaded = true;
+      } catch (err) {
+        textLoading.hidden = true;
+        textUnavailable.textContent = `Could not load the text: ${(err as Error).message || err}`;
+        textUnavailable.hidden = false;
+      }
+    }
+
+    function styleModeButton(btn: HTMLButtonElement, active: boolean) {
+      btn.setAttribute("aria-pressed", String(active));
+      btn.classList.toggle("bg-brand-blue-dark", active);
+      btn.classList.toggle("text-cream-card", active);
+      btn.classList.toggle("bg-cream-card", !active);
+      btn.classList.toggle("text-brand-blue-dark", !active);
+    }
+
     function setMode(next: Mode) {
       if (mode === next) return;
       mode = next;
-      const isScroll = mode === "scroll";
-      modeScrollBtn.setAttribute("aria-pressed", String(isScroll));
-      modeBookBtn.setAttribute("aria-pressed", String(!isScroll));
-      modeScrollBtn.classList.toggle("bg-brand-blue-dark", isScroll);
-      modeScrollBtn.classList.toggle("text-cream-card", isScroll);
-      modeScrollBtn.classList.toggle("bg-cream-card", !isScroll);
-      modeScrollBtn.classList.toggle("text-brand-blue-dark", !isScroll);
-      modeBookBtn.classList.toggle("bg-brand-blue-dark", !isScroll);
-      modeBookBtn.classList.toggle("text-cream-card", !isScroll);
-      modeBookBtn.classList.toggle("bg-cream-card", isScroll);
-      modeBookBtn.classList.toggle("text-brand-blue-dark", isScroll);
-      if (!isScroll && currentPage % 2 === 0) currentPage -= 1;
+
+      styleModeButton(modeScrollBtn, mode === "scroll");
+      styleModeButton(modeBookBtn, mode === "book");
+      styleModeButton(modeTextBtn, mode === "text");
+
+      const isText = mode === "text";
+      textStage.hidden = !isText;
+      pdfStage.hidden = isText;
+      textSizeControls.hidden = !isText;
+      // The pager belongs to the page views; the text view is one
+      // continuous scroll with no pages to step through.
+      prevBtn.hidden = isText;
+      nextBtn.hidden = isText;
+      statusEl.hidden = isText;
+
+      if (isText) {
+        loadText();
+        return;
+      }
+      if (mode === "book" && currentPage % 2 === 0) currentPage -= 1;
       render();
     }
     modeScrollBtn.addEventListener("click", () => setMode("scroll"));
     modeBookBtn.addEventListener("click", () => setMode("book"));
+    modeTextBtn.addEventListener("click", () => setMode("text"));
+
+    document.getElementById("text-larger")?.addEventListener("click", () => {
+      textSize = Math.min(2, Math.round((textSize + 0.1) * 100) / 100);
+      applyTextSize();
+    });
+    document.getElementById("text-smaller")?.addEventListener("click", () => {
+      textSize = Math.max(0.8, Math.round((textSize - 0.1) * 100) / 100);
+      applyTextSize();
+    });
 
     document.addEventListener("keydown", (e) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
+      // Nothing to page through in the text view.
+      if (mode === "text") return;
       if (e.key === "ArrowLeft") goPrev();
       else if (e.key === "ArrowRight") goNext();
     });
@@ -361,6 +492,10 @@ import Layout from "../../../layouts/Layout.astro";
     (async () => {
       const params = new URLSearchParams(window.location.search);
       const slug = (params.get("slug") || "").trim();
+      currentSlug = slug;
+      // ?view=text opens straight into the cleaned-up text — that's what
+      // the "Read as text" link on each library card points at.
+      const wantsText = params.get("view") === "text";
       if (!slug) {
         titleEl.textContent = "No book selected";
         showError("This reader needs a ?slug= parameter. Pick a book from the library.");
@@ -394,6 +529,12 @@ import Layout from "../../../layouts/Layout.astro";
         document.title = `${book.title} | Parish Library`;
         titleEl.textContent = book.title;
         authorEl.textContent = book.author ?? "";
+
+        // Someone who asked for the text view gets it straight away —
+        // waiting for a 300-page PDF to render first would be a long
+        // stare at nothing. The pages still load underneath, so
+        // switching back to them is instant.
+        if (wantsText) setMode("text");
 
         const pdfRes = await fetch(`/api/library/pdf?key=${encodeURIComponent(book.pdf_storage_key)}`, {
           headers: { Accept: "application/json" },

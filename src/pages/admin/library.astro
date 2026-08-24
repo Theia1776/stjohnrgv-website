@@ -8,6 +8,14 @@ import Layout from "../../layouts/Layout.astro";
 >
   <meta slot="head" name="robots" content="noindex,nofollow" />
 
+  <!-- PDF.js — pinned to the same version the reader uses. Used here to
+       pull the text out of a book in the browser at upload time, so the
+       server never has to parse a 300-page PDF. -->
+  <script
+    is:inline
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+  ></script>
+
   <main class="mx-auto max-w-5xl px-4 py-8">
     <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
     <h1 class="font-display text-3xl text-text-primary mb-2 md:text-4xl">Parish Library</h1>
@@ -31,7 +39,10 @@ import Layout from "../../layouts/Layout.astro";
         </h2>
         <p class="text-sm text-text-secondary mb-5">
           Drop a PDF and fill in the details. The URL slug is auto-generated from
-          the title unless you set one yourself.
+          the title unless you set one yourself. The book's text is pulled out here
+          in your browser as it uploads, which gives readers a plain-text version
+          alongside the original pages. Scanned books have no text to pull, and
+          upload just the same.
         </p>
 
         <form id="upload-form" class="space-y-4">
@@ -237,9 +248,18 @@ import Layout from "../../layouts/Layout.astro";
 
       <!-- ============== MANAGE LIST ============== -->
       <section aria-labelledby="manage-heading">
-        <h2 id="manage-heading" class="font-display text-xl text-text-primary mb-4">
-          Current Catalog (<span id="book-count">0</span>)
-        </h2>
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <h2 id="manage-heading" class="font-display text-xl text-text-primary">
+            Current Catalog (<span id="book-count">0</span>)
+          </h2>
+          <div class="flex flex-wrap items-center gap-3">
+            <span id="backfill-summary" class="text-sm text-text-secondary"></span>
+            <button type="button" id="backfill-btn" class="btn btn-secondary text-sm" hidden>
+              Prepare text for older books
+            </button>
+          </div>
+        </div>
+        <p id="backfill-status" class="mb-4 text-sm text-text-secondary" hidden></p>
         <div class="overflow-x-auto border border-border-soft rounded">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -249,6 +269,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Category</th>
                 <th class="p-2">Languages</th>
                 <th class="p-2">Visibility</th>
+                <th class="p-2">Text</th>
                 <th class="p-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -275,6 +296,8 @@ import Layout from "../../layouts/Layout.astro";
     pdf_storage_key: string;
     public_access: boolean;
     hidden: boolean;
+    text_chars: number | null;
+    text_status: string | null;
     created_at: string;
     updated_at: string;
   };
@@ -338,9 +361,12 @@ import Layout from "../../layouts/Layout.astro";
     if (books.length === 0) {
       tbody.innerHTML = "";
       empty.classList.remove("hidden");
+      renderBackfillControl();
       return;
     }
     empty.classList.add("hidden");
+
+    renderBackfillControl();
 
     tbody.innerHTML = books
       .map(
@@ -359,6 +385,7 @@ import Layout from "../../layouts/Layout.astro";
               <option value="public"${!b.hidden && b.public_access ? " selected" : ""}>Public</option>
             </select>
           </td>
+          <td class="p-2 whitespace-nowrap text-xs">${textCell(b)}</td>
           <td class="p-2 text-right whitespace-nowrap">
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
@@ -368,6 +395,148 @@ import Layout from "../../layouts/Layout.astro";
       .join("");
   }
 
+  // ====================== TEXT EXTRACTION ======================
+  // PDF.js gives us the text layer of a PDF. Books that were typeset
+  // digitally hand it over cleanly; books that are photographs of pages
+  // have none to give, and come back empty — that's a scan, not a
+  // failure, and it's recorded as such so the backfill doesn't keep
+  // retrying them.
+  const pdfjsLib = (window as unknown as { pdfjsLib: any }).pdfjsLib;
+  if (pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  // Beyond this we keep the beginning rather than refusing the book.
+  // Matches the cap on the server.
+  const MAX_TEXT_CHARS = 3_000_000;
+
+  type Extraction = { text: string; status: "ok" | "empty" | "error"; pages: number };
+
+  async function extractText(
+    source: { data: ArrayBuffer } | { url: string },
+    onProgress?: (page: number, total: number) => void,
+  ): Promise<Extraction> {
+    if (!pdfjsLib) return { text: "", status: "error", pages: 0 };
+    try {
+      const pdf = await pdfjsLib.getDocument(source).promise;
+      const parts: string[] = [];
+      let chars = 0;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        // One page per line keeps some sense of where you are; PDF.js
+        // hands back positioned fragments, so they're joined with spaces.
+        const pageText = content.items.map((it: any) => it.str).join(" ").replace(/\s+/g, " ").trim();
+        if (pageText) {
+          parts.push(pageText);
+          chars += pageText.length;
+        }
+        onProgress?.(i, pdf.numPages);
+        if (chars > MAX_TEXT_CHARS) break;
+      }
+      // A blank line between pages, so the text view has some sense of
+      // where one page ended and the next began.
+      const text = parts.join("\n\n").slice(0, MAX_TEXT_CHARS);
+      return { text, status: text ? "ok" : "empty", pages: pdf.numPages };
+    } catch (err) {
+      console.error("Text extraction failed:", err);
+      return { text: "", status: "error", pages: 0 };
+    }
+  }
+
+  function textCell(b: Book): string {
+    if (b.text_status === "ok") {
+      const n = Number(b.text_chars ?? 0);
+      return `<span class="text-text-secondary">${n.toLocaleString()} chars</span>`;
+    }
+    if (b.text_status === "empty") return `<span class="text-text-secondary">scan — no text</span>`;
+    if (b.text_status === "error") return `<span class="text-liturgical-red">failed</span>`;
+    return `<span class="text-text-secondary">—</span>`;
+  }
+
+  // ====================== BACKFILL ======================
+  // Books uploaded before text extraction existed. Each one is fetched
+  // through its signed URL, read in this browser, and PATCHed back. It
+  // runs in the open tab; closing the tab stops it, and re-running picks
+  // up where it left off because finished books no longer qualify.
+  function booksNeedingText(): Book[] {
+    return books.filter((b) => !b.text_status);
+  }
+
+  function renderBackfillControl() {
+    const btn = document.getElementById("backfill-btn") as HTMLButtonElement | null;
+    const summary = document.getElementById("backfill-summary");
+    if (!btn || !summary) return;
+    const pending = booksNeedingText().length;
+    const withText = books.filter((b) => b.text_status === "ok").length;
+    summary.textContent = books.length
+      ? `${withText} of ${books.length} have text${pending ? `, ${pending} not yet tried` : ""}`
+      : "";
+    btn.hidden = pending === 0;
+    btn.textContent = `Prepare text for ${pending} book${pending === 1 ? "" : "s"}`;
+  }
+
+  function setBackfillStatus(text: string, isError = false) {
+    const el = document.getElementById("backfill-status");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = !text;
+    el.className = isError ? "mb-4 text-sm text-liturgical-red" : "mb-4 text-sm text-text-secondary";
+  }
+
+  document.getElementById("backfill-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("backfill-btn") as HTMLButtonElement;
+    const queue = booksNeedingText();
+    if (queue.length === 0) return;
+    if (!window.confirm(`Read the text out of ${queue.length} book${queue.length === 1 ? "" : "s"}? Keep this tab open while it runs.`)) return;
+
+    btn.disabled = true;
+    let done = 0;
+    let withText = 0;
+    let scans = 0;
+    let failed = 0;
+
+    for (const book of queue) {
+      setBackfillStatus(`Reading “${book.title}” (${done + 1} of ${queue.length})…`);
+      try {
+        const signed = await fetch(`/api/library/pdf?key=${encodeURIComponent(book.pdf_storage_key)}`, {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        });
+        if (!signed.ok) throw new Error(`could not open the PDF (${signed.status})`);
+        const { url } = await signed.json();
+
+        const result = await extractText({ url });
+        if (result.status === "ok") withText++;
+        else if (result.status === "empty") scans++;
+        else failed++;
+
+        const res = await fetch(`/api/admin/library/${encodeURIComponent(book.id)}`, {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text_content: result.text, text_status: result.status }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? `save failed (${res.status})`);
+        }
+      } catch (err) {
+        failed++;
+        console.error(`Backfill failed for ${book.title}:`, err);
+      }
+      done++;
+    }
+
+    setBackfillStatus(
+      `Done: ${withText} with text, ${scans} scanned (nothing to pull), ${failed} failed.`,
+      failed > 0,
+    );
+    btn.disabled = false;
+    await loadBooks();
+  });
+
   // ====================== UPLOAD ======================
   document.getElementById("upload-form")?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -376,7 +545,29 @@ import Layout from "../../layouts/Layout.astro";
     const formData = new FormData(form);
 
     btn.disabled = true;
-    setUploadStatus("Uploading…");
+
+    // Read the text out of the PDF before sending it, and post both
+    // together. A book whose text can't be read still uploads — the
+    // status records why, and the reader falls back to page view.
+    const pdfFile = formData.get("pdf");
+    if (pdfFile instanceof File && pdfFile.size > 0) {
+      setUploadStatus("Reading the text out of the PDF…");
+      const buffer = await pdfFile.arrayBuffer();
+      const extraction = await extractText({ data: buffer }, (page, total) => {
+        setUploadStatus(`Reading text — page ${page} of ${total}…`);
+      });
+      formData.append("text_content", extraction.text);
+      formData.append("text_status", extraction.status);
+      setUploadStatus(
+        extraction.status === "ok"
+          ? `Read ${extraction.text.length.toLocaleString()} characters. Uploading…`
+          : extraction.status === "empty"
+            ? "No text in this PDF (it's a scan). Uploading…"
+            : "Couldn't read the text from this PDF. Uploading anyway…",
+      );
+    } else {
+      setUploadStatus("Uploading…");
+    }
 
     try {
       const res = await fetch("/api/admin/library", {
@@ -390,7 +581,11 @@ import Layout from "../../layouts/Layout.astro";
         setUploadStatus(`Failed: ${body.error ?? res.status}`, true);
         return;
       }
-      setUploadStatus(`Added "${body.book?.title ?? "book"}".`);
+      const chars = Number(body.book?.text_chars ?? 0);
+      setUploadStatus(
+        `Added "${body.book?.title ?? "book"}".` +
+          (chars > 0 ? ` Text version ready (${chars.toLocaleString()} characters).` : " No text version — this one is a scan."),
+      );
       form.reset();
       // Restore the default Languages value after reset.
       (document.getElementById("languages") as HTMLInputElement).value = "English";

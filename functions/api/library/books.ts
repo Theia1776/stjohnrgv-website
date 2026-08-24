@@ -40,7 +40,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     let query = supabase
       .from("library_books")
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access")
+      // text_chars, not text_content: whether a book HAS a cleaned-up
+      // text version is one number; the text itself is served one book
+      // at a time by /api/library/text.
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, text_chars, text_status")
       // Hidden/staging books never appear in the parishioner or public
       // catalog — admins manage them from /admin/library.
       .eq("hidden", false)
@@ -55,7 +58,15 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const { data, error } = await query;
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
 
-    return wrap(jsonResponse({ books: data ?? [], viewer_authenticated: !!session.user }, 200));
+    // has_text drives the "Read as text" link on each card. Books that
+    // predate text extraction, and scans that yielded nothing, simply
+    // don't get one.
+    const books = (data ?? []).map((b) => {
+      const { text_chars, text_status, ...rest } = b as Record<string, unknown>;
+      return { ...rest, has_text: Number(text_chars ?? 0) > 0 && text_status === "ok" };
+    });
+
+    return wrap(jsonResponse({ books, viewer_authenticated: !!session.user }, 200));
   } catch (err) {
     return wrap(
       jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),

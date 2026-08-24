@@ -18,6 +18,8 @@ interface Env {
 }
 
 const BUCKET = "library";
+// Matches the cap in index.ts — roughly a 1,200-page book.
+const MAX_TEXT_CHARS = 3_000_000;
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -127,6 +129,22 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     if (typeof body.hidden === "boolean") {
       updates.hidden = body.hidden;
     }
+    // Backfill of extracted text, sent by the admin page after pulling
+    // it out of an already-uploaded PDF in the browser. text_status
+    // records a scan ('empty') or a failure ('error') just as clearly as
+    // a success, so the backfill doesn't retry the same book forever.
+    if (typeof body.text_content === "string" || typeof body.text_status === "string") {
+      const text = typeof body.text_content === "string"
+        ? body.text_content.slice(0, MAX_TEXT_CHARS).trim()
+        : "";
+      const status = typeof body.text_status === "string" && body.text_status
+        ? body.text_status
+        : text ? "ok" : "empty";
+      updates.text_content = text || null;
+      updates.text_chars = text.length;
+      updates.text_status = status;
+      updates.text_extracted_at = new Date().toISOString();
+    }
 
     if (Object.keys(updates).length === 0) {
       return wrap(jsonResponse({ error: "No editable fields supplied." }, 400));
@@ -136,7 +154,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       .from("library_books")
       .update(updates)
       .eq("id", id)
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
       .single();
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));

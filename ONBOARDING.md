@@ -126,7 +126,19 @@ renders when `/api/auth/me` confirms login.
   `/learn/saints/`.
 - **`/admin/library/`** — upload new books (drag-drop PDF + metadata
   form) and edit/delete existing ones. Backed by the `library_books`
-  table; PDFs go into the existing `library` storage bucket. Code:
+  table; PDFs go into the existing `library` storage bucket.
+  **Text extraction:** each PDF's text is pulled out *in the admin's
+  browser* with PDF.js as it uploads and stored in
+  `library_books.text_content` (migration 015) — a 300-page book would
+  blow a Cloudflare Function's CPU budget, and the browser has PDF.js
+  loaded anyway. A "Prepare text for older books" button backfills books
+  uploaded before this existed, one at a time, in the open tab. Scanned
+  books yield nothing and are marked `text_status = 'empty'` so the
+  backfill doesn't retry them forever; OCR is not attempted. The text is
+  served one book at a time by
+  [functions/api/library/text.ts](functions/api/library/text.ts) under
+  the same visibility rules as the PDF, and read by the reader's **Text**
+  view (`/learn/library/reader/?slug=…&view=text`). Code:
   [src/pages/admin/library.astro](src/pages/admin/library.astro),
   APIs: [functions/api/admin/library/index.ts](functions/api/admin/library/index.ts)
   and [functions/api/admin/library/[id].ts](functions/api/admin/library/[id].ts).
@@ -228,6 +240,8 @@ update public.profiles set approved = true where email = 'newperson@example.com'
   `001_*.sql`, `002_*.sql`, etc.
 - **Tables:** `public.profiles`, `public.coffee_hour_signups`,
   `public.library_books`, `public.catechism_lessons`, `public.parish_emails`.
+  `library_books.text_content` holds each book's extracted text (migration
+  015) — see the text-extraction note under `/admin/library/`.
 - **Auth users:** `auth.users` (Supabase-managed).
 
 ### Critical: migrations are applied BY HAND

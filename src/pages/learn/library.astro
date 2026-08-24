@@ -148,6 +148,8 @@ const categories = [
       category: string;
       languages: string[];
       description: string | null;
+      /** True when a cleaned-up text version has been prepared. */
+      has_text?: boolean;
     };
 
     const loadingEl = document.getElementById("library-loading") as HTMLParagraphElement;
@@ -188,6 +190,19 @@ const categories = [
     }
 
     function bookCard(book: Book): string {
+      // Languages now sit with the author as a quiet line, and the space
+      // they used to occupy carries the link to the cleaned-up text
+      // version — the original scanned pages are always still there
+      // under "Read".
+      const languages = (book.languages ?? []).filter(Boolean).map(escapeHtml).join(" · ");
+      const textLink = book.has_text
+        ? `<a
+            href="/learn/library/reader/?slug=${encodeURIComponent(book.slug)}&view=text"
+            class="font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
+          >Read as text →</a>
+          <span class="mt-1 block text-xs text-text-secondary">Reflows to your screen; type size adjustable.</span>`
+        : `<span class="text-xs italic text-text-secondary">Scanned pages — no text version.</span>`;
+
       return `<article
         data-category="${escapeHtml(book.category)}"
         class="library-card flex flex-col border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
@@ -195,16 +210,15 @@ const categories = [
         <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">${escapeHtml(book.category)}</p>
         <h3 class="mt-2 font-display text-xl text-text-primary leading-snug">${escapeHtml(book.title)}</h3>
         <p class="mt-2 text-sm italic text-text-secondary">${escapeHtml(book.author ?? "")}</p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          ${(book.languages ?? []).map((lang) => `<span class="border border-border-soft px-2 py-0.5 text-xs uppercase tracking-wider text-text-secondary">${escapeHtml(lang)}</span>`).join("")}
-        </div>
+        ${languages ? `<p class="mt-1 text-xs uppercase tracking-wider text-text-secondary">${languages}</p>` : ""}
+        <div class="mt-4">${textLink}</div>
         <p class="mt-5 text-sm text-text-primary/85 leading-relaxed">${escapeHtml(book.description ?? "")}</p>
         <div class="mt-6 flex-grow"></div>
         <p>
           <a
             href="/learn/library/reader/?slug=${encodeURIComponent(book.slug)}"
             class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline"
-          >Read →</a>
+          >Read original pages →</a>
         </p>
       </article>`;
     }

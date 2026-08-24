@@ -14,6 +14,9 @@
  *   languages    (string, required)         — comma-separated list,
  *                                             e.g. "English,Greek"
  *   description  (string, optional)
+ *   text_content (string, optional)         — text pulled out of the
+ *                                             PDF in the browser
+ *   text_status  ("ok"|"empty"|"error")     — how that extraction went
  *
  * On success the row is inserted into library_books and the PDF is
  * uploaded to the existing "library" storage bucket under the file's
@@ -36,6 +39,10 @@ const BUCKET = "library";
 // Books often run 5-30 MB; cap at 50 MB to avoid runaway uploads
 // from misclicks (e.g. someone dragging the wrong scanned PDF).
 const PDF_MAX_BYTES = 50 * 1024 * 1024;
+// Extracted text is stored on the row. Three million characters is
+// roughly a 1,200-page book — beyond that we keep the beginning rather
+// than refusing the upload.
+const MAX_TEXT_CHARS = 3_000_000;
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -92,7 +99,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     const { data, error } = await supabase
       .from("library_books")
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, created_at, updated_at")
+      // text_chars / text_status but never text_content — the admin list
+      // needs to know which books still want extracting, not to carry
+      // every book's full text.
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -163,6 +173,13 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       return wrap(jsonResponse({ error: "At least one language is required." }, 400));
     }
 
+    // Text extracted from the PDF in the admin's browser (PDF.js) and
+    // posted alongside it, so the server never has to parse a 300-page
+    // book. Empty means the extraction found nothing — a scan.
+    const textRaw = String(formData.get("text_content") ?? "");
+    const textContent = textRaw.slice(0, MAX_TEXT_CHARS).trim();
+    const textStatus = String(formData.get("text_status") ?? "").trim() || null;
+
     const slug = slugRaw ? slugify(slugRaw) : slugify(title);
 
     // Reject before upload if the slug is already taken — saves a
@@ -214,8 +231,14 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         pdf_storage_key: storageKey,
         public_access: publicAccess,
         hidden,
+        text_content: textContent || null,
+        text_chars: textContent.length,
+        // Trust the browser's own verdict when it sent one; otherwise
+        // infer from whether any text arrived.
+        text_status: textStatus ?? (textContent ? "ok" : "empty"),
+        text_extracted_at: textStatus || textContent ? new Date().toISOString() : null,
       })
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
       .single();
 
     if (insertError) {
