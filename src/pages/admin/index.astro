@@ -43,6 +43,7 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
           Approvals <span id="jump-approvals-badge" class="hidden rounded-full bg-liturgical-red px-1.5 py-0.5 text-[0.65rem] font-semibold text-white"></span>
         </a>
         <a href="#section-members" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Members</a>
+        <a href="#section-email" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Email the Parish</a>
         <a href="#section-catechism" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Catechism Lessons</a>
         <a href="#section-library" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Parish Library</a>
         <a href="#section-saints" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Saints</a>
@@ -106,6 +107,29 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
               </a>
               <a href="/directory/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
                 Parish directory →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── EMAIL ─────────────── -->
+      <section id="section-email" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">Email the Parish</span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              Write to one member, a few, or everyone with an account. Messages to more
+              than one person go out with everyone on BCC, so nobody sees anybody else's
+              address.
+            </p>
+            <p id="email-recent" class="mt-3 text-sm text-text-secondary italic">Loading…</p>
+            <p class="mt-4">
+              <a href="/admin/email/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Write a message →
               </a>
             </p>
           </div>
@@ -392,11 +416,10 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
       const { pending } = (await res.json()) as { pending: Pending[] };
 
       setText("approvals-count", `(${pending.length})`);
-      if (pending.length === 0) {
-        msg.textContent = "Nobody is waiting — everyone who signed up has been dealt with.";
-        return;
-      }
+      // Nobody waiting: say nothing. The (0) beside the heading already
+      // carries it, and a sentence about it just adds noise.
       msg.hidden = true;
+      if (pending.length === 0) return;
       badge.textContent = String(pending.length);
       badge.classList.remove("hidden");
       list.innerHTML = pending
@@ -429,6 +452,35 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
       setText("members-count", `(${contacts.length})`);
     } catch (err) {
       showSectionError("members-msg", `Couldn't load members: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  async function loadEmail() {
+    const el = document.getElementById("email-recent") as HTMLParagraphElement;
+    try {
+      const res = await fetch("/api/admin/email", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as {
+        members: unknown[];
+        recent: { subject: string; created_at: string; recipient_count: number }[];
+      };
+      const count = (data.members ?? []).length;
+      const last = (data.recent ?? [])[0];
+      if (!last) {
+        el.textContent = `${count} registered ${count === 1 ? "member" : "members"} can be written to. Nothing sent yet.`;
+        return;
+      }
+      const when = new Date(last.created_at);
+      const whenText = Number.isNaN(when.getTime())
+        ? ""
+        : when.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      el.textContent =
+        `${count} registered ${count === 1 ? "member" : "members"} can be written to. ` +
+        `Last sent${whenText ? ` ${whenText}` : ""}: “${last.subject}” (${last.recipient_count}).`;
+    } catch (err) {
+      el.textContent = `Couldn't load the mailer: ${err instanceof Error ? err.message : String(err)}`;
+      el.classList.remove("italic", "text-text-secondary");
+      el.classList.add("text-liturgical-red");
     }
   }
 
@@ -519,6 +571,7 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
     // Sections fill in as their data arrives, in whatever order it lands.
     loadApprovals(res);
     loadMembers();
+    loadEmail();
     loadCatechism();
     loadLibrary();
   })();

@@ -1,0 +1,390 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Parish mailer. Writes to one member, several, or everyone with an
+// account. Addresses come from the accounts themselves (auth.users) —
+// nothing is copied into a second list that could go stale.
+//
+// Everything but a single-recipient message goes out with the members
+// on BCC, so no one ever sees another member's address.
+---
+
+<Layout
+  title="Email the Parish | St. John of Kronstadt"
+  description="Send a message to parish members."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">
+      <a href="/admin/" class="text-text-secondary no-underline hover:underline">← Parish Admin</a>
+    </p>
+    <h1 class="font-display text-3xl text-text-primary mb-2 md:text-4xl">Email the Parish</h1>
+    <p class="text-text-secondary mb-6">
+      Write to one member, a few, or everyone with an account. When a message goes to
+      more than one person, everyone is placed on <strong>BCC</strong> — nobody sees
+      anybody else's address. Replies come back to you, not to the no-reply address.
+    </p>
+
+    <div id="loading" class="text-text-secondary">Loading…</div>
+    <div id="error-msg" class="text-liturgical-red hidden mb-4" role="alert"></div>
+
+    <div id="app" class="hidden">
+      <p id="config-warning" hidden class="mb-6 border border-liturgical-red bg-cream-card p-4 text-sm text-liturgical-red">
+        Email isn't set up on the server yet, so nothing can be sent. (RESEND_API_KEY /
+        RESET_EMAIL_FROM in the Cloudflare dashboard.)
+      </p>
+
+      <form id="send-form" class="space-y-6">
+        <!-- ============== WHO ============== -->
+        <section class="border border-border-soft bg-cream-card p-6 shadow-sm md:p-7" aria-labelledby="who-heading">
+          <h2 id="who-heading" class="font-display text-xl text-text-primary mb-4">Who is this going to?</h2>
+
+          <div class="space-y-3">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="audience" value="everyone" checked class="mt-1 h-4 w-4" />
+              <span>
+                <span class="font-semibold text-text-primary">Everyone with an account</span>
+                <span id="everyone-count" class="ml-1 text-sm text-text-secondary"></span>
+                <span class="mt-0.5 block text-xs text-text-secondary">
+                  All registered members, on BCC.
+                </span>
+              </span>
+            </label>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="audience" value="individuals" class="mt-1 h-4 w-4" />
+              <span>
+                <span class="font-semibold text-text-primary">Choose individuals</span>
+                <span class="mt-0.5 block text-xs text-text-secondary">
+                  Pick from the list below.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div id="people-panel" hidden class="mt-5 border-t border-border-soft pt-5">
+            <div class="flex flex-wrap items-center gap-3">
+              <label for="people-search" class="sr-only">Search members</label>
+              <input
+                id="people-search"
+                type="search"
+                placeholder="Search by name or email…"
+                class="min-w-[16rem] flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+              <button type="button" id="select-all" class="btn btn-secondary text-sm">Select all shown</button>
+              <button type="button" id="select-none" class="btn btn-secondary text-sm">Clear</button>
+            </div>
+            <p id="selected-count" class="mt-3 text-sm text-text-secondary">No one selected.</p>
+            <ul id="people-list" class="mt-3 max-h-80 divide-y divide-border-soft overflow-y-auto border border-border-soft"></ul>
+          </div>
+        </section>
+
+        <!-- ============== MESSAGE ============== -->
+        <section class="border border-border-soft bg-cream-card p-6 shadow-sm md:p-7" aria-labelledby="message-heading">
+          <h2 id="message-heading" class="font-display text-xl text-text-primary mb-4">The message</h2>
+
+          <div>
+            <label for="subject" class="block text-sm font-semibold mb-1">Subject *</label>
+            <input
+              id="subject"
+              name="subject"
+              type="text"
+              required
+              maxlength="200"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            />
+          </div>
+
+          <div class="mt-4">
+            <label for="body" class="block text-sm font-semibold mb-1">Message *</label>
+            <textarea
+              id="body"
+              name="body"
+              rows="12"
+              required
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            ></textarea>
+            <p class="mt-1 text-xs text-text-secondary">
+              Plain text. Leave a blank line between paragraphs.
+            </p>
+          </div>
+
+          <p class="mt-4 text-xs text-text-secondary">
+            Replies will go to <span id="sender-email" class="font-mono"></span>.
+          </p>
+        </section>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="send-btn" type="submit" class="btn btn-primary">Send</button>
+          <span id="send-status" class="text-sm text-text-secondary"></span>
+        </div>
+      </form>
+
+      <!-- ============== RECENT ============== -->
+      <section class="mt-12" aria-labelledby="recent-heading">
+        <h2 id="recent-heading" class="font-display text-xl text-text-primary mb-4">Recently Sent</h2>
+        <div class="overflow-x-auto border border-border-soft rounded">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-brand-blue-dark text-cream-bg text-left">
+                <th class="p-2">Subject</th>
+                <th class="p-2">To</th>
+                <th class="p-2">Sent by</th>
+                <th class="p-2">When</th>
+              </tr>
+            </thead>
+            <tbody id="recent-tbody"></tbody>
+          </table>
+        </div>
+        <p id="recent-empty" class="text-text-secondary mt-4 hidden">Nothing has been sent yet.</p>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Member = { id: string; name: string; email: string; role: string | null };
+  type SentRecord = {
+    id: string;
+    subject: string;
+    audience: string;
+    recipient_count: number;
+    attempted_count: number;
+    error: string | null;
+    sent_by_name: string | null;
+    created_at: string;
+  };
+
+  let members: Member[] = [];
+  let recent: SentRecord[] = [];
+  const selected = new Set<string>();
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showError(message: string) {
+    const el = document.getElementById("error-msg");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 8000);
+  }
+
+  function setSendStatus(text: string, isError = false) {
+    const el = document.getElementById("send-status");
+    if (!el) return;
+    el.textContent = text;
+    el.className = isError ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
+  }
+
+  function currentAudience(): "everyone" | "individuals" {
+    const picked = document.querySelector<HTMLInputElement>('input[name="audience"]:checked');
+    return picked?.value === "individuals" ? "individuals" : "everyone";
+  }
+
+  // ============ PEOPLE LIST ============
+  function visibleMembers(): Member[] {
+    const q = (document.getElementById("people-search") as HTMLInputElement | null)?.value.trim().toLowerCase() ?? "";
+    if (!q) return members;
+    return members.filter(
+      (m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q),
+    );
+  }
+
+  function renderPeople() {
+    const list = document.getElementById("people-list");
+    if (!list) return;
+    const shown = visibleMembers();
+    if (shown.length === 0) {
+      list.innerHTML = `<li class="p-3 text-sm italic text-text-secondary">Nobody matches that search.</li>`;
+    } else {
+      list.innerHTML = shown
+        .map(
+          (m) => `<li class="p-2">
+            <label class="flex cursor-pointer items-center gap-3">
+              <input type="checkbox" class="person-check h-4 w-4" value="${escapeHtml(m.id)}"${selected.has(m.id) ? " checked" : ""} />
+              <span>
+                <span class="text-text-primary">${escapeHtml(m.name || "(no name)")}</span>
+                <span class="block text-xs text-text-secondary">${escapeHtml(m.email)}</span>
+              </span>
+            </label>
+          </li>`,
+        )
+        .join("");
+    }
+    renderSelectedCount();
+  }
+
+  function renderSelectedCount() {
+    const el = document.getElementById("selected-count");
+    if (!el) return;
+    el.textContent =
+      selected.size === 0
+        ? "No one selected."
+        : `${selected.size} ${selected.size === 1 ? "person" : "people"} selected.`;
+  }
+
+  function renderRecent() {
+    const tbody = document.getElementById("recent-tbody");
+    const empty = document.getElementById("recent-empty");
+    if (!tbody || !empty) return;
+
+    if (recent.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+    tbody.innerHTML = recent
+      .map((r) => {
+        const when = new Date(r.created_at);
+        const whenText = Number.isNaN(when.getTime())
+          ? ""
+          : when.toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+        // A gap between delivered and attempted is the thing an admin
+        // most needs to notice, so it gets its own line.
+        const shortfall =
+          r.recipient_count < r.attempted_count
+            ? `<div class="text-xs text-liturgical-red">${r.recipient_count} of ${r.attempted_count} delivered${r.error ? ` — ${escapeHtml(r.error)}` : ""}</div>`
+            : "";
+        return `<tr class="border-b border-border-soft">
+          <td class="p-2">${escapeHtml(r.subject)}${shortfall}</td>
+          <td class="p-2 whitespace-nowrap">${r.audience === "everyone" ? "Everyone" : "Individuals"} (${r.recipient_count})</td>
+          <td class="p-2">${escapeHtml(r.sent_by_name ?? "—")}</td>
+          <td class="p-2 whitespace-nowrap">${escapeHtml(whenText)}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  // ============ LOAD ============
+  async function load() {
+    const res = await fetch("/api/admin/email", { credentials: "same-origin", cache: "no-store" });
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return false;
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't load the parish list: ${body.error ?? res.status}`);
+      return false;
+    }
+    const data = await res.json();
+    members = (data.members ?? []) as Member[];
+    recent = (data.recent ?? []) as SentRecord[];
+
+    const countEl = document.getElementById("everyone-count");
+    if (countEl) countEl.textContent = `(${members.length})`;
+    const senderEl = document.getElementById("sender-email");
+    if (senderEl) senderEl.textContent = data.sender_email || "your account";
+    if (!data.email_configured) {
+      document.getElementById("config-warning")?.removeAttribute("hidden");
+    }
+
+    renderPeople();
+    renderRecent();
+    return true;
+  }
+
+  // ============ WIRING ============
+  document.querySelectorAll<HTMLInputElement>('input[name="audience"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      const panel = document.getElementById("people-panel");
+      if (panel) panel.hidden = currentAudience() !== "individuals";
+    });
+  });
+
+  document.getElementById("people-search")?.addEventListener("input", renderPeople);
+
+  document.getElementById("people-list")?.addEventListener("change", (ev) => {
+    const box = (ev.target as HTMLElement | null)?.closest(".person-check") as HTMLInputElement | null;
+    if (!box) return;
+    if (box.checked) selected.add(box.value);
+    else selected.delete(box.value);
+    renderSelectedCount();
+  });
+
+  document.getElementById("select-all")?.addEventListener("click", () => {
+    visibleMembers().forEach((m) => selected.add(m.id));
+    renderPeople();
+  });
+
+  document.getElementById("select-none")?.addEventListener("click", () => {
+    selected.clear();
+    renderPeople();
+  });
+
+  document.getElementById("send-form")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = document.getElementById("send-btn") as HTMLButtonElement;
+    const subject = (document.getElementById("subject") as HTMLInputElement).value.trim();
+    const body = (document.getElementById("body") as HTMLTextAreaElement).value.trim();
+    const audience = currentAudience();
+    const ids = [...selected];
+
+    if (!subject || !body) {
+      setSendStatus("A subject and a message are both needed.", true);
+      return;
+    }
+    if (audience === "individuals" && ids.length === 0) {
+      setSendStatus("Pick at least one person, or choose Everyone.", true);
+      return;
+    }
+
+    // Sending to the whole parish is not undoable, so it gets a
+    // confirmation naming the number of people.
+    const count = audience === "everyone" ? members.length : ids.length;
+    const who = audience === "everyone" ? `all ${count} registered members` : `${count} ${count === 1 ? "person" : "people"}`;
+    if (!window.confirm(`Send "${subject}" to ${who}? This can't be undone.`)) return;
+
+    btn.disabled = true;
+    setSendStatus("Sending…");
+
+    try {
+      const res = await fetch("/api/admin/email", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, body, audience, ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSendStatus(`Failed: ${data.error ?? res.status}`, true);
+        return;
+      }
+
+      let message = `Sent to ${data.delivered} of ${data.attempted}.`;
+      if (data.error) message += ` Some didn't go through: ${data.error}`;
+      // The mail went out but the record of it didn't — worth saying so
+      // rather than leaving "Recently Sent" mysteriously empty.
+      if (data.log_error) message += ` (The message was sent, but couldn't be recorded below: ${data.log_error})`;
+      setSendStatus(message, Boolean(data.error));
+
+      if (!data.error) {
+        (document.getElementById("subject") as HTMLInputElement).value = "";
+        (document.getElementById("body") as HTMLTextAreaElement).value = "";
+        selected.clear();
+        renderPeople();
+      }
+      await load();
+    } catch (err) {
+      setSendStatus(`Error: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  (async () => {
+    const ok = await load();
+    document.getElementById("loading")?.classList.add("hidden");
+    if (ok) document.getElementById("app")?.classList.remove("hidden");
+  })();
+</script>

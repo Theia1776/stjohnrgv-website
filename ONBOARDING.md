@@ -126,6 +126,19 @@ renders when `/api/auth/me` confirms login.
   [src/pages/admin/library.astro](src/pages/admin/library.astro),
   APIs: [functions/api/admin/library/index.ts](functions/api/admin/library/index.ts)
   and [functions/api/admin/library/[id].ts](functions/api/admin/library/[id].ts).
+- **`/admin/email/`** — the parish mailer. Writes to one member, several,
+  or everyone holding an account. Addresses are read live from
+  `auth.users` (never copied into a second list that could go stale), and
+  any message with more than one recipient is addressed TO the sending
+  admin with all members on **BCC**, in batches of 49 (Resend caps a
+  message at 50 addresses). Replies go to the sending admin.
+  Deliberately does NOT filter on `opt_in_communications` — registration
+  itself is the permission; that flag governs the automatic
+  announcements only. Every send is recorded in `parish_emails`
+  (migration 013) so "did that go out?" has an answer.
+  Code: [src/pages/admin/email.astro](src/pages/admin/email.astro),
+  API: [functions/api/admin/email.ts](functions/api/admin/email.ts).
+
 - **`/admin/catechism/`** — upload catechism lessons (PDF + a title and
   a few optional details) and edit/delete existing ones. Each upload
   appears immediately under **My Learning** on `/account/` for every
@@ -207,7 +220,7 @@ update public.profiles set approved = true where email = 'newperson@example.com'
 - **Migrations:** [supabase/migrations/](supabase/migrations/) — numbered
   `001_*.sql`, `002_*.sql`, etc.
 - **Tables:** `public.profiles`, `public.coffee_hour_signups`,
-  `public.library_books`, `public.catechism_lessons`.
+  `public.library_books`, `public.catechism_lessons`, `public.parish_emails`.
 - **Auth users:** `auth.users` (Supabase-managed).
 
 ### Critical: migrations are applied BY HAND

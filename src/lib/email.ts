@@ -24,6 +24,16 @@ export interface SendEmailParams {
   subject: string;
   text: string;
   html?: string;
+  /**
+   * Blind copies. Used by the parish mailer in
+   * functions/api/admin/email.ts: a message to the whole parish goes to
+   * the sending admin with everyone else on BCC, so no member ever sees
+   * another member's address. Resend caps `to` + `cc` + `bcc` at 50
+   * addresses per message, so callers must batch.
+   */
+  bcc?: string[];
+  /** Where replies should land — the sending admin, not the no-reply From. */
+  replyTo?: string;
 }
 
 export interface SendEmailResult {
@@ -35,7 +45,7 @@ export interface SendEmailResult {
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-  const { apiKey, from, to, subject, text, html } = params;
+  const { apiKey, from, to, subject, text, html, bcc, replyTo } = params;
   try {
     const res = await fetch(RESEND_ENDPOINT, {
       method: "POST",
@@ -43,7 +53,15 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [to], subject, text, ...(html ? { html } : {}) }),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        text,
+        ...(html ? { html } : {}),
+        ...(bcc && bcc.length ? { bcc } : {}),
+        ...(replyTo ? { reply_to: replyTo } : {}),
+      }),
     });
 
     if (!res.ok) {
