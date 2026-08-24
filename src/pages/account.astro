@@ -6,6 +6,33 @@ import Layout from "../layouts/Layout.astro";
   <main class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold mb-8">My Account</h1>
 
+    <!-- ============== MY LEARNING ==============
+         Catechism lessons posted by an admin from /admin/catechism/.
+         Populated at runtime from /api/catechism/lessons so a new
+         lesson shows up here the moment it's uploaded — no rebuild.
+         Lessons open in the reader at /account/lesson/?slug=…  -->
+    <section
+      class="mb-10 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="learning-heading"
+    >
+      <div class="flex items-baseline justify-between gap-4 border-b pb-2 mb-4">
+        <h2 id="learning-heading" class="text-lg font-semibold">My Learning</h2>
+        <span id="learning-count" class="text-xs uppercase tracking-widest text-text-secondary"></span>
+      </div>
+
+      <p class="text-sm text-gray-500 mb-4">
+        Catechism lessons shared with the parish. Click any lesson to read it here on the site.
+      </p>
+
+      <p id="learning-loading" class="text-sm text-text-secondary italic">Loading lessons…</p>
+      <p id="learning-error" hidden role="alert" class="text-sm text-liturgical-red"></p>
+      <p id="learning-empty" hidden class="text-sm text-text-secondary italic">
+        No lessons have been posted yet. They'll appear here as soon as they are.
+      </p>
+
+      <ul id="learning-list" class="divide-y divide-border-soft"></ul>
+    </section>
+
     <!-- Profile Photo -->
     <div class="flex flex-col items-center gap-3 mb-10">
       <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-brand-blue-dark bg-cream-card">
@@ -508,4 +535,107 @@ import Layout from "../layouts/Layout.astro";
       status.classList.add("text-red-600");
     }
   });
+
+  // ============== MY LEARNING ==============
+  // Renders the catechism lessons an admin has posted from
+  // /admin/catechism/. Its own fetch, wrapped in its own try/catch, so a
+  // hiccup loading lessons never disturbs the profile form above.
+  // (Lives in this same script block on purpose — a second top-level
+  // <script> on this page is dropped from the build.)
+  type Lesson = {
+    slug: string;
+    title: string;
+    teacher: string | null;
+    series: string | null;
+    lesson_date: string | null;
+    description: string | null;
+    published: boolean;
+  };
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Lesson dates are plain YYYY-MM-DD strings. Parsing them with the
+  // Date constructor would shift them a day in US time zones, so we
+  // split the string instead.
+  function formatLessonDate(value: string | null): string {
+    if (!value) return "";
+    const [y, m, d] = value.split("-").map(Number);
+    if (!y || !m || !d) return value;
+    const months = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    return `${months[m - 1]} ${d}, ${y}`;
+  }
+
+  function lessonRow(lesson: Lesson): string {
+    // Series / teacher / date, whichever the admin filled in.
+    const meta = [lesson.series, lesson.teacher, formatLessonDate(lesson.lesson_date)]
+      .filter(Boolean)
+      .map((part) => escapeHtml(part))
+      .join(" · ");
+    // Admins also see their own unposted drafts; members never do.
+    const draftTag = lesson.published
+      ? ""
+      : ` <span class="ml-2 border border-border-soft px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-text-secondary align-middle">Draft</span>`;
+
+    return `<li class="py-3">
+      <a
+        href="/account/lesson/?slug=${encodeURIComponent(lesson.slug)}"
+        class="font-semibold text-brand-blue-dark no-underline hover:underline"
+      >${escapeHtml(lesson.title)}</a>${draftTag}
+      ${meta ? `<p class="mt-0.5 text-xs text-text-secondary">${meta}</p>` : ""}
+      ${lesson.description ? `<p class="mt-1 text-sm text-text-primary/85">${escapeHtml(lesson.description)}</p>` : ""}
+    </li>`;
+  }
+
+  (async () => {
+    const loadingEl = document.getElementById("learning-loading") as HTMLParagraphElement | null;
+    const errorEl = document.getElementById("learning-error") as HTMLParagraphElement | null;
+    const emptyEl = document.getElementById("learning-empty") as HTMLParagraphElement | null;
+    const listEl = document.getElementById("learning-list") as HTMLUListElement | null;
+    const countEl = document.getElementById("learning-count") as HTMLSpanElement | null;
+    if (!loadingEl || !errorEl || !emptyEl || !listEl) return;
+
+    try {
+      const res = await fetch("/api/catechism/lessons", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      // A 401 here is handled by the profile loader above, which sends
+      // the visitor to /login — nothing more to do in that case.
+      if (res.status === 401) return;
+
+      loadingEl.hidden = true;
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        errorEl.textContent = `Could not load your lessons: ${body.error ?? res.status}`;
+        errorEl.hidden = false;
+        return;
+      }
+
+      const data = await res.json();
+      const lessons = (data.lessons ?? []) as Lesson[];
+
+      if (lessons.length === 0) {
+        emptyEl.hidden = false;
+        return;
+      }
+
+      listEl.innerHTML = lessons.map(lessonRow).join("");
+      if (countEl) {
+        countEl.textContent = `${lessons.length} ${lessons.length === 1 ? "lesson" : "lessons"}`;
+      }
+    } catch (err) {
+      loadingEl.hidden = true;
+      errorEl.textContent = `Could not load your lessons: ${err instanceof Error ? err.message : String(err)}`;
+      errorEl.hidden = false;
+    }
+  })();
 </script>

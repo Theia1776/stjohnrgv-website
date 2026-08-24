@@ -1,0 +1,196 @@
+/**
+ * Cloudflare Pages Function: /api/admin/catechism/:id
+ *
+ *  PATCH  — update a lesson's details or post/unpost it (no PDF change).
+ *  DELETE — remove the lesson row and delete its PDF from storage.
+ *
+ * Admin-only, same role-check pattern as the rest of /api/admin/*.
+ * As with the library, swapping the PDF isn't supported — delete the
+ * lesson and re-upload it, which keeps the upload path one-way and
+ * avoids orphaned blobs from half-finished swaps.
+ */
+import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
+import { SUPABASE_URL } from "../../../../src/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+interface Env {
+  SUPABASE_SERVICE_ROLE_KEY: string;
+}
+
+const BUCKET = "library";
+
+const LESSON_FIELDS =
+  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, notified_at, created_at, updated_at";
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  });
+}
+
+function slugify(input: string): string {
+  return input
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "lesson";
+}
+
+async function isAdmin(supabase: ReturnType<typeof createClient>, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return data?.role === "admin";
+}
+
+interface PagesContext {
+  request: Request;
+  env: Env;
+  params: { id: string };
+}
+
+// ============================================================
+// PATCH — update details / posted state
+// ============================================================
+export async function onRequestPatch(context: PagesContext): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
+  try {
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    const id = (context.params.id ?? "").trim();
+    if (!id) return wrap(jsonResponse({ error: "Missing lesson id." }, 400));
+
+    const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (!(await isAdmin(supabase, session.user.id))) {
+      return wrap(jsonResponse({ error: "Forbidden" }, 403));
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await context.request.json();
+    } catch {
+      return wrap(jsonResponse({ error: "Invalid JSON body." }, 400));
+    }
+
+    // Whitelist of fields the admin form can touch. pdf_storage_key is
+    // intentionally absent — to swap a PDF, delete and re-upload.
+    const updates: Record<string, unknown> = {};
+
+    if (typeof body.title === "string") {
+      const t = body.title.trim();
+      if (!t) return wrap(jsonResponse({ error: "Title cannot be empty." }, 400));
+      updates.title = t;
+    }
+    if ("teacher" in body) {
+      updates.teacher = typeof body.teacher === "string" && body.teacher.trim() ? body.teacher.trim() : null;
+    }
+    if ("series" in body) {
+      updates.series = typeof body.series === "string" && body.series.trim() ? body.series.trim() : null;
+    }
+    if ("description" in body) {
+      updates.description =
+        typeof body.description === "string" && body.description.trim() ? body.description.trim() : null;
+    }
+    if ("lesson_date" in body) {
+      const raw = typeof body.lesson_date === "string" ? body.lesson_date.trim() : "";
+      updates.lesson_date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
+    }
+    if (typeof body.slug === "string" && body.slug.trim()) {
+      const newSlug = slugify(body.slug);
+      const { data: dupe } = await supabase
+        .from("catechism_lessons")
+        .select("id")
+        .eq("slug", newSlug)
+        .neq("id", id)
+        .maybeSingle();
+      if (dupe) {
+        return wrap(jsonResponse({ error: `Slug "${newSlug}" is already in use.` }, 409));
+      }
+      updates.slug = newSlug;
+    }
+    if (typeof body.published === "boolean") {
+      updates.published = body.published;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return wrap(jsonResponse({ error: "No editable fields supplied." }, 400));
+    }
+
+    const { data: updated, error } = await supabase
+      .from("catechism_lessons")
+      .update(updates)
+      .eq("id", id)
+      .select(LESSON_FIELDS)
+      .single();
+
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    if (!updated) return wrap(jsonResponse({ error: "Lesson not found." }, 404));
+
+    return wrap(jsonResponse({ lesson: updated }, 200));
+  } catch (err) {
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
+  }
+}
+
+// ============================================================
+// DELETE — remove lesson row + its PDF
+// ============================================================
+export async function onRequestDelete(context: PagesContext): Promise<Response> {
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+
+  try {
+    if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
+    if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return wrap(jsonResponse({ error: "Server not configured." }, 500));
+    }
+
+    const id = (context.params.id ?? "").trim();
+    if (!id) return wrap(jsonResponse({ error: "Missing lesson id." }, 400));
+
+    const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (!(await isAdmin(supabase, session.user.id))) {
+      return wrap(jsonResponse({ error: "Forbidden" }, 403));
+    }
+
+    // Read the storage key first so we know which blob to remove once
+    // the row is gone.
+    const { data: existing, error: lookupError } = await supabase
+      .from("catechism_lessons")
+      .select("pdf_storage_key")
+      .eq("id", id)
+      .single();
+    if (lookupError) return wrap(jsonResponse({ error: lookupError.message }, 404));
+
+    const { error: deleteError } = await supabase
+      .from("catechism_lessons")
+      .delete()
+      .eq("id", id);
+    if (deleteError) return wrap(jsonResponse({ error: deleteError.message }, 500));
+
+    // Best-effort PDF removal — the lesson is already out of everyone's
+    // account, which is the outcome the admin asked for. A stray blob is
+    // harmless and easy to clean up in the Supabase dashboard.
+    if (existing?.pdf_storage_key) {
+      await supabase.storage.from(BUCKET).remove([existing.pdf_storage_key]);
+    }
+
+    return wrap(jsonResponse({ ok: true }, 200));
+  } catch (err) {
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
+    );
+  }
+}

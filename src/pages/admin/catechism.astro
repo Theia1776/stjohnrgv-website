@@ -1,0 +1,582 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Admin screen for catechism lessons. Same shape as the library admin
+// page: an upload card on top, a manage table below, and a modal editor.
+// Uploading here posts the lesson straight into every member's
+// "My Learning" section — no code change or deploy involved.
+---
+
+<Layout
+  title="Catechism Lessons Admin | St. John of Kronstadt"
+  description="Upload catechism lessons to parishioner accounts."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="font-display text-3xl text-text-primary mb-2 md:text-4xl">Catechism Lessons</h1>
+    <p class="text-text-secondary mb-6">
+      Upload each lesson as it comes in. Once uploaded it appears right away
+      under <strong>My Learning</strong> in every signed-in member's account.
+      Tick <em>Email members</em> if you also want everyone who opted into
+      parish communications to be told it's up.
+    </p>
+
+    <div id="loading" class="text-text-secondary">Loading…</div>
+    <div id="error-msg" class="text-liturgical-red hidden mb-4" role="alert"></div>
+
+    <div id="app" class="hidden">
+      <!-- ============== UPLOAD CARD ============== -->
+      <section
+        class="mb-10 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+        aria-labelledby="upload-heading"
+      >
+        <h2 id="upload-heading" class="font-display text-xl text-text-primary mb-1">
+          Add a New Lesson
+        </h2>
+        <p class="text-sm text-text-secondary mb-5">
+          Choose the PDF and give it a title. Everything else is optional.
+        </p>
+
+        <form id="upload-form" class="space-y-4">
+          <div>
+            <label for="pdf" class="block text-sm font-semibold mb-1">Lesson PDF *</label>
+            <input
+              id="pdf"
+              name="pdf"
+              type="file"
+              accept="application/pdf"
+              required
+              class="block w-full text-sm text-text-primary file:mr-3 file:border file:border-border-soft file:bg-brand-blue-pale file:px-3 file:py-1.5 file:text-xs file:uppercase file:tracking-widest file:text-brand-blue-dark file:cursor-pointer hover:file:bg-brand-blue-pale/70"
+            />
+            <p class="mt-1 text-xs text-text-secondary">Up to 25 MB.</p>
+          </div>
+
+          <div>
+            <label for="title" class="block text-sm font-semibold mb-1">Title *</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              required
+              placeholder="Lesson 3 — The Nicene Creed"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            />
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label for="teacher" class="block text-sm font-semibold mb-1">Taught / sent by</label>
+              <input
+                id="teacher"
+                name="teacher"
+                type="text"
+                placeholder="Fr. Antonios"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+            </div>
+            <div>
+              <label for="series" class="block text-sm font-semibold mb-1">Series</label>
+              <input
+                id="series"
+                name="series"
+                type="text"
+                placeholder="Introduction to the Faith"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+              <p class="mt-1 text-xs text-text-secondary">Groups related lessons together for members.</p>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label for="lesson_date" class="block text-sm font-semibold mb-1">Date of the lesson</label>
+              <input
+                id="lesson_date"
+                name="lesson_date"
+                type="date"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              />
+              <p class="mt-1 text-xs text-text-secondary">Lessons are listed newest first by this date.</p>
+            </div>
+            <div>
+              <label for="status" class="block text-sm font-semibold mb-1">Post to members</label>
+              <select
+                id="status"
+                name="status"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+              >
+                <option value="posted" selected>Post now — all members can read it</option>
+                <option value="draft">Save as draft — admins only for now</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="description" class="block text-sm font-semibold mb-1">Short note</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              placeholder="What this lesson covers — shown under the title in members' accounts."
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            ></textarea>
+          </div>
+
+          <div>
+            <label for="slug" class="block text-sm font-semibold mb-1">URL slug (optional)</label>
+            <input
+              id="slug"
+              name="slug"
+              type="text"
+              placeholder="auto-generated from title"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2"
+            />
+          </div>
+
+          <div class="border border-border-soft bg-cream-bg p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input id="notify" name="notify" type="checkbox" value="1" class="mt-0.5 h-4 w-4 rounded border-gray-300" />
+              <span>
+                <span class="text-sm font-semibold text-text-primary">Email members that this lesson is posted</span>
+                <span class="mt-0.5 block text-xs text-text-secondary">
+                  Goes only to members who ticked "Receive email updates" in their account.
+                  Drafts are never emailed.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="upload-btn" type="submit" class="btn btn-primary">
+              Upload Lesson
+            </button>
+            <span id="upload-status" class="text-sm text-text-secondary"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============== EDIT MODAL ============== -->
+      <div
+        id="edit-modal"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-modal-title"
+        class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
+      >
+        <div class="my-8 w-full max-w-2xl border border-border-soft bg-cream-card p-6 shadow-lg md:p-8">
+          <div class="mb-4 flex items-start justify-between gap-4">
+            <h3 id="edit-modal-title" class="font-display text-xl text-text-primary">Edit Lesson</h3>
+            <button
+              type="button"
+              id="edit-close"
+              aria-label="Close"
+              class="text-2xl leading-none text-text-secondary hover:text-text-primary"
+            >&times;</button>
+          </div>
+
+          <form id="edit-form" class="space-y-4">
+            <input type="hidden" id="edit-id" />
+
+            <div>
+              <label for="edit-title" class="block text-sm font-semibold mb-1">Title *</label>
+              <input id="edit-title" type="text" required class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label for="edit-teacher" class="block text-sm font-semibold mb-1">Taught / sent by</label>
+                <input id="edit-teacher" type="text" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+              </div>
+              <div>
+                <label for="edit-series" class="block text-sm font-semibold mb-1">Series</label>
+                <input id="edit-series" type="text" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+              </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label for="edit-lesson-date" class="block text-sm font-semibold mb-1">Date of the lesson</label>
+                <input id="edit-lesson-date" type="date" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2" />
+              </div>
+              <div>
+                <label for="edit-status" class="block text-sm font-semibold mb-1">Post to members</label>
+                <select id="edit-status" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2">
+                  <option value="posted">Posted — all members can read it</option>
+                  <option value="draft">Draft — admins only</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="edit-description" class="block text-sm font-semibold mb-1">Short note</label>
+              <textarea id="edit-description" rows="3" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"></textarea>
+            </div>
+
+            <div>
+              <label for="edit-slug" class="block text-sm font-semibold mb-1">URL slug</label>
+              <input id="edit-slug" type="text" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2" />
+              <p class="mt-1 text-xs text-text-secondary">Changing this breaks existing links to the lesson.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 border-t border-border-soft pt-4">
+              <span id="edit-status-msg" class="text-sm text-text-secondary mr-auto"></span>
+              <button type="button" id="edit-cancel" class="btn btn-secondary">Cancel</button>
+              <button type="submit" id="edit-save" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============== MANAGE LIST ============== -->
+      <section aria-labelledby="manage-heading">
+        <h2 id="manage-heading" class="font-display text-xl text-text-primary mb-4">
+          Posted Lessons (<span id="lesson-count">0</span>)
+        </h2>
+        <div class="overflow-x-auto border border-border-soft rounded">
+          <table class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="bg-brand-blue-dark text-cream-bg text-left">
+                <th class="p-2">Lesson</th>
+                <th class="p-2">Series</th>
+                <th class="p-2">Date</th>
+                <th class="p-2">Status</th>
+                <th class="p-2">Emailed</th>
+                <th class="p-2 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="lessons-tbody"></tbody>
+          </table>
+        </div>
+        <p id="lessons-empty" class="text-text-secondary mt-4 hidden">
+          No lessons yet — upload the first one above.
+        </p>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Lesson = {
+    id: string;
+    slug: string;
+    title: string;
+    teacher: string | null;
+    series: string | null;
+    lesson_date: string | null;
+    description: string | null;
+    pdf_storage_key: string;
+    published: boolean;
+    notified_at: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+
+  let lessons: Lesson[] = [];
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Dates come back as plain YYYY-MM-DD. Formatting them through the
+  // Date constructor would shift them a day in US time zones, so we
+  // split the string instead.
+  function formatDate(value: string | null): string {
+    if (!value) return "—";
+    const [y, m, d] = value.split("-").map(Number);
+    if (!y || !m || !d) return value;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[m - 1]} ${d}, ${y}`;
+  }
+
+  function showError(message: string) {
+    const el = document.getElementById("error-msg");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 8000);
+  }
+
+  function setUploadStatus(text: string, isError = false) {
+    const el = document.getElementById("upload-status");
+    if (!el) return;
+    el.textContent = text;
+    el.className = isError ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
+  }
+
+  async function loadLessons() {
+    const res = await fetch("/api/admin/catechism", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return;
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't load lessons: ${body.error ?? res.status}`);
+      return;
+    }
+    const data = await res.json();
+    lessons = (data.lessons ?? []) as Lesson[];
+    render();
+  }
+
+  function render() {
+    const tbody = document.getElementById("lessons-tbody");
+    const empty = document.getElementById("lessons-empty");
+    const countEl = document.getElementById("lesson-count");
+    if (!tbody || !empty) return;
+
+    if (countEl) countEl.textContent = String(lessons.length);
+
+    if (lessons.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    tbody.innerHTML = lessons
+      .map(
+        (l) => `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(l.id)}">
+          <td class="p-2">
+            <a href="/account/lesson/?slug=${encodeURIComponent(l.slug)}" class="text-brand-blue-dark hover:underline" target="_blank" rel="noopener">${escapeHtml(l.title)}</a>
+            <div class="text-xs text-text-secondary">${escapeHtml(l.teacher ?? "")}</div>
+          </td>
+          <td class="p-2">${escapeHtml(l.series ?? "—")}</td>
+          <td class="p-2 whitespace-nowrap">${escapeHtml(formatDate(l.lesson_date))}</td>
+          <td class="p-2">
+            <select class="status-select border border-border-soft bg-cream-bg px-2 py-1 text-xs focus:outline-none focus:ring-2" data-id="${escapeHtml(l.id)}" aria-label="Posted state">
+              <option value="posted"${l.published ? " selected" : ""}>Posted</option>
+              <option value="draft"${!l.published ? " selected" : ""}>Draft</option>
+            </select>
+          </td>
+          <td class="p-2 text-xs text-text-secondary">${l.notified_at ? "Yes" : "—"}</td>
+          <td class="p-2 text-right whitespace-nowrap">
+            <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(l.id)}">Edit</button>
+            <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(l.id)}" data-title="${escapeHtml(l.title)}">Delete</button>
+          </td>
+        </tr>`,
+      )
+      .join("");
+  }
+
+  // ====================== UPLOAD ======================
+  document.getElementById("upload-form")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const form = ev.target as HTMLFormElement;
+    const btn = document.getElementById("upload-btn") as HTMLButtonElement;
+    const formData = new FormData(form);
+
+    btn.disabled = true;
+    setUploadStatus("Uploading…");
+
+    try {
+      const res = await fetch("/api/admin/catechism", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        body: formData,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUploadStatus(`Failed: ${body.error ?? res.status}`, true);
+        return;
+      }
+
+      // Report the email outcome alongside the upload so a failed
+      // announcement is never silent — the lesson itself is already up.
+      // The sending runs in the background, so this reports how many
+      // messages were queued; the Emailed column below turns to "Yes"
+      // once they've gone out (refresh the page to see it).
+      const notified = body.notified as { queued: number; error?: string } | null;
+      let message = `Added "${body.lesson?.title ?? "lesson"}".`;
+      if (notified?.error) {
+        message += ` Lesson is posted, but the email was not sent — ${notified.error}`;
+      } else if (notified) {
+        message += notified.queued === 0
+          ? " No members have opted into email updates, so no email was sent."
+          : ` Emailing ${notified.queued} member${notified.queued === 1 ? "" : "s"} now.`;
+      }
+      setUploadStatus(message, Boolean(notified?.error));
+
+      form.reset();
+      await loadLessons();
+    } catch (err) {
+      setUploadStatus(`Upload error: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ====================== EDIT / DELETE (delegated) ======================
+  document.getElementById("lessons-tbody")?.addEventListener("click", async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    const editBtn = target.closest(".edit-btn") as HTMLButtonElement | null;
+    const deleteBtn = target.closest(".delete-btn") as HTMLButtonElement | null;
+    if (!editBtn && !deleteBtn) return;
+
+    const id = (editBtn ?? deleteBtn)?.dataset.id;
+    if (!id) return;
+
+    if (editBtn) {
+      const lesson = lessons.find((l) => l.id === id);
+      if (lesson) openEditModal(lesson);
+      return;
+    }
+
+    if (deleteBtn) {
+      const title = deleteBtn.dataset.title || "this lesson";
+      if (!window.confirm(`Delete "${title}"? It will disappear from members' accounts and the PDF will be removed.`)) return;
+      deleteBtn.disabled = true;
+      const res = await fetch(`/api/admin/catechism/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showError(`Couldn't delete: ${body.error ?? res.status}`);
+        deleteBtn.disabled = false;
+        return;
+      }
+      lessons = lessons.filter((l) => l.id !== id);
+      render();
+    }
+  });
+
+  // ====================== POSTED/DRAFT DROPDOWN (delegated) ======================
+  document.getElementById("lessons-tbody")?.addEventListener("change", async (ev) => {
+    const sel = (ev.target as HTMLElement | null)?.closest(".status-select") as HTMLSelectElement | null;
+    if (!sel) return;
+    const id = sel.dataset.id;
+    if (!id) return;
+
+    const published = sel.value === "posted";
+    sel.disabled = true;
+    try {
+      const res = await fetch(`/api/admin/catechism/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showError(`Couldn't update: ${body.error ?? res.status}`);
+        // Re-render to snap the dropdown back to the stored value.
+        render();
+        return;
+      }
+      const idx = lessons.findIndex((l) => l.id === id);
+      if (idx !== -1) lessons[idx].published = published;
+    } finally {
+      sel.disabled = false;
+    }
+  });
+
+  // ============= MODAL EDITOR =============
+  const editModal = document.getElementById("edit-modal") as HTMLDivElement;
+  const editForm = document.getElementById("edit-form") as HTMLFormElement;
+  const editIdEl = document.getElementById("edit-id") as HTMLInputElement;
+  const editTitleEl = document.getElementById("edit-title") as HTMLInputElement;
+  const editTeacherEl = document.getElementById("edit-teacher") as HTMLInputElement;
+  const editSeriesEl = document.getElementById("edit-series") as HTMLInputElement;
+  const editDateEl = document.getElementById("edit-lesson-date") as HTMLInputElement;
+  const editStatusEl = document.getElementById("edit-status") as HTMLSelectElement;
+  const editDescriptionEl = document.getElementById("edit-description") as HTMLTextAreaElement;
+  const editSlugEl = document.getElementById("edit-slug") as HTMLInputElement;
+  const editStatusMsg = document.getElementById("edit-status-msg") as HTMLSpanElement;
+  const editSaveBtn = document.getElementById("edit-save") as HTMLButtonElement;
+  const editCloseBtn = document.getElementById("edit-close") as HTMLButtonElement;
+  const editCancelBtn = document.getElementById("edit-cancel") as HTMLButtonElement;
+
+  function openEditModal(lesson: Lesson) {
+    editIdEl.value = lesson.id;
+    editTitleEl.value = lesson.title;
+    editTeacherEl.value = lesson.teacher ?? "";
+    editSeriesEl.value = lesson.series ?? "";
+    editDateEl.value = lesson.lesson_date ?? "";
+    editStatusEl.value = lesson.published ? "posted" : "draft";
+    editDescriptionEl.value = lesson.description ?? "";
+    editSlugEl.value = lesson.slug;
+    editStatusMsg.textContent = "";
+    editSaveBtn.disabled = false;
+    editModal.removeAttribute("hidden");
+    setTimeout(() => editTitleEl.focus(), 0);
+  }
+
+  function closeEditModal() {
+    editModal.setAttribute("hidden", "");
+    editForm.reset();
+  }
+
+  editCloseBtn.addEventListener("click", closeEditModal);
+  editCancelBtn.addEventListener("click", closeEditModal);
+  editModal.addEventListener("click", (ev) => {
+    if (ev.target === editModal) closeEditModal();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && !editModal.hasAttribute("hidden")) closeEditModal();
+  });
+
+  editForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const id = editIdEl.value;
+    if (!id) return;
+
+    editSaveBtn.disabled = true;
+    editStatusMsg.textContent = "Saving…";
+
+    const payload = {
+      title: editTitleEl.value.trim(),
+      teacher: editTeacherEl.value.trim(),
+      series: editSeriesEl.value.trim(),
+      lesson_date: editDateEl.value.trim(),
+      description: editDescriptionEl.value.trim(),
+      slug: editSlugEl.value.trim(),
+      published: editStatusEl.value === "posted",
+    };
+
+    try {
+      const res = await fetch(`/api/admin/catechism/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        editStatusMsg.textContent = `Failed: ${body.error ?? res.status}`;
+        editSaveBtn.disabled = false;
+        return;
+      }
+      const idx = lessons.findIndex((l) => l.id === id);
+      if (idx !== -1 && body.lesson) lessons[idx] = body.lesson;
+      render();
+      closeEditModal();
+    } catch (err) {
+      editStatusMsg.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
+      editSaveBtn.disabled = false;
+    }
+  });
+
+  async function init() {
+    await loadLessons();
+    document.getElementById("loading")?.classList.add("hidden");
+    document.getElementById("app")?.classList.remove("hidden");
+  }
+  init();
+</script>

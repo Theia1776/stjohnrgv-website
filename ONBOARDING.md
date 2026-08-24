@@ -76,8 +76,17 @@ renders when `/api/auth/me` confirms login.
 
 - **`/account/`** — profile editor. Lets parishioners set their name,
   contact info, emergency contacts, and directory opt-in preferences.
+  Also carries the **My Learning** section at the top, listing the
+  catechism lessons admins have posted from `/admin/catechism/`.
   Code: [src/pages/account.astro](src/pages/account.astro),
-  API: [functions/api/profile.ts](functions/api/profile.ts).
+  API: [functions/api/profile.ts](functions/api/profile.ts) and
+  [functions/api/catechism/lessons.ts](functions/api/catechism/lessons.ts).
+
+- **`/account/lesson/?slug=…`** — reader for one catechism lesson, using
+  the same PDF.js viewer as the library reader. Members only; the PDF
+  comes back as a 60-second signed URL.
+  Code: [src/pages/account/lesson.astro](src/pages/account/lesson.astro),
+  API: [functions/api/catechism/pdf.ts](functions/api/catechism/pdf.ts).
 
 - **`/directory/`** — parish directory. Shows everyone who opted in,
   with avatar / name / contact methods they chose to share. **Admins
@@ -105,6 +114,16 @@ renders when `/api/auth/me` confirms login.
   [src/pages/admin/library.astro](src/pages/admin/library.astro),
   APIs: [functions/api/admin/library/index.ts](functions/api/admin/library/index.ts)
   and [functions/api/admin/library/[id].ts](functions/api/admin/library/[id].ts).
+- **`/admin/catechism/`** — upload catechism lessons (PDF + a title and
+  a few optional details) and edit/delete existing ones. Each upload
+  appears immediately under **My Learning** on `/account/` for every
+  signed-in member; ticking *Email members* also announces it to
+  everyone who opted into parish communications. Backed by the
+  `catechism_lessons` table; PDFs go into the same `library` storage
+  bucket under a `catechism/` prefix, so no second bucket is needed.
+  Code: [src/pages/admin/catechism.astro](src/pages/admin/catechism.astro),
+  APIs: [functions/api/admin/catechism/index.ts](functions/api/admin/catechism/index.ts)
+  and [functions/api/admin/catechism/[id].ts](functions/api/admin/catechism/[id].ts).
 
 Admin gating: API endpoints check `profiles.role === 'admin'` server-side
 (see [functions/api/admin/directory.ts:43](functions/api/admin/directory.ts)
@@ -176,7 +195,7 @@ update public.profiles set approved = true where email = 'newperson@example.com'
 - **Migrations:** [supabase/migrations/](supabase/migrations/) — numbered
   `001_*.sql`, `002_*.sql`, etc.
 - **Tables:** `public.profiles`, `public.coffee_hour_signups`,
-  `public.library_books`.
+  `public.library_books`, `public.catechism_lessons`.
 - **Auth users:** `auth.users` (Supabase-managed).
 
 ### Critical: migrations are applied BY HAND
