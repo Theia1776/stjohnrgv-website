@@ -20,6 +20,16 @@ import Layout from "../../../layouts/Layout.astro";
        and breadcrumb stay in the site's regular theme above. -->
   <style is:global>
     .pdf-stage { background: #1d1f23; }
+    /* Every hit is marked; the one you're on is marked more strongly. */
+    #text-body mark {
+      background: var(--color-brand-blue-pale);
+      color: var(--color-text-primary);
+      padding: 0 0.1em;
+    }
+    #text-body mark.find-current {
+      background: var(--color-sacred-gold);
+      color: #2C2828;
+    }
     .pdf-page-canvas {
       background: #ffffff;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
@@ -124,6 +134,23 @@ import Layout from "../../../layouts/Layout.astro";
        PDF frame. Fed by /api/library/text. -->
   <section id="text-stage" hidden class="bg-cream-bg">
     <div class="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      <!-- Find within the book. The page views are canvases — there is
+           no text in them for the browser's own Ctrl+F to catch — so the
+           text view carries its own search. -->
+      <div id="find-bar" hidden class="mb-6 flex flex-wrap items-center gap-2 border border-border-soft bg-cream-card p-3">
+        <label for="find-input" class="sr-only">Find in this book</label>
+        <input
+          id="find-input"
+          type="search"
+          autocomplete="off"
+          placeholder="Find in this book…"
+          class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2"
+        />
+        <span id="find-count" class="px-1 text-sm text-text-secondary" aria-live="polite"></span>
+        <button type="button" id="find-prev" class="border border-border-soft bg-cream-bg px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:opacity-40" disabled>Prev</button>
+        <button type="button" id="find-next" class="border border-border-soft bg-cream-bg px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:opacity-40" disabled>Next</button>
+      </div>
+
       <p id="text-loading" class="text-center font-display text-sm uppercase tracking-widest text-text-secondary">
         Loading text…
       </p>
@@ -195,6 +222,10 @@ import Layout from "../../../layouts/Layout.astro";
       languages: string[];
       description: string | null;
       pdf_storage_key: string;
+      /** Whether a cleaned-up text version exists for this book. */
+      has_text?: boolean;
+      /** Staging books are visible to admins only. */
+      hidden?: boolean;
     };
 
     const viewer = document.getElementById("pdf-viewer") as HTMLDivElement;
@@ -397,6 +428,217 @@ import Layout from "../../../layouts/Layout.astro";
       localStorage.setItem(TEXT_SIZE_KEY, String(textSize));
     }
 
+    // ============================================================
+    // FIND IN BOOK
+    // ============================================================
+    let bookText = "";
+    let findMatches: number[] = [];
+    let findIndex = 0;
+    let findLoose = false;
+
+    function escapeForHtml(value: string): string {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    /**
+     * A searchable copy of the book, plus a map back to where each
+     * character came from.
+     *
+     * Text pulled out of a PDF carries the printed page's habits: a word
+     * broken across a line arrives as "near- ness", kerned runs arrive
+     * as "near ness", and stray double spaces are everywhere. Searching
+     * the raw text for an exact phrase therefore fails on words the
+     * reader can plainly see — which is exactly what the browser's own
+     * Ctrl+F runs into.
+     *
+     * So we search a normalised copy (lowercased, whitespace collapsed,
+     * soft hyphens dropped, line-break hyphens rejoined) and use the map
+     * to highlight the right characters in the original.
+     */
+    let findNorm = "";
+    let findMap: number[] = [];
+    // A second, harsher index with every space removed. PDF extraction
+    // sometimes splits a word on nothing but a space ("near ness"),
+    // which no amount of hyphen-mending will fix. Searching without
+    // spaces at all catches those — at the cost of letting "to me"
+    // match "tome" — so it is only consulted when the ordinary search
+    // comes up empty, and the reader is told when that happened.
+    let findTight = "";
+    let findTightMap: number[] = [];
+
+    function buildFindIndex(raw: string) {
+      const chars: string[] = [];
+      const map: number[] = [];
+      let lastWasSpace = true; // leading whitespace earns no entry
+
+      for (let i = 0; i < raw.length; i++) {
+        const ch = raw[i];
+
+        // Soft hyphen: invisible, never part of a word.
+        if (ch === "­") continue;
+
+        // A hyphen followed by whitespace is the printed page breaking a
+        // word in half. Drop both, so "near- ness" reads as "nearness".
+        if (ch === "-" && /\s/.test(raw[i + 1] ?? "")) {
+          let j = i + 1;
+          while (j < raw.length && /\s/.test(raw[j])) j++;
+          i = j - 1;
+          continue;
+        }
+
+        if (/\s/.test(ch)) {
+          if (lastWasSpace) continue;
+          chars.push(" ");
+          map.push(i);
+          lastWasSpace = true;
+          continue;
+        }
+
+        chars.push(ch.toLowerCase());
+        map.push(i);
+        lastWasSpace = false;
+      }
+
+      findNorm = chars.join("");
+      findMap = map;
+
+      const tight: string[] = [];
+      const tightMap: number[] = [];
+      for (let i = 0; i < chars.length; i++) {
+        if (chars[i] === " ") continue;
+        tight.push(chars[i]);
+        tightMap.push(map[i]);
+      }
+      findTight = tight.join("");
+      findTightMap = tightMap;
+    }
+
+    function normalizeQuery(value: string): string {
+      return value.replace(/­/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+
+    function setFindButtons(enabled: boolean) {
+      (document.getElementById("find-prev") as HTMLButtonElement).disabled = !enabled;
+      (document.getElementById("find-next") as HTMLButtonElement).disabled = !enabled;
+    }
+
+    function showCurrentMatch() {
+      const marks = textBody.querySelectorAll("mark");
+      marks.forEach((m) => m.classList.remove("find-current"));
+      const current = marks[findIndex];
+      if (!current) return;
+      current.classList.add("find-current");
+      // Instant: hunting through a book shouldn't mean watching it glide.
+      current.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "center" });
+      const countEl = document.getElementById("find-count") as HTMLSpanElement;
+      countEl.textContent =
+        `${findIndex + 1} of ${marks.length}` + (findLoose ? " (ignoring spaces)" : "");
+    }
+
+    function runFind() {
+      const input = document.getElementById("find-input") as HTMLInputElement;
+      const countEl = document.getElementById("find-count") as HTMLSpanElement;
+      const query = input.value.trim();
+
+      // Rebuilding the whole book for one letter isn't worth it, and the
+      // hit count would be meaningless anyway.
+      if (query.length < 2) {
+        textBody.textContent = bookText;
+        countEl.textContent = "";
+        findMatches = [];
+        findIndex = 0;
+        setFindButtons(false);
+        return;
+      }
+
+      // Search the normalised copy, then translate each hit back to the
+      // original characters so the highlight lands where the reader can
+      // see it. Building the HTML from the raw text keeps & and < safe.
+      const needle = normalizeQuery(query);
+      const tightNeedle = needle.replace(/ /g, "");
+
+      function countIn(hay: string, target: string): number {
+        if (!target) return 0;
+        let n = 0;
+        let at = hay.indexOf(target);
+        while (at !== -1) {
+          n++;
+          at = hay.indexOf(target, at + target.length);
+        }
+        return n;
+      }
+
+      const exactCount = countIn(findNorm, needle);
+      const tightCount = countIn(findTight, tightNeedle);
+
+      // Prefer the precise search. Ignore spaces when it finds nothing —
+      // or, for a phrase of two or more words, when doing so finds more:
+      // that difference is a word the PDF split in half, and a
+      // multi-word phrase is specific enough that ignoring spaces won't
+      // start matching "to me" inside "tome".
+      const multiWord = needle.includes(" ");
+      const loose = tightCount > 0 && (exactCount === 0 || (multiWord && tightCount > exactCount));
+
+      const haystack = loose ? findTight : findNorm;
+      const map = loose ? findTightMap : findMap;
+      const target = loose ? tightNeedle : needle;
+
+      const pieces: string[] = [];
+      let last = 0;
+      let count = 0;
+      let at = target ? haystack.indexOf(target) : -1;
+      while (at !== -1) {
+        const start = map[at];
+        const end = map[at + target.length - 1] + 1;
+        if (start >= last) {
+          pieces.push(escapeForHtml(bookText.slice(last, start)));
+          pieces.push(`<mark>${escapeForHtml(bookText.slice(start, end))}</mark>`);
+          last = end;
+          count++;
+        }
+        at = haystack.indexOf(target, at + target.length);
+      }
+      pieces.push(escapeForHtml(bookText.slice(last)));
+
+      if (count === 0) {
+        textBody.textContent = bookText;
+        countEl.textContent = "no matches";
+        setFindButtons(false);
+        return;
+      }
+
+      textBody.innerHTML = pieces.join("");
+      findIndex = 0;
+      findLoose = loose;
+      setFindButtons(true);
+      showCurrentMatch();
+    }
+
+    function stepFind(delta: number) {
+      const marks = textBody.querySelectorAll("mark");
+      if (marks.length === 0) return;
+      findIndex = (findIndex + delta + marks.length) % marks.length;
+      showCurrentMatch();
+    }
+
+    document.getElementById("find-input")?.addEventListener("input", runFind);
+    document.getElementById("find-next")?.addEventListener("click", () => stepFind(1));
+    document.getElementById("find-prev")?.addEventListener("click", () => stepFind(-1));
+    document.getElementById("find-input")?.addEventListener("keydown", (e) => {
+      const ev = e as KeyboardEvent;
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        stepFind(ev.shiftKey ? -1 : 1);
+      } else if (ev.key === "Escape") {
+        ev.preventDefault();
+        (ev.target as HTMLInputElement).value = "";
+        runFind();
+      }
+    });
+
     async function loadText() {
       if (textLoaded) return;
       textLoading.hidden = false;
@@ -419,9 +661,12 @@ import Layout from "../../../layouts/Layout.astro";
           return;
         }
 
-        textBody.textContent = data.text ?? "";
+        bookText = data.text ?? "";
+        buildFindIndex(bookText);
+        textBody.textContent = bookText;
         applyTextSize();
         textBody.hidden = false;
+        (document.getElementById("find-bar") as HTMLDivElement).hidden = false;
         textLoaded = true;
       } catch (err) {
         textLoading.hidden = true;
@@ -448,6 +693,9 @@ import Layout from "../../../layouts/Layout.astro";
 
       const isText = mode === "text";
       textStage.hidden = !isText;
+      // Only meaningful once there is text on screen to search.
+      const findBar = document.getElementById("find-bar") as HTMLDivElement | null;
+      if (findBar) findBar.hidden = !isText || !textLoaded;
       pdfStage.hidden = isText;
       textSizeControls.hidden = !isText;
       // The pager belongs to the page views; the text view is one
@@ -503,23 +751,25 @@ import Layout from "../../../layouts/Layout.astro";
       }
 
       try {
-        // Look up the book in the catalog. For the parish-scale library
-        // this is fine; if the catalog grows past a few hundred we'd
-        // switch to a dedicated /api/library/books/:slug endpoint.
-        const catRes = await fetch("/api/library/books", {
+        // Ask for this one book by slug. Scanning the whole catalog
+        // (as this used to) never found hidden staging books, so an
+        // admin opening one from /admin/library/ was told it didn't
+        // exist — and it fetched every book's details to show one.
+        const bookRes = await fetch(`/api/library/book?slug=${encodeURIComponent(slug)}`, {
           credentials: "same-origin",
           cache: "no-store",
         });
-        if (catRes.status === 401) {
+        if (bookRes.status === 401) {
           location.assign(`/login/?next=${encodeURIComponent(location.pathname + location.search)}`);
           return;
         }
-        if (!catRes.ok) {
-          showError(`Could not load catalog (${catRes.status}).`);
+        if (!bookRes.ok) {
+          const detail = await bookRes.json().catch(() => ({}));
+          titleEl.textContent = bookRes.status === 404 ? "Book not found" : "Not available";
+          showError(detail.error || `Could not load this book (${bookRes.status}).`);
           return;
         }
-        const { books } = (await catRes.json()) as { books: Book[] };
-        const book = (books ?? []).find((b) => b.slug === slug);
+        const { book } = (await bookRes.json()) as { book: Book };
         if (!book) {
           titleEl.textContent = "Book not found";
           showError(`No book with slug "${slug}".`);
@@ -529,6 +779,12 @@ import Layout from "../../../layouts/Layout.astro";
         document.title = `${book.title} | Parish Library`;
         titleEl.textContent = book.title;
         authorEl.textContent = book.author ?? "";
+
+        // A book with no text version says so on the button itself.
+        if (book.has_text === false) {
+          modeTextBtn.title = "No text version for this book";
+          modeTextBtn.classList.add("opacity-50");
+        }
 
         // Someone who asked for the text view gets it straight away —
         // waiting for a 300-page PDF to render first would be a long

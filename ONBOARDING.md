@@ -86,6 +86,14 @@ renders when `/api/auth/me` confirms login.
   API: [functions/api/profile.ts](functions/api/profile.ts) and
   [functions/api/catechism/lessons.ts](functions/api/catechism/lessons.ts).
 
+- **`/api/library/book?slug=…`** — one book's details for the reader,
+  under the same visibility rules as the PDF and text endpoints. The
+  reader used to find its book by scanning the whole catalog from
+  `/api/library/books`, which never includes hidden staging books — so an
+  admin opening one from `/admin/library/` was told "Book not found"
+  while the book sat right there. Code:
+  [functions/api/library/book.ts](functions/api/library/book.ts).
+
 - **`/account/lesson/?slug=…`** — reader for one catechism lesson, using
   the same PDF.js viewer as the library reader. Members only; the PDF
   comes back as a 60-second signed URL.
@@ -138,7 +146,21 @@ renders when `/api/auth/me` confirms login.
   served one book at a time by
   [functions/api/library/text.ts](functions/api/library/text.ts) under
   the same visibility rules as the PDF, and read by the reader's **Text**
-  view (`/learn/library/reader/?slug=…&view=text`). Code:
+  view (`/learn/library/reader/?slug=…&view=text`), which carries its own
+  find bar — the page views are canvases, so the browser's Ctrl+F has
+  nothing to catch there.
+
+  **Finding text in a book:** extraction inherits the printed page's
+  habits — a word broken across a line arrives as `near- ness`, kerning
+  can split one as `near ness`, and soft hyphens and doubled spaces are
+  common. So the find bar searches a normalised copy (lowercased,
+  whitespace collapsed, soft hyphens dropped, line-break hyphens
+  rejoined) and maps hits back to the original characters to highlight
+  them. A second index with every space removed catches words split on a
+  bare space; it is used when the precise search finds nothing, or when a
+  multi-word phrase finds more that way, and the count then says
+  "(ignoring spaces)". Single words stay precise, so "to me" never
+  matches inside "tome". Code:
   [src/pages/admin/library.astro](src/pages/admin/library.astro),
   APIs: [functions/api/admin/library/index.ts](functions/api/admin/library/index.ts)
   and [functions/api/admin/library/[id].ts](functions/api/admin/library/[id].ts).
