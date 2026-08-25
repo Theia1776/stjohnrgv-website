@@ -46,6 +46,18 @@ const PDF_MAX_BYTES = 50 * 1024 * 1024;
 // than refusing the upload.
 const MAX_TEXT_CHARS = 3_000_000;
 
+// Migration 016 adds text_pages. Until it's applied, asking for that
+// column fails the whole query — which would take the catalog and the
+// reader down rather than merely doing without page numbers. So every
+// query that wants it falls back to one that doesn't.
+const BOOK_FIELDS =
+  "id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at";
+const BOOK_FIELDS_WITH_PAGES = `${BOOK_FIELDS}, text_pages`;
+
+function missingPagesColumn(error: { message?: string } | null): boolean {
+  return Boolean(error?.message && error.message.includes("text_pages"));
+}
+
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -99,13 +111,20 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       return wrap(jsonResponse({ error: "Forbidden" }, 403));
     }
 
-    const { data, error } = await supabase
+    // text_chars / text_status but never text_content — the admin list
+    // needs to know which books still want extracting, not to carry
+    // every book's full text.
+    let { data, error } = await supabase
       .from("library_books")
-      // text_chars / text_status but never text_content — the admin list
-      // needs to know which books still want extracting, not to carry
-      // every book's full text.
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
+      .select(BOOK_FIELDS_WITH_PAGES)
       .order("updated_at", { ascending: false });
+
+    if (error && missingPagesColumn(error)) {
+      ({ data, error } = await supabase
+        .from("library_books")
+        .select(BOOK_FIELDS)
+        .order("updated_at", { ascending: false }));
+    }
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
     return wrap(jsonResponse({ books: data ?? [] }, 200));
@@ -224,9 +243,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       return wrap(jsonResponse({ error: `PDF upload failed: ${uploadError.message}` }, 500));
     }
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("library_books")
-      .insert({
+    const bookRow: Record<string, unknown> = {
         slug,
         title,
         author: author || null,
@@ -243,9 +260,24 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         // infer from whether any text arrived.
         text_status: textStatus ?? (textContent ? "ok" : "empty"),
         text_extracted_at: textStatus || textContent ? new Date().toISOString() : null,
-      })
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
+    };
+
+    let { data: inserted, error: insertError } = await supabase
+      .from("library_books")
+      .insert(bookRow)
+      .select(BOOK_FIELDS_WITH_PAGES)
       .single();
+
+    if (insertError && missingPagesColumn(insertError)) {
+      // Migration 016 not applied: save the book without its page count
+      // rather than refusing the upload.
+      delete bookRow.text_pages;
+      ({ data: inserted, error: insertError } = await supabase
+        .from("library_books")
+        .insert(bookRow)
+        .select(BOOK_FIELDS)
+        .single());
+    }
 
     if (insertError) {
       // Roll back the uploaded PDF so we don't leave an orphan blob

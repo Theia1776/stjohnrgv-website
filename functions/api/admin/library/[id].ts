@@ -21,6 +21,16 @@ const BUCKET = "library";
 // Matches the cap in index.ts — roughly a 1,200-page book.
 const MAX_TEXT_CHARS = 3_000_000;
 
+// See index.ts: text_pages arrives with migration 016, and a query that
+// names it fails outright until then. Both paths fall back.
+const BOOK_FIELDS =
+  "id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at";
+const BOOK_FIELDS_WITH_PAGES = `${BOOK_FIELDS}, text_pages`;
+
+function missingPagesColumn(error: { message?: string } | null): boolean {
+  return Boolean(error?.message && error.message.includes("text_pages"));
+}
+
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -151,12 +161,24 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       return wrap(jsonResponse({ error: "No editable fields supplied." }, 400));
     }
 
-    const { data: updated, error } = await supabase
+    let { data: updated, error } = await supabase
       .from("library_books")
       .update(updates)
       .eq("id", id)
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
+      .select(BOOK_FIELDS_WITH_PAGES)
       .single();
+
+    if (error && missingPagesColumn(error)) {
+      // Migration 016 not applied: save everything else rather than
+      // failing the edit.
+      delete updates.text_pages;
+      ({ data: updated, error } = await supabase
+        .from("library_books")
+        .update(updates)
+        .eq("id", id)
+        .select(BOOK_FIELDS)
+        .single());
+    }
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
     if (!updated) return wrap(jsonResponse({ error: "Book not found." }, 404));
