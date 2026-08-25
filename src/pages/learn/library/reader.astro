@@ -84,6 +84,12 @@ import Layout from "../../../layouts/Layout.astro";
           </button>
         </div>
 
+        <!-- Why the Text button is greyed out, said plainly rather than
+             left to a hover tooltip nobody finds. -->
+        <span id="no-text-note" hidden class="text-xs italic text-text-secondary">
+          Scanned pages — no text version to search.
+        </span>
+
         <!-- Type size, for the text view only. -->
         <div id="text-size-controls" hidden role="group" aria-label="Text size" class="flex items-center gap-2">
           <button
@@ -435,6 +441,8 @@ import Layout from "../../../layouts/Layout.astro";
     let findMatches: number[] = [];
     let findIndex = 0;
     let findLoose = false;
+    // Whether this book has a text version to search at all.
+    let bookHasText = false;
 
     function escapeForHtml(value: string): string {
       return value
@@ -624,6 +632,32 @@ import Layout from "../../../layouts/Layout.astro";
       showCurrentMatch();
     }
 
+    // Ctrl+F is what anyone reaches for, and on the page views it finds
+    // nothing at all — those are images of pages, with no text in them
+    // for the browser to catch. So on a book that has a text version we
+    // take the shortcut over: switch to the text view and put the cursor
+    // in our own find box, which also copes with words the PDF split in
+    // half. On a book with no text version we leave the browser's own
+    // find alone rather than intercepting it to no purpose.
+    document.addEventListener("keydown", (e) => {
+      const ev = e as KeyboardEvent;
+      if (ev.key !== "f" && ev.key !== "F") return;
+      if (!(ev.ctrlKey || ev.metaKey) || ev.altKey) return;
+      if (!bookHasText) return;
+
+      ev.preventDefault();
+      if (mode !== "text") setMode("text");
+      const input = document.getElementById("find-input") as HTMLInputElement | null;
+      // The text may still be arriving; focusing once it's there avoids
+      // the cursor landing in a box that's about to be revealed.
+      const focusIt = () => {
+        input?.focus();
+        input?.select();
+      };
+      if (textLoaded) focusIt();
+      else setTimeout(focusIt, 300);
+    });
+
     document.getElementById("find-input")?.addEventListener("input", runFind);
     document.getElementById("find-next")?.addEventListener("click", () => stepFind(1));
     document.getElementById("find-prev")?.addEventListener("click", () => stepFind(-1));
@@ -780,10 +814,13 @@ import Layout from "../../../layouts/Layout.astro";
         titleEl.textContent = book.title;
         authorEl.textContent = book.author ?? "";
 
-        // A book with no text version says so on the button itself.
+        bookHasText = book.has_text !== false;
+
+        // A book with no text version says so on the button, and beside it.
         if (book.has_text === false) {
           modeTextBtn.title = "No text version for this book";
           modeTextBtn.classList.add("opacity-50");
+          document.getElementById("no-text-note")?.removeAttribute("hidden");
         }
 
         // Someone who asked for the text view gets it straight away —

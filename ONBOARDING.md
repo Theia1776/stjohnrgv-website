@@ -148,7 +148,10 @@ renders when `/api/auth/me` confirms login.
   the same visibility rules as the PDF, and read by the reader's **Text**
   view (`/learn/library/reader/?slug=…&view=text`), which carries its own
   find bar — the page views are canvases, so the browser's Ctrl+F has
-  nothing to catch there.
+  nothing to catch there. Pressing **Ctrl+F on a book that has a text
+  version** switches to the text view and focuses that find box; on a
+  book without one the browser's own find is left alone, and a note
+  beside the greyed-out Text button says why.
 
   **Finding text in a book:** extraction inherits the printed page's
   habits — a word broken across a line arrives as `near- ness`, kerning
