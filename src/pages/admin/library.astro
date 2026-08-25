@@ -260,6 +260,36 @@ import Layout from "../../layouts/Layout.astro";
           </div>
         </div>
         <p id="backfill-status" class="mb-4 text-sm text-text-secondary" hidden></p>
+
+        <!-- Finding one book among hundreds. Filters the table below by
+             title, author, slug, category or language; the dropdown
+             narrows by visibility or by whether a text version exists. -->
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+          <label for="catalog-search" class="sr-only">Search the catalog</label>
+          <input
+            id="catalog-search"
+            type="search"
+            autocomplete="off"
+            placeholder="Search title, author, slug, category…"
+            class="min-w-[18rem] flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          />
+          <label for="catalog-filter" class="sr-only">Filter</label>
+          <select
+            id="catalog-filter"
+            class="border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          >
+            <option value="">All books</option>
+            <option value="hidden">Hidden (staging)</option>
+            <option value="parish">Parishioners only</option>
+            <option value="public">Public</option>
+            <option value="has-text">Has a text version</option>
+            <option value="no-text">No text version</option>
+            <option value="scan">Scans (no text to pull)</option>
+            <option value="untried">Text not tried yet</option>
+          </select>
+          <button type="button" id="catalog-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
+        </div>
+        <p id="catalog-count" class="mb-3 text-sm text-text-secondary"></p>
         <div class="overflow-x-auto border border-border-soft rounded">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -350,6 +380,49 @@ import Layout from "../../layouts/Layout.astro";
     render();
   }
 
+  // ====================== SEARCH / FILTER ======================
+  // Fold accents and lowercase so capitalisation and diacritics never
+  // stand between you and a book.
+  function normalize(value: string): string {
+    return String(value ?? "")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase();
+  }
+
+  function bookHaystack(b: Book): string {
+    return normalize(
+      [b.title, b.author ?? "", b.slug, b.category, ...(b.languages ?? [])].join(" "),
+    );
+  }
+
+  function matchesFilter(b: Book, filter: string): boolean {
+    switch (filter) {
+      case "hidden": return b.hidden;
+      case "parish": return !b.hidden && !b.public_access;
+      case "public": return !b.hidden && b.public_access;
+      case "has-text": return b.text_status === "ok";
+      case "no-text": return b.text_status !== "ok";
+      case "scan": return b.text_status === "empty";
+      case "untried": return !b.text_status;
+      default: return true;
+    }
+  }
+
+  // The books the table is currently showing. Every word typed must
+  // appear somewhere, in any order.
+  function visibleBooks(): Book[] {
+    const query = (document.getElementById("catalog-search") as HTMLInputElement | null)?.value.trim() ?? "";
+    const filter = (document.getElementById("catalog-filter") as HTMLSelectElement | null)?.value ?? "";
+    const terms = normalize(query).split(/\s+/).filter(Boolean);
+    return books.filter((b) => {
+      if (!matchesFilter(b, filter)) return false;
+      if (terms.length === 0) return true;
+      const hay = bookHaystack(b);
+      return terms.every((t) => hay.includes(t));
+    });
+  }
+
   function render() {
     const tbody = document.getElementById("books-tbody");
     const empty = document.getElementById("books-empty");
@@ -357,6 +430,19 @@ import Layout from "../../layouts/Layout.astro";
     if (!tbody || !empty) return;
 
     if (countEl) countEl.textContent = String(books.length);
+
+    const shown = visibleBooks();
+    const searchEl = document.getElementById("catalog-search") as HTMLInputElement | null;
+    const filterEl = document.getElementById("catalog-filter") as HTMLSelectElement | null;
+    const clearBtn = document.getElementById("catalog-clear") as HTMLButtonElement | null;
+    const isFiltered = Boolean(searchEl?.value.trim()) || Boolean(filterEl?.value);
+    if (clearBtn) clearBtn.hidden = !isFiltered;
+    const countLine = document.getElementById("catalog-count");
+    if (countLine) {
+      countLine.textContent = isFiltered
+        ? `Showing ${shown.length} of ${books.length} books`
+        : "";
+    }
 
     if (books.length === 0) {
       tbody.innerHTML = "";
@@ -368,7 +454,14 @@ import Layout from "../../layouts/Layout.astro";
 
     renderBackfillControl();
 
-    tbody.innerHTML = books
+    // Nothing matched the search — say so in the table rather than
+    // leaving an empty box that looks broken.
+    if (shown.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-sm italic text-text-secondary">No books match that search.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = shown
       .map(
         (b) => `<tr class="border-b border-border-soft hover:bg-brand-blue-pale/40" data-id="${escapeHtml(b.id)}">
           <td class="p-2">
@@ -535,6 +628,17 @@ import Layout from "../../layouts/Layout.astro";
     );
     btn.disabled = false;
     await loadBooks();
+  });
+
+  document.getElementById("catalog-search")?.addEventListener("input", render);
+  document.getElementById("catalog-filter")?.addEventListener("change", render);
+  document.getElementById("catalog-clear")?.addEventListener("click", () => {
+    const searchEl = document.getElementById("catalog-search") as HTMLInputElement;
+    const filterEl = document.getElementById("catalog-filter") as HTMLSelectElement;
+    searchEl.value = "";
+    filterEl.value = "";
+    searchEl.focus();
+    render();
   });
 
   // ====================== UPLOAD ======================
