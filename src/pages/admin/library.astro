@@ -492,6 +492,11 @@ import Layout from "../../layouts/Layout.astro";
       .join("");
   }
 
+  // A catalog of hundreds of rows: the floating back-to-top button
+  // should jump, not glide.
+  document.documentElement.style.scrollBehavior = "auto";
+  document.documentElement.dataset.instantScroll = "true";
+
   // ====================== TEXT EXTRACTION ======================
   // PDF.js gives us the text layer of a PDF. Books that were typeset
   // digitally hand it over cleanly; books that are photographs of pages

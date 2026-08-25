@@ -84,6 +84,18 @@ import Layout from "../../../layouts/Layout.astro";
           </button>
         </div>
 
+        <!-- Back to the top of the book. The floating arrow does this
+             too, but it only appears once you've scrolled and it sits in
+             the corner; deep in a 400-page book you want it where your
+             eyes already are. -->
+        <button
+          type="button"
+          id="to-top"
+          class="border border-border-soft bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-text-primary hover:text-brand-blue-dark"
+        >
+          ↑ Top
+        </button>
+
         <!-- Why the Text button is greyed out, said plainly rather than
              left to a hover tooltip nobody finds. -->
         <span id="no-text-note" hidden class="text-xs italic text-text-secondary">
@@ -143,7 +155,11 @@ import Layout from "../../../layouts/Layout.astro";
       <!-- Find within the book. The page views are canvases — there is
            no text in them for the browser's own Ctrl+F to catch — so the
            text view carries its own search. -->
-      <div id="find-bar" hidden class="mb-6 flex flex-wrap items-center gap-2 border border-border-soft bg-cream-card p-3">
+      <!-- Sticks below the site header while you read. Jumping to a
+           match 300 pages down is no use if Next is still at the top of
+           the book. top-[73px] clears the header (69px tall, offset 4px
+           from the top). -->
+      <div id="find-bar" hidden class="sticky top-[73px] z-30 mb-6 flex flex-wrap items-center gap-2 border border-border-soft bg-cream-card p-3 shadow-sm">
         <label for="find-input" class="sr-only">Find in this book</label>
         <input
           id="find-input"
@@ -434,6 +450,16 @@ import Layout from "../../../layouts/Layout.astro";
       localStorage.setItem(TEXT_SIZE_KEY, String(textSize));
     }
 
+    // Jumps here land instantly — nobody deep in a book wants to watch
+    // 300 pages scroll past. The floating back-to-top button in the
+    // layout reads this flag too.
+    document.documentElement.style.scrollBehavior = "auto";
+    document.documentElement.dataset.instantScroll = "true";
+
+    document.getElementById("to-top")?.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+
     // ============================================================
     // FIND IN BOOK
     // ============================================================
@@ -540,6 +566,7 @@ import Layout from "../../../layouts/Layout.astro";
       if (!current) return;
       current.classList.add("find-current");
       // Instant: hunting through a book shouldn't mean watching it glide.
+      // Centred, so a hit never lands underneath the sticky find bar.
       current.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "center" });
       const countEl = document.getElementById("find-count") as HTMLSpanElement;
       countEl.textContent =
