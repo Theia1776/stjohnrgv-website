@@ -285,6 +285,7 @@ import Layout from "../../layouts/Layout.astro";
             <option value="has-text">Has a text version</option>
             <option value="no-text">No text version</option>
             <option value="scan">Scans (no text to pull)</option>
+            <option value="failed">Failed to read</option>
             <option value="untried">Text not tried yet</option>
           </select>
           <button type="button" id="catalog-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
@@ -404,6 +405,9 @@ import Layout from "../../layouts/Layout.astro";
       case "has-text": return b.text_status === "ok";
       case "no-text": return b.text_status !== "ok";
       case "scan": return b.text_status === "empty";
+      // Not scans: files PDF.js couldn't open at all — protected,
+      // damaged, or oddly built. Worth looking at individually.
+      case "failed": return b.text_status === "error";
       case "untried": return !b.text_status;
       default: return true;
     }
