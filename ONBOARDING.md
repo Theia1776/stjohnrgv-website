@@ -153,6 +153,15 @@ renders when `/api/auth/me` confirms login.
   book without one the browser's own find is left alone, and a note
   beside the greyed-out Text button says why.
 
+  **Filling the form from the book:** choosing a PDF reads it once —
+  embedded metadata, the largest type on the title page, which alphabets
+  appear, and which subject its vocabulary points to — and fills any
+  blank field. Nothing typed is overwritten and everything can be
+  corrected. Titles that extract as gibberish (Slavonic and old Greek
+  fonts often carry private encodings) are rejected in favour of the next
+  size down, which is usually the same title in English. The same read
+  serves the upload, so a book is never parsed twice.
+
   **Page numbers (migration 016):** extraction writes a marker between
   pages — `U+241E label|pdfPage U+241E` — using the PDF's own page labels
   where it has them (real printed numbers, including roman front matter)

@@ -38,11 +38,12 @@ import Layout from "../../layouts/Layout.astro";
           Add a New Book
         </h2>
         <p class="text-sm text-text-secondary mb-5">
-          Drop a PDF and fill in the details. The URL slug is auto-generated from
-          the title unless you set one yourself. The book's text is pulled out here
-          in your browser as it uploads, which gives readers a plain-text version
-          alongside the original pages. Scanned books have no text to pull, and
-          upload just the same.
+          Choose a PDF and the rest fills itself in — title, author, category and
+          languages are read out of the book, and can be corrected before you
+          upload. The book's text is pulled out here in your browser at the same
+          time, which gives readers a searchable plain-text version alongside the
+          original pages. Scanned books have no text to pull, and upload just the
+          same.
         </p>
 
         <form id="upload-form" class="space-y-4">
@@ -571,6 +572,265 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
+  // ====================== READING THE BOOK'S OWN DETAILS ======================
+  // Choosing a category for a book you haven't read is a guess, and the
+  // PDF usually knows more about itself than the form asks for. So when a
+  // file is picked we read it once: its embedded title and author, the
+  // large type on its title page, which alphabets appear in it, and which
+  // subject its vocabulary points to. Everything is a suggestion — each
+  // field is filled only if it's still empty, and all of it can be typed
+  // over.
+
+  type Analysis = {
+    title: string;
+    author: string;
+    category: string;
+    languages: string[];
+    description: string;
+  };
+
+  // Distinctive words per category, weighted: three for a term that
+  // belongs to one subject and almost nowhere else, one for a term that
+  // merely leans that way. Scored over the book's own text, so a passing
+  // mention loses to a book about the thing.
+  const CATEGORY_TERMS: Record<string, [string, number][]> = {
+    "Liturgical Texts": [
+      ["divine liturgy", 3], ["vespers", 3], ["matins", 3], ["orthros", 3],
+      ["troparion", 3], ["kontakion", 3], ["prokeimenon", 3], ["akathist", 3],
+      ["horologion", 3], ["euchologion", 3], ["typikon", 3], ["menaion", 3],
+      ["service book", 3], ["prayer book", 2], ["the hours", 2], ["litany", 2],
+      ["celebrant", 2], ["deacon:", 2], ["priest:", 2], ["choir:", 2],
+    ],
+    Hagiography: [
+      ["life of saint", 3], ["lives of the saints", 3], ["holy martyr", 3],
+      ["venerable father", 3], ["wonderworker", 3], ["his relics", 3],
+      ["glorification", 2], ["ascetic feats", 2], ["monastery of", 1],
+      ["was born in", 1], ["reposed", 2], ["commemorated", 2],
+    ],
+    Patristics: [
+      ["homily", 3], ["homilies", 3], ["church fathers", 3], ["chrysostom", 2],
+      ["basil the great", 3], ["gregory the theologian", 3], ["isaac the syrian", 3],
+      ["ephraim the syrian", 3], ["discourse", 2], ["treatise", 2],
+      ["on the incarnation", 3], ["patristic", 3],
+    ],
+    Scripture: [
+      ["gospel according", 3], ["new testament", 3], ["old testament", 3],
+      ["the psalter", 3], ["epistle to the", 3], ["holy scripture", 2],
+      ["chapter and verse", 2], ["evangelist", 2], ["septuagint", 3],
+    ],
+    History: [
+      ["church history", 3], ["ecumenical council", 3], ["the schism", 3],
+      ["patriarchate", 2], ["in the year", 1], ["century", 1], ["synod", 2],
+      ["chronicle", 2], ["emperor", 2], ["persecution", 1],
+    ],
+    "Theology / Doctrine": [
+      ["catechism", 3], ["dogma", 3], ["doctrine", 2], ["symbol of faith", 3],
+      ["the creed", 3], ["heresy", 2], ["apologetic", 3], ["theology", 2],
+      ["trinity", 2], ["orthodox faith", 2],
+    ],
+    "Spiritual Life": [
+      ["the passions", 3], ["asceticism", 3], ["monastic life", 3],
+      ["spiritual life", 3], ["the elder", 2], ["repentance", 2],
+      ["prayer of the heart", 3], ["jesus prayer", 3], ["philokalia", 3],
+      ["confession", 2], ["fasting", 2], ["humility", 2],
+    ],
+  };
+
+  /** Which subject the book's own vocabulary points to. */
+  function guessCategory(text: string, title: string): string {
+    // The opening pages carry title, contents and preface — the most
+    // telling part — and scoring a whole book is needless work.
+    const sample = (title + " " + text.slice(0, 60000)).toLowerCase();
+    let best = "";
+    let bestScore = 0;
+    for (const [category, terms] of Object.entries(CATEGORY_TERMS)) {
+      let score = 0;
+      for (const [term, weight] of terms) {
+        // Count up to five occurrences per term, so one word repeated
+        // hundreds of times can't decide the whole book.
+        let found = 0;
+        let at = sample.indexOf(term);
+        while (at !== -1 && found < 5) {
+          found++;
+          at = sample.indexOf(term, at + term.length);
+        }
+        score += found * weight;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = category;
+      }
+    }
+    // A weak signal is worse than none: "Other" is honest, and it's the
+    // first thing an admin will look at.
+    return bestScore >= 6 ? best : "Other";
+  }
+
+  /** Which alphabets actually appear, in enough quantity to count. */
+  function guessLanguages(text: string, hint: string): string[] {
+    const sample = text.slice(0, 200000);
+    const count = (re: RegExp) => (sample.match(re) ?? []).length;
+
+    const latin = count(/[A-Za-z]/g);
+    const greek = count(/[Ͱ-Ͽἀ-῿]/g);
+    const cyrillic = count(/[Ѐ-ӿ]/g);
+    // Letters that dropped out of Russian but remain in Church Slavonic.
+    const slavonicMarks = count(/[ѣѳѵѦѧѻѱ]/g);
+
+    const languages: string[] = [];
+    if (latin > 200) languages.push("English");
+    if (greek > 200) languages.push("Greek");
+    if (cyrillic > 200) {
+      // The archaic letters settle it when they survive extraction. They
+      // often don't, since Slavonic fonts tend to carry private
+      // encodings — so Cyrillic in a service book is taken as Slavonic,
+      // which is what a parish library's service books are.
+      const slavonic = slavonicMarks > 20 || hint === "Liturgical Texts";
+      languages.push(slavonic ? "Church Slavonic" : "Russian");
+    }
+    return languages.length ? languages : ["English"];
+  }
+
+  /**
+   * Text that came out of the PDF garbled. Church Slavonic and old Greek
+   * are often set in fonts with private encodings, so a title page's
+   * largest line can extract as "Б9eственнаz літургjа" — digits and two
+   * alphabets fused into single words. A title like that is worse than
+   * none.
+   */
+  function looksMangled(value: string): boolean {
+    for (const word of value.split(/\s+/)) {
+      if (word.length < 3) continue;
+      if (/[A-Za-zЀ-ӿ][0-9]|[0-9][A-Za-zЀ-ӿ]/.test(word)) return true;
+      const scripts = [/[A-Za-z]/, /[Ѐ-ӿ]/, /[Ͱ-Ͽἀ-῿]/].filter((re) => re.test(word));
+      if (scripts.length > 1) return true;
+    }
+    return false;
+  }
+
+  /** Rubbish that PDF producers leave in the Title field. */
+  function looksLikeRealTitle(value: string): boolean {
+    const v = value.trim();
+    if (v.length < 4 || v.length > 150) return false;
+    if (/^(microsoft word|untitled|document\d*|book\d*|print|scan)/i.test(v)) return false;
+    if (/\.(pdf|docx?|indd|qxd)$/i.test(v)) return false;
+    return true;
+  }
+
+  /**
+   * The largest type on the title page, which is nearly always the title,
+   * and the line beneath it, which is often the author. PDF.js gives each
+   * fragment a transform whose scale is its rendered size.
+   */
+  async function readTitlePage(pdf: any): Promise<{ title: string; author: string }> {
+    try {
+      const page = await pdf.getPage(1);
+      const content = await page.getTextContent();
+      const lines: { size: number; text: string }[] = [];
+      for (const item of content.items) {
+        const text = String(item.str ?? "").trim();
+        if (text.length < 2) continue;
+        const size = Math.abs(Number(item.transform?.[3] ?? 0));
+        lines.push({ size, text });
+      }
+      if (lines.length === 0) return { title: "", author: "" };
+
+      // Group fragments into lines of type by size, largest first. The
+      // title is nearly always the biggest thing on the page — but when
+      // it extracts as gibberish (Slavonic and old Greek fonts often
+      // do), the next size down is usually the same title in English.
+      const sizes = [...new Set(lines.map((l) => Math.round(l.size * 2) / 2))].sort((a, b) => b - a);
+      let title = "";
+      for (const size of sizes.slice(0, 4)) {
+        const candidate = lines
+          .filter((l) => Math.abs(Math.round(l.size * 2) / 2 - size) < 0.01)
+          .map((l) => l.text)
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (candidate.length >= 4 && candidate.length <= 150 && !looksMangled(candidate)) {
+          title = candidate;
+          break;
+        }
+      }
+
+      // An author line either announces itself, or carries a title of
+      // office that only ever precedes a name.
+      const byLine = lines.find((l) => /^(by|written by|compiled by|translated by)\b/i.test(l.text));
+      const clergyLine = lines.find(
+        (l) =>
+          /^(fr\.|father|priest|archpriest|hieromonk|archimandrite|bishop|archbishop|metropolitan|st\.|saint|monk|nun)\s+\S/i.test(l.text) &&
+          l.text.length <= 80 &&
+          !looksMangled(l.text),
+      );
+      const author = byLine
+        ? byLine.text.replace(/^(by|written by|compiled by|translated by)\s+/i, "").trim()
+        : clergyLine?.text.trim() ?? "";
+      return { title, author };
+    } catch {
+      return { title: "", author: "" };
+    }
+  }
+
+  async function analysePdf(pdf: any, text: string): Promise<Analysis> {
+    let info: any = {};
+    try {
+      const meta = await pdf.getMetadata();
+      info = meta?.info ?? {};
+    } catch {
+      info = {};
+    }
+
+    const fromPage = await readTitlePage(pdf);
+
+    // The embedded title is right more often than not, but plenty of PDFs
+    // carry the producer's rubbish — so it has to look like a title.
+    const embeddedTitle = String(info.Title ?? "").trim();
+    const title =
+      looksLikeRealTitle(embeddedTitle) && !looksMangled(embeddedTitle)
+        ? embeddedTitle
+        : fromPage.title;
+
+    const embeddedAuthor = String(info.Author ?? "").trim();
+    const author =
+      embeddedAuthor && embeddedAuthor.length <= 120 && !/^(unknown|user|admin)$/i.test(embeddedAuthor)
+        ? embeddedAuthor
+        : fromPage.author;
+
+    // Subject and Keywords are where a description would live if the book
+    // has one; the body text is not a description and reads terribly as
+    // one, so nothing is invented when they're absent.
+    const subject = String(info.Subject ?? "").trim();
+    // A "description" that merely repeats the title tells a reader
+    // nothing, and producers set Subject to the title all the time.
+    const flatten = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const echoesTitle =
+      Boolean(title) &&
+      (flatten(subject).includes(flatten(title)) || flatten(title).includes(flatten(subject)));
+    const description =
+      subject.length > 10 && subject.length <= 500 && !echoesTitle ? subject : "";
+
+    // Category first: it settles what a Cyrillic service book is written in.
+    const category = guessCategory(text, title);
+
+    return {
+      title,
+      author,
+      category,
+      languages: guessLanguages(text, category),
+      description,
+    };
+  }
+
+  /** Fill a field only when it's empty, so nothing typed is overwritten. */
+  function fillIfEmpty(id: string, value: string): boolean {
+    if (!value) return false;
+    const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    if (!el || el.value.trim()) return false;
+    el.value = value;
+    return true;
+  }
+
   function textCell(b: Book): string {
     if (b.text_status === "ok") {
       const pages = Number(b.text_pages ?? 0);
@@ -692,6 +952,63 @@ import Layout from "../../layouts/Layout.astro";
     render();
   });
 
+  // Reading a 300-page book takes a moment, so it happens once — when
+  // the file is chosen — and the result is kept for the upload itself.
+  let pending: { key: string; extraction: Extraction; analysis: Analysis } | null = null;
+
+  function fileKey(file: File): string {
+    return `${file.name}:${file.size}:${file.lastModified}`;
+  }
+
+  document.getElementById("pdf")?.addEventListener("change", async (ev) => {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    pending = null;
+    if (!file || !pdfjsLib) return;
+
+    setUploadStatus("Reading the book…");
+    try {
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+      // The same extraction the upload needs, done now rather than twice.
+      const extraction = await extractText({ data: await file.arrayBuffer() }, (page, total) => {
+        setUploadStatus(`Reading the book — page ${page} of ${total}…`);
+      });
+      const analysis = await analysePdf(pdf, extraction.text);
+      pending = { key: fileKey(file), extraction, analysis };
+
+      const filled: string[] = [];
+      if (fillIfEmpty("title", analysis.title)) filled.push("title");
+      if (fillIfEmpty("author", analysis.author)) filled.push("author");
+      if (fillIfEmpty("description", analysis.description)) filled.push("note");
+
+      // Languages always carries "English" by default, so it's replaced
+      // rather than filled — but only when the book says otherwise.
+      const langEl = document.getElementById("languages") as HTMLInputElement;
+      const langs = analysis.languages.join(", ");
+      if (langEl && (langEl.value.trim() === "" || langEl.value.trim() === "English") && langs !== "English") {
+        langEl.value = langs;
+        filled.push("languages");
+      }
+
+      const catEl = document.getElementById("category") as HTMLSelectElement;
+      if (catEl && analysis.category && analysis.category !== "Other") {
+        catEl.value = analysis.category;
+        filled.push("category");
+      }
+
+      const pagesRead = extraction.pages ? `${extraction.pages} pages of text` : "no text (a scan)";
+      setUploadStatus(
+        filled.length
+          ? `Read the book: ${pagesRead}. Filled in ${filled.join(", ")} — please check before uploading.`
+          : `Read the book: ${pagesRead}.`,
+      );
+    } catch (err) {
+      setUploadStatus(`Couldn't read that PDF: ${err instanceof Error ? err.message : String(err)}`, true);
+    }
+  });
+
   // ====================== UPLOAD ======================
   document.getElementById("upload-form")?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -706,11 +1023,17 @@ import Layout from "../../layouts/Layout.astro";
     // status records why, and the reader falls back to page view.
     const pdfFile = formData.get("pdf");
     if (pdfFile instanceof File && pdfFile.size > 0) {
-      setUploadStatus("Reading the text out of the PDF…");
-      const buffer = await pdfFile.arrayBuffer();
-      const extraction = await extractText({ data: buffer }, (page, total) => {
-        setUploadStatus(`Reading text — page ${page} of ${total}…`);
-      });
+      // Already read when the file was chosen, unless it changed since.
+      let extraction: Extraction;
+      if (pending && pending.key === fileKey(pdfFile)) {
+        extraction = pending.extraction;
+      } else {
+        setUploadStatus("Reading the text out of the PDF…");
+        const buffer = await pdfFile.arrayBuffer();
+        extraction = await extractText({ data: buffer }, (page, total) => {
+          setUploadStatus(`Reading text — page ${page} of ${total}…`);
+        });
+      }
       formData.append("text_content", extraction.text);
       formData.append("text_status", extraction.status);
       formData.append("text_pages", String(extraction.pages));
