@@ -872,13 +872,31 @@ import Layout from "../../layouts/Layout.astro";
       text,
     );
 
-    // The Author field is frequently whoever created the file, so it has
-    // to look like an author's name before it's believed — and the
-    // filename's author half is preferred when it does.
+    // Authors are left blank far more readily than titles. A wrong name
+    // on a book is worse than no name — it gets cited — and the sources
+    // are poor: the Author field is usually whoever made the file, and
+    // the half of a filename after the dash is as likely to be a
+    // translator, a publisher or a note as an author.
+    //
+    // So a candidate must both look like a name AND have its surname
+    // appear in the book's own opening pages. A book prints its author's
+    // name inside it; "Janice" is nowhere in The Ladder of Divine Ascent.
     const embeddedAuthor = String(info.Author ?? "").trim();
+    const opening = text.slice(0, 8000).toLowerCase();
+    const namedInBook = (candidate: string): boolean => {
+      const words = candidate.toLowerCase().match(/[a-zà-ÿ]{3,}/g) ?? [];
+      // Honorifics prove nothing, and forenames prove little: "John"
+      // appears in nearly every Orthodox book ever printed. The surname
+      // is what has to be there.
+      const names = words.filter(
+        (w) => !/^(father|priest|saint|elder|bishop|monk|nun|archpriest|hieromonk|archimandrite|metropolitan)$/.test(w),
+      );
+      const surname = names[names.length - 1];
+      return Boolean(surname) && surname.length >= 4 && opening.includes(surname);
+    };
     const author =
-      [fromName.author, fromPage.author, embeddedAuthor].find((candidate) =>
-        candidate ? looksLikeAuthor(candidate) : false,
+      [fromName.author, fromPage.author, embeddedAuthor].find(
+        (candidate) => candidate && looksLikeAuthor(candidate) && namedInBook(candidate),
       ) ?? "";
 
     // Subject and Keywords are where a description would live if the book
