@@ -55,7 +55,11 @@ import Layout from "../../../layouts/Layout.astro";
   <section class="bg-cream-bg">
     <div class="mx-auto max-w-6xl px-4 pt-10 pb-6 md:px-6">
       <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
-        <a href="/learn/library/" class="text-brand-tan-dark no-underline hover:underline">
+        <!-- Points back at whichever list you came from. Books opened
+             from the admin catalog open in a new tab, so there's no Back
+             to press, and a staging book isn't in the parish library
+             anyway — leaving the only way back a trip through the menu. -->
+        <a id="back-link" href="/learn/library/" class="text-brand-tan-dark no-underline hover:underline">
           ← Parish Library
         </a>
       </p>
@@ -982,6 +986,15 @@ import Layout from "../../../layouts/Layout.astro";
       // ?view=text opens straight into the cleaned-up text — that's what
       // the "Read as text" link on each library card points at.
       const wantsText = params.get("view") === "text";
+
+      // ?from=admin — opened from the library admin catalog.
+      if (params.get("from") === "admin") {
+        const back = document.getElementById("back-link") as HTMLAnchorElement | null;
+        if (back) {
+          back.href = "/admin/library/";
+          back.textContent = "← Library Admin";
+        }
+      }
       if (!slug) {
         titleEl.textContent = "No book selected";
         showError("This reader needs a ?slug= parameter. Pick a book from the library.");
