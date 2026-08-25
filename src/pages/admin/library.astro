@@ -772,7 +772,81 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
-  async function analysePdf(pdf: any, text: string): Promise<Analysis> {
+  /**
+   * Filenames in this library are descriptive — "The Ladder of Divine
+   * Ascent - St John Klimakos.pdf" — and a name someone typed on purpose
+   * beats a metadata field written by whatever produced the file.
+   */
+  function parseFilename(filename: string): { title: string; author: string } {
+    const base = filename
+      .replace(/\.pdf$/i, "")
+      .replace(/[_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    // "Title - Author" is the common shape; a spaced hyphen or en dash
+    // separates them, while hyphens inside words are left alone.
+    const split = base.split(/\s+[-–—]\s+/);
+    if (split.length >= 2) {
+      return { title: split[0].trim(), author: split.slice(1).join(" - ").trim() };
+    }
+    return { title: base, author: "" };
+  }
+
+  /** Does this name look like a person, rather than whoever owned the laptop? */
+  function looksLikeAuthor(value: string): boolean {
+    const v = value.trim();
+    if (v.length < 4 || v.length > 120) return false;
+    if (/^(unknown|user|admin|owner|guest|windows|microsoft|acrobat|scanner)$/i.test(v)) return false;
+    // A title of office is enough on its own.
+    if (/\b(st\.?|saint|fr\.?|father|priest|archpriest|hieromonk|archimandrite|bishop|archbishop|metropolitan|monk|nun|elder|pope)\b/i.test(v)) {
+      return true;
+    }
+    // Otherwise it needs at least a forename and a surname. "Janice" is
+    // the person who made the PDF, not the author of the book.
+    return v.split(/\s+/).filter((w) => w.length > 1).length >= 2;
+  }
+
+  /**
+   * How much of a candidate title actually appears in the book's opening
+   * pages. A real title is printed in its own book; a cataloguer's
+   * shorthand like "Clim. Ladder, tr.Lazarus Moore" is not.
+   */
+  function titleSupport(candidate: string, text: string): number {
+    const words = candidate.toLowerCase().match(/[a-z]{4,}/g) ?? [];
+    if (words.length === 0) return 0;
+    const opening = text.slice(0, 8000).toLowerCase();
+    const found = words.filter((w) => opening.includes(w)).length;
+    return found / words.length;
+  }
+
+  /** Pick the most title-like of the candidates we have. */
+  function chooseTitle(candidates: string[], text: string): string {
+    let best = "";
+    let bestScore = -Infinity;
+    for (const raw of candidates) {
+      const candidate = raw.trim();
+      if (!candidate || candidate.length < 4 || candidate.length > 150) continue;
+
+      let score = titleSupport(candidate, text) * 4;
+      const words = candidate.split(/\s+/).filter(Boolean);
+      if (words.length >= 3) score += 1;
+      if (looksMangled(candidate)) score -= 5;
+      // Cataloguing shorthand: "Clim. Ladder, tr.Lazarus Moore".
+      if (/\b(tr|ed|trans|vol|pt|comp)\.\s*/i.test(candidate)) score -= 4;
+      // Abbreviated words are a shorthand tell too.
+      const abbreviations = (candidate.match(/\b[A-Za-z]{2,5}\./g) ?? []).length;
+      if (abbreviations >= 1 && !/^(st|fr|ss)\.$/i.test(candidate.match(/\b[A-Za-z]{2,5}\./)?.[0] ?? "")) {
+        score -= abbreviations;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
+      }
+    }
+    return best;
+  }
+
+  async function analysePdf(pdf: any, text: string, filename: string): Promise<Analysis> {
     let info: any = {};
     try {
       const meta = await pdf.getMetadata();
@@ -782,20 +856,30 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     const fromPage = await readTitlePage(pdf);
+    const fromName = parseFilename(filename);
 
-    // The embedded title is right more often than not, but plenty of PDFs
-    // carry the producer's rubbish — so it has to look like a title.
+    // Three sources, none reliably best: the embedded title is often a
+    // cataloguer's shorthand, the title page is often set in a font that
+    // won't extract, and the filename is whatever someone typed. Score
+    // them against the book's own opening pages and take the winner.
     const embeddedTitle = String(info.Title ?? "").trim();
-    const title =
-      looksLikeRealTitle(embeddedTitle) && !looksMangled(embeddedTitle)
-        ? embeddedTitle
-        : fromPage.title;
+    const title = chooseTitle(
+      [
+        looksLikeRealTitle(embeddedTitle) ? embeddedTitle : "",
+        fromPage.title,
+        fromName.title,
+      ],
+      text,
+    );
 
+    // The Author field is frequently whoever created the file, so it has
+    // to look like an author's name before it's believed — and the
+    // filename's author half is preferred when it does.
     const embeddedAuthor = String(info.Author ?? "").trim();
     const author =
-      embeddedAuthor && embeddedAuthor.length <= 120 && !/^(unknown|user|admin)$/i.test(embeddedAuthor)
-        ? embeddedAuthor
-        : fromPage.author;
+      [fromName.author, fromPage.author, embeddedAuthor].find((candidate) =>
+        candidate ? looksLikeAuthor(candidate) : false,
+      ) ?? "";
 
     // Subject and Keywords are where a description would live if the book
     // has one; the body text is not a description and reads terribly as
@@ -975,7 +1059,7 @@ import Layout from "../../layouts/Layout.astro";
       const extraction = await extractText({ data: await file.arrayBuffer() }, (page, total) => {
         setUploadStatus(`Reading the book — page ${page} of ${total}…`);
       });
-      const analysis = await analysePdf(pdf, extraction.text);
+      const analysis = await analysePdf(pdf, extraction.text, file.name);
       pending = { key: fileKey(file), extraction, analysis };
 
       const filled: string[] = [];
