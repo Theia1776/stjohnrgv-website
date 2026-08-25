@@ -286,6 +286,7 @@ import Layout from "../../layouts/Layout.astro";
             <option value="no-text">No text version</option>
             <option value="scan">Scans (no text to pull)</option>
             <option value="failed">Failed to read</option>
+            <option value="no-pages">Text without page numbers</option>
             <option value="untried">Text not tried yet</option>
           </select>
           <button type="button" id="catalog-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
@@ -329,6 +330,7 @@ import Layout from "../../layouts/Layout.astro";
     hidden: boolean;
     text_chars: number | null;
     text_status: string | null;
+    text_pages: number | null;
     created_at: string;
     updated_at: string;
   };
@@ -408,6 +410,7 @@ import Layout from "../../layouts/Layout.astro";
       // Not scans: files PDF.js couldn't open at all — protected,
       // damaged, or oddly built. Worth looking at individually.
       case "failed": return b.text_status === "error";
+      case "no-pages": return b.text_status === "ok" && !Number(b.text_pages ?? 0);
       case "untried": return !b.text_status;
       default: return true;
     }
@@ -522,8 +525,21 @@ import Layout from "../../layouts/Layout.astro";
     if (!pdfjsLib) return { text: "", status: "error", pages: 0 };
     try {
       const pdf = await pdfjsLib.getDocument(source).promise;
+
+      // Many PDFs carry real page labels — i, ii, iii through the front
+      // matter, then 1, 2, 3 — and those are what's printed on the paper,
+      // which is what a citation needs. Where a book has none, its
+      // position in the file is the honest fallback.
+      let labels: string[] | null = null;
+      try {
+        labels = await pdf.getPageLabels();
+      } catch {
+        labels = null;
+      }
+
       const parts: string[] = [];
       let chars = 0;
+      let pagesWithText = 0;
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
@@ -531,8 +547,14 @@ import Layout from "../../layouts/Layout.astro";
         // hands back positioned fragments, so they're joined with spaces.
         const pageText = content.items.map((it: any) => it.str).join(" ").replace(/\s+/g, " ").trim();
         if (pageText) {
-          parts.push(pageText);
+          const label = labels && labels[i - 1] ? String(labels[i - 1]) : String(i);
+          // The marker carries what to show and where to go: the printed
+          // label, then the page's position in the file. U+241E is a
+          // character no book contains, so it can never be mistaken for
+          // the text itself. The reader strips these out on load.
+          parts.push(`␞${label}|${i}␞\n${pageText}`);
           chars += pageText.length;
+          pagesWithText++;
         }
         onProgress?.(i, pdf.numPages);
         if (chars > MAX_TEXT_CHARS) break;
@@ -540,7 +562,9 @@ import Layout from "../../layouts/Layout.astro";
       // A blank line between pages, so the text view has some sense of
       // where one page ended and the next began.
       const text = parts.join("\n\n").slice(0, MAX_TEXT_CHARS);
-      return { text, status: text ? "ok" : "empty", pages: pdf.numPages };
+      // pages counts the pages the text actually carries markers for —
+      // that's what tells the backfill this book has page numbers.
+      return { text, status: text ? "ok" : "empty", pages: text ? pagesWithText : 0 };
     } catch (err) {
       console.error("Text extraction failed:", err);
       return { text: "", status: "error", pages: 0 };
@@ -549,8 +573,13 @@ import Layout from "../../layouts/Layout.astro";
 
   function textCell(b: Book): string {
     if (b.text_status === "ok") {
-      const n = Number(b.text_chars ?? 0);
-      return `<span class="text-text-secondary">${n.toLocaleString()} chars</span>`;
+      const pages = Number(b.text_pages ?? 0);
+      if (pages > 0) {
+        return `<span class="text-text-secondary">${pages.toLocaleString()} pages</span>`;
+      }
+      // Text from before page markers existed — the backfill will
+      // re-read it.
+      return `<span class="text-brand-tan-dark">no page numbers</span>`;
     }
     if (b.text_status === "empty") return `<span class="text-text-secondary">scan — no text</span>`;
     if (b.text_status === "error") return `<span class="text-liturgical-red">failed</span>`;
@@ -563,7 +592,14 @@ import Layout from "../../layouts/Layout.astro";
   // runs in the open tab; closing the tab stops it, and re-running picks
   // up where it left off because finished books no longer qualify.
   function booksNeedingText(): Book[] {
-    return books.filter((b) => !b.text_status);
+    return books.filter((b) => {
+      // Never tried.
+      if (!b.text_status) return true;
+      // Has text, but from before page markers existed — re-reading it
+      // is what gives citations their page numbers.
+      if (b.text_status === "ok" && !Number(b.text_pages ?? 0)) return true;
+      return false;
+    });
   }
 
   function renderBackfillControl() {
@@ -572,8 +608,10 @@ import Layout from "../../layouts/Layout.astro";
     if (!btn || !summary) return;
     const pending = booksNeedingText().length;
     const withText = books.filter((b) => b.text_status === "ok").length;
+    const withPages = books.filter((b) => Number(b.text_pages ?? 0) > 0).length;
     summary.textContent = books.length
-      ? `${withText} of ${books.length} have text${pending ? `, ${pending} not yet tried` : ""}`
+      ? `${withText} of ${books.length} have text, ${withPages} with page numbers` +
+        (pending ? ` · ${pending} to read` : "")
       : "";
     btn.hidden = pending === 0;
     btn.textContent = `Prepare text for ${pending} book${pending === 1 ? "" : "s"}`;
@@ -618,7 +656,11 @@ import Layout from "../../layouts/Layout.astro";
           method: "PATCH",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text_content: result.text, text_status: result.status }),
+          body: JSON.stringify({
+            text_content: result.text,
+            text_status: result.status,
+            text_pages: result.pages,
+          }),
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
@@ -671,6 +713,7 @@ import Layout from "../../layouts/Layout.astro";
       });
       formData.append("text_content", extraction.text);
       formData.append("text_status", extraction.status);
+      formData.append("text_pages", String(extraction.pages));
       setUploadStatus(
         extraction.status === "ok"
           ? `Read ${extraction.text.length.toLocaleString()} characters. Uploading…`

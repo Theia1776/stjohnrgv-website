@@ -55,7 +55,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   const { data: book, error } = await admin
     .from("library_books")
-    .select("slug, title, author, public_access, hidden, text_content, text_chars, text_status")
+    .select("slug, title, author, public_access, hidden, text_content, text_chars, text_status, text_pages")
     .eq("slug", slug)
     .maybeSingle();
   if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -98,6 +98,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
         author: book.author,
         text: book.text_content,
         chars: book.text_chars ?? String(book.text_content).length,
+        pages: book.text_pages ?? 0,
       },
       200,
     ),

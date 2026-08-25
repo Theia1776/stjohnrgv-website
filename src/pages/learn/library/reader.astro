@@ -26,6 +26,19 @@ import Layout from "../../../layouts/Layout.astro";
       color: var(--color-text-primary);
       padding: 0 0.1em;
     }
+    /* Page dividers, so a passage can be cited to its page. */
+    #text-body .page-break {
+      display: block;
+      margin: 2rem 0 1.25rem;
+      border-top: 1px solid var(--color-border-soft);
+      padding-top: 0.5rem;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-text-secondary);
+    }
+    #text-body .page-break:first-child { margin-top: 0; border-top: none; }
     #text-body mark.find-current {
       background: var(--color-sacred-gold);
       color: #2C2828;
@@ -169,6 +182,14 @@ import Layout from "../../../layouts/Layout.astro";
           class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2"
         />
         <span id="find-count" class="px-1 text-sm text-text-secondary" aria-live="polite"></span>
+        <!-- Which page the current hit is on — the thing a citation
+             needs — and a way straight to that scanned page. -->
+        <button
+          type="button"
+          id="find-page"
+          hidden
+          class="border border-brand-blue-dark bg-cream-bg px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark hover:bg-brand-blue-pale"
+        ></button>
         <button type="button" id="find-prev" class="border border-border-soft bg-cream-bg px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:opacity-40" disabled>Prev</button>
         <button type="button" id="find-next" class="border border-border-soft bg-cream-bg px-3 py-2 font-display text-xs font-semibold uppercase tracking-widest text-text-primary disabled:opacity-40" disabled>Next</button>
       </div>
@@ -464,6 +485,14 @@ import Layout from "../../../layouts/Layout.astro";
     // FIND IN BOOK
     // ============================================================
     let bookText = "";
+    // Page markers written by the extractor: ␞label|pdfPage␞ before each
+    // page's text. Parsed out on load into pages[], so the text can show
+    // dividers, a search hit can name its page, and that page can be
+    // opened in the scanned view. Books extracted before markers existed
+    // simply have none, and everything still works without them.
+    const PAGE_MARKER_RE = /␞([^␞]*)␞\n?/g;
+    type BookPage = { label: string; pdfPage: number; start: number; end: number };
+    let bookPages: BookPage[] = [];
     let findMatches: number[] = [];
     let findIndex = 0;
     let findLoose = false;
@@ -502,6 +531,70 @@ import Layout from "../../../layouts/Layout.astro";
     // comes up empty, and the reader is told when that happened.
     let findTight = "";
     let findTightMap: number[] = [];
+
+    /**
+     * Pull the page markers out of the stored text, remembering where
+     * each page starts and ends in the text that's left. The markers
+     * themselves never reach the reader — they'd otherwise turn up in
+     * searches and in anything copied out.
+     */
+    function stripPageMarkers(withMarkers: string): string {
+      bookPages = [];
+      if (!withMarkers.includes("␞")) return withMarkers;
+
+      let clean = "";
+      let lastEnd = 0;
+      let m: RegExpExecArray | null;
+      PAGE_MARKER_RE.lastIndex = 0;
+
+      while ((m = PAGE_MARKER_RE.exec(withMarkers)) !== null) {
+        clean += withMarkers.slice(lastEnd, m.index);
+        // Close the previous page at the point this one begins.
+        if (bookPages.length) bookPages[bookPages.length - 1].end = clean.length;
+        const [label, pdfPage] = (m[1] ?? "").split("|");
+        bookPages.push({
+          label: label || String(bookPages.length + 1),
+          pdfPage: Number(pdfPage) || bookPages.length + 1,
+          start: clean.length,
+          end: withMarkers.length,
+        });
+        lastEnd = m.index + m[0].length;
+      }
+      clean += withMarkers.slice(lastEnd);
+      if (bookPages.length) bookPages[bookPages.length - 1].end = clean.length;
+      return clean;
+    }
+
+    /** Which page a position in the text falls on. */
+    function pageAt(offset: number): BookPage | null {
+      for (let i = bookPages.length - 1; i >= 0; i--) {
+        if (offset >= bookPages[i].start) return bookPages[i];
+      }
+      return null;
+    }
+
+    /**
+     * Render the book with a divider at the head of each page. Built
+     * from the same offsets the search uses, so a highlight and a page
+     * label can never disagree.
+     */
+    function renderTextBody(highlighted?: string) {
+      if (highlighted !== undefined) {
+        textBody.innerHTML = highlighted;
+        return;
+      }
+      if (bookPages.length === 0) {
+        textBody.textContent = bookText;
+        return;
+      }
+      textBody.innerHTML = bookPages
+        .map(
+          (p) =>
+            `<span class="page-break" data-pdf-page="${p.pdfPage}">Page ${escapeForHtml(p.label)}</span>` +
+            escapeForHtml(bookText.slice(p.start, p.end)),
+        )
+        .join("");
+    }
 
     function buildFindIndex(raw: string) {
       const chars: string[] = [];
@@ -571,6 +664,20 @@ import Layout from "../../../layouts/Layout.astro";
       const countEl = document.getElementById("find-count") as HTMLSpanElement;
       countEl.textContent =
         `${findIndex + 1} of ${marks.length}` + (findLoose ? " (ignoring spaces)" : "");
+
+      // Name the page this hit sits on — the thing a citation needs —
+      // and offer the scanned page, where the printed number is visible.
+      const pageBtn = document.getElementById("find-page") as HTMLButtonElement;
+      const offset = findMatches[findIndex];
+      const page = typeof offset === "number" ? pageAt(offset) : null;
+      if (page) {
+        pageBtn.textContent = `Page ${page.label} ↗`;
+        pageBtn.title = `Open page ${page.label} in the scanned pages`;
+        pageBtn.dataset.pdfPage = String(page.pdfPage);
+        pageBtn.hidden = false;
+      } else {
+        pageBtn.hidden = true;
+      }
     }
 
     function runFind() {
@@ -581,11 +688,12 @@ import Layout from "../../../layouts/Layout.astro";
       // Rebuilding the whole book for one letter isn't worth it, and the
       // hit count would be meaningless anyway.
       if (query.length < 2) {
-        textBody.textContent = bookText;
+        renderTextBody();
         countEl.textContent = "";
         findMatches = [];
         findIndex = 0;
         setFindButtons(false);
+        (document.getElementById("find-page") as HTMLButtonElement).hidden = true;
         return;
       }
 
@@ -621,35 +729,82 @@ import Layout from "../../../layouts/Layout.astro";
       const map = loose ? findTightMap : findMap;
       const target = loose ? tightNeedle : needle;
 
-      const pieces: string[] = [];
+      // Spans of the book, in order: plain stretches and matches, each
+      // with the offset it starts at so page dividers can be dropped in
+      // at the right places.
+      const pieces: { start: number; end: number; match: boolean }[] = [];
       let last = 0;
       let count = 0;
+      findMatches = [];
       let at = target ? haystack.indexOf(target) : -1;
       while (at !== -1) {
         const start = map[at];
         const end = map[at + target.length - 1] + 1;
         if (start >= last) {
-          pieces.push(escapeForHtml(bookText.slice(last, start)));
-          pieces.push(`<mark>${escapeForHtml(bookText.slice(start, end))}</mark>`);
+          pieces.push({ start: last, end: start, match: false });
+          pieces.push({ start, end, match: true });
+          findMatches.push(start);
           last = end;
           count++;
         }
         at = haystack.indexOf(target, at + target.length);
       }
-      pieces.push(escapeForHtml(bookText.slice(last)));
+      pieces.push({ start: last, end: bookText.length, match: false });
 
       if (count === 0) {
-        textBody.textContent = bookText;
+        renderTextBody();
         countEl.textContent = "no matches";
         setFindButtons(false);
+        (document.getElementById("find-page") as HTMLButtonElement).hidden = true;
         return;
       }
 
-      textBody.innerHTML = pieces.join("");
+      // Rebuild with dividers AND highlights, from one pass over the
+      // same offsets, so the two can't drift apart.
+      textBody.innerHTML = withPageBreaks(pieces);
       findIndex = 0;
       findLoose = loose;
       setFindButtons(true);
       showCurrentMatch();
+    }
+
+    /**
+     * Turn the spans into HTML, inserting a page divider wherever a page
+     * begins. A page can begin in the middle of a span, so spans are cut
+     * at page boundaries as we go.
+     */
+    function withPageBreaks(spans: { start: number; end: number; match: boolean }[]): string {
+      const out: string[] = [];
+      let nextPage = 0;
+
+      const divider = (p: BookPage) =>
+        `<span class="page-break" data-pdf-page="${p.pdfPage}">Page ${escapeForHtml(p.label)}</span>`;
+
+      for (const span of spans) {
+        let from = span.start;
+        while (from < span.end || (from === span.end && span.start === span.end)) {
+          // Any page starting at or before this point gets its divider.
+          while (nextPage < bookPages.length && bookPages[nextPage].start <= from) {
+            out.push(divider(bookPages[nextPage]));
+            nextPage++;
+          }
+          // Cut this span where the next page begins.
+          const boundary =
+            nextPage < bookPages.length
+              ? Math.min(span.end, bookPages[nextPage].start)
+              : span.end;
+          const chunk = escapeForHtml(bookText.slice(from, boundary));
+          if (chunk) out.push(span.match ? `<mark>${chunk}</mark>` : chunk);
+          if (boundary >= span.end) break;
+          from = boundary;
+        }
+      }
+      // Any pages left (empty trailing pages) still get their dividers.
+      while (nextPage < bookPages.length) {
+        out.push(divider(bookPages[nextPage]));
+        nextPage++;
+      }
+      return out.join("");
     }
 
     function stepFind(delta: number) {
@@ -683,6 +838,28 @@ import Layout from "../../../layouts/Layout.astro";
       };
       if (textLoaded) focusIt();
       else setTimeout(focusIt, 300);
+    });
+
+    // Open the scanned page a hit came from, so the printed page number
+    // can be seen and cited.
+    document.getElementById("find-page")?.addEventListener("click", (ev) => {
+      const btn = ev.currentTarget as HTMLButtonElement;
+      const pdfPage = Number(btn.dataset.pdfPage || 0);
+      if (!pdfPage || !pdf) return;
+      currentPage = Math.min(Math.max(pdfPage, 1), pdf.numPages);
+      setMode("scroll");
+      // The scroll view renders every page; wait for the canvas to exist
+      // before jumping to it.
+      const jump = (tries: number) => {
+        const canvas = document.getElementById(`pdf-page-${currentPage}`);
+        if (canvas) {
+          canvas.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" });
+          setStatus();
+        } else if (tries > 0) {
+          setTimeout(() => jump(tries - 1), 250);
+        }
+      };
+      jump(20);
     });
 
     document.getElementById("find-input")?.addEventListener("input", runFind);
@@ -722,9 +899,9 @@ import Layout from "../../../layouts/Layout.astro";
           return;
         }
 
-        bookText = data.text ?? "";
+        bookText = stripPageMarkers(data.text ?? "");
         buildFindIndex(bookText);
-        textBody.textContent = bookText;
+        renderTextBody();
         applyTextSize();
         textBody.hidden = false;
         (document.getElementById("find-bar") as HTMLDivElement).hidden = false;

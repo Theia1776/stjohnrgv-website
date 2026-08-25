@@ -143,6 +143,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       updates.text_content = text || null;
       updates.text_chars = text.length;
       updates.text_status = status;
+      updates.text_pages = typeof body.text_pages === "number" ? body.text_pages : 0;
       updates.text_extracted_at = new Date().toISOString();
     }
 
@@ -154,7 +155,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       .from("library_books")
       .update(updates)
       .eq("id", id)
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
       .single();
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));

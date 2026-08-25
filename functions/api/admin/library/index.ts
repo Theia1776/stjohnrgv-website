@@ -17,6 +17,8 @@
  *   text_content (string, optional)         — text pulled out of the
  *                                             PDF in the browser
  *   text_status  ("ok"|"empty"|"error")     — how that extraction went
+ *   text_pages   (number, optional)         — pages the text carries
+ *                                             page markers for
  *
  * On success the row is inserted into library_books and the PDF is
  * uploaded to the existing "library" storage bucket under the file's
@@ -102,7 +104,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       // text_chars / text_status but never text_content — the admin list
       // needs to know which books still want extracting, not to carry
       // every book's full text.
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -179,6 +181,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const textRaw = String(formData.get("text_content") ?? "");
     const textContent = textRaw.slice(0, MAX_TEXT_CHARS).trim();
     const textStatus = String(formData.get("text_status") ?? "").trim() || null;
+    // How many pages the text carries markers for. Zero means the text
+    // predates page markers, which is what the backfill looks for.
+    const textPages = Number(formData.get("text_pages") ?? 0) || 0;
 
     const slug = slugRaw ? slugify(slugRaw) : slugify(title);
 
@@ -233,12 +238,13 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         hidden,
         text_content: textContent || null,
         text_chars: textContent.length,
+        text_pages: textPages,
         // Trust the browser's own verdict when it sent one; otherwise
         // infer from whether any text arrived.
         text_status: textStatus ?? (textContent ? "ok" : "empty"),
         text_extracted_at: textStatus || textContent ? new Date().toISOString() : null,
       })
-      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, created_at, updated_at")
+      .select("id, slug, title, author, category, languages, description, pdf_storage_key, public_access, hidden, text_chars, text_status, text_pages, created_at, updated_at")
       .single();
 
     if (insertError) {

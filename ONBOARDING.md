@@ -153,6 +153,17 @@ renders when `/api/auth/me` confirms login.
   book without one the browser's own find is left alone, and a note
   beside the greyed-out Text button says why.
 
+  **Page numbers (migration 016):** extraction writes a marker between
+  pages — `U+241E label|pdfPage U+241E` — using the PDF's own page labels
+  where it has them (real printed numbers, including roman front matter)
+  and the page's file position where it doesn't. The reader strips the
+  markers out on load, shows a divider at the head of each page, names
+  the page a search hit sits on, and can open that page in the scanned
+  view. `library_books.text_pages` counts marked pages, which is how the
+  backfill finds books extracted before markers existed
+  (`text_status = 'ok' and text_pages = 0`) and re-reads only those.
+  Books with no markers still render as plain continuous text.
+
   **Finding text in a book:** extraction inherits the printed page's
   habits — a word broken across a line arrives as `near- ness`, kerning
   can split one as `near ness`, and soft hyphens and doubled spaces are
