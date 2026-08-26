@@ -258,9 +258,13 @@ import Layout from "../../layouts/Layout.astro";
             <button type="button" id="backfill-btn" class="btn btn-secondary text-sm" hidden>
               Prepare text for older books
             </button>
+            <button type="button" id="r2-btn" class="btn btn-secondary text-sm">
+              Copy books to Cloudflare
+            </button>
           </div>
         </div>
         <p id="backfill-status" class="mb-4 text-sm text-text-secondary" hidden></p>
+        <p id="r2-status" class="mb-4 text-sm text-text-secondary" hidden></p>
 
         <!-- Finding one book among hundreds. Filters the table below by
              title, author, slug, category or language; the dropdown
@@ -291,6 +295,11 @@ import Layout from "../../layouts/Layout.astro";
             <option value="untried">Text not tried yet</option>
           </select>
           <button type="button" id="catalog-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
+          <!-- For working on the books outside the site — a reading list,
+               a spreadsheet, or handing the catalogue to something that
+               helps with citations. Exports whatever the table is
+               currently showing, so a filter narrows the export too. -->
+          <button type="button" id="catalog-export" class="btn btn-secondary text-sm">Export list</button>
         </div>
         <p id="catalog-count" class="mb-3 text-sm text-text-secondary"></p>
         <div class="overflow-x-auto border border-border-soft rounded">
@@ -488,6 +497,9 @@ import Layout from "../../layouts/Layout.astro";
           </td>
           <td class="p-2 whitespace-nowrap text-xs">${textCell(b)}</td>
           <td class="p-2 text-right whitespace-nowrap">
+            ${b.text_status === "ok"
+              ? `<button type="button" class="btn btn-secondary mr-2 text-btn" data-slug="${escapeHtml(b.slug)}" data-title="${escapeHtml(b.title)}" title="Download this book's text, with page numbers">Text</button>`
+              : ""}
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
           </td>
@@ -1108,6 +1120,153 @@ import Layout from "../../layouts/Layout.astro";
       );
     } catch (err) {
       setUploadStatus(`Couldn't read that PDF: ${err instanceof Error ? err.message : String(err)}`, true);
+    }
+  });
+
+  // ====================== COPY TO CLOUDFLARE (R2) ======================
+  // Moves the library's PDFs off Supabase's 1 GB allowance onto R2's
+  // 10 GB, where downloads are also free. One book per request; books
+  // already copied come back instantly, so stopping and restarting costs
+  // nothing. Originals stay in Supabase until the R2 path is proven, and
+  // the site serves whichever place has the book — so the library keeps
+  // working throughout.
+  function setR2Status(text: string, isError = false) {
+    const el = document.getElementById("r2-status");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = !text;
+    el.className = isError ? "mb-4 text-sm text-liturgical-red" : "mb-4 text-sm text-text-secondary";
+  }
+
+  document.getElementById("r2-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("r2-btn") as HTMLButtonElement;
+    if (books.length === 0) return;
+    if (!window.confirm(`Copy ${books.length} book(s) to Cloudflare storage? Keep this tab open while it runs.`)) return;
+
+    btn.disabled = true;
+    let copied = 0;
+    let already = 0;
+    let failed = 0;
+    let bytes = 0;
+
+    for (const [i, book] of books.entries()) {
+      setR2Status(`Copying “${book.title}” (${i + 1} of ${books.length})…`);
+      try {
+        const res = await fetch("/api/admin/library/copy-to-r2", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: book.pdf_storage_key }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          failed++;
+          // A missing binding would fail every book identically, so stop
+          // rather than grind through hundreds of the same error.
+          if (res.status === 503) {
+            setR2Status(data.error ?? "Cloudflare storage isn't connected yet.", true);
+            break;
+          }
+          console.error(`R2 copy failed for ${book.title}:`, data.error);
+          continue;
+        }
+        if (data.copied) copied++;
+        else already++;
+        bytes += Number(data.size ?? 0);
+      } catch (err) {
+        failed++;
+        console.error(`R2 copy failed for ${book.title}:`, err);
+      }
+    }
+
+    if (copied || already) {
+      setR2Status(
+        `Done: ${copied} copied, ${already} already there, ${failed} failed. ` +
+          `${(bytes / 1024 / 1024).toFixed(0)} MB now in Cloudflare storage.`,
+        failed > 0,
+      );
+    }
+    btn.disabled = false;
+  });
+
+  // ====================== EXPORTS ======================
+  // For working on the books away from the site: a catalogue to read or
+  // hand to something that helps with citations, and a book's text with
+  // its page numbers left in, so a quotation can be cited to a page and
+  // checked against the scan.
+
+  function downloadFile(filename: string, content: string, type: string) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /** One CSV field: quotes doubled, the whole thing quoted. */
+  function csvField(value: unknown): string {
+    return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  }
+
+  document.getElementById("catalog-export")?.addEventListener("click", () => {
+    const shown = visibleBooks();
+    if (shown.length === 0) return;
+    const header = ["Title", "Author", "Category", "Languages", "Visibility", "Pages of text", "Read at"];
+    const rows = shown.map((b) => [
+      b.title,
+      b.author ?? "",
+      b.category,
+      (b.languages ?? []).join("; "),
+      b.hidden ? "Staging" : b.public_access ? "Public" : "Parishioners",
+      b.text_status === "ok" ? String(b.text_pages ?? 0) : b.text_status === "empty" ? "scan" : "",
+      `${location.origin}/learn/library/reader/?slug=${encodeURIComponent(b.slug)}`,
+    ]);
+    const csv = [header, ...rows].map((r) => r.map(csvField).join(",")).join("\r\n");
+    // A byte-order mark, so Excel opens accented titles properly instead
+    // of turning them into nonsense.
+    downloadFile("parish-library.csv", "﻿" + csv, "text/csv;charset=utf-8");
+  });
+
+  document.getElementById("books-tbody")?.addEventListener("click", async (ev) => {
+    const btn = (ev.target as HTMLElement | null)?.closest(".text-btn") as HTMLButtonElement | null;
+    if (!btn) return;
+    const slug = btn.dataset.slug;
+    const title = btn.dataset.title || "book";
+    if (!slug) return;
+
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "…";
+    try {
+      const res = await fetch(`/api/library/text?slug=${encodeURIComponent(slug)}`, {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showError(`Couldn't get the text: ${data.error ?? res.status}`);
+        return;
+      }
+      // The page markers become something a reader can see — "[page 12]"
+      // on its own line — so a quotation can be cited to a page.
+      const readable = String(data.text ?? "").replace(
+        /␞([^␞|]*)\|?[^␞]*␞\n?/g,
+        (_match: string, pageLabel: string) => `\n[page ${pageLabel}]\n`,
+      );
+      const header =
+        `${data.title ?? title}\n` +
+        `${data.author ? data.author + "\n" : ""}` +
+        `Parish library — ${location.origin}/learn/library/reader/?slug=${encodeURIComponent(slug)}\n` +
+        `Page numbers below are the book's own printed pages where the PDF records them.\n\n`;
+      downloadFile(`${slug}.txt`, header + readable.trim() + "\n", "text/plain;charset=utf-8");
+    } catch (err) {
+      showError(`Couldn't get the text: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
     }
   });
 
