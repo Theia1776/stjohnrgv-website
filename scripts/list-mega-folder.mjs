@@ -20,7 +20,11 @@
  * Prints one filename per line (plus size), or writes JSON with --json.
  */
 import crypto from "node:crypto";
-import { writeFile } from "node:fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
+import { createWriteStream, existsSync, statSync } from "node:fs";
+import { pipeline } from "node:stream/promises";
+import { Readable } from "node:stream";
+import path from "node:path";
 
 const API = "https://g.api.mega.co.nz/cs";
 
@@ -107,7 +111,17 @@ async function listFolder(link) {
     if (!attrs?.n) continue;
 
     if (node.t === 1) folders.set(node.h, { name: attrs.n, parent: node.p });
-    else if (node.t === 0) files.push({ name: attrs.n, size: Number(node.s ?? 0), parent: node.p });
+    else if (node.t === 0) {
+      files.push({
+        name: attrs.n,
+        size: Number(node.s ?? 0),
+        parent: node.p,
+        handle: node.h,
+        // The unfolded 32 bytes: the first half makes the AES key, and
+        // bytes 16-24 are the counter block's nonce.
+        rawKey: b64decode(encodedKey).length >= 32 ? decryptKey(b64decode(encodedKey), folderKey) : null,
+      });
+    }
   }
 
   // Rebuild the path each file sits at, for folders nested in the share.
@@ -126,18 +140,109 @@ async function listFolder(link) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Fetch one file and decrypt it as it arrives.
+ *
+ * MEGA hands back the bytes AES-CTR encrypted. The counter block is the
+ * node key's bytes 16-24 followed by eight zero bytes, and the AES key is
+ * the two halves of the node key XORed together — the same fold used to
+ * read the file's name.
+ */
+async function downloadFile(folderHandle, file, destination) {
+  const res = await fetch(`${API}?id=0&n=${encodeURIComponent(folderHandle)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify([{ a: "g", g: 1, n: file.handle }]),
+  });
+  const payload = await res.json();
+  const info = Array.isArray(payload) ? payload[0] : payload;
+  if (typeof info === "number" || !info?.g) {
+    throw new Error(`MEGA would not serve this file (${JSON.stringify(info)})`);
+  }
+
+  const aesKey = unfoldKey(file.rawKey);
+  const counter = Buffer.alloc(16);
+  file.rawKey.copy(counter, 0, 16, 24); // nonce; the rest counts up from zero
+  const decipher = crypto.createDecipheriv("aes-128-ctr", aesKey, counter);
+
+  const body = await fetch(info.g);
+  if (!body.ok || !body.body) throw new Error(`download failed (HTTP ${body.status})`);
+
+  const out = createWriteStream(destination);
+  await pipeline(Readable.fromWeb(body.body), decipher, out);
+}
+
+function flag(name) {
+  const i = process.argv.indexOf(name);
+  return i !== -1 ? process.argv[i + 1] ?? true : null;
+}
+
 const link = process.argv[2];
 if (!link) {
-  console.error("Usage: node scripts/list-mega-folder.mjs \"<mega folder link>\" [--json out.json]");
+  console.error(
+    "Usage:\n" +
+      '  node scripts/list-mega-folder.mjs "<link>"                     list everything\n' +
+      '  node scripts/list-mega-folder.mjs "<link>" --json out.json     write the listing\n' +
+      '  node scripts/list-mega-folder.mjs "<link>" --download <dir> --folder "Catechism"\n',
+  );
   process.exit(1);
 }
 
 const files = await listFolder(link);
-const jsonIndex = process.argv.indexOf("--json");
+const jsonPath = flag("--json");
+const downloadDir = flag("--download");
+const folderFilter = flag("--folder");
 
-if (jsonIndex !== -1 && process.argv[jsonIndex + 1]) {
-  await writeFile(process.argv[jsonIndex + 1], JSON.stringify(files, null, 2), "utf8");
-  console.log(`${files.length} files → ${process.argv[jsonIndex + 1]}`);
+if (typeof jsonPath === "string") {
+  // Keys never go into the listing file — they're the share's secret.
+  await writeFile(jsonPath, JSON.stringify(files.map(({ rawKey, ...f }) => f), null, 2), "utf8");
+  console.log(`${files.length} files → ${jsonPath}`);
+} else if (typeof downloadDir === "string") {
+  const { handle: folderHandle } = parseLink(link);
+  let wanted = files.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
+  if (typeof folderFilter === "string" && folderFilter.trim()) {
+    const needle = folderFilter.toLowerCase();
+    wanted = wanted.filter((f) => f.folder.toLowerCase().includes(needle));
+  }
+  // --name picks out individual books, for when a whole folder is more
+  // than you want to pull down.
+  const nameFilter = flag("--name");
+  if (typeof nameFilter === "string" && nameFilter.trim()) {
+    const needle = nameFilter.toLowerCase();
+    wanted = wanted.filter((f) => f.name.toLowerCase().includes(needle));
+  }
+  if (wanted.length === 0) {
+    console.error("Nothing matched that folder.");
+    process.exit(1);
+  }
+
+  await mkdir(downloadDir, { recursive: true });
+  const totalMb = wanted.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024;
+  console.log(`${wanted.length} file(s), ${totalMb.toFixed(0)} MB → ${downloadDir}\n`);
+
+  let done = 0;
+  let skipped = 0;
+  for (const [i, file] of wanted.entries()) {
+    // Keep MEGA's filename: it carries the title, and the uploader reads
+    // titles from filenames.
+    const dest = path.join(downloadDir, file.name.replace(/[\\/:*?"<>|]/g, "-"));
+    // Already here at the right size? Leave it. That makes the whole
+    // thing resumable, which matters across gigabytes.
+    if (existsSync(dest) && statSync(dest).size === file.size) {
+      skipped++;
+      continue;
+    }
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    process.stdout.write(`[${i + 1}/${wanted.length}] ${file.name} (${mb} MB) … `);
+    try {
+      await downloadFile(folderHandle, file, dest);
+      done++;
+      console.log("ok");
+    } catch (err) {
+      console.log(`failed: ${err.message}`);
+    }
+  }
+  console.log(`\nDownloaded ${done}, already had ${skipped}.`);
 } else {
   for (const f of files) {
     const mb = (f.size / 1024 / 1024).toFixed(1);

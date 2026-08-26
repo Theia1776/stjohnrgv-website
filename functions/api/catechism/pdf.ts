@@ -21,8 +21,16 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 
+
+/** Just enough of the R2 binding's shape for what this endpoint does. */
+interface R2Bucket {
+  head(key: string): Promise<{ size: number } | null>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** See functions/api/library/pdf.ts — lessons live in the same bucket. */
+  LIBRARY_BUCKET?: R2Bucket;
 }
 
 const BUCKET = "library";
@@ -72,6 +80,17 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .single();
     if (viewer?.role !== "admin") {
       return wrap(jsonResponse({ error: "This lesson hasn't been posted yet." }, 403));
+    }
+  }
+
+  if (context.env.LIBRARY_BUCKET) {
+    try {
+      const found = await context.env.LIBRARY_BUCKET.head(key);
+      if (found) {
+        return wrap(jsonResponse({ url: `/api/library/file?key=${encodeURIComponent(key)}` }, 200));
+      }
+    } catch {
+      // R2 unreachable — Supabase still has it.
     }
   }
 

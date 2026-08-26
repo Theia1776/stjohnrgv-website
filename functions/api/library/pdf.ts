@@ -19,8 +19,19 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 
+
+/** Just enough of the R2 binding's shape for what this endpoint does. */
+interface R2Bucket {
+  head(key: string): Promise<{ size: number } | null>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** Present once R2 is bound to the Pages project. Books that have been
+   *  moved across are served from there; anything not yet moved still
+   *  comes from Supabase, so the migration can run book by book without
+   *  a moment where the library is broken. */
+  LIBRARY_BUCKET?: R2Bucket;
 }
 
 const BUCKET = "library";
@@ -81,6 +92,20 @@ export async function onRequestGet(
       .single();
     if (viewer?.role !== "admin") {
       return wrap(jsonResponse({ error: "This text isn't available yet." }, 403));
+    }
+  }
+
+  // Prefer R2: downloads from there are free, where Supabase transfer
+  // counts against a monthly allowance. If the book hasn't been copied
+  // over yet, fall through to Supabase exactly as before.
+  if (context.env.LIBRARY_BUCKET) {
+    try {
+      const found = await context.env.LIBRARY_BUCKET.head(key);
+      if (found) {
+        return wrap(jsonResponse({ url: `/api/library/file?key=${encodeURIComponent(key)}` }, 200));
+      }
+    } catch {
+      // R2 unreachable — Supabase still has it.
     }
   }
 
