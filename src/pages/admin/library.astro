@@ -516,12 +516,22 @@ import Layout from "../../layouts/Layout.astro";
             </select>
           </td>
           <td class="p-2 whitespace-nowrap text-xs">${textCell(b)}</td>
+          <!-- One dropdown rather than three buttons: with hundreds of
+               rows, three wide buttons each pushed the titles off the
+               side of the table. -->
           <td class="p-2 text-right whitespace-nowrap">
-            ${b.text_status === "ok"
-              ? `<button type="button" class="btn btn-secondary mr-2 text-btn" data-slug="${escapeHtml(b.slug)}" data-title="${escapeHtml(b.title)}" title="Download this book's text as a .txt file, with page numbers">Download .txt</button>`
-              : ""}
-            <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
-            <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>
+            <select
+              class="row-action border border-border-soft bg-cream-bg px-2 py-1 text-xs focus:outline-none focus:ring-2"
+              data-id="${escapeHtml(b.id)}"
+              data-slug="${escapeHtml(b.slug)}"
+              data-title="${escapeHtml(b.title)}"
+              aria-label="Actions for ${escapeHtml(b.title)}"
+            >
+              <option value="">Actions…</option>
+              <option value="edit">Edit details</option>
+              ${b.text_status === "ok" ? `<option value="text">Download .txt</option>` : ""}
+              <option value="delete">Delete book</option>
+            </select>
           </td>
         </tr>`,
       )
@@ -1308,16 +1318,8 @@ import Layout from "../../layouts/Layout.astro";
     downloadFile("parish-library.csv", "﻿" + csv, "text/csv;charset=utf-8");
   });
 
-  document.getElementById("books-tbody")?.addEventListener("click", async (ev) => {
-    const btn = (ev.target as HTMLElement | null)?.closest(".text-btn") as HTMLButtonElement | null;
-    if (!btn) return;
-    const slug = btn.dataset.slug;
-    const title = btn.dataset.title || "book";
-    if (!slug) return;
-
-    const label = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "…";
+  /** Download one book's text, page markers turned into readable lines. */
+  async function downloadBookText(slug: string, title: string) {
     try {
       const res = await fetch(`/api/library/text?slug=${encodeURIComponent(slug)}`, {
         credentials: "same-origin",
@@ -1334,109 +1336,54 @@ import Layout from "../../layouts/Layout.astro";
         /␞([^␞|]*)\|?[^␞]*␞\n?/g,
         (_match: string, pageLabel: string) => `\n[page ${pageLabel}]\n`,
       );
-      const header =
-        `${data.title ?? title}\n` +
-        `${data.author ? data.author + "\n" : ""}` +
-        `Parish library — ${location.origin}/learn/library/reader/?slug=${encodeURIComponent(slug)}\n` +
-        `Page numbers below are the book's own printed pages where the PDF records them.\n\n`;
-      downloadFile(`${slug}.txt`, header + readable.trim() + "\n", "text/plain;charset=utf-8");
+      const lines = [
+        String(data.title ?? title),
+        data.author ? String(data.author) : "",
+        `Parish library — ${location.origin}/learn/library/reader/?slug=${encodeURIComponent(slug)}`,
+        "Page numbers below are the book's own printed pages where the PDF records them.",
+        "",
+        "",
+      ].filter((line, i) => line !== "" || i > 1);
+      downloadFile(
+        `${slug}.txt`,
+        lines.join("\n") + readable.trim() + "\n",
+        "text/plain;charset=utf-8",
+      );
     } catch (err) {
       showError(`Couldn't get the text: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = label;
     }
-  });
+  }
 
-  // ====================== UPLOAD ======================
-  document.getElementById("upload-form")?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const form = ev.target as HTMLFormElement;
-    const btn = document.getElementById("upload-btn") as HTMLButtonElement;
-    const formData = new FormData(form);
+  // ====================== ROW ACTIONS (delegated) ======================
+  // Edit, download, delete all hang off one dropdown per row.
+  document.getElementById("books-tbody")?.addEventListener("change", async (ev) => {
+    const select = (ev.target as HTMLElement | null)?.closest(".row-action") as HTMLSelectElement | null;
+    if (!select) return;
 
-    btn.disabled = true;
+    const action = select.value;
+    const id = select.dataset.id ?? "";
+    const slug = select.dataset.slug ?? "";
+    const title = select.dataset.title || "this book";
+    // Snap back to "Actions…" so the same choice can be made twice.
+    select.value = "";
+    if (!action) return;
 
-    // Read the text out of the PDF before sending it, and post both
-    // together. A book whose text can't be read still uploads — the
-    // status records why, and the reader falls back to page view.
-    const pdfFile = formData.get("pdf");
-    if (pdfFile instanceof File && pdfFile.size > 0) {
-      // Already read when the file was chosen, unless it changed since.
-      let extraction: Extraction;
-      if (pending && pending.key === fileKey(pdfFile)) {
-        extraction = pending.extraction;
-      } else {
-        setUploadStatus("Reading the text out of the PDF…");
-        const buffer = await pdfFile.arrayBuffer();
-        extraction = await extractText({ data: buffer }, (page, total) => {
-          setUploadStatus(`Reading text — page ${page} of ${total}…`);
-        });
-      }
-      formData.append("text_content", extraction.text);
-      formData.append("text_status", extraction.status);
-      formData.append("text_pages", String(extraction.pages));
-      setUploadStatus(
-        extraction.status === "ok"
-          ? `Read ${extraction.text.length.toLocaleString()} characters. Uploading…`
-          : extraction.status === "empty"
-            ? "No text in this PDF (it's a scan). Uploading…"
-            : "Couldn't read the text from this PDF. Uploading anyway…",
-      );
-    } else {
-      setUploadStatus("Uploading…");
-    }
-
-    try {
-      const res = await fetch("/api/admin/library", {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        body: formData,
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setUploadStatus(`Failed: ${body.error ?? res.status}`, true);
-        return;
-      }
-      const chars = Number(body.book?.text_chars ?? 0);
-      setUploadStatus(
-        `Added "${body.book?.title ?? "book"}".` +
-          (chars > 0 ? ` Text version ready (${chars.toLocaleString()} characters).` : " No text version — this one is a scan."),
-      );
-      form.reset();
-      // Restore the default Languages value after reset.
-      (document.getElementById("languages") as HTMLInputElement).value = "English";
-      await loadBooks();
-    } catch (err) {
-      setUploadStatus(`Upload error: ${err instanceof Error ? err.message : String(err)}`, true);
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  // ====================== EDIT / DELETE / TOGGLE PUBLIC (delegated) ======================
-  document.getElementById("books-tbody")?.addEventListener("click", async (ev) => {
-    const target = ev.target as HTMLElement | null;
-    if (!target) return;
-    const editBtn = target.closest(".edit-btn") as HTMLButtonElement | null;
-    const deleteBtn = target.closest(".delete-btn") as HTMLButtonElement | null;
-    if (!editBtn && !deleteBtn) return;
-
-    const id = (editBtn ?? deleteBtn)?.dataset.id;
-    if (!id) return;
-
-    if (editBtn) {
+    if (action === "edit") {
       const book = books.find((b) => b.id === id);
-      if (!book) return;
-      openEditModal(book);
+      if (book) openEditModal(book);
       return;
     }
 
-    if (deleteBtn) {
-      const title = deleteBtn.dataset.title || "this book";
+    if (action === "text") {
+      select.disabled = true;
+      await downloadBookText(slug, title);
+      select.disabled = false;
+      return;
+    }
+
+    if (action === "delete") {
       if (!window.confirm(`Delete "${title}" from the library? The PDF will also be removed from storage.`)) return;
-      deleteBtn.disabled = true;
+      select.disabled = true;
       const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
         method: "DELETE",
         credentials: "same-origin",
@@ -1445,7 +1392,7 @@ import Layout from "../../layouts/Layout.astro";
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         showError(`Couldn't delete: ${body.error ?? res.status}`);
-        deleteBtn.disabled = false;
+        select.disabled = false;
         return;
       }
       books = books.filter((b) => b.id !== id);
