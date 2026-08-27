@@ -498,7 +498,7 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2 whitespace-nowrap text-xs">${textCell(b)}</td>
           <td class="p-2 text-right whitespace-nowrap">
             ${b.text_status === "ok"
-              ? `<button type="button" class="btn btn-secondary mr-2 text-btn" data-slug="${escapeHtml(b.slug)}" data-title="${escapeHtml(b.title)}" title="Download this book's text, with page numbers">Text</button>`
+              ? `<button type="button" class="btn btn-secondary mr-2 text-btn" data-slug="${escapeHtml(b.slug)}" data-title="${escapeHtml(b.title)}" title="Download this book's text as a .txt file, with page numbers">Download .txt</button>`
               : ""}
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(b.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(b.id)}" data-title="${escapeHtml(b.title)}">Delete</button>

@@ -485,6 +485,41 @@ import Layout from "../../../layouts/Layout.astro";
       window.scrollTo({ top: 0, behavior: "auto" });
     });
 
+    /**
+     * How much of this text came out as nonsense.
+     *
+     * A font with a private encoding — most Church Slavonic and old
+     * Greek typesetting — extracts as a jumble: digits wedged inside
+     * words, two alphabets fused together, long runs of single letters.
+     * Real prose does none of that, so the proportion of words doing it
+     * tells us whether the extraction is worth showing at all.
+     */
+    function garbleRatio(text: string): number {
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length < 200) return 0;
+
+      // The clearest tell, measured on this library's own books: text
+      // that failed to convert comes out as a drift of one- and
+      // two-character fragments — "Б 9e ственна z л ітург j а" — where
+      // prose is made of whole words. On the Divine Liturgy, 57% of
+      // "words" are two characters or fewer and the average word is 2.8
+      // characters long; on a book that converted cleanly, 18% and 5.1.
+      const tiny = words.filter((w) => w.length <= 2).length / words.length;
+      const averageLength = words.reduce((sum, w) => sum + w.length, 0) / words.length;
+
+      // Digits wedged inside words are a second, independent tell.
+      const digitInWord =
+        words.filter((w) => /[A-Za-zЀ-ӿ][0-9]|[0-9][A-Za-zЀ-ӿ]/.test(w)).length / words.length;
+
+      // Scaled so the threshold reads as "how far past acceptable":
+      // 40% tiny fragments, or an average word under 3.5 characters, is
+      // past it.
+      const byFragments = tiny / 0.4;
+      const byWordLength = averageLength < 3.5 ? 3.5 / Math.max(averageLength, 0.5) - 1 : 0;
+      const byDigits = digitInWord / 0.03;
+      return Math.max(byFragments, byWordLength, byDigits) * 0.35;
+    }
+
     // ============================================================
     // FIND IN BOOK
     // ============================================================
@@ -904,6 +939,24 @@ import Layout from "../../../layouts/Layout.astro";
         }
 
         bookText = stripPageMarkers(data.text ?? "");
+
+        // Some books extract as nonsense. Church Slavonic and old Greek
+        // are often set in fonts with private encodings, so what comes
+        // out is "Б 9e ственна z л ітург j а" rather than words. Showing
+        // that as though it were the book is worse than not offering it:
+        // it can't be read, and it can't be searched or cited.
+        const garble = garbleRatio(bookText);
+        if (garble > 0.35) {
+          textUnavailable.innerHTML =
+            "This book's text didn't convert cleanly — it's typeset in a font " +
+            "(Church Slavonic and old Greek usually) that can't be read back as letters. " +
+            "<strong>Use Scroll or Book view</strong> to read the scanned pages, which are perfect.";
+          textUnavailable.hidden = false;
+          modeTextBtn.classList.add("opacity-50");
+          modeTextBtn.title = "This book's text didn't convert cleanly";
+          return;
+        }
+
         buildFindIndex(bookText);
         renderTextBody();
         applyTextSize();
