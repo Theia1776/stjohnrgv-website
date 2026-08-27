@@ -22,6 +22,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { Readable } from "node:stream";
 
 const here = import.meta.dirname;
 const MB = 1024 * 1024;
@@ -51,12 +52,14 @@ const sha256hex = (data) => crypto.createHash("sha256").update(data).digest("hex
 const hmac = (key, data) => crypto.createHmac("sha256", key).update(data).digest();
 
 /** Sign and send one S3 request. R2 speaks S3; SigV4 is its handshake. */
-async function s3(method, key, body) {
+async function s3(method, key, body, options = {}) {
   const host = `${creds.accountId}.r2.cloudflarestorage.com`;
   const uri = `/${creds.bucket}/${key.split("/").map(uriEncode).join("/")}`;
   const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
   const dateStamp = amzDate.slice(0, 8);
-  const payloadHash = sha256hex(body ?? "");
+  // A streamed body can't be hashed without holding all of it in memory,
+  // which is the whole point of streaming. S3 has a sentinel for this.
+  const payloadHash = options.unsignedPayload ? "UNSIGNED-PAYLOAD" : sha256hex(body ?? "");
 
   const canonicalHeaders =
     `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
@@ -78,8 +81,12 @@ async function s3(method, key, body) {
       Authorization:
         `AWS4-HMAC-SHA256 Credential=${creds.accessKeyId}/${scope}, ` +
         `SignedHeaders=${signedHeaders}, Signature=${signature}`,
+      ...(options.contentLength ? { "Content-Length": String(options.contentLength) } : {}),
     },
     body,
+    // Node needs telling that the request body is a stream it should
+    // send while the response is still coming.
+    ...(options.unsignedPayload ? { duplex: "half" } : {}),
   });
 }
 
@@ -114,25 +121,43 @@ let already = 0;
 let skipped = 0;
 let failed = 0;
 let bytes = 0;
+let done = 0;
 
-for (const [i, file] of files.entries()) {
+/**
+ * Several at once. One at a time meant the whole archive would take
+ * hours: each upload spends nearly all its time waiting on the network,
+ * so a handful in flight together costs nothing and finishes far sooner.
+ * Six is gentle enough not to look like abuse from one address.
+ */
+const CONCURRENCY = 6;
+
+async function handle(file, index) {
   const key = path.basename(file);
   const size = fs.statSync(file).size;
-  const label = `[${i + 1}/${files.length}] ${key} (${(size / MB).toFixed(1)} MB)`;
+  const label = `[${index + 1}/${files.length}] ${key} (${(size / MB).toFixed(1)} MB)`;
 
   if (size > maxBytes) {
     skipped++;
     console.log(`${label}  too big for this pass`);
-    continue;
+    return;
   }
 
   try {
     const head = await s3("HEAD", key);
     if (head.status === 200) {
       already++;
-      continue;
+      return;
     }
-    const put = await s3("PUT", key, fs.readFileSync(file));
+    // Reading a 856 MB book into memory is what killed the giants on the
+    // first pass; over this size it goes up as a stream instead.
+    const STREAM_OVER = 100 * MB;
+    const put =
+      size > STREAM_OVER
+        ? await s3("PUT", key, Readable.toWeb(fs.createReadStream(file)), {
+            unsignedPayload: true,
+            contentLength: size,
+          })
+        : await s3("PUT", key, fs.readFileSync(file));
     if (!put.ok) throw new Error(`HTTP ${put.status} ${(await put.text()).slice(0, 120)}`);
     uploaded++;
     bytes += size;
@@ -140,10 +165,26 @@ for (const [i, file] of files.entries()) {
   } catch (err) {
     failed++;
     console.log(`${label}  FAILED: ${err.message}`);
+  } finally {
+    done++;
+    if (done % 25 === 0) console.log(`   … ${done}/${files.length}`);
   }
 }
 
+// A shared queue: each worker takes the next index until they run out.
+let next = 0;
+await Promise.all(
+  Array.from({ length: CONCURRENCY }, async () => {
+    while (true) {
+      const index = next++;
+      if (index >= files.length) return;
+      await handle(files[index], index);
+    }
+  }),
+);
+
 console.log(
-  `\nUploaded ${uploaded} (${(bytes / 1024 / MB).toFixed(2)} GB), ` +
+  `
+Uploaded ${uploaded} (${(bytes / 1024 / MB).toFixed(2)} GB), ` +
     `${already} already there, ${skipped} too big, ${failed} failed.`,
 );
