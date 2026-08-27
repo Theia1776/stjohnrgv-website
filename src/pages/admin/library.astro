@@ -253,22 +253,38 @@ import Layout from "../../layouts/Layout.astro";
           <h2 id="manage-heading" class="font-display text-xl text-text-primary">
             Current Catalog (<span id="book-count">0</span>)
           </h2>
-          <div class="flex flex-wrap items-center gap-3">
-            <span id="backfill-summary" class="text-sm text-text-secondary"></span>
-            <button type="button" id="backfill-btn" class="btn btn-secondary text-sm" hidden>
-              Prepare text for older books
-            </button>
-            <button type="button" id="r2-btn" class="btn btn-secondary text-sm">
-              Copy books to Cloudflare
-            </button>
-            <button type="button" id="register-btn" class="btn btn-secondary text-sm">
-              Add books found in storage
-            </button>
-          </div>
+          <span id="backfill-summary" class="text-sm text-text-secondary"></span>
         </div>
-        <p id="backfill-status" class="mb-4 text-sm text-text-secondary" hidden></p>
-        <p id="r2-status" class="mb-4 text-sm text-text-secondary" hidden></p>
-        <p id="register-status" class="mb-4 text-sm text-text-secondary" hidden></p>
+
+        <!-- The occasional jobs, folded away. Day to day this page is
+             for finding a book and changing its visibility; these are
+             for after a batch of books arrives, and having them all out
+             on the page made the ordinary work harder to see. -->
+        <details class="mb-4 border border-border-soft bg-cream-card">
+          <summary class="cursor-pointer px-4 py-2 font-display text-xs uppercase tracking-widest text-text-secondary hover:text-brand-blue-dark">
+            Library jobs
+          </summary>
+          <div class="border-t border-border-soft px-4 py-4">
+            <p class="mb-3 text-sm text-text-secondary">
+              After new books arrive, run these in order. Each one is safe to
+              repeat — anything already done is skipped.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <button type="button" id="register-btn" class="btn btn-secondary text-sm">
+                1. Add books found in storage
+              </button>
+              <button type="button" id="backfill-btn" class="btn btn-secondary text-sm" hidden>
+                2. Prepare text
+              </button>
+              <button type="button" id="r2-btn" class="btn btn-secondary text-sm">
+                Copy books to Cloudflare
+              </button>
+            </div>
+            <p id="register-status" class="mt-3 text-sm text-text-secondary" hidden></p>
+            <p id="backfill-status" class="mt-3 text-sm text-text-secondary" hidden></p>
+            <p id="r2-status" class="mt-3 text-sm text-text-secondary" hidden></p>
+          </div>
+        </details>
 
         <!-- Finding one book among hundreds. Filters the table below by
              title, author, slug, category or language; the dropdown
@@ -992,7 +1008,8 @@ import Layout from "../../layouts/Layout.astro";
         (pending ? ` · ${pending} to read` : "")
       : "";
     btn.hidden = pending === 0;
-    btn.textContent = `Prepare text for ${pending} book${pending === 1 ? "" : "s"}`;
+    // Keep the step number: this button is the second of the jobs.
+    btn.textContent = `2. Prepare text for ${pending} book${pending === 1 ? "" : "s"}`;
   }
 
   function setBackfillStatus(text: string, isError = false) {
