@@ -33,8 +33,20 @@ import { verifySession, withSessionCookies } from "../../../../src/lib/session.t
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
+
+/** Just enough of the R2 binding for storing and removing a book. */
+interface R2Bucket {
+  head(key: string): Promise<{ size: number } | null>;
+  put(key: string, value: ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** Where the library lives now. Absent in an environment that hasn't
+   *  been given the binding, in which case uploads fall back to
+   *  Supabase and still work. */
+  LIBRARY_BUCKET?: R2Bucket;
 }
 
 const BUCKET = "library";
@@ -223,10 +235,18 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // existing book's PDF by accident.
     const originalName = pdfFile.name || `${slug}.pdf`;
     let storageKey = originalName;
-    const { data: existingFiles } = await supabase.storage
-      .from(BUCKET)
-      .list("", { limit: 1000, search: originalName });
-    if (existingFiles?.some((f) => f.name === originalName)) {
+    const bucket = context.env.LIBRARY_BUCKET;
+
+    // Don't overwrite an existing book's PDF: if that name is taken,
+    // suffix it. Checked wherever the books actually live.
+    const nameTaken = bucket
+      ? Boolean(await bucket.head(originalName))
+      : Boolean(
+          (
+            await supabase.storage.from(BUCKET).list("", { limit: 1000, search: originalName })
+          ).data?.some((f) => f.name === originalName),
+        );
+    if (nameTaken) {
       const suffix = crypto.randomUUID().slice(0, 8);
       const dot = originalName.lastIndexOf(".");
       storageKey = dot > 0
@@ -235,12 +255,30 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     const buffer = await pdfFile.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(storageKey, buffer, { contentType: "application/pdf", upsert: false });
 
-    if (uploadError) {
-      return wrap(jsonResponse({ error: `PDF upload failed: ${uploadError.message}` }, 500));
+    // New books go to R2, where the library now lives. Supabase is only
+    // used when R2 isn't bound — which is also what keeps this working
+    // in a preview environment that hasn't been given the binding.
+    if (bucket) {
+      try {
+        await bucket.put(storageKey, buffer, {
+          httpMetadata: { contentType: "application/pdf" },
+        });
+      } catch (err) {
+        return wrap(
+          jsonResponse(
+            { error: `Upload to Cloudflare storage failed: ${err instanceof Error ? err.message : String(err)}` },
+            500,
+          ),
+        );
+      }
+    } else {
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(storageKey, buffer, { contentType: "application/pdf", upsert: false });
+      if (uploadError) {
+        return wrap(jsonResponse({ error: `PDF upload failed: ${uploadError.message}` }, 500));
+      }
     }
 
     const bookRow: Record<string, unknown> = {
@@ -282,7 +320,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     if (insertError) {
       // Roll back the uploaded PDF so we don't leave an orphan blob
       // in the bucket when the row insert fails (duplicate key, etc.).
-      await supabase.storage.from(BUCKET).remove([storageKey]);
+      if (context.env.LIBRARY_BUCKET) {
+        await context.env.LIBRARY_BUCKET.delete(storageKey).catch(() => {});
+      } else {
+        await supabase.storage.from(BUCKET).remove([storageKey]);
+      }
       return wrap(jsonResponse({ error: `Could not save book: ${insertError.message}` }, 500));
     }
 

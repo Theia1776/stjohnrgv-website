@@ -13,8 +13,17 @@ import { verifySession, withSessionCookies } from "../../../../src/lib/session.t
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 
+
+/** Just enough of the R2 binding for storing and removing a book. */
+interface R2Bucket {
+  head(key: string): Promise<{ size: number } | null>;
+  put(key: string, value: ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  LIBRARY_BUCKET?: R2Bucket;
 }
 
 const BUCKET = "library";
@@ -231,8 +240,14 @@ export async function onRequestDelete(context: PagesContext): Promise<Response> 
     // from the catalog, which is the user-visible outcome they wanted.
     // A stray blob in the bucket is harmless and easy to clean up
     // later in the Supabase dashboard.
+    // Remove the file from both homes: the book may predate the move to
+    // R2, or postdate it, and a stray file in either is just clutter.
     if (existing?.pdf_storage_key) {
-      await supabase.storage.from(BUCKET).remove([existing.pdf_storage_key]);
+      const key = existing.pdf_storage_key as string;
+      if (context.env.LIBRARY_BUCKET) {
+        await context.env.LIBRARY_BUCKET.delete(key).catch(() => {});
+      }
+      await supabase.storage.from(BUCKET).remove([key]);
     }
 
     return wrap(jsonResponse({ ok: true }, 200));
