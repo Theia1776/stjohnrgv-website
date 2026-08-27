@@ -168,3 +168,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Bulk-upload credentials (never committed)
+scripts/r2-credentials.json

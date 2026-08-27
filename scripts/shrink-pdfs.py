@@ -57,6 +57,34 @@ BILEVEL_KEEP_DPI = 250
 BILEVEL_TARGET_DPI = 200
 
 
+def to_bilevel_png(pix) -> bytes | None:
+    """
+    A downsampled black-and-white page, still black and white.
+
+    Scaling a 1-bit scan produces grey edges, which is what makes text
+    look soft. Thresholding puts every pixel back to black or white, and
+    a 1-bit PNG of a page of print is dramatically smaller than any JPEG
+    of the same page — which is the whole reason these archival scans
+    resisted shrinking.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+
+    mode = "L" if pix.n == 1 else "RGB"
+    image = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
+    if mode != "L":
+        image = image.convert("L")
+    # 176 rather than the default 128: scans carry grey paper, and a
+    # higher cut keeps the page white instead of speckled.
+    image = image.point(lambda v: 255 if v > 176 else 0, mode="1")
+
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG", optimize=True, bits=1)
+    return buffer.getvalue()
+
+
 def shrink(path: Path, target_bytes: int) -> tuple[Path | None, int, int, str]:
     """Rewrite one book's images smaller. Returns (output, before, after, note)."""
     before = path.stat().st_size
@@ -127,9 +155,18 @@ def shrink(path: Path, target_bytes: int) -> tuple[Path | None, int, int, str]:
                         pix = pymupdf.Pixmap(pix, new_width, new_height)
 
                     try:
-                        # Downsampled bilevel text turns grey at the edges;
-                        # a higher quality keeps it readable.
-                        jpeg = pix.tobytes("jpeg", jpg_quality=max(quality, 80) if bilevel else quality)
+                        if bilevel:
+                            # Black-and-white scans must STAY black and
+                            # white. A 1-bit page compresses far better
+                            # than any JPEG of it — turning one grey made
+                            # an 87 MB book only 59 MB, where dropping
+                            # 603 DPI to 200 and keeping it 1-bit is a
+                            # ninefold cut in pixels with none of the
+                            # blur. Pillow does the thresholding; PyMuPDF
+                            # can't write 1-bit.
+                            replacement = to_bilevel_png(pix)
+                        else:
+                            replacement = pix.tobytes("jpeg", jpg_quality=quality)
                     except Exception:  # noqa: BLE001
                         pix = None
                         continue
@@ -137,9 +174,9 @@ def shrink(path: Path, target_bytes: int) -> tuple[Path | None, int, int, str]:
                     # Only swap when it's a real gain. This is what makes
                     # the pass safe to run over a whole library: an image
                     # that's already efficient is simply left alone.
-                    if len(jpeg) < original_bytes * 0.8:
+                    if replacement and len(replacement) < original_bytes * 0.8:
                         try:
-                            page.replace_image(xref, stream=jpeg)
+                            page.replace_image(xref, stream=replacement)
                         except Exception:  # noqa: BLE001
                             pass
                     pix = None
