@@ -99,12 +99,25 @@ function readR2Credentials() {
 // description of the request. Doing it by hand keeps this script free of
 // the enormous AWS SDK for what amounts to forty lines of hashing.
 // ---------------------------------------------------------------
+/**
+ * RFC 3986 encoding, which is what SigV4 signs over.
+ * encodeURIComponent leaves ! ' ( ) * alone; AWS and R2 do not, and a
+ * book called "... (In Greek).pdf" fails the signature check without
+ * this.
+ */
+function uriEncode(segment) {
+  return encodeURIComponent(segment).replace(
+    /[!'()*]/g,
+    (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase(),
+  );
+}
+
 const sha256hex = (data) => crypto.createHash("sha256").update(data).digest("hex");
 const hmac = (key, data) => crypto.createHmac("sha256", key).update(data).digest();
 
 async function putObject(creds, key, body, contentType = "application/pdf") {
   const host = `${creds.accountId}.r2.cloudflarestorage.com`;
-  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
+  const encodedKey = key.split("/").map(uriEncode).join("/");
   const canonicalUri = `/${creds.bucket}/${encodedKey}`;
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");

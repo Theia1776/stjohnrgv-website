@@ -261,10 +261,14 @@ import Layout from "../../layouts/Layout.astro";
             <button type="button" id="r2-btn" class="btn btn-secondary text-sm">
               Copy books to Cloudflare
             </button>
+            <button type="button" id="register-btn" class="btn btn-secondary text-sm">
+              Add books found in storage
+            </button>
           </div>
         </div>
         <p id="backfill-status" class="mb-4 text-sm text-text-secondary" hidden></p>
         <p id="r2-status" class="mb-4 text-sm text-text-secondary" hidden></p>
+        <p id="register-status" class="mb-4 text-sm text-text-secondary" hidden></p>
 
         <!-- Finding one book among hundreds. Filters the table below by
              title, author, slug, category or language; the dropdown
@@ -1187,6 +1191,63 @@ import Layout from "../../layouts/Layout.astro";
       );
     }
     btn.disabled = false;
+  });
+
+  // ============ ADD BOOKS FOUND IN STORAGE ============
+  // Books pushed straight into Cloudflare storage — the MEGA archive
+  // arriving in bulk — have files but no catalogue entry, so the site
+  // can't see them. This asks the server to look for such files and
+  // write the rows, using its own database key. Everything lands Hidden.
+  function setRegisterStatus(text: string, isError = false) {
+    const el = document.getElementById("register-status");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = !text;
+    el.className = isError ? "mb-4 text-sm text-liturgical-red" : "mb-4 text-sm text-text-secondary";
+  }
+
+  document.getElementById("register-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("register-btn") as HTMLButtonElement;
+    btn.disabled = true;
+    setRegisterStatus("Looking through storage…");
+
+    let total = 0;
+    let skipped = 0;
+    try {
+      // The server works in batches so no single request runs long; keep
+      // asking until it reports nothing left.
+      for (let round = 0; round < 40; round++) {
+        const res = await fetch("/api/admin/library/register-storage", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ limit: 50 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setRegisterStatus(data.error ?? `Failed (${res.status}).`, true);
+          break;
+        }
+        total += Number(data.added ?? 0);
+        skipped += Number(data.skipped ?? 0);
+        setRegisterStatus(`Added ${total} book(s)… ${data.remaining ?? 0} still to look at.`);
+        if (!data.added && !data.remaining) break;
+      }
+
+      if (total > 0) {
+        setRegisterStatus(
+          `Added ${total} book(s) as Hidden${skipped ? `, ${skipped} skipped` : ""}. ` +
+            "Use “Prepare text” next to give them text and page numbers.",
+        );
+        await loadBooks();
+      } else if (!skipped) {
+        setRegisterStatus("Nothing new in storage — every file already has a catalogue entry.");
+      }
+    } catch (err) {
+      setRegisterStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   // ====================== EXPORTS ======================
