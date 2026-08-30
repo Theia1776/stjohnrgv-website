@@ -32,6 +32,7 @@
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
+import { cleanForStorage } from "../../../../src/lib/library-text";
 
 
 /** Just enough of the R2 binding for storing and removing a book. */
@@ -210,7 +211,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // posted alongside it, so the server never has to parse a 300-page
     // book. Empty means the extraction found nothing — a scan.
     const textRaw = String(formData.get("text_content") ?? "");
-    const textContent = textRaw.slice(0, MAX_TEXT_CHARS).trim();
+    // Strip what Postgres refuses before it reaches the insert — see
+    // cleanForStorage: some PDFs yield NUL bytes and lone surrogates.
+    const textContent = cleanForStorage(textRaw.slice(0, MAX_TEXT_CHARS)).trim();
     const textStatus = String(formData.get("text_status") ?? "").trim() || null;
     // How many pages the text carries markers for. Zero means the text
     // predates page markers, which is what the backfill looks for.

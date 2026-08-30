@@ -12,6 +12,7 @@
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
+import { cleanForStorage } from "../../../../src/lib/library-text";
 
 
 /** Just enough of the R2 binding for storing and removing a book. */
@@ -29,6 +30,7 @@ interface Env {
 const BUCKET = "library";
 // Matches the cap in index.ts — roughly a 1,200-page book.
 const MAX_TEXT_CHARS = 3_000_000;
+
 
 // See index.ts: text_pages arrives with migration 016, and a query that
 // names it fails outright until then. Both paths fall back.
@@ -154,7 +156,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     // a success, so the backfill doesn't retry the same book forever.
     if (typeof body.text_content === "string" || typeof body.text_status === "string") {
       const text = typeof body.text_content === "string"
-        ? body.text_content.slice(0, MAX_TEXT_CHARS).trim()
+        ? cleanForStorage(body.text_content.slice(0, MAX_TEXT_CHARS)).trim()
         : "";
       const status = typeof body.text_status === "string" && body.text_status
         ? body.text_status
