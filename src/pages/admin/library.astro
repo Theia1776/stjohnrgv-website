@@ -328,9 +328,11 @@ import Layout from "../../layouts/Layout.astro";
             <option value="">Export list…</option>
             <option value="csv">Spreadsheet (.csv)</option>
             <option value="md">Reading list (.md)</option>
+            <option value="text">Full text of these books (.txt)</option>
           </select>
         </div>
         <p id="catalog-count" class="mb-3 text-sm text-text-secondary"></p>
+        <p id="export-status" class="mb-3 text-sm text-text-secondary" hidden></p>
         <div class="overflow-x-auto border border-border-soft rounded">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -424,12 +426,16 @@ import Layout from "../../layouts/Layout.astro";
 
   // ====================== SEARCH / FILTER ======================
   // Fold accents and lowercase so capitalisation and diacritics never
-  // stand between you and a book.
+  // stand between you and a book. Punctuation becomes a space, because a
+  // book gets typed the way it's spoken — "Andreyev, Orthodox Apologetic
+  // Theology" — and a trailing comma shouldn't stop the word matching.
   function normalize(value: string): string {
     return String(value ?? "")
       .normalize("NFKD")
       .replace(/[̀-ͯ]/g, "")
-      .toLowerCase();
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
   }
 
   function bookHaystack(b: Book): string {
@@ -461,12 +467,30 @@ import Layout from "../../layouts/Layout.astro";
     const query = (document.getElementById("catalog-search") as HTMLInputElement | null)?.value.trim() ?? "";
     const filter = (document.getElementById("catalog-filter") as HTMLSelectElement | null)?.value ?? "";
     const terms = normalize(query).split(/\s+/).filter(Boolean);
-    return books.filter((b) => {
-      if (!matchesFilter(b, filter)) return false;
-      if (terms.length === 0) return true;
+    const inFilter = books.filter((b) => matchesFilter(b, filter));
+    if (terms.length === 0) return inFilter;
+
+    const exact = inFilter.filter((b) => {
       const hay = bookHaystack(b);
       return terms.every((t) => hay.includes(t));
     });
+    if (exact.length > 0 || terms.length < 2) return exact;
+
+    // Nothing carries every word. Rather than an empty table, show the
+    // books carrying the most of them — only the closest, or one word
+    // out of four would drag in every book with "orthodox" on it.
+    const scored = inFilter
+      .map((b) => {
+        const hay = bookHaystack(b);
+        return { book: b, score: terms.filter((t) => hay.includes(t)).length };
+      })
+      .filter((s) => s.score > 0);
+    if (scored.length === 0) return [];
+    // At least two words must land. One out of four is not a near miss —
+    // it's "there" containing "here" — and a wrong book is worse than none.
+    const best = Math.max(...scored.map((s) => s.score));
+    if (best < 2) return [];
+    return scored.filter((s) => s.score === best).map((s) => s.book);
   }
 
   function render() {
@@ -1384,6 +1408,89 @@ import Layout from "../../layouts/Layout.astro";
     downloadFile("parish-library.md", lines.join("\n"), "text/markdown;charset=utf-8");
   }
 
+  /**
+   * The full text of several books at once, in one file.
+   *
+   * The books are read for school and quoted in class, and a reader
+   * working outside the site — or a chat that can't come through the
+   * sign-in — needs the words, not a link. Whatever the table is
+   * showing is what goes in, so a search narrows it to a topic first.
+   *
+   * Scans are left out: there's nothing to put in for them.
+   */
+  async function exportFullText(shown: Book[]) {
+    const status = document.getElementById("export-status");
+    const withText = shown.filter((b) => b.text_status === "ok");
+    if (withText.length === 0) {
+      showError("None of the books showing have a text version — they're scans.");
+      return;
+    }
+
+    // Every book's length is already known, so the size can be named
+    // before anything is fetched rather than discovered afterwards.
+    const chars = withText.reduce((sum, b) => sum + (b.text_chars ?? 0), 0);
+    const mb = chars / 1_000_000;
+    const skipped = shown.length - withText.length;
+    if (
+      !window.confirm(
+        `Put the full text of ${withText.length} book${withText.length === 1 ? "" : "s"} ` +
+          `into one file, about ${mb < 1 ? "under 1" : Math.round(mb)} MB?` +
+          (skipped > 0 ? `\n\n${skipped} showing are scans and will be left out.` : "") +
+          `\n\nSearch first to narrow it down if that's more than you want.`,
+      )
+    ) {
+      return;
+    }
+
+    const parts = [
+      `Parish library of St John the Forerunner — ${withText.length} books`,
+      "Page numbers below are each book's own printed pages, where the PDF records them,",
+      "so a quotation can be cited to the page it appears on.",
+      "",
+    ];
+    let failed = 0;
+
+    if (status) status.hidden = false;
+    try {
+      for (let i = 0; i < withText.length; i++) {
+        const b = withText[i];
+        if (status) status.textContent = `Fetching ${i + 1} of ${withText.length}: ${b.title}`;
+        try {
+          const res = await fetch(`/api/library/text?slug=${encodeURIComponent(b.slug)}`, {
+            credentials: "same-origin",
+            cache: "no-store",
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            failed++;
+            continue;
+          }
+          parts.push(
+            "",
+            "================================================================",
+            `${b.title}${b.author ? ` — ${b.author}` : ""}`,
+            `${location.origin}/learn/library/reader/?slug=${encodeURIComponent(b.slug)}`,
+            "================================================================",
+            "",
+            readablePages(data.text).trim(),
+            "",
+          );
+        } catch {
+          failed++;
+        }
+      }
+
+      downloadFile("parish-library-text.txt", parts.join("\n") + "\n", "text/plain;charset=utf-8");
+      if (status) {
+        status.textContent =
+          `Downloaded ${withText.length - failed} book${withText.length - failed === 1 ? "" : "s"}` +
+          (failed > 0 ? `; ${failed} couldn't be read.` : ".");
+      }
+    } finally {
+      if (status && !status.textContent) status.hidden = true;
+    }
+  }
+
   document.getElementById("catalog-export")?.addEventListener("change", (ev) => {
     const select = ev.target as HTMLSelectElement;
     const choice = select.value;
@@ -1397,8 +1504,20 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
     if (choice === "csv") exportCsv(shown);
-    else exportList(shown);
+    else if (choice === "md") exportList(shown);
+    else void exportFullText(shown);
   });
+
+  /**
+   * The page markers become something a reader can see — "[page 12]" on
+   * its own line — so a quotation can be cited to a page.
+   */
+  function readablePages(text: string): string {
+    return String(text ?? "").replace(
+      /␞([^␞|]*)\|?[^␞]*␞\n?/g,
+      (_match: string, pageLabel: string) => `\n[page ${pageLabel}]\n`,
+    );
+  }
 
   /** Download one book's text, page markers turned into readable lines. */
   async function downloadBookText(slug: string, title: string) {
@@ -1412,12 +1531,7 @@ import Layout from "../../layouts/Layout.astro";
         showError(`Couldn't get the text: ${data.error ?? res.status}`);
         return;
       }
-      // The page markers become something a reader can see — "[page 12]"
-      // on its own line — so a quotation can be cited to a page.
-      const readable = String(data.text ?? "").replace(
-        /␞([^␞|]*)\|?[^␞]*␞\n?/g,
-        (_match: string, pageLabel: string) => `\n[page ${pageLabel}]\n`,
-      );
+      const readable = readablePages(data.text);
       const lines = [
         String(data.title ?? title),
         data.author ? String(data.author) : "",

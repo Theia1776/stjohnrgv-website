@@ -286,12 +286,16 @@ const categories = [
 
     // ============== SEARCH ==============
     // Fold accents and lowercase, so "Nektarios" finds "Nektários" and
-    // capitalisation never matters.
+    // capitalisation never matters. Punctuation becomes a space: people
+    // type a book the way they'd say it — "Andreyev, Orthodox Apologetic
+    // Theology" — and a trailing comma shouldn't stop the word matching.
     function normalize(value: string): string {
       return value
         .normalize("NFKD")
         .replace(/[̀-ͯ]/g, "")
-        .toLowerCase();
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
     }
 
     // Everything worth matching on, in one string per book.
@@ -306,6 +310,41 @@ const categories = [
     function matches(book: Book, terms: string[]): boolean {
       const hay = haystack(book);
       return terms.every((term) => hay.includes(term));
+    }
+
+    /** How many of the words this book carries. */
+    function matchScore(book: Book, terms: string[]): number {
+      const hay = haystack(book);
+      return terms.filter((term) => hay.includes(term)).length;
+    }
+
+    /**
+     * Search results, best first, and never empty when something is
+     * close.
+     *
+     * Requiring every word is right when it works, but it dead-ends on
+     * the way people actually remember a book: "Ivan Andreyev, Orthodox
+     * Apologetic Theology" finds nothing if the catalogue filed that
+     * book under its title alone. So when no book carries every word,
+     * fall back to the books carrying the most — which is the one being
+     * looked for, nearly always.
+     */
+    function searchBooks(books: Book[], terms: string[]): { hits: Book[]; loosened: boolean } {
+      const exact = books.filter((b) => matches(b, terms));
+      if (exact.length > 0 || terms.length < 2) return { hits: exact, loosened: false };
+
+      const scored = books
+        .map((b) => ({ book: b, score: matchScore(b, terms) }))
+        .filter((s) => s.score > 0);
+      if (scored.length === 0) return { hits: [], loosened: false };
+
+      // Only the closest, and only when at least two words landed. One
+      // word out of four is not a near miss — it's "there" containing
+      // "here", and answering a dead end with a wrong book is worse than
+      // answering it with nothing.
+      const best = Math.max(...scored.map((s) => s.score));
+      if (best < 2) return { hits: [], loosened: false };
+      return { hits: scored.filter((s) => s.score === best).map((s) => s.book), loosened: true };
     }
 
     function hideBrowseViews() {
@@ -339,10 +378,12 @@ const categories = [
       }
 
       const terms = normalize(query).split(/\s+/).filter(Boolean);
-      const found = books.filter((b) => matches(b, terms));
+      const { hits: found, loosened } = searchBooks(books, terms);
 
       hideBrowseViews();
-      searchCount.textContent = `${found.length} ${found.length === 1 ? "text" : "texts"} matching “${query}”`;
+      searchCount.textContent = loosened
+        ? `No text matches all of “${query}”. ${found.length} closest ${found.length === 1 ? "match" : "matches"}:`
+        : `${found.length} ${found.length === 1 ? "text" : "texts"} matching “${query}”`;
 
       if (found.length === 0) {
         searchResults.hidden = true;
