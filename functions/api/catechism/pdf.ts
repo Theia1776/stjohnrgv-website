@@ -50,8 +50,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
 
   const url = new URL(context.request.url);
-  const key = url.searchParams.get("key")?.trim() || "";
-  if (!key) {
+  // Not trimmed — see library/pdf.ts: a leading space can be part of
+  // the filename, and trimming makes that file unreachable.
+  const key = url.searchParams.get("key") ?? "";
+  if (!key.trim()) {
     return wrap(jsonResponse({ error: "Missing 'key' query parameter." }, 400));
   }
   if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {

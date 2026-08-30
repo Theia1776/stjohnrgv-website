@@ -51,8 +51,11 @@ export async function onRequestGet(
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
   const url = new URL(context.request.url);
-  const key = url.searchParams.get("key")?.trim() || "";
-  if (!key) {
+  // Not trimmed: a storage key is a filename, and one book in the
+  // archive is genuinely called " Lord, What Shall I Do…" with a leading
+  // space. Trimming it looked tidy and made the book unreachable.
+  const key = url.searchParams.get("key") ?? "";
+  if (!key.trim()) {
     return wrap(jsonResponse({ error: "Missing 'key' query parameter." }, 400));
   }
 

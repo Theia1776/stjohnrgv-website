@@ -75,8 +75,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
 
   const url = new URL(context.request.url);
-  const key = url.searchParams.get("key")?.trim() || "";
-  if (!key) return wrap(jsonResponse({ error: "Missing 'key' query parameter." }, 400));
+  // Not trimmed — see pdf.ts: a leading space can be part of the
+  // filename, and trimming makes that book unreachable.
+  const key = url.searchParams.get("key") ?? "";
+  if (!key.trim()) return wrap(jsonResponse({ error: "Missing 'key' query parameter." }, 400));
 
   const bucket = context.env.LIBRARY_BUCKET;
   if (!bucket) {
