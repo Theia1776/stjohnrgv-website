@@ -317,9 +317,18 @@ import Layout from "../../layouts/Layout.astro";
           <button type="button" id="catalog-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
           <!-- For working on the books outside the site — a reading list,
                a spreadsheet, or handing the catalogue to something that
-               helps with citations. Exports whatever the table is
-               currently showing, so a filter narrows the export too. -->
-          <button type="button" id="catalog-export" class="btn btn-secondary text-sm">Export list</button>
+               helps with citations but can't sign in to see the library
+               for itself. Exports whatever the table is currently
+               showing, so a filter narrows the export too. -->
+          <label for="catalog-export" class="sr-only">Export the list</label>
+          <select
+            id="catalog-export"
+            class="border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          >
+            <option value="">Export list…</option>
+            <option value="csv">Spreadsheet (.csv)</option>
+            <option value="md">Reading list (.md)</option>
+          </select>
         </div>
         <p id="catalog-count" class="mb-3 text-sm text-text-secondary"></p>
         <div class="overflow-x-auto border border-border-soft rounded">
@@ -1299,23 +1308,96 @@ import Layout from "../../layouts/Layout.astro";
     return `"${String(value ?? "").replace(/"/g, '""')}"`;
   }
 
-  document.getElementById("catalog-export")?.addEventListener("click", () => {
-    const shown = visibleBooks();
-    if (shown.length === 0) return;
-    const header = ["Title", "Author", "Category", "Languages", "Visibility", "Pages of text", "Read at"];
+  /**
+   * How a book can be read. It matters to anyone working from this list:
+   * a book with text can be quoted and cited to a printed page, a scan
+   * can only be read.
+   */
+  function textNote(b: Book): string {
+    if (b.text_status === "ok") {
+      return b.text_pages ? `text, ${b.text_pages} pages` : "text, no page numbers";
+    }
+    return b.text_status === "empty" ? "scan only" : "no text";
+  }
+
+  function visibilityNote(b: Book): string {
+    return b.hidden ? "Staging" : b.public_access ? "Public" : "Parishioners";
+  }
+
+  /** The catalogue as a spreadsheet. */
+  function exportCsv(shown: Book[]) {
+    const header = ["Title", "Author", "Category", "Languages", "Visibility", "Text", "Read at"];
     const rows = shown.map((b) => [
       b.title,
       b.author ?? "",
       b.category,
       (b.languages ?? []).join("; "),
-      b.hidden ? "Staging" : b.public_access ? "Public" : "Parishioners",
-      b.text_status === "ok" ? String(b.text_pages ?? 0) : b.text_status === "empty" ? "scan" : "",
+      visibilityNote(b),
+      textNote(b),
       `${location.origin}/learn/library/reader/?slug=${encodeURIComponent(b.slug)}`,
     ]);
     const csv = [header, ...rows].map((r) => r.map(csvField).join(",")).join("\r\n");
     // A byte-order mark, so Excel opens accented titles properly instead
     // of turning them into nonsense.
     downloadFile("parish-library.csv", "﻿" + csv, "text/csv;charset=utf-8");
+  }
+
+  /**
+   * The catalogue as something to read, or to hand to a chat that can't
+   * come through the sign-in and see the library for itself. Grouped by
+   * category, one line a book, no links — a link it can't open is just
+   * noise; the title is what lets it name the book and be looked up.
+   */
+  function exportList(shown: Book[]) {
+    const withText = shown.filter((b) => b.text_status === "ok").length;
+    const withPages = shown.filter((b) => b.text_status === "ok" && b.text_pages).length;
+    const byCategory = new Map<string, Book[]>();
+    for (const b of shown) {
+      const key = b.category || "Other";
+      if (!byCategory.has(key)) byCategory.set(key, []);
+      byCategory.get(key)!.push(b);
+    }
+
+    const lines = [
+      "# St John the Forerunner — parish library",
+      "",
+      `${shown.length} books. ${withText} have a searchable text version, ${withPages} of those`,
+      "with page numbers, so a passage can be quoted and cited to the printed page.",
+      "The rest are scans: readable on the site page by page, but not quotable",
+      "without transcribing.",
+      "",
+      "The library is behind a member sign-in, so these can't be opened from a",
+      "link alone. This list says what the parish holds, so a book can be named",
+      "and then looked up on the site.",
+      "",
+    ];
+
+    for (const category of [...byCategory.keys()].sort()) {
+      const group = byCategory.get(category)!;
+      lines.push(`## ${category} (${group.length})`, "");
+      for (const b of group) {
+        lines.push(`- **${b.title}**${b.author ? ` — ${b.author}` : ""} · ${textNote(b)}`);
+      }
+      lines.push("");
+    }
+
+    downloadFile("parish-library.md", lines.join("\n"), "text/markdown;charset=utf-8");
+  }
+
+  document.getElementById("catalog-export")?.addEventListener("change", (ev) => {
+    const select = ev.target as HTMLSelectElement;
+    const choice = select.value;
+    // Snap back, so the same export can be taken twice.
+    select.value = "";
+    if (!choice) return;
+
+    const shown = visibleBooks();
+    if (shown.length === 0) {
+      showError("Nothing to export — no books are showing.");
+      return;
+    }
+    if (choice === "csv") exportCsv(shown);
+    else exportList(shown);
   });
 
   /** Download one book's text, page markers turned into readable lines. */
