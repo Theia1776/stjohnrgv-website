@@ -80,6 +80,7 @@ import Layout from "../layouts/Layout.astro";
       <a href="#section-directory" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Directory</a>
       <a href="#section-calendar" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Calendar &amp; Saints</a>
       <a href="#section-profile" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">My Details</a>
+      <a href="#section-password" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Password</a>
     </nav>
 
     <!-- ============== MY LEARNING ==============
@@ -428,6 +429,90 @@ import Layout from "../layouts/Layout.astro";
 
     </form>
 
+        </div>
+      </details>
+    </section>
+
+    <!-- ============== PASSWORD ============== -->
+    <!-- Changing it from in here, rather than signing out and going
+         round the emailed-code flow, which exists for being locked out
+         entirely and is a lot of ceremony for "I'd like a new one". -->
+    <section
+      id="section-password"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="password-heading"
+    >
+      <details class="account-fold">
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="password-heading" class="text-lg font-semibold">Password</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4">
+          <p class="mb-4 text-sm text-text-secondary">
+            Change your password here. You'll need the one you use now — if you
+            can't sign in at all, use
+            <a href="/reset-password/" class="text-brand-blue-dark">Forgot your password?</a>
+            instead.
+          </p>
+
+          <form id="password-form" class="max-w-md space-y-4">
+            <div>
+              <label for="current_password" class="block text-sm font-medium mb-1">
+                Current password
+              </label>
+              <input
+                id="current_password"
+                name="current_password"
+                type="password"
+                autocomplete="current-password"
+                required
+                class="w-full border border-border-soft bg-cream-bg px-3 py-2 focus:outline-none focus:ring-2"
+              />
+            </div>
+
+            <div>
+              <label for="new_password" class="block text-sm font-medium mb-1">
+                New password
+              </label>
+              <input
+                id="new_password"
+                name="new_password"
+                type="password"
+                autocomplete="new-password"
+                minlength="8"
+                required
+                class="w-full border border-border-soft bg-cream-bg px-3 py-2 focus:outline-none focus:ring-2"
+              />
+              <p class="mt-1 text-xs text-text-secondary">At least 8 characters.</p>
+            </div>
+
+            <div>
+              <label for="confirm_password" class="block text-sm font-medium mb-1">
+                New password again
+              </label>
+              <input
+                id="confirm_password"
+                name="confirm_password"
+                type="password"
+                autocomplete="new-password"
+                minlength="8"
+                required
+                class="w-full border border-border-soft bg-cream-bg px-3 py-2 focus:outline-none focus:ring-2"
+              />
+            </div>
+
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input id="show_passwords" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+              Show what I'm typing
+            </label>
+
+            <div class="flex items-center gap-4 pt-2">
+              <button type="submit" id="password-submit" class="btn btn-primary">
+                Change Password
+              </button>
+              <span id="password-status" class="text-sm text-text-secondary" role="status"></span>
+            </div>
+          </form>
         </div>
       </details>
     </section>
@@ -882,5 +967,68 @@ import Layout from "../layouts/Layout.astro";
       errorEl.textContent = `Could not load your lessons: ${err instanceof Error ? err.message : String(err)}`;
       errorEl.hidden = false;
     }
+  })();
+  // ============== PASSWORD ==============
+  // Astro drops a second top-level <script>, so this lives in the same
+  // block as everything else on the page.
+  (() => {
+    const form = document.getElementById("password-form") as HTMLFormElement | null;
+    if (!form) return;
+    const status = document.getElementById("password-status") as HTMLSpanElement;
+    const submit = document.getElementById("password-submit") as HTMLButtonElement;
+    const current = document.getElementById("current_password") as HTMLInputElement;
+    const next = document.getElementById("new_password") as HTMLInputElement;
+    const confirm = document.getElementById("confirm_password") as HTMLInputElement;
+    const show = document.getElementById("show_passwords") as HTMLInputElement;
+
+    // Typing a password you can't see, twice, is how a typo becomes an
+    // account you can't get into.
+    show?.addEventListener("change", () => {
+      const type = show.checked ? "text" : "password";
+      for (const field of [current, next, confirm]) field.type = type;
+    });
+
+    function say(message: string, bad = false) {
+      status.textContent = message;
+      status.className = bad
+        ? "text-sm text-red-700"
+        : "text-sm text-text-secondary";
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (next.value !== confirm.value) {
+        say("The two new passwords don't match.", true);
+        confirm.focus();
+        return;
+      }
+
+      submit.disabled = true;
+      say("Changing…");
+      try {
+        const res = await fetch("/api/auth/change-password", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            current_password: current.value,
+            new_password: next.value,
+          }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          say(body.error ?? `Couldn't change it (${res.status}).`, true);
+          return;
+        }
+        form.reset();
+        // reset() leaves the checkbox's effect behind otherwise.
+        for (const field of [current, next, confirm]) field.type = "password";
+        say("✓ Password changed. It's what you'll sign in with from now on.");
+      } catch (err) {
+        say(`Couldn't change it: ${err instanceof Error ? err.message : String(err)}`, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
   })();
 </script>
