@@ -224,7 +224,9 @@ import Layout from "../layouts/Layout.astro";
             fasting.kind === "fast" && typeof fasting.rule === "string" && fasting.rule.trim()
               ? ` — ${fasting.rule.trim()}`
               : "";
-          slot.textContent = `· ${label.text}${rule}`;
+          // The span sits flush against the date in the markup, so the
+          // separator carries its own spacing.
+          slot.textContent = ` · ${label.text}${rule}`;
           (slot as HTMLElement).style.color = label.color;
         } catch {
           // No answer from the calendar: say nothing at all. A wrong
@@ -249,10 +251,10 @@ import Layout from "../layouts/Layout.astro";
     return `
       <section class="border border-brand-tan bg-cream-card p-6 shadow-sm" data-sunday="${dateIso}">
         <h2 class="text-lg font-semibold border-b pb-2 mb-4">
-          ${escapeHtml(heading)}<span
-            class="fast-label ml-2 align-middle text-xs font-semibold uppercase tracking-widest"
-            data-fast-for="${dateIso}"
-          ></span>
+          <!-- No size of its own: it reads as part of the heading, at the
+               same weight as the date it qualifies. Only the colour sets
+               it apart. -->
+          ${escapeHtml(heading)}<span class="fast-label" data-fast-for="${dateIso}"></span>
         </h2>
 
         ${emptyNote}
