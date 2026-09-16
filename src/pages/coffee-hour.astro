@@ -178,6 +178,60 @@ import Layout from "../layouts/Layout.astro";
       .join("");
 
     attachHandlers();
+    void loadFastLabels(sundays);
+  }
+
+  /**
+   * Whether each Sunday is a fasting day, from the parish calendar.
+   *
+   * It matters here more than anywhere: the sign-up is for food, and
+   * what may be brought depends on the day. Sundays are not uniformly
+   * fast-free — inside Great Lent and the other fasts they carry a rule
+   * of their own — so it can't be worked out from the date.
+   *
+   * Read from the same endpoint as the calendar page, which reads the
+   * Holy Trinity calendar itself, so the two can never disagree. Filled
+   * in after the list is drawn rather than before: eight lookups should
+   * not hold up the sign-up sheet, and a date with no answer simply
+   * shows nothing rather than a guess.
+   */
+  const FAST_LABELS: Record<string, { text: string; color: string }> = {
+    fast: { text: "Fast Day", color: "var(--color-liturgical-purple)" },
+    fish: { text: "Fish Allowed", color: "var(--color-brand-blue)" },
+    none: { text: "No Fast", color: "var(--color-liturgical-green)" },
+  };
+
+  async function loadFastLabels(sundays: Date[]) {
+    await Promise.all(
+      sundays.map(async (date) => {
+        const dateIso = isoDate(date);
+        const slot = document.querySelector(`[data-fast-for="${dateIso}"]`);
+        if (!slot) return;
+        try {
+          const res = await fetch(`/api/calendar?date=${dateIso}`, { cache: "no-store" });
+          if (!res.ok) return;
+          const data = await res.json();
+          const fasting = data?.fasting;
+          const label = fasting?.kind ? FAST_LABELS[fasting.kind] : null;
+          if (!label) return;
+
+          // The rule ("Food with Oil") is what actually decides what to
+          // cook, so it rides along when the calendar gives one. Not on
+          // a fish day: there the rule *is* "Fish Allowed", and it would
+          // read "Fish Allowed — Fish Allowed". The calendar page drops
+          // it for the same reason.
+          const rule =
+            fasting.kind === "fast" && typeof fasting.rule === "string" && fasting.rule.trim()
+              ? ` — ${fasting.rule.trim()}`
+              : "";
+          slot.textContent = `· ${label.text}${rule}`;
+          (slot as HTMLElement).style.color = label.color;
+        } catch {
+          // No answer from the calendar: say nothing at all. A wrong
+          // fasting rule is worse than an absent one.
+        }
+      }),
+    );
   }
 
   function renderSunday(date: Date, dateSignups: Signup[]): string {
@@ -194,7 +248,12 @@ import Layout from "../layouts/Layout.astro";
 
     return `
       <section class="border border-brand-tan bg-cream-card p-6 shadow-sm" data-sunday="${dateIso}">
-        <h2 class="text-lg font-semibold border-b pb-2 mb-4">${escapeHtml(heading)}</h2>
+        <h2 class="text-lg font-semibold border-b pb-2 mb-4">
+          ${escapeHtml(heading)}<span
+            class="fast-label ml-2 align-middle text-xs font-semibold uppercase tracking-widest"
+            data-fast-for="${dateIso}"
+          ></span>
+        </h2>
 
         ${emptyNote}
         <ul class="space-y-2 mb-4">${rows}</ul>
