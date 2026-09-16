@@ -67,26 +67,38 @@ export async function onRequestPost(
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 
-  // Most recent un-consumed code for this email. Issuing a new code
-  // (forgot) doesn't delete older ones, but we only ever honor the
-  // newest, so a superseded code is effectively dead.
-  const { data: row } = await admin
+  // Every un-consumed code for this email, newest first.
+  //
+  // Only the newest used to count, which quietly broke the flow it was
+  // meant to serve: reaching the code-entry screen means asking for a
+  // code, so a code already sitting in the inbox — from a first attempt,
+  // or from someone helping — was dead before it was typed. Nothing was
+  // wrong with it and the message said "invalid or expired".
+  //
+  // Any code that hasn't expired and hasn't been used is honoured. Each
+  // is single-use, each dies within the same window, and every code for
+  // the address is burned the moment one succeeds, so nothing outlives
+  // the reset it belongs to.
+  const { data: rows } = await admin
     .from("password_resets")
     .select("id, user_id, code_hash, attempts, expires_at")
     .eq("email", email)
     .is("consumed_at", null)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(10);
 
   const invalid = () =>
     jsonResponse({ error: "That code is invalid or expired. Request a new one." }, 400);
 
-  if (!row) return invalid();
+  const live = (rows ?? []).filter(
+    (r) => new Date(r.expires_at).getTime() >= Date.now(),
+  );
+  if (live.length === 0) return invalid();
 
-  if (new Date(row.expires_at).getTime() < Date.now()) return invalid();
-
-  if (row.attempts >= MAX_ATTEMPTS) {
+  // Attempts are counted across the live codes together, so issuing more
+  // of them can't be used to widen the guessing budget.
+  const attempts = live.reduce((total, r) => total + (r.attempts as number), 0);
+  if (attempts >= MAX_ATTEMPTS) {
     return jsonResponse(
       { error: "Too many attempts. Request a new code and try again." },
       429,
@@ -94,12 +106,13 @@ export async function onRequestPost(
   }
 
   const submittedHash = await hashCode(code, context.env.SUPABASE_SERVICE_ROLE_KEY);
-  if (!timingSafeEqual(submittedHash, row.code_hash)) {
+  const row = live.find((r) => timingSafeEqual(submittedHash, r.code_hash as string));
+  if (!row) {
     // Burn an attempt so the 6-digit space can't be ground down.
     await admin
       .from("password_resets")
-      .update({ attempts: row.attempts + 1 })
-      .eq("id", row.id);
+      .update({ attempts: (live[0].attempts as number) + 1 })
+      .eq("id", live[0].id);
     return invalid();
   }
 
