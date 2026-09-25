@@ -31,6 +31,48 @@ import Layout from "../../layouts/Layout.astro";
       display: block;
       margin: 0 auto;
     }
+
+    /* The dark frame exists so white PDF pages stand out against it.
+       Text is a different job: it's read for minutes at a time, so it
+       gets paper — black on white — rather than pale type on charcoal.
+       Stated outright rather than in theme tokens, because this sheet
+       must stay light whichever theme the site is in. */
+    #text-view {
+      background: #ffffff;
+      color: #16181c;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #text-view .find-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #ddd8cb;
+    }
+    #text-view .find-bar input {
+      background: #ffffff;
+      color: #16181c;
+      border: 1px solid #b9b3a4;
+    }
+    #text-view .find-bar .btn {
+      background: #ffffff;
+      color: #16181c;
+      border: 1px solid #b9b3a4;
+    }
+    #text-view .find-count { color: #55585e; }
+    /* Page dividers are signposts, not text: present, not competing. */
+    #text-view .page-divider {
+      color: #6a6d73;
+      border-top: 1px solid #e2ddd1;
+    }
+    /* Every match in gold; the one you're standing on, deeper. */
+    #text-view mark.find-hit {
+      background: #f2d47a;
+      color: #16181c;
+      padding: 0 1px;
+    }
+    #text-view mark.find-hit.is-current {
+      background: #e0a92a;
+      color: #16181c;
+      box-shadow: 0 0 0 2px rgba(224, 169, 42, 0.45);
+    }
   </style>
 
   <!-- ============== HEADER + TOOLBAR ============== -->
@@ -130,24 +172,24 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <!-- ============== TEXT VIEW ============== -->
-    <div id="text-view" hidden class="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-12">
+    <div id="text-view" hidden class="mx-auto my-8 max-w-3xl px-5 py-8 md:my-12 md:px-10 md:py-12">
       <!-- The find bar stays put while the text scrolls, so a long
            lesson doesn't mean scrolling back up to search again. -->
-      <div class="sticky top-0 z-10 -mx-4 mb-6 border-b border-border-soft bg-cream-card px-4 py-3 md:-mx-6 md:px-6">
+      <div class="find-bar sticky top-0 z-10 -mx-5 mb-6 px-5 py-3 md:-mx-10 md:px-10">
         <div class="flex flex-wrap items-center gap-2">
           <label for="text-find" class="sr-only">Find in this lesson</label>
           <input
             id="text-find"
             type="search"
             placeholder="Find in this lesson"
-            class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            class="min-w-0 flex-1 px-3 py-2 text-sm focus:outline-none focus:ring-2"
           />
-          <button type="button" id="find-prev" class="btn btn-secondary text-sm">Previous</button>
-          <button type="button" id="find-next" class="btn btn-secondary text-sm">Next</button>
-          <span id="find-count" class="text-sm text-text-secondary" role="status"></span>
+          <button type="button" id="find-prev" class="btn px-3 py-2 text-sm">Previous</button>
+          <button type="button" id="find-next" class="btn px-3 py-2 text-sm">Next</button>
+          <span id="find-count" class="find-count text-sm" role="status"></span>
         </div>
       </div>
-      <div id="text-body" class="whitespace-pre-wrap text-base leading-relaxed text-text-primary"></div>
+      <div id="text-body" class="whitespace-pre-wrap text-base leading-relaxed"></div>
     </div>
   </section>
 
@@ -530,7 +572,7 @@ import Layout from "../../layouts/Layout.astro";
         // with the newline that follows it.
         /␞([^␞|]*)\|?([^␞]*)␞\n?/g,
         (_m: string, label: string) =>
-          `<span class="mt-6 mb-2 block border-t border-border-soft pt-2 font-display text-xs uppercase tracking-widest text-text-secondary">Page ${label || "—"}</span>`,
+          `<span class="page-divider mt-6 mb-2 block pt-2 font-display text-xs uppercase tracking-widest">Page ${label || "—"}</span>`,
       );
 
       if (highlight) {
@@ -551,7 +593,7 @@ import Layout from "../../layouts/Layout.astro";
         try {
           html = html.replace(
             new RegExp(`(${loose})`, "gi"),
-            '<mark class="find-hit bg-sacred-gold/40">$1</mark>',
+            '<mark class="find-hit">$1</mark>',
           );
         } catch {
           // An unusable pattern just means no highlighting.
@@ -572,10 +614,7 @@ import Layout from "../../layouts/Layout.astro";
     function showHit(index: number) {
       if (hits.length === 0) return;
       hitIndex = (index + hits.length) % hits.length;
-      hits.forEach((el, i) => {
-        el.classList.toggle("bg-sacred-gold", i === hitIndex);
-        el.classList.toggle("bg-sacred-gold/40", i !== hitIndex);
-      });
+      hits.forEach((el, i) => el.classList.toggle("is-current", i === hitIndex));
       hits[hitIndex].scrollIntoView({ block: "center" });
       const count = document.getElementById("find-count");
       if (count) count.textContent = `${hitIndex + 1} of ${hits.length}`;
