@@ -104,6 +104,22 @@ import Layout from "../layouts/Layout.astro";
             Catechism lessons shared with the parish. Click any lesson to read it here on the site.
           </p>
 
+          <!-- Searching reaches inside the lessons, not just their
+               titles, so a half-remembered phrase finds the lesson it
+               came from. That runs on the server: doing it here would
+               mean sending every lesson's full text to every member. -->
+          <div class="mb-4 flex flex-wrap items-center gap-2">
+            <label for="learning-search" class="sr-only">Search the lessons</label>
+            <input
+              id="learning-search"
+              type="search"
+              placeholder="Search lessons — a title, or words from inside one"
+              class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            />
+            <button type="button" id="learning-search-clear" class="btn btn-secondary text-sm" hidden>Clear</button>
+          </div>
+          <p id="learning-search-note" hidden class="mb-3 text-sm text-text-secondary"></p>
+
           <p id="learning-loading" class="text-sm text-text-secondary italic">Loading lessons…</p>
           <p id="learning-error" hidden role="alert" class="text-sm text-liturgical-red"></p>
           <p id="learning-empty" hidden class="text-sm text-text-secondary italic">
@@ -809,6 +825,16 @@ import Layout from "../layouts/Layout.astro";
     lesson_date: string | null;
     description: string | null;
     published: boolean;
+    text_chars?: number | null;
+    text_status?: string | null;
+    text_pages?: number | null;
+  };
+
+  /** A search hit: a lesson, plus where the words were found. */
+  type LessonHit = Lesson & {
+    where?: "text" | "details" | "both";
+    snippet?: string | null;
+    page?: string | null;
   };
 
   function escapeHtml(value: unknown): string {
@@ -832,7 +858,7 @@ import Layout from "../layouts/Layout.astro";
     return `${months[m - 1]} ${d}, ${y}`;
   }
 
-  function lessonRow(lesson: Lesson): string {
+  function lessonRow(lesson: LessonHit): string {
     // Series / teacher / date, whichever the admin filled in.
     const meta = [lesson.series, lesson.teacher, formatLessonDate(lesson.lesson_date)]
       .filter(Boolean)
@@ -850,7 +876,25 @@ import Layout from "../layouts/Layout.astro";
       >${escapeHtml(lesson.title)}</a>${draftTag}
       ${meta ? `<p class="mt-0.5 text-xs text-text-secondary">${meta}</p>` : ""}
       ${lesson.description ? `<p class="mt-1 text-sm text-text-primary/85">${escapeHtml(lesson.description)}</p>` : ""}
+      ${lessonSnippet(lesson)}
     </li>`;
+  }
+
+  /**
+   * The passage a search matched, when it was found inside the lesson
+   * rather than in its title. Without this a lesson appears in the
+   * results for a word that isn't visible anywhere on the row, which
+   * reads as a mistake. The page number comes along because that is
+   * what a citation needs.
+   */
+  function lessonSnippet(lesson: LessonHit): string {
+    if (!lesson.snippet) return "";
+    const page = lesson.page
+      ? `<span class="font-semibold">Page ${escapeHtml(lesson.page)}</span> · `
+      : "";
+    return `<p class="mt-2 border-l-2 border-sacred-gold pl-3 text-sm text-text-primary/75 italic">
+      ${page}${escapeHtml(lesson.snippet)}
+    </p>`;
   }
 
   // ============== FOLDS + JUMPS ==============
@@ -951,17 +995,15 @@ import Layout from "../layouts/Layout.astro";
       }
 
       const data = await res.json();
-      const lessons = (data.lessons ?? []) as Lesson[];
+      allLessons = (data.lessons ?? []) as Lesson[];
 
-      if (lessons.length === 0) {
+      if (allLessons.length === 0) {
         emptyEl.hidden = false;
         return;
       }
 
-      listEl.innerHTML = lessons.map(lessonRow).join("");
-      if (countEl) {
-        countEl.textContent = `${lessons.length} ${lessons.length === 1 ? "lesson" : "lessons"}`;
-      }
+      showLessons(allLessons);
+      enableLessonSearch();
     } catch (err) {
       loadingEl.hidden = true;
       errorEl.textContent = `Could not load your lessons: ${err instanceof Error ? err.message : String(err)}`;
@@ -1031,4 +1073,110 @@ import Layout from "../layouts/Layout.astro";
       }
     });
   })();
+
+  // ============== SEARCHING THE LESSONS ==============
+  // Titles, teachers and series are here in the browser already, but the
+  // words inside each lesson are not — sending every lesson's full text
+  // to every member would be absurd. So the search goes to the server,
+  // which looks in both and sends back only what matched, with the
+  // passage and its page number.
+
+  let allLessons: Lesson[] = [];
+  let lessonSearchWired = false;
+
+  function showLessons(rows: LessonHit[]) {
+    const listEl = document.getElementById("learning-list") as HTMLUListElement | null;
+    const countEl = document.getElementById("learning-count") as HTMLSpanElement | null;
+    const emptyEl = document.getElementById("learning-empty") as HTMLParagraphElement | null;
+    if (!listEl) return;
+    if (emptyEl) emptyEl.hidden = rows.length > 0 || allLessons.length === 0;
+    listEl.innerHTML = rows.map(lessonRow).join("");
+    if (countEl) {
+      countEl.textContent = `${rows.length} ${rows.length === 1 ? "lesson" : "lessons"}`;
+    }
+  }
+
+  function setLessonSearchNote(message: string) {
+    const note = document.getElementById("learning-search-note") as HTMLParagraphElement | null;
+    if (!note) return;
+    note.textContent = message;
+    note.hidden = message === "";
+  }
+
+  function enableLessonSearch() {
+    if (lessonSearchWired) return;
+    const input = document.getElementById("learning-search") as HTMLInputElement | null;
+    const clear = document.getElementById("learning-search-clear") as HTMLButtonElement | null;
+    if (!input) return;
+    lessonSearchWired = true;
+
+    let timer: number | undefined;
+    let sequence = 0;
+
+    async function run(query: string) {
+      if (clear) clear.hidden = query === "";
+      if (!query) {
+        setLessonSearchNote("");
+        showLessons(allLessons);
+        return;
+      }
+
+      // Each search carries a number; a slower earlier one that lands
+      // after a later one is dropped rather than overwriting it.
+      const mine = ++sequence;
+      setLessonSearchNote("Searching…");
+      try {
+        const res = await fetch(`/api/catechism/search?q=${encodeURIComponent(query)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (mine !== sequence) return;
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setLessonSearchNote(body.error ?? `Search failed (${res.status}).`);
+          return;
+        }
+        const results = (body.results ?? []) as LessonHit[];
+        showLessons(results);
+        if (results.length === 0) {
+          setLessonSearchNote(`Nothing found for "${query}".`);
+        } else if (body.loosened) {
+          setLessonSearchNote(
+            `No lesson matches all of "${query}". Showing the closest ${results.length === 1 ? "one" : results.length}:`,
+          );
+        } else {
+          const inside = results.filter((r) => r.where === "text" || r.where === "both").length;
+          setLessonSearchNote(
+            inside > 0
+              ? `${results.length} ${results.length === 1 ? "lesson" : "lessons"} — ${inside} matched inside the lesson.`
+              : `${results.length} ${results.length === 1 ? "lesson" : "lessons"}.`,
+          );
+        }
+      } catch (err) {
+        if (mine !== sequence) return;
+        setLessonSearchNote(
+          `Search failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+
+    input.addEventListener("input", () => {
+      // Every keystroke would be a request to the server; wait for a
+      // pause in the typing instead.
+      window.clearTimeout(timer);
+      const query = input.value.trim();
+      timer = window.setTimeout(() => void run(query), 250);
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        input.value = "";
+        void run("");
+      }
+    });
+    clear?.addEventListener("click", () => {
+      input.value = "";
+      input.focus();
+      void run("");
+    });
+  }
 </script>

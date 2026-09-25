@@ -70,10 +70,22 @@ import Layout from "../../layouts/Layout.astro";
           >
             Book
           </button>
+          <!-- The pages are drawn onto a canvas, so the browser's own
+               Ctrl+F finds nothing in them. This view is the text
+               itself: selectable, quotable, and searchable. -->
+          <button
+            id="mode-text"
+            type="button"
+            aria-pressed="false"
+            hidden
+            class="border border-brand-blue-dark border-l-0 bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-brand-blue-dark"
+          >
+            Text
+          </button>
         </div>
 
         <!-- Pager -->
-        <div class="ml-auto flex items-center gap-2">
+        <div id="pager" class="ml-auto flex items-center gap-2">
           <button
             id="pager-prev"
             type="button"
@@ -115,6 +127,27 @@ import Layout from "../../layouts/Layout.astro";
         role="alert"
         class="mx-auto max-w-md border border-liturgical-red bg-cream-card p-4 text-center text-sm text-liturgical-red"
       ></p>
+    </div>
+
+    <!-- ============== TEXT VIEW ============== -->
+    <div id="text-view" hidden class="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-12">
+      <!-- The find bar stays put while the text scrolls, so a long
+           lesson doesn't mean scrolling back up to search again. -->
+      <div class="sticky top-0 z-10 -mx-4 mb-6 border-b border-border-soft bg-cream-card px-4 py-3 md:-mx-6 md:px-6">
+        <div class="flex flex-wrap items-center gap-2">
+          <label for="text-find" class="sr-only">Find in this lesson</label>
+          <input
+            id="text-find"
+            type="search"
+            placeholder="Find in this lesson"
+            class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          />
+          <button type="button" id="find-prev" class="btn btn-secondary text-sm">Previous</button>
+          <button type="button" id="find-next" class="btn btn-secondary text-sm">Next</button>
+          <span id="find-count" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </div>
+      <div id="text-body" class="whitespace-pre-wrap text-base leading-relaxed text-text-primary"></div>
     </div>
   </section>
 
@@ -164,12 +197,13 @@ import Layout from "../../layouts/Layout.astro";
     const authorEl = document.getElementById("book-author") as HTMLParagraphElement;
     const noteEl = document.getElementById("lesson-note") as HTMLParagraphElement;
     const modeScrollBtn = document.getElementById("mode-scroll") as HTMLButtonElement;
+    const modeTextBtn = document.getElementById("mode-text") as HTMLButtonElement | null;
     const modeBookBtn = document.getElementById("mode-book") as HTMLButtonElement;
     const prevBtn = document.getElementById("pager-prev") as HTMLButtonElement;
     const nextBtn = document.getElementById("pager-next") as HTMLButtonElement;
     const statusEl = document.getElementById("pager-status") as HTMLSpanElement;
 
-    type Mode = "scroll" | "book";
+    type Mode = "scroll" | "book" | "text";
     let mode: Mode = "scroll";
     let pdf: PDFDocument | null = null;
     let currentPage = 1;
@@ -335,25 +369,48 @@ import Layout from "../../layouts/Layout.astro";
     prevBtn.addEventListener("click", goPrev);
     nextBtn.addEventListener("click", goNext);
 
+    /** One button lit, the rest not. Three modes now, so this is a loop. */
+    function paintModeButtons() {
+      const buttons: [HTMLButtonElement | null, Mode][] = [
+        [modeScrollBtn, "scroll"],
+        [modeBookBtn, "book"],
+        [modeTextBtn, "text"],
+      ];
+      for (const [btn, which] of buttons) {
+        if (!btn) continue;
+        const on = mode === which;
+        btn.setAttribute("aria-pressed", String(on));
+        btn.classList.toggle("bg-brand-blue-dark", on);
+        btn.classList.toggle("text-cream-card", on);
+        btn.classList.toggle("bg-cream-card", !on);
+        btn.classList.toggle("text-brand-blue-dark", !on);
+      }
+    }
+
     function setMode(next: Mode) {
       if (mode === next) return;
       mode = next;
-      const isScroll = mode === "scroll";
-      modeScrollBtn.setAttribute("aria-pressed", String(isScroll));
-      modeBookBtn.setAttribute("aria-pressed", String(!isScroll));
-      modeScrollBtn.classList.toggle("bg-brand-blue-dark", isScroll);
-      modeScrollBtn.classList.toggle("text-cream-card", isScroll);
-      modeScrollBtn.classList.toggle("bg-cream-card", !isScroll);
-      modeScrollBtn.classList.toggle("text-brand-blue-dark", !isScroll);
-      modeBookBtn.classList.toggle("bg-brand-blue-dark", !isScroll);
-      modeBookBtn.classList.toggle("text-cream-card", !isScroll);
-      modeBookBtn.classList.toggle("bg-cream-card", isScroll);
-      modeBookBtn.classList.toggle("text-brand-blue-dark", isScroll);
-      if (!isScroll && currentPage % 2 === 0) currentPage -= 1;
+      paintModeButtons();
+
+      const reading = mode === "text";
+      const viewerEl = document.getElementById("pdf-viewer");
+      const textEl = document.getElementById("text-view");
+      const pagerEl = document.getElementById("pager");
+      if (viewerEl) viewerEl.hidden = reading;
+      if (textEl) textEl.hidden = !reading;
+      // The pager turns pages, and the text view has none to turn.
+      if (pagerEl) pagerEl.hidden = reading;
+
+      if (reading) {
+        document.getElementById("text-find")?.focus();
+        return;
+      }
+      if (mode === "book" && currentPage % 2 === 0) currentPage -= 1;
       render();
     }
     modeScrollBtn.addEventListener("click", () => setMode("scroll"));
     modeBookBtn.addEventListener("click", () => setMode("book"));
+    modeTextBtn?.addEventListener("click", () => setMode("text"));
 
     document.addEventListener("keydown", (e) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
@@ -418,6 +475,11 @@ import Layout from "../../layouts/Layout.astro";
           .join(" · ");
         noteEl.textContent = lesson.description ?? "";
 
+        // Before the PDF, and never waited on: the text is the part that
+        // can be searched and quoted, and it shouldn't be lost because
+        // the PDF is slow, missing, or broken.
+        void loadLessonText(slug);
+
         const pdfRes = await fetch(`/api/catechism/pdf?key=${encodeURIComponent(lesson.pdf_storage_key)}`, {
           headers: { Accept: "application/json" },
           credentials: "same-origin",
@@ -439,5 +501,147 @@ import Layout from "../../layouts/Layout.astro";
         showError(`Could not load lesson: ${(e as Error).message || e}`);
       }
     })();
-  </script>
+  
+    // ============== THE TEXT OF THE LESSON ==============
+    // Pulled out of the PDF when the lesson was uploaded and stored on
+    // its row (migration 017). Fetched quietly alongside the pages: if
+    // there is none — a scan, or a lesson uploaded before this existed —
+    // the Text button simply never appears.
+
+    let lessonText = "";
+
+    function escapeForHtml(value: string): string {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    /**
+     * The text as readable HTML: page markers become visible dividers,
+     * so a passage can be cited to the page it is printed on rather
+     * than guessed at.
+     */
+    function textToHtml(text: string, highlight: string): string {
+      const escaped = escapeForHtml(text);
+      // Markers survive escaping untouched (U+241E is not & < or >).
+      let html = escaped.replace(
+        // ␞printedLabel|pdfPage␞, written between pages by extraction,
+        // with the newline that follows it.
+        /␞([^␞|]*)\|?([^␞]*)␞\n?/g,
+        (_m: string, label: string) =>
+          `<span class="mt-6 mb-2 block border-t border-border-soft pt-2 font-display text-xs uppercase tracking-widest text-text-secondary">Page ${label || "—"}</span>`,
+      );
+
+      if (highlight) {
+        // Matching allows for what extraction does to words: a line
+        // break can leave "near- ness", kerning can leave "near ness".
+        const loose = highlight
+          .trim()
+          .split(/\s+/)
+          .map((word) =>
+            word
+              .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+              .split("")
+              // Between any two letters: a hyphen from a line break, a
+              // stray space from kerning, or a soft hyphen.
+              .join("[-\\s­]*"),
+          )
+          .join("\\s+");
+        try {
+          html = html.replace(
+            new RegExp(`(${loose})`, "gi"),
+            '<mark class="find-hit bg-sacred-gold/40">$1</mark>',
+          );
+        } catch {
+          // An unusable pattern just means no highlighting.
+        }
+      }
+      return html;
+    }
+
+    function renderText(highlight = "") {
+      const body = document.getElementById("text-body");
+      if (!body) return;
+      body.innerHTML = textToHtml(lessonText, highlight);
+    }
+
+    let hits: HTMLElement[] = [];
+    let hitIndex = -1;
+
+    function showHit(index: number) {
+      if (hits.length === 0) return;
+      hitIndex = (index + hits.length) % hits.length;
+      hits.forEach((el, i) => {
+        el.classList.toggle("bg-sacred-gold", i === hitIndex);
+        el.classList.toggle("bg-sacred-gold/40", i !== hitIndex);
+      });
+      hits[hitIndex].scrollIntoView({ block: "center" });
+      const count = document.getElementById("find-count");
+      if (count) count.textContent = `${hitIndex + 1} of ${hits.length}`;
+    }
+
+    function runFind(query: string) {
+      const count = document.getElementById("find-count");
+      renderText(query);
+      hits = Array.from(document.querySelectorAll<HTMLElement>(".find-hit"));
+      hitIndex = -1;
+      if (!query) {
+        if (count) count.textContent = "";
+        return;
+      }
+      if (hits.length === 0) {
+        if (count) count.textContent = "Not found";
+        return;
+      }
+      showHit(0);
+    }
+
+    const findInput = document.getElementById("text-find") as HTMLInputElement | null;
+    let findTimer: number | undefined;
+    findInput?.addEventListener("input", () => {
+      window.clearTimeout(findTimer);
+      findTimer = window.setTimeout(() => runFind(findInput.value.trim()), 200);
+    });
+    findInput?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (hits.length > 0) showHit(hitIndex + (event.shiftKey ? -1 : 1));
+        else runFind(findInput.value.trim());
+      } else if (event.key === "Escape") {
+        findInput.value = "";
+        runFind("");
+      }
+    });
+    document.getElementById("find-next")?.addEventListener("click", () => showHit(hitIndex + 1));
+    document.getElementById("find-prev")?.addEventListener("click", () => showHit(hitIndex - 1));
+
+    // Ctrl+F would search the canvas pages, where there is nothing to
+    // find. Send it to the text instead, when there is text.
+    document.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f" && lessonText) {
+        event.preventDefault();
+        if (mode !== "text") setMode("text");
+        findInput?.focus();
+        findInput?.select();
+      }
+    });
+
+    async function loadLessonText(slug: string) {
+      try {
+        const res = await fetch(`/api/catechism/text?slug=${encodeURIComponent(slug)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (!res.ok) return; // 409 = a scan, or not read yet. No button.
+        const data = await res.json();
+        lessonText = String(data.text ?? "");
+        if (!lessonText) return;
+        renderText();
+        if (modeTextBtn) modeTextBtn.hidden = false;
+      } catch {
+        // No text view; the pages still work.
+      }
+    }
+</script>
 </Layout>

@@ -27,6 +27,7 @@ import { verifySession, withSessionCookies } from "../../../../src/lib/session.t
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { sendEmail } from "../../../../src/lib/email";
 import { createClient } from "@supabase/supabase-js";
+import { cleanForStorage } from "../../../../src/lib/library-text";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -43,6 +44,8 @@ interface Env {
 const DEFAULT_PARISH_ADDRESS = "parishoffice@stjohnrgv.org";
 
 const BUCKET = "library";
+// Extracted text is stored on the row; same cap as the library.
+const MAX_TEXT_CHARS = 3_000_000;
 const PREFIX = "catechism/";
 // Lessons are handouts, not scanned books — 25 MB is generous and
 // keeps a misdropped file from stalling the upload.
@@ -52,7 +55,7 @@ const PDF_MAX_BYTES = 25 * 1024 * 1024;
 const MAX_NOTIFY_RECIPIENTS = 500;
 
 const LESSON_FIELDS =
-  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, notified_at, created_at, updated_at";
+  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, notified_at, created_at, updated_at, text_chars, text_status, text_pages";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -297,6 +300,15 @@ export async function onRequestPost(
     const lessonDateRaw = String(formData.get("lesson_date") ?? "").trim();
     const lessonDate = /^\d{4}-\d{2}-\d{2}$/.test(lessonDateRaw) ? lessonDateRaw : null;
 
+    // Text pulled out of the PDF in the admin's browser and posted
+    // alongside it — see migration 017. The server never parses a PDF:
+    // a Function's CPU budget won't do it, and the browser already has
+    // PDF.js loaded on that page.
+    const textRaw = String(formData.get("text_content") ?? "");
+    const textContent = cleanForStorage(textRaw.slice(0, MAX_TEXT_CHARS)).trim();
+    const textStatus = String(formData.get("text_status") ?? "").trim() || null;
+    const textPages = Number(formData.get("text_pages") ?? 0) || 0;
+
     const slug = slugRaw ? slugify(slugRaw) : slugify(title);
 
     // Reject a duplicate slug before uploading so we never have to
@@ -346,6 +358,11 @@ export async function onRequestPost(
         description: description || null,
         pdf_storage_key: storageKey,
         published,
+        text_content: textContent || null,
+        text_chars: textContent.length,
+        text_status: textStatus || (textContent ? "ok" : "empty"),
+        text_pages: textPages,
+        text_extracted_at: textStatus ? new Date().toISOString() : null,
       })
       .select(LESSON_FIELDS)
       .single();

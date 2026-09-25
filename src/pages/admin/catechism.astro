@@ -12,6 +12,14 @@ import Layout from "../../layouts/Layout.astro";
   description="Upload catechism lessons to parishioner accounts."
 >
   <meta slot="head" name="robots" content="noindex,nofollow" />
+  <!-- Reading the lesson's text happens here in the browser: a
+       Cloudflare Function's CPU budget won't parse a PDF, and this page
+       needs PDF.js anyway. -->
+  <script
+    slot="head"
+    is:inline
+    src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+  ></script>
 
   <main class="mx-auto max-w-5xl px-4 py-8">
     <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
@@ -235,6 +243,14 @@ import Layout from "../../layouts/Layout.astro";
         <h2 id="manage-heading" class="font-display text-xl text-text-primary mb-4">
           Posted Lessons (<span id="lesson-count">0</span>)
         </h2>
+
+        <!-- Lessons uploaded before the text was being read have nothing
+             to search. This reads them now, in this browser, one at a
+             time — the same job the library's "Prepare text" does. -->
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+          <button type="button" id="backfill-btn" class="btn btn-secondary text-sm" hidden></button>
+          <span id="backfill-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
         <div class="overflow-x-auto border border-border-soft rounded">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -244,6 +260,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Date</th>
                 <th class="p-2">Status</th>
                 <th class="p-2">Emailed</th>
+                <th class="p-2">Searchable</th>
                 <th class="p-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -259,6 +276,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { extractText } from "../../lib/pdf-text";
+
   type Lesson = {
     id: string;
     slug: string;
@@ -272,6 +291,9 @@ import Layout from "../../layouts/Layout.astro";
     notified_at: string | null;
     created_at: string;
     updated_at: string;
+    text_chars: number | null;
+    text_status: string | null;
+    text_pages: number | null;
   };
 
   let lessons: Lesson[] = [];
@@ -341,6 +363,7 @@ import Layout from "../../layouts/Layout.astro";
     if (lessons.length === 0) {
       tbody.innerHTML = "";
       empty.classList.remove("hidden");
+      refreshBackfillButton();
       return;
     }
     empty.classList.add("hidden");
@@ -361,6 +384,7 @@ import Layout from "../../layouts/Layout.astro";
             </select>
           </td>
           <td class="p-2 text-xs text-text-secondary">${l.notified_at ? "Yes" : "—"}</td>
+          <td class="p-2 text-xs text-text-secondary">${searchableCell(l)}</td>
           <td class="p-2 text-right whitespace-nowrap">
             <button type="button" class="btn btn-secondary mr-2 edit-btn" data-id="${escapeHtml(l.id)}">Edit</button>
             <button type="button" class="btn btn-secondary delete-btn" data-id="${escapeHtml(l.id)}" data-title="${escapeHtml(l.title)}">Delete</button>
@@ -368,6 +392,8 @@ import Layout from "../../layouts/Layout.astro";
         </tr>`,
       )
       .join("");
+
+    refreshBackfillButton();
   }
 
   // ====================== UPLOAD ======================
@@ -378,6 +404,31 @@ import Layout from "../../layouts/Layout.astro";
     const formData = new FormData(form);
 
     btn.disabled = true;
+
+    // Read the lesson's words out of the PDF and send them along, so the
+    // lesson can be searched and quoted with a page number. A scan has
+    // none to give; that is recorded rather than treated as a failure,
+    // and the upload carries on either way — a lesson nobody can search
+    // still beats no lesson.
+    const pdfInput = document.getElementById("pdf") as HTMLInputElement;
+    const file = pdfInput?.files?.[0];
+    if (file) {
+      try {
+        setUploadStatus("Reading the lesson…");
+        const extraction = await extractText(
+          { data: await file.arrayBuffer() },
+          (page, total) => setUploadStatus(`Reading the lesson… page ${page} of ${total}`),
+        );
+        formData.set("text_content", extraction.text);
+        formData.set("text_status", extraction.status);
+        formData.set("text_pages", String(extraction.pages));
+      } catch {
+        formData.set("text_content", "");
+        formData.set("text_status", "error");
+        formData.set("text_pages", "0");
+      }
+    }
+
     setUploadStatus("Uploading…");
 
     try {
@@ -579,4 +630,107 @@ import Layout from "../../layouts/Layout.astro";
     document.getElementById("app")?.classList.remove("hidden");
   }
   init();
+
+  // ====================== TEXT FOR SEARCHING ======================
+  // A lesson's words are read out of its PDF so the lesson can be
+  // searched and quoted with a page number. New uploads are read as they
+  // go up; this catches the ones uploaded before that existed.
+
+  function searchableCell(l: Lesson): string {
+    if (l.text_status === "ok") {
+      return l.text_pages
+        ? `Yes · ${l.text_pages} ${l.text_pages === 1 ? "page" : "pages"}`
+        : "Yes";
+    }
+    if (l.text_status === "empty") return "Scan — no text";
+    if (l.text_status === "error") return "Couldn't read";
+    return "Not read yet";
+  }
+
+  /**
+   * Lessons still worth reading: never attempted, or read before page
+   * markers existed. Scans and failures are left alone — they have no
+   * text to give and re-reading them only wastes the time again.
+   */
+  function lessonsNeedingText(): Lesson[] {
+    return lessons.filter(
+      (l) => !l.text_status || (l.text_status === "ok" && !Number(l.text_pages ?? 0)),
+    );
+  }
+
+  function setBackfillStatus(message: string, bad = false) {
+    const el = document.getElementById("backfill-status");
+    if (!el) return;
+    el.textContent = message;
+    el.className = bad ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
+  }
+
+  function refreshBackfillButton() {
+    const btn = document.getElementById("backfill-btn") as HTMLButtonElement | null;
+    if (!btn) return;
+    const queue = lessonsNeedingText();
+    btn.hidden = queue.length === 0;
+    btn.textContent = `Make ${queue.length} ${queue.length === 1 ? "lesson" : "lessons"} searchable`;
+  }
+
+  document.getElementById("backfill-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("backfill-btn") as HTMLButtonElement;
+    const queue = lessonsNeedingText();
+    if (queue.length === 0) return;
+    if (
+      !window.confirm(
+        `Read the text out of ${queue.length} ${queue.length === 1 ? "lesson" : "lessons"}? Keep this tab open while it runs.`,
+      )
+    ) {
+      return;
+    }
+
+    btn.disabled = true;
+    let withText = 0;
+    let scans = 0;
+    let failed = 0;
+
+    for (let i = 0; i < queue.length; i++) {
+      const lesson = queue[i];
+      setBackfillStatus(`Reading "${lesson.title}" (${i + 1} of ${queue.length})…`);
+      try {
+        const signed = await fetch(
+          `/api/catechism/pdf?key=${encodeURIComponent(lesson.pdf_storage_key)}`,
+          { credentials: "same-origin", headers: { Accept: "application/json" } },
+        );
+        if (!signed.ok) throw new Error(`could not open the PDF (${signed.status})`);
+        const { url } = await signed.json();
+
+        const result = await extractText({ url });
+        if (result.status === "ok") withText++;
+        else if (result.status === "empty") scans++;
+        else failed++;
+
+        const res = await fetch(`/api/admin/catechism/${encodeURIComponent(lesson.id)}`, {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text_content: result.text,
+            text_status: result.status,
+            text_pages: result.pages,
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? `save failed (${res.status})`);
+        }
+      } catch (err) {
+        failed++;
+        console.error(`Backfill failed for ${lesson.title}:`, err);
+      }
+    }
+
+    setBackfillStatus(
+      `Done: ${withText} searchable, ${scans} ${scans === 1 ? "scan" : "scans"} (nothing to read), ${failed} failed.`,
+      failed > 0,
+    );
+    btn.disabled = false;
+    await loadLessons();
+  });
 </script>

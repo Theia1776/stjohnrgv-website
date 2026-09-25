@@ -358,6 +358,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { extractText, getPdfjs } from "../../lib/pdf-text";
+
   type Book = {
     id: string;
     slug: string;
@@ -577,75 +579,10 @@ import Layout from "../../layouts/Layout.astro";
   document.documentElement.dataset.instantScroll = "true";
 
   // ====================== TEXT EXTRACTION ======================
-  // PDF.js gives us the text layer of a PDF. Books that were typeset
-  // digitally hand it over cleanly; books that are photographs of pages
-  // have none to give, and come back empty — that's a scan, not a
-  // failure, and it's recorded as such so the backfill doesn't keep
-  // retrying them.
-  const pdfjsLib = (window as unknown as { pdfjsLib: any }).pdfjsLib;
-  if (pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-  }
-
-  // Beyond this we keep the beginning rather than refusing the book.
-  // Matches the cap on the server.
-  const MAX_TEXT_CHARS = 3_000_000;
-
-  type Extraction = { text: string; status: "ok" | "empty" | "error"; pages: number };
-
-  async function extractText(
-    source: { data: ArrayBuffer } | { url: string },
-    onProgress?: (page: number, total: number) => void,
-  ): Promise<Extraction> {
-    if (!pdfjsLib) return { text: "", status: "error", pages: 0 };
-    try {
-      const pdf = await pdfjsLib.getDocument(source).promise;
-
-      // Many PDFs carry real page labels — i, ii, iii through the front
-      // matter, then 1, 2, 3 — and those are what's printed on the paper,
-      // which is what a citation needs. Where a book has none, its
-      // position in the file is the honest fallback.
-      let labels: string[] | null = null;
-      try {
-        labels = await pdf.getPageLabels();
-      } catch {
-        labels = null;
-      }
-
-      const parts: string[] = [];
-      let chars = 0;
-      let pagesWithText = 0;
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        // One page per line keeps some sense of where you are; PDF.js
-        // hands back positioned fragments, so they're joined with spaces.
-        const pageText = content.items.map((it: any) => it.str).join(" ").replace(/\s+/g, " ").trim();
-        if (pageText) {
-          const label = labels && labels[i - 1] ? String(labels[i - 1]) : String(i);
-          // The marker carries what to show and where to go: the printed
-          // label, then the page's position in the file. U+241E is a
-          // character no book contains, so it can never be mistaken for
-          // the text itself. The reader strips these out on load.
-          parts.push(`␞${label}|${i}␞\n${pageText}`);
-          chars += pageText.length;
-          pagesWithText++;
-        }
-        onProgress?.(i, pdf.numPages);
-        if (chars > MAX_TEXT_CHARS) break;
-      }
-      // A blank line between pages, so the text view has some sense of
-      // where one page ended and the next began.
-      const text = parts.join("\n\n").slice(0, MAX_TEXT_CHARS);
-      // pages counts the pages the text actually carries markers for —
-      // that's what tells the backfill this book has page numbers.
-      return { text, status: text ? "ok" : "empty", pages: text ? pagesWithText : 0 };
-    } catch (err) {
-      console.error("Text extraction failed:", err);
-      return { text: "", status: "error", pages: 0 };
-    }
-  }
+  // Extraction lives in src/lib/pdf-text.ts, shared with the catechism
+  // uploader so the text, the page markers and what counts as a scan
+  // can never drift apart between the two.
+  const pdfjsLib = getPdfjs();
 
   // ====================== READING THE BOOK'S OWN DETAILS ======================
   // Choosing a category for a book you haven't read is a guess, and the

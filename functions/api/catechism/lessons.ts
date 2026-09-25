@@ -23,7 +23,7 @@ interface Env {
 }
 
 const LESSON_FIELDS =
-  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, created_at";
+  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, created_at, text_chars, text_status, text_pages";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

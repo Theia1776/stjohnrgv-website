@@ -12,6 +12,7 @@
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
+import { cleanForStorage } from "../../../../src/lib/library-text";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -19,8 +20,11 @@ interface Env {
 
 const BUCKET = "library";
 
+// Same cap as the library and the upload path.
+const MAX_TEXT_CHARS = 3_000_000;
+
 const LESSON_FIELDS =
-  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, notified_at, created_at, updated_at";
+  "id, slug, title, teacher, series, lesson_date, description, pdf_storage_key, published, notified_at, created_at, updated_at, text_chars, text_status, text_pages";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -120,6 +124,27 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     }
     if (typeof body.published === "boolean") {
       updates.published = body.published;
+    }
+    // Backfill of extracted text, sent by the admin page after reading
+    // a lesson uploaded before migration 017. text_status records a
+    // scan ('empty') or a failure ('error') as plainly as a success, so
+    // the backfill never re-reads the same lesson forever.
+    if (typeof body.text_content === "string" || typeof body.text_status === "string") {
+      const text =
+        typeof body.text_content === "string"
+          ? cleanForStorage(body.text_content.slice(0, MAX_TEXT_CHARS)).trim()
+          : "";
+      const status =
+        typeof body.text_status === "string" && body.text_status
+          ? body.text_status
+          : text
+            ? "ok"
+            : "empty";
+      updates.text_content = text || null;
+      updates.text_chars = text.length;
+      updates.text_status = status;
+      updates.text_pages = typeof body.text_pages === "number" ? body.text_pages : 0;
+      updates.text_extracted_at = new Date().toISOString();
     }
 
     if (Object.keys(updates).length === 0) {
