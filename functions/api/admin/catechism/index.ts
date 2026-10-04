@@ -29,8 +29,17 @@ import { sendEmail } from "../../../../src/lib/email";
 import { createClient } from "@supabase/supabase-js";
 import { cleanForStorage } from "../../../../src/lib/library-text";
 
+/** Just enough of the R2 binding to store and remove a lesson. */
+interface R2Bucket {
+  head(key: string): Promise<{ size: number } | null>;
+  put(key: string, value: ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** Where the library — lessons included — actually lives. */
+  LIBRARY_BUCKET?: R2Bucket;
   RESEND_API_KEY?: string;
   RESET_EMAIL_FROM?: string;
   /** Optional override; falls back to RESET_EMAIL_FROM, the address
@@ -327,10 +336,20 @@ export async function onRequestPost(
     // name is already taken.
     const originalName = pdfFile.name || `${slug}.pdf`;
     let storageKey = `${PREFIX}${originalName}`;
-    const { data: existingFiles } = await supabase.storage
-      .from(BUCKET)
-      .list(PREFIX.replace(/\/$/, ""), { limit: 1000, search: originalName });
-    if (existingFiles?.some((f) => f.name === originalName)) {
+    // Asked of wherever the lessons actually live. Checking Supabase
+    // while writing to R2 would miss a collision and overwrite an
+    // existing lesson's PDF — two lessons, one file, the older one gone.
+    const bucketForCheck = context.env.LIBRARY_BUCKET;
+    const nameTaken = bucketForCheck
+      ? Boolean(await bucketForCheck.head(storageKey))
+      : Boolean(
+          (
+            await supabase.storage
+              .from(BUCKET)
+              .list(PREFIX.replace(/\/$/, ""), { limit: 1000, search: originalName })
+          ).data?.some((f) => f.name === originalName),
+        );
+    if (nameTaken) {
       const suffix = crypto.randomUUID().slice(0, 8);
       const dot = originalName.lastIndexOf(".");
       const renamed = dot > 0
@@ -340,11 +359,34 @@ export async function onRequestPost(
     }
 
     const buffer = await pdfFile.arrayBuffer();
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(storageKey, buffer, { contentType: "application/pdf", upsert: false });
-    if (uploadError) {
-      return wrap(jsonResponse({ error: `PDF upload failed: ${uploadError.message}` }, 500));
+
+    // Lessons go to R2, where the rest of the library lives and where
+    // /api/library/file reads from. Uploading to Supabase instead left
+    // a lesson that could be read (that endpoint falls back) but not
+    // downloaded, which is a strange half-broken state to ship.
+    // Supabase is still the path when R2 isn't bound, which is what
+    // keeps a preview environment working.
+    const bucket = context.env.LIBRARY_BUCKET;
+    if (bucket) {
+      try {
+        await bucket.put(storageKey, buffer, {
+          httpMetadata: { contentType: "application/pdf" },
+        });
+      } catch (err) {
+        return wrap(
+          jsonResponse(
+            { error: `Upload to Cloudflare storage failed: ${err instanceof Error ? err.message : String(err)}` },
+            500,
+          ),
+        );
+      }
+    } else {
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(storageKey, buffer, { contentType: "application/pdf", upsert: false });
+      if (uploadError) {
+        return wrap(jsonResponse({ error: `PDF upload failed: ${uploadError.message}` }, 500));
+      }
     }
 
     const { data: inserted, error: insertError } = await supabase
@@ -369,7 +411,8 @@ export async function onRequestPost(
 
     if (insertError) {
       // Roll back the blob so a failed insert doesn't leave a stray PDF.
-      await supabase.storage.from(BUCKET).remove([storageKey]);
+      if (bucket) await bucket.delete(storageKey).catch(() => {});
+      else await supabase.storage.from(BUCKET).remove([storageKey]);
       return wrap(jsonResponse({ error: `Could not save lesson: ${insertError.message}` }, 500));
     }
 
