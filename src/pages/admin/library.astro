@@ -1801,24 +1801,44 @@ import Layout from "../../layouts/Layout.astro";
 
     const btn = document.getElementById("dupes-remove") as HTMLButtonElement;
     btn.disabled = true;
-    setDupesStatus("Removing…");
+
+    // A few at a time. Each removal is several calls to the database and
+    // to storage, and one request asked to do seventy of them runs out
+    // of room part way — which is how a first attempt removed 48 and
+    // reported the remaining 20 as "skipped". The work is the same;
+    // this just doesn't ask for it all in one breath.
+    const BATCH = 10;
+    let removed = 0;
+    let freedBytes = 0;
+    let textCarriedOver = 0;
+    const skipped: { key: string; why: string }[] = [];
+    const queue = [...duplicateKeys];
+
     try {
-      const res = await fetch("/api/admin/library/duplicates", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keys: duplicateKeys }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setDupesStatus(body.error ?? `Couldn't remove (${res.status}).`, true);
-        return;
+      for (let i = 0; i < queue.length; i += BATCH) {
+        const slice = queue.slice(i, i + BATCH);
+        setDupesStatus(`Removing… ${Math.min(i + slice.length, queue.length)} of ${queue.length}`);
+        const res = await fetch("/api/admin/library/duplicates", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keys: slice }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setDupesStatus(body.error ?? `Couldn't remove (${res.status}).`, true);
+          return;
+        }
+        removed += body.removed ?? 0;
+        freedBytes += body.freedBytes ?? 0;
+        textCarriedOver += body.textCarriedOver ?? 0;
+        skipped.push(...((body.skipped ?? []) as { key: string; why: string }[]));
       }
-      const skipped = (body.skipped ?? []) as { key: string; why: string }[];
+
       setDupesStatus(
-        `Removed ${body.removed}, freeing ${(body.freedBytes / 1048576).toFixed(0)} MB.` +
-          (body.textCarriedOver ? ` Text carried over for ${body.textCarriedOver}.` : "") +
-          (skipped.length ? ` ${skipped.length} skipped — see the console.` : ""),
+        `Removed ${removed}, freeing ${(freedBytes / 1048576).toFixed(0)} MB.` +
+          (textCarriedOver ? ` Text carried over for ${textCarriedOver}.` : "") +
+          (skipped.length ? ` ${skipped.length} couldn't be removed — press Find again to see them.` : ""),
         skipped.length > 0,
       );
       if (skipped.length) console.warn("Duplicate removal skipped:", skipped);
