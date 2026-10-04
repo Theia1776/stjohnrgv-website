@@ -78,6 +78,9 @@ function parseRange(header: string | null, size: number): { offset: number; leng
  * real one in `filename*`, which modern browsers prefer. Without the
  * first, a title that is entirely non-Latin saves as a blank name.
  */
+/** Where anything not yet moved to R2 still lives. */
+const SUPABASE_BUCKET = "library";
+
 function contentDisposition(title: string, key: string): string {
   const fallbackName = key.split("/").pop() || "document.pdf";
   const base = (title.trim() || fallbackName.replace(/\.pdf$/i, "")).slice(0, 120);
@@ -210,7 +213,22 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   // ---- Serve it ----
   const head = await bucket.get(key);
-  if (!head) return wrap(jsonResponse({ error: "File not found in storage." }, 404));
+  if (!head) {
+    // Not in R2. The catechism lessons uploaded before lessons were
+    // switched over still live in Supabase storage, and a file that
+    // plainly exists should not answer 404 because of where it is kept.
+    // Supabase signs a URL that carries the filename itself, so a
+    // download stays a download through the redirect.
+    const niceName = contentDisposition(fileTitle, key)
+      .replace(/^.*filename\*=UTF-8''/, "");
+    const { data: signed } = await admin.storage
+      .from(SUPABASE_BUCKET)
+      .createSignedUrl(key, 120, wantsDownload ? { download: decodeURIComponent(niceName) } : undefined);
+    if (signed?.signedUrl) {
+      return wrap(Response.redirect(signed.signedUrl, 302));
+    }
+    return wrap(jsonResponse({ error: "File not found in storage." }, 404));
+  }
 
   const range = parseRange(context.request.headers.get("Range"), head.size);
   const object = range ? await bucket.get(key, { range }) : head;
