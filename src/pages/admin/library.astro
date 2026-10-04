@@ -560,10 +560,12 @@ import Layout from "../../layouts/Layout.astro";
               data-id="${escapeHtml(b.id)}"
               data-slug="${escapeHtml(b.slug)}"
               data-title="${escapeHtml(b.title)}"
+              data-key="${escapeHtml(b.pdf_storage_key)}"
               aria-label="Actions for ${escapeHtml(b.title)}"
             >
               <option value="">Actions…</option>
               <option value="edit">Edit details</option>
+              <option value="pdf">Download PDF</option>
               ${b.text_status === "ok" ? `<option value="text">Download .txt</option>` : ""}
               <option value="delete">Delete book</option>
             </select>
@@ -1504,6 +1506,23 @@ import Layout from "../../layouts/Layout.astro";
     if (action === "edit") {
       const book = books.find((b) => b.id === id);
       if (book) openEditModal(book);
+      return;
+    }
+
+    if (action === "pdf") {
+      // Straight to the file endpoint, which checks the download rule
+      // itself — admins only for library books.
+      const key = select.dataset.key ?? "";
+      if (!key) {
+        showError("That book has no file in storage.");
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = `/api/library/file?key=${encodeURIComponent(key)}&download=1`;
+      link.download = "";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       return;
     }
 
