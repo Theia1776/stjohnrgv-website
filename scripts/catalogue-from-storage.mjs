@@ -119,12 +119,80 @@ function looksLikePerson(text) {
   return words.length >= 2 && words.length <= 4 && words.every((w) => /^[A-ZÀ-Þ][\w'’.-]*$/.test(w));
 }
 
+/**
+ * A filename that is really a slug — "iberian-fathers-volume-1-martin-
+ * of-braga" — back into something readable. Small words stay lowercase
+ * unless they begin the title.
+ */
+const SMALL_WORDS = new Set([
+  "a", "an", "and", "as", "at", "by", "for", "from", "in", "of", "on", "or",
+  "the", "to", "with", "vs",
+]);
+
+function deslug(text) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(text)) return text;
+  return text
+    .split("-")
+    .map((word, i) =>
+      i > 0 && SMALL_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join(" ");
+}
+
+/**
+ * The Orthodox Word was scanned issue by issue, and the filenames are
+ * the scanner's: a sequence number, a volume/number code, the year, the
+ * months, and ENH/SRCH for the enhanced and searchable passes. Ninety
+ * or so books in this library are these, and left raw they sort into an
+ * unreadable block at the top of any list.
+ *
+ *   "031 V06N03 1970 May Jun.ENH.SRCH"
+ *     → "The Orthodox Word, Vol. 6 No. 3 — May Jun 1970"
+ */
+function orthodoxWordIssue(base) {
+  // The scanner was not consistent: a double issue can be "V06N04 05",
+  // a zero was sometimes typed as the letter O ("V07NO5"), and the V and
+  // N are sometimes separated. All of it means the same thing.
+  const m = /^(?:\d{3}\s+)+V\s*(\d+)\s*N[O0]?\s*([\dNO\s]+?)\s+(\d{4})\s+(.+)$/i.exec(base);
+  if (!m) return null;
+  const [, volumeRaw, numberRaw, year, rest] = m;
+  const volume = String(Number(volumeRaw));
+  const digits = numberRaw.replace(/\D/g, "");
+  // Four digits is a double issue — 0506 is numbers 5 and 6.
+  const number =
+    digits.length === 4
+      ? `${Number(digits.slice(0, 2))}–${Number(digits.slice(2))}`
+      : String(Number(digits));
+  const months = rest
+    .replace(/\.ENH|\.SRCH|\bENH\b|\bSRCH\b/gi, "")
+    .replace(/\bnew\b/gi, "")
+    .replace(/[._]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return {
+    title: `The Orthodox Word, Vol. ${volume} No. ${number}${months ? ` — ${months} ${year}` : ` (${year})`}`,
+    author: "",
+  };
+}
+
 function fromFilename(filename) {
-  const base = filename
+  let base = filename
     .replace(/\.pdf$/i, "")
     .replace(/_+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+  const issue = orthodoxWordIssue(base);
+  if (issue) return issue;
+
+  // Scanner leftovers carry no meaning for a catalogue.
+  base = base
+    .replace(/\.ENH\.SRCH|\.ENH|\.SRCH/gi, "")
+    .replace(/\s+new$/i, "")
+    .trim();
+
+  const unslugged = deslug(base);
+  if (unslugged !== base) return { title: unslugged, author: "" };
 
   const spaced = base.split(/\s+[-–—]\s+/);
   if (spaced.length >= 2) {
@@ -185,6 +253,35 @@ for (const b of books) {
   }
   md.push(`- **${b.title}**${b.author ? ` — ${b.author}` : ""}`);
 }
+// --- Likely duplicates ---
+// The same book arrived from the old library and from MEGA under
+// different filenames, so some are held twice. Worth knowing for a
+// records list, and worth tidying in the catalogue one day.
+const byNormalised = new Map();
+for (const b of books) {
+  const normal = b.title
+    .toLowerCase()
+    .replace(/\bvol(ume)?\.?\s*/g, "v")
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+  if (!byNormalised.has(normal)) byNormalised.set(normal, []);
+  byNormalised.get(normal).push(b);
+}
+const duplicates = [...byNormalised.values()].filter((group) => group.length > 1);
+
+if (duplicates.length > 0) {
+  md.push("", "---", "", `## Possible duplicates (${duplicates.length})`, "");
+  md.push(
+    "The same book held twice under different filenames — most arrived once",
+    "from the old library and once from the MEGA archive.",
+    "",
+  );
+  for (const group of duplicates) {
+    md.push(`- **${group[0].title}**`);
+    for (const b of group) md.push(`  - \`${b.key}\` (${b.mb.toFixed(1)} MB)`);
+  }
+}
+
 md.push("");
 fs.writeFileSync(path.join(outDir, "parish-library-catalogue.md"), md.join("\n"), "utf8");
 
@@ -209,4 +306,5 @@ const txt = [
 fs.writeFileSync(path.join(outDir, "parish-library-catalogue.txt"), txt, "utf8");
 
 console.log(`${books.length} books, ${totalGb.toFixed(2)} GB (plus ${lessons.length} catechism lessons, not listed).`);
+console.log(`${duplicates.length} title(s) appear to be held more than once.`);
 console.log(`Wrote parish-library-catalogue.{md,csv,txt} to ${outDir}`);

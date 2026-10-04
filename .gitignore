@@ -171,3 +171,6 @@ vite.config.ts.timestamp-*
 
 # Bulk-upload credentials (never committed)
 scripts/r2-credentials.json
+
+# Catalogue exports — generated on demand, not part of the site.
+parish-library-catalogue.*
