@@ -279,10 +279,29 @@ import Layout from "../../layouts/Layout.astro";
               <button type="button" id="r2-btn" class="btn btn-secondary text-sm">
                 Copy books to Cloudflare
               </button>
+              <!-- Some books arrived once from the old library and once
+                   from MEGA. Identical files, two catalogue entries. -->
+              <button type="button" id="dupes-btn" class="btn btn-secondary text-sm">
+                Find duplicate copies
+              </button>
             </div>
             <p id="register-status" class="mt-3 text-sm text-text-secondary" hidden></p>
             <p id="backfill-status" class="mt-3 text-sm text-text-secondary" hidden></p>
             <p id="r2-status" class="mt-3 text-sm text-text-secondary" hidden></p>
+            <p id="dupes-status" class="mt-3 text-sm text-text-secondary" hidden></p>
+            <div id="dupes-panel" hidden class="mt-3 border border-border-soft bg-cream-bg p-3">
+              <div class="mb-3 flex flex-wrap items-center gap-3">
+                <button type="button" id="dupes-remove" class="btn btn-primary text-sm">
+                  Remove the duplicate copies
+                </button>
+                <span class="text-xs text-text-secondary">
+                  Only files with identical contents are listed. The copy with the
+                  better title is kept, and its text is filled in from the other if
+                  it hasn't any.
+                </span>
+              </div>
+              <div id="dupes-list" class="max-h-80 overflow-y-auto text-xs"></div>
+            </div>
           </div>
         </details>
 
@@ -1693,4 +1712,123 @@ import Layout from "../../layouts/Layout.astro";
     document.getElementById("app")?.classList.remove("hidden");
   }
   init();
+
+  // ====================== DUPLICATE COPIES ======================
+  // Books held twice — once from the parish's old library, once from
+  // the MEGA archive, under different filenames. Grouped by identical
+  // contents, never by similar titles: the same work can be two
+  // different scans, and two different works can share a short title.
+
+  let duplicateKeys: string[] = [];
+
+  function setDupesStatus(message: string, bad = false) {
+    const el = document.getElementById("dupes-status");
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = message === "";
+    el.className = bad ? "mt-3 text-sm text-liturgical-red" : "mt-3 text-sm text-text-secondary";
+  }
+
+  document.getElementById("dupes-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("dupes-btn") as HTMLButtonElement;
+    const panel = document.getElementById("dupes-panel") as HTMLDivElement;
+    const list = document.getElementById("dupes-list") as HTMLDivElement;
+    btn.disabled = true;
+    setDupesStatus("Comparing every file in storage…");
+    try {
+      const res = await fetch("/api/admin/library/duplicates", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDupesStatus(body.error ?? `Couldn't check (${res.status}).`, true);
+        return;
+      }
+
+      const groups = (body.groups ?? []) as {
+        size: number;
+        keep: { title: string; key: string };
+        remove: { key: string; title: string | null }[];
+      }[];
+      duplicateKeys = groups.flatMap((g) => g.remove.map((r) => r.key));
+
+      if (groups.length === 0) {
+        panel.hidden = true;
+        setDupesStatus("No duplicate copies — every file in storage is unique.");
+        return;
+      }
+
+      list.innerHTML = groups
+        .map(
+          (g) => `<div class="border-b border-border-soft py-2">
+            <div><span class="text-text-secondary">keep</span> <strong>${escapeHtml(g.keep.title)}</strong></div>
+            ${g.remove
+              .map(
+                (r) =>
+                  `<div class="text-liturgical-red">remove ${escapeHtml(r.title ?? r.key)} <span class="text-text-secondary">(${(g.size / 1048576).toFixed(1)} MB)</span></div>`,
+              )
+              .join("")}
+          </div>`,
+        )
+        .join("");
+      panel.hidden = false;
+      setDupesStatus(
+        `${body.copies} duplicate ${body.copies === 1 ? "copy" : "copies"} across ` +
+          `${groups.length} ${groups.length === 1 ? "book" : "books"} — ` +
+          `${(body.freedBytes / 1048576).toFixed(0)} MB would be freed.`,
+      );
+    } catch (err) {
+      setDupesStatus(`Couldn't check: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("dupes-remove")?.addEventListener("click", async () => {
+    if (duplicateKeys.length === 0) return;
+    if (
+      !window.confirm(
+        `Remove ${duplicateKeys.length} duplicate ${duplicateKeys.length === 1 ? "copy" : "copies"}?
+
+` +
+          `Each one is byte-for-byte identical to a copy that stays. The file and its ` +
+          `catalogue entry both go, and this can't be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    const btn = document.getElementById("dupes-remove") as HTMLButtonElement;
+    btn.disabled = true;
+    setDupesStatus("Removing…");
+    try {
+      const res = await fetch("/api/admin/library/duplicates", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys: duplicateKeys }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDupesStatus(body.error ?? `Couldn't remove (${res.status}).`, true);
+        return;
+      }
+      const skipped = (body.skipped ?? []) as { key: string; why: string }[];
+      setDupesStatus(
+        `Removed ${body.removed}, freeing ${(body.freedBytes / 1048576).toFixed(0)} MB.` +
+          (body.textCarriedOver ? ` Text carried over for ${body.textCarriedOver}.` : "") +
+          (skipped.length ? ` ${skipped.length} skipped — see the console.` : ""),
+        skipped.length > 0,
+      );
+      if (skipped.length) console.warn("Duplicate removal skipped:", skipped);
+      (document.getElementById("dupes-panel") as HTMLDivElement).hidden = true;
+      duplicateKeys = [];
+      await loadBooks();
+    } catch (err) {
+      setDupesStatus(`Couldn't remove: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 </script>
