@@ -113,6 +113,21 @@ import Layout from "../../../layouts/Layout.astro";
           ↑ Top
         </button>
 
+        <!-- Admins only, and hidden otherwise. Most of this library is
+             still in copyright and held for preservation, so a copy
+             leaving the site is a decision, not a convenience. The rule
+             is enforced in /api/library/file; this button only reflects
+             it. -->
+        <a
+          id="download-book"
+          hidden
+          download
+          href="#"
+          class="border border-border-soft bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-text-primary no-underline hover:text-brand-blue-dark"
+        >
+          ↓ Download
+        </a>
+
         <!-- Why the Text button is greyed out, said plainly rather than
              left to a hover tooltip nobody finds. -->
         <span id="no-text-note" hidden class="text-xs italic text-text-secondary">
@@ -1073,7 +1088,10 @@ import Layout from "../../../layouts/Layout.astro";
           showError(detail.error || `Could not load this book (${bookRes.status}).`);
           return;
         }
-        const { book } = (await bookRes.json()) as { book: Book };
+        const { book, viewer_is_admin: viewerIsAdmin } = (await bookRes.json()) as {
+          book: Book;
+          viewer_is_admin?: boolean;
+        };
         if (!book) {
           titleEl.textContent = "Book not found";
           showError(`No book with slug "${slug}".`);
@@ -1098,6 +1116,15 @@ import Layout from "../../../layouts/Layout.astro";
         // stare at nothing. The pages still load underneath, so
         // switching back to them is instant.
         if (wantsText) setMode("text");
+
+        // Only an admin is offered the file itself.
+        if (viewerIsAdmin) {
+          const downloadLink = document.getElementById("download-book") as HTMLAnchorElement | null;
+          if (downloadLink) {
+            downloadLink.href = `/api/library/file?key=${encodeURIComponent(book.pdf_storage_key)}&download=1`;
+            downloadLink.hidden = false;
+          }
+        }
 
         const pdfRes = await fetch(`/api/library/pdf?key=${encodeURIComponent(book.pdf_storage_key)}`, {
           headers: { Accept: "application/json" },

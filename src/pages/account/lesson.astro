@@ -126,6 +126,19 @@ import Layout from "../../layouts/Layout.astro";
           </button>
         </div>
 
+        <!-- Lessons are the parish's own teaching, meant to be handed
+             out, so any member may keep a copy. (Library books are not:
+             those download for admins only.) -->
+        <a
+          id="download-lesson"
+          hidden
+          download
+          href="#"
+          class="border border-border-soft bg-cream-card px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-widest text-text-primary no-underline hover:text-brand-blue-dark"
+        >
+          ↓ Download
+        </a>
+
         <!-- Pager -->
         <div id="pager" class="ml-auto flex items-center gap-2">
           <button
@@ -521,6 +534,14 @@ import Layout from "../../layouts/Layout.astro";
         // can be searched and quoted, and it shouldn't be lost because
         // the PDF is slow, missing, or broken.
         void loadLessonText(slug);
+
+        // Every signed-in member may keep a copy of a lesson.
+        const downloadLink = document.getElementById("download-lesson") as HTMLAnchorElement | null;
+        if (downloadLink) {
+          downloadLink.href =
+            `/api/library/file?key=${encodeURIComponent(lesson.pdf_storage_key)}&download=1`;
+          downloadLink.hidden = false;
+        }
 
         const pdfRes = await fetch(`/api/catechism/pdf?key=${encodeURIComponent(lesson.pdf_storage_key)}`, {
           headers: { Accept: "application/json" },

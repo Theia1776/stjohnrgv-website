@@ -63,17 +63,19 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   if (error) return wrap(jsonResponse({ error: error.message }, 500));
   if (!book) return wrap(jsonResponse({ error: "Book not found." }, 404));
 
+  let viewerIsAdmin = false;
   if (!session.user) {
     if (!book.public_access || book.hidden) {
       return wrap(jsonResponse({ error: "This text is for parishioners only. Please sign in." }, 403));
     }
-  } else if (book.hidden) {
+  } else {
     const { data: viewer } = await admin
       .from("profiles")
       .select("role")
       .eq("id", session.user.id)
       .single();
-    if (viewer?.role !== "admin") {
+    viewerIsAdmin = viewer?.role === "admin";
+    if (book.hidden && !viewerIsAdmin) {
       return wrap(jsonResponse({ error: "This text isn't available yet." }, 403));
     }
   }
@@ -81,6 +83,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   return wrap(
     jsonResponse(
       {
+        viewer_is_admin: viewerIsAdmin,
         book: {
           slug: book.slug,
           title: book.title,

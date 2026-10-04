@@ -70,6 +70,42 @@ function parseRange(header: string | null, size: number): { offset: number; leng
   return { offset, length: end - offset + 1 };
 }
 
+/**
+ * What a downloaded copy should be called, as a Content-Disposition.
+ *
+ * Two filenames, because this archive is full of accents, Greek and
+ * Cyrillic: a plain ASCII one that every client understands, and the
+ * real one in `filename*`, which modern browsers prefer. Without the
+ * first, a title that is entirely non-Latin saves as a blank name.
+ */
+function contentDisposition(title: string, key: string): string {
+  const fallbackName = key.split("/").pop() || "document.pdf";
+  const base = (title.trim() || fallbackName.replace(/\.pdf$/i, "")).slice(0, 120);
+  const full = `${base}.pdf`;
+
+  // Quotes and control characters would break out of the header.
+  const toAscii = (value: string) =>
+    value
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/["\\]/g, "")
+      .trim();
+
+  // A title written entirely in Greek or Cyrillic leaves nothing behind
+  // once it's reduced to ASCII, and ".pdf" is not a filename. Fall back
+  // to the stored key, then to something rather than nothing.
+  let ascii = toAscii(full);
+  if (!/[A-Za-z0-9]/.test(ascii.replace(/\.pdf$/i, ""))) {
+    ascii = toAscii(fallbackName);
+  }
+  if (!/[A-Za-z0-9]/.test(ascii.replace(/\.pdf$/i, ""))) {
+    ascii = "document.pdf";
+  }
+
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(full)}`;
+}
+
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const session = await verifySession(context.request);
   const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
@@ -95,14 +131,18 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   // ---- Who may read this file? ----
   const isLesson = key.startsWith("catechism/");
+  // Kept for naming a downloaded copy: the catalogue's title reads far
+  // better than the storage key, which is whatever the file arrived as.
+  let fileTitle = "";
   if (isLesson) {
     if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
     const { data: lesson } = await admin
       .from("catechism_lessons")
-      .select("published")
+      .select("published, title")
       .eq("pdf_storage_key", key)
       .maybeSingle();
     if (!lesson) return wrap(jsonResponse({ error: "Lesson not found." }, 404));
+    fileTitle = String(lesson.title ?? "");
     if (!lesson.published) {
       const { data: viewer } = await admin
         .from("profiles")
@@ -116,10 +156,11 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   } else {
     const { data: book } = await admin
       .from("library_books")
-      .select("public_access, hidden")
+      .select("public_access, hidden, title")
       .eq("pdf_storage_key", key)
       .maybeSingle();
     if (!book) return wrap(jsonResponse({ error: "File not found." }, 404));
+    fileTitle = String(book.title ?? "");
 
     if (!session.user) {
       if (!book.public_access || book.hidden) {
@@ -134,6 +175,36 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       if (viewer?.role !== "admin") {
         return wrap(jsonResponse({ error: "This text isn't available yet." }, 403));
       }
+    }
+  }
+
+  // ---- May they take a copy away? ----
+  //
+  // Reading and keeping are different permissions here. The lessons are
+  // the parish's own teaching, written to be handed out, so any member
+  // may save one. The library is not: most of it is still in copyright,
+  // held for preservation, and a copy that leaves the site is a copy the
+  // parish can no longer account for. So books download for admins only.
+  //
+  // Checked on the server, not merely hidden in the page — a button that
+  // isn't drawn is not a rule.
+  const wantsDownload = url.searchParams.get("download") === "1";
+  if (wantsDownload && !isLesson) {
+    if (!session.user) {
+      return wrap(jsonResponse({ error: "Please sign in." }, 401));
+    }
+    const { data: viewer } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    if (viewer?.role !== "admin") {
+      return wrap(
+        jsonResponse(
+          { error: "Library books can be read here, but only an admin can download one." },
+          403,
+        ),
+      );
     }
   }
 
@@ -155,6 +226,13 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   // the browser may keep one for a day. Private: these are parish files.
   headers.set("Cache-Control", "private, max-age=86400");
   headers.set("Accept-Ranges", "bytes");
+
+  if (wantsDownload) {
+    headers.set("Content-Disposition", contentDisposition(fileTitle, key));
+    // A saved copy shouldn't be answered from the cache of a page view,
+    // or vice versa — they are different responses for the same bytes.
+    headers.set("Cache-Control", "private, no-store");
+  }
 
   if (range) {
     headers.set("Content-Length", String(range.length));
