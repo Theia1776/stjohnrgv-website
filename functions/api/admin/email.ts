@@ -32,8 +32,10 @@
  *   subject    string, required
  *   body       string, required — plain text; blank lines become paragraphs
  *   audience   "everyone" | "individuals"
- *   ids        string[] — profile ids, required when audience is
- *              "individuals"
+ *   ids        string[] — profile ids; with audience "individuals",
+ *              this or `extra` must name someone
+ *   extra      string[] — any other addresses, members or not. Sent to
+ *              alongside whoever else was chosen, on the same BCC terms.
  *   sender     "office" | "priest" — whose name the message carries;
  *              sets the From, the Reply-To, and the visible To
  *
@@ -96,6 +98,11 @@ const BATCH_GAP_MS = 600;
 // A parish-sized guard rail. Far above the real roster; raise it if the
 // parish ever outgrows it.
 const MAX_RECIPIENTS = 1000;
+
+// Deliberately loose: one @, something either side, a dot in the
+// domain. Resend rejects anything it can't deliver to, and its error is
+// reported back on the page.
+const EMAIL_PATTERN = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
 
 interface Member {
   id: string;
@@ -276,18 +283,36 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const ids = Array.isArray(payload.ids)
       ? payload.ids.filter((x): x is string => typeof x === "string")
       : [];
+    const extraRaw = Array.isArray(payload.extra)
+      ? payload.extra.filter((x): x is string => typeof x === "string").map((x) => x.trim()).filter(Boolean)
+      : [];
+    const badExtra = extraRaw.filter((x) => !EMAIL_PATTERN.test(x));
+    if (badExtra.length) {
+      return wrap(jsonResponse({ error: `These don't look like email addresses: ${badExtra.join(", ")}` }, 400));
+    }
 
     if (!subject) return wrap(jsonResponse({ error: "Subject is required." }, 400));
     if (!body) return wrap(jsonResponse({ error: "Message is required." }, 400));
-    if (audience === "individuals" && ids.length === 0) {
+    if (audience === "individuals" && ids.length === 0 && extraRaw.length === 0) {
       return wrap(jsonResponse({ error: "Pick at least one person to write to." }, 400));
     }
 
     const { members, error: rosterError } = await loadRoster(supabase);
     if (rosterError) return wrap(jsonResponse({ error: rosterError }, 500));
 
-    const chosen =
+    const chosenMembers =
       audience === "individuals" ? members.filter((m) => ids.includes(m.id)) : members;
+
+    // Members first, then the typed-in addresses, each address once
+    // however many ways it was picked.
+    const seen = new Set<string>();
+    const chosen: string[] = [];
+    for (const email of [...chosenMembers.map((m) => m.email), ...extraRaw]) {
+      const key = email.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      chosen.push(email);
+    }
 
     if (chosen.length === 0) {
       return wrap(jsonResponse({ error: "None of those people have an email address on file." }, 400));
@@ -306,7 +331,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       const result = await sendEmail({
         apiKey,
         from: sender.from,
-        to: chosen[0].email,
+        to: chosen[0],
         replyTo: sender.address,
         subject,
         text: body,
@@ -320,7 +345,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       // The To is deliberately the parish address — recipients on BCC
       // can read the To header, so anything else would publish a
       // person's address to the whole list.
-      const addresses = chosen.map((m) => m.email);
+      const addresses = chosen;
       for (let i = 0; i < addresses.length; i += BCC_BATCH_SIZE) {
         const batch = addresses.slice(i, i + BCC_BATCH_SIZE);
         const result = await sendEmail({
