@@ -124,6 +124,11 @@ import Layout from "../../layouts/Layout.astro";
             <div>
               <label for="edit-role" class="block text-sm font-semibold text-text-primary">Role</label>
               <select id="edit-role" class="mt-1 block w-full border border-text-secondary bg-cream-card px-3 py-2 text-sm text-text-primary disabled:opacity-60">
+                <!-- Inquirer is the first step in: someone looking into
+                     the faith who isn't a catechumen yet. They read the
+                     library and the lessons, and receive parish email,
+                     but the directory is not theirs to see. -->
+                <option value="inquirer">Inquirer</option>
                 <option value="catechumen">Catechumen</option>
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>

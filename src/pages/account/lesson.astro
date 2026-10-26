@@ -514,7 +514,10 @@ import Layout from "../../layouts/Layout.astro";
           showError(`Could not load your lessons (${listRes.status}).`);
           return;
         }
-        const { lessons } = (await listRes.json()) as { lessons: Lesson[] };
+        const { lessons, viewer_role: viewerRole } = (await listRes.json()) as {
+          lessons: Lesson[];
+          viewer_role?: string | null;
+        };
         const lesson = (lessons ?? []).find((l) => l.slug === slug);
         if (!lesson) {
           titleEl.textContent = "Lesson not found";
@@ -535,9 +538,11 @@ import Layout from "../../layouts/Layout.astro";
         // the PDF is slow, missing, or broken.
         void loadLessonText(slug);
 
-        // Every signed-in member may keep a copy of a lesson.
+        // Catechumens, members and admins may keep a copy. An inquirer
+        // reads it here — so no button rather than a button that
+        // refuses. (/api/library/file enforces it either way.)
         const downloadLink = document.getElementById("download-lesson") as HTMLAnchorElement | null;
-        if (downloadLink) {
+        if (downloadLink && viewerRole !== "inquirer") {
           downloadLink.href =
             `/api/library/file?key=${encodeURIComponent(lesson.pdf_storage_key)}&download=1`;
           downloadLink.hidden = false;

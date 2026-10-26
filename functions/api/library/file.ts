@@ -192,7 +192,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   // Checked on the server, not merely hidden in the page — a button that
   // isn't drawn is not a rule.
   const wantsDownload = url.searchParams.get("download") === "1";
-  if (wantsDownload && !isLesson) {
+  if (wantsDownload) {
     if (!session.user) {
       return wrap(jsonResponse({ error: "Please sign in." }, 401));
     }
@@ -201,10 +201,23 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .select("role")
       .eq("id", session.user.id)
       .single();
-    if (viewer?.role !== "admin") {
+
+    if (!isLesson && viewer?.role !== "admin") {
       return wrap(
         jsonResponse(
           { error: "Library books can be read here, but only an admin can download one." },
+          403,
+        ),
+      );
+    }
+    // An inquirer reads everything and keeps nothing. Lessons are
+    // handed out freely to those walking the road in — catechumens and
+    // members — but someone still looking in from outside reads them
+    // here, on the site.
+    if (isLesson && viewer?.role === "inquirer") {
+      return wrap(
+        jsonResponse(
+          { error: "Lessons can be read here. Saving a copy is for catechumens and members." },
           403,
         ),
       );

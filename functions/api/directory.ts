@@ -60,6 +60,21 @@ export async function onRequestGet(
     if (viewerError) return wrap(jsonResponse({ error: viewerError.message }, 500));
     const viewerIsAdmin = viewer?.role === "admin";
 
+    // The directory is the one place an account doesn't buy its way
+    // into. It carries other members' addresses, phone numbers and
+    // emails, shared on the understanding that it stays inside the
+    // parish. An inquirer is welcome to the books and the lessons;
+    // someone else's home address is not ours to hand over on the
+    // strength of a sign-up form.
+    if (viewer?.role === "inquirer") {
+      return wrap(
+        jsonResponse(
+          { error: "The parish directory is for catechumens and members." },
+          403,
+        ),
+      );
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select(

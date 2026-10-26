@@ -10,8 +10,11 @@ function getSupabase(env: Env) {
   return createClient(SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+// role rides along so the account page knows which sections to draw —
+// an inquirer has no directory, and a door that opens onto a refusal is
+// worse than no door.
 const PROFILE_COLUMNS =
-  "first_name, last_name, email, public_email, phone, avatar_url, " +
+  "role, first_name, last_name, email, public_email, phone, avatar_url, " +
   "address_line1, address_line2, city, state, zip, " +
   "emergency_name, emergency_relationship, emergency_phone, " +
   "emergency_name_2, emergency_relationship_2, emergency_phone_2, " +

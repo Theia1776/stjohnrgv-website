@@ -276,7 +276,7 @@ import Layout from "../layouts/Layout.astro";
           <span class="text-sm font-medium text-text-primary">Parish Administration Emails</span>
         </label>
 
-        <div class="border border-gray-200 rounded p-4 mt-4">
+        <div id="directory-optin" class="border border-gray-200 rounded p-4 mt-4">
           <label class="flex items-start gap-3 cursor-pointer">
             <input id="opt_in_directory" name="opt_in_directory" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-gray-300" />
             <div>
@@ -596,6 +596,18 @@ import Layout from "../layouts/Layout.astro";
     if (!res.ok) return;
 
     const profile = await res.json();
+
+    // An inquirer has the library and the lessons but not the directory,
+    // so the directory section and its jump link come down rather than
+    // standing there as a door onto a refusal. The directory options in
+    // "My Details" go too — there is nothing to opt into.
+    if (profile.role === "inquirer") {
+      for (const id of ["section-directory", "directory-optin"]) {
+        const el = document.getElementById(id);
+        if (el) el.hidden = true;
+      }
+      document.querySelector('a[href="#section-directory"]')?.remove();
+    }
 
     setInputValue("first_name", profile.first_name);
     setInputValue("last_name", profile.last_name);

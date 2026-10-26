@@ -43,7 +43,11 @@ const PATCH_ALLOWED = [
   "emergency_name_2", "emergency_relationship_2", "emergency_phone_2",
 ] as const;
 
-const VALID_ROLES = ["catechumen", "member", "admin"] as const;
+// "inquirer" is the first step in — someone looking into the faith who
+// isn't a catechumen yet. They read the library and the lessons and get
+// parish email; the directory is the one thing held back, because it
+// carries other people's addresses and phone numbers.
+const VALID_ROLES = ["inquirer", "catechumen", "member", "admin"] as const;
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

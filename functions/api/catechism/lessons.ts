@@ -67,7 +67,14 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const { data, error } = await query;
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
 
-    return wrap(jsonResponse({ lessons: data ?? [], viewer_is_admin: isAdmin }, 200));
+    // The role rides along so the reader knows whether to offer a
+    // download — an inquirer may read a lesson but not keep a copy.
+    return wrap(
+      jsonResponse(
+        { lessons: data ?? [], viewer_is_admin: isAdmin, viewer_role: viewer?.role ?? null },
+        200,
+      ),
+    );
   } catch (err) {
     return wrap(
       jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
