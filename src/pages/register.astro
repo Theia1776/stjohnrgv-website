@@ -1,0 +1,30 @@
+---
+// A short address to put in an email or hand to someone after a
+// service: stjohnrgv.org/register
+//
+// The form itself lives on /login/ as a tab, because signing in and
+// signing up belong side by side. This sends people to that tab
+// already open, so an invitation doesn't land on Sign In with a tab
+// they have to notice.
+//
+// Redirecting in the page rather than at the server keeps it a plain
+// static file — no Function, nothing to configure, works the same on a
+// preview build.
+const target = "/login/?register=1";
+---
+
+<!-- Both, deliberately: the meta refresh covers a browser that runs no
+     script, and the script runs first and replaces the history entry so
+     Back doesn't bounce the visitor straight back here. -->
+<meta http-equiv="refresh" content={`0; url=${target}`} />
+<meta name="robots" content="noindex" />
+<title>Create your parish account</title>
+
+<p style="font-family: system-ui, sans-serif; padding: 2rem;">
+  Taking you to the sign-up form —
+  <a href={target}>continue here</a> if nothing happens.
+</p>
+
+<script is:inline define:vars={{ target }}>
+  window.location.replace(target);
+</script>

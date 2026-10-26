@@ -255,6 +255,13 @@ import Layout from "../layouts/Layout.astro";
     const params = new URLSearchParams(location.search);
     const next = params.get("next") || "/learn/";
 
+    // /register/ sends people here with ?register=1, so an invitation
+    // emailed to someone lands on the form itself rather than on Sign
+    // In with a tab they have to notice.
+    if (params.get("register") === "1" || location.hash === "#register") {
+      activateTab("register");
+    }
+
     // ============================================================
     // LOGIN
     // ============================================================
