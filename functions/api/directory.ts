@@ -69,7 +69,13 @@ export async function onRequestGet(
     if (viewer?.role === "inquirer") {
       return wrap(
         jsonResponse(
-          { error: "The parish directory is for catechumens and members." },
+          {
+            error:
+              "Our parishioners' contact details stay within the parish, so the " +
+              "directory isn't part of your account. Please do ask anyone for " +
+              "theirs directly — after Liturgy or over coffee hour is the natural " +
+              "time. You're welcome among us.",
+          },
           403,
         ),
       );

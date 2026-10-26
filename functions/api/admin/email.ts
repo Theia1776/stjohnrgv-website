@@ -268,7 +268,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const subject = typeof payload.subject === "string" ? payload.subject.trim() : "";
     const body = typeof payload.body === "string" ? payload.body.trim() : "";
-    const audience = payload.audience === "individuals" ? "individuals" : "everyone";
+    const audience =
+      payload.audience === "individuals"
+        ? "individuals"
+        : payload.audience === "typed"
+          ? "typed"
+          : "everyone";
     // Which parish identity this goes out as. Anything unrecognised
     // falls back to the office — the safer of the two to put a name to.
     const senderKey: SenderKey = payload.sender === "priest" ? "priest" : "office";
@@ -277,17 +282,40 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       ? payload.ids.filter((x): x is string => typeof x === "string")
       : [];
 
+    // Addresses typed straight in, for someone with no account at all —
+    // a visitor who asked to be added to the list, a priest from
+    // another parish, anyone. Separated by commas, spaces or new lines,
+    // because people paste addresses in all three ways.
+    const typed = (typeof payload.addresses === "string" ? payload.addresses : "")
+      .split(/[\s,;]+/)
+      .map((a) => a.trim())
+      .filter(Boolean);
+    const badAddress = typed.find((a) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a));
+
     if (!subject) return wrap(jsonResponse({ error: "Subject is required." }, 400));
     if (!body) return wrap(jsonResponse({ error: "Message is required." }, 400));
     if (audience === "individuals" && ids.length === 0) {
       return wrap(jsonResponse({ error: "Pick at least one person to write to." }, 400));
     }
+    if (audience === "typed") {
+      if (typed.length === 0) {
+        return wrap(jsonResponse({ error: "Type at least one email address." }, 400));
+      }
+      if (badAddress) {
+        return wrap(jsonResponse({ error: `"${badAddress}" doesn't look like an email address.` }, 400));
+      }
+    }
 
-    const { members, error: rosterError } = await loadRoster(supabase);
-    if (rosterError) return wrap(jsonResponse({ error: rosterError }, 500));
-
-    const chosen =
-      audience === "individuals" ? members.filter((m) => ids.includes(m.id)) : members;
+    // A typed list needs no roster at all — that lookup exists to turn
+    // profile ids into addresses, and these are already addresses.
+    let chosen: Member[];
+    if (audience === "typed") {
+      chosen = typed.map((email) => ({ id: email, name: "", email, role: null }));
+    } else {
+      const { members, error: rosterError } = await loadRoster(supabase);
+      if (rosterError) return wrap(jsonResponse({ error: rosterError }, 500));
+      chosen = audience === "individuals" ? members.filter((m) => ids.includes(m.id)) : members;
+    }
 
     if (chosen.length === 0) {
       return wrap(jsonResponse({ error: "None of those people have an email address on file." }, 400));

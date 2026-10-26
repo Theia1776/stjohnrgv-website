@@ -63,6 +63,35 @@ import Layout from "../../layouts/Layout.astro";
                 </span>
               </span>
             </label>
+
+            <!-- For anyone with no account at all: a visitor who asked to
+                 be added to the list, a priest from another parish. No
+                 sign-up required to be written to. -->
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="audience" value="typed" class="mt-1 h-4 w-4" />
+              <span>
+                <span class="font-semibold text-text-primary">Type an address</span>
+                <span class="mt-0.5 block text-xs text-text-secondary">
+                  Anyone at all — they don't need an account.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div id="typed-panel" hidden class="mt-5 border-t border-border-soft pt-5">
+            <label for="typed-addresses" class="block text-sm font-semibold text-text-primary">
+              Email addresses
+            </label>
+            <textarea
+              id="typed-addresses"
+              rows="3"
+              placeholder="someone@example.com"
+              class="mt-1.5 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+            ></textarea>
+            <p class="mt-1.5 text-xs text-text-secondary">
+              One or several — separate them with commas, spaces or new lines.
+              More than one and everybody goes on BCC, as always.
+            </p>
           </div>
 
           <div id="people-panel" hidden class="mt-5 border-t border-border-soft pt-5">
@@ -208,9 +237,11 @@ import Layout from "../../layouts/Layout.astro";
     el.className = isError ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
   }
 
-  function currentAudience(): "everyone" | "individuals" {
+  function currentAudience(): "everyone" | "individuals" | "typed" {
     const picked = document.querySelector<HTMLInputElement>('input[name="audience"]:checked');
-    return picked?.value === "individuals" ? "individuals" : "everyone";
+    if (picked?.value === "individuals") return "individuals";
+    if (picked?.value === "typed") return "typed";
+    return "everyone";
   }
 
   // ============ PEOPLE LIST ============
@@ -338,8 +369,12 @@ import Layout from "../../layouts/Layout.astro";
 
   document.querySelectorAll<HTMLInputElement>('input[name="audience"]').forEach((radio) => {
     radio.addEventListener("change", () => {
-      const panel = document.getElementById("people-panel");
-      if (panel) panel.hidden = currentAudience() !== "individuals";
+      const where = currentAudience();
+      const people = document.getElementById("people-panel");
+      const typed = document.getElementById("typed-panel");
+      if (people) people.hidden = where !== "individuals";
+      if (typed) typed.hidden = where !== "typed";
+      if (where === "typed") document.getElementById("typed-addresses")?.focus();
     });
   });
 
@@ -381,10 +416,23 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
+    const addresses = (document.getElementById("typed-addresses") as HTMLTextAreaElement | null)?.value ?? "";
+    const typedList = addresses.split(/[\s,;]+/).map((a) => a.trim()).filter(Boolean);
+    if (audience === "typed" && typedList.length === 0) {
+      setSendStatus("Type at least one email address.", true);
+      return;
+    }
+
     // Sending to the whole parish is not undoable, so it gets a
     // confirmation naming the number of people.
-    const count = audience === "everyone" ? members.length : ids.length;
-    const who = audience === "everyone" ? `all ${count} registered members` : `${count} ${count === 1 ? "person" : "people"}`;
+    const count =
+      audience === "everyone" ? members.length : audience === "typed" ? typedList.length : ids.length;
+    const who =
+      audience === "everyone"
+        ? `all ${count} registered members`
+        : audience === "typed"
+          ? typedList.join(", ")
+          : `${count} ${count === 1 ? "person" : "people"}`;
     const asWhom = senders.find((s) => s.key === senderKey)?.label ?? "the parish office";
     if (!window.confirm(`Send "${subject}" to ${who}, as ${asWhom}? This can't be undone.`)) return;
 
@@ -397,7 +445,7 @@ import Layout from "../../layouts/Layout.astro";
         credentials: "same-origin",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body, audience, ids, sender: senderKey }),
+        body: JSON.stringify({ subject, body, audience, ids, addresses, sender: senderKey }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

@@ -358,6 +358,20 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
 
+    // An inquirer reaching this page by typing the address gets the
+    // reason, plainly, rather than an error code — they haven't done
+    // anything wrong, the directory simply isn't theirs yet.
+    if (res.status === 403) {
+      const detail = await readErrorDetail(res);
+      showError(
+        detail ||
+          "Our parishioners' contact details stay within the parish, so the " +
+            "directory isn't part of your account. Please do ask anyone for " +
+            "theirs directly after a service. You're welcome among us.",
+      );
+      return;
+    }
+
     if (!res.ok) {
       const detail = await readErrorDetail(res);
       showError(detail

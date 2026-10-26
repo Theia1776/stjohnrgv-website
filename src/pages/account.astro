@@ -192,7 +192,7 @@ import Layout from "../layouts/Layout.astro";
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="directory-heading" class="text-lg font-semibold">Parish Directory</h2>
         </summary>
-        <div class="mt-4 border-t pt-4">
+        <div id="directory-body" class="mt-4 border-t pt-4">
           <p class="text-sm text-gray-500">
             Fellow parishioners who have chosen to be listed. Whether you appear, and which
             details you share, is up to you — see <a href="#section-profile" class="jump-link text-brand-blue-dark">My Details</a> below.
@@ -201,6 +201,20 @@ import Layout from "../layouts/Layout.astro";
             <a href="/directory/" class="font-semibold text-brand-blue-dark no-underline hover:underline">
               Open the directory →
             </a>
+          </p>
+        </div>
+
+        <!-- What an inquirer sees instead. Said kindly: the answer is
+             "not yet, and here is the better way", not "no". -->
+        <div id="directory-inquirer-note" hidden class="mt-4 border-t pt-4">
+          <p class="text-sm text-text-primary/85">
+            Our parishioners' contact details stay within the parish, so the
+            directory isn't part of your account.
+          </p>
+          <p class="mt-3 text-sm text-text-primary/85">
+            Please do ask anyone for theirs directly — after Liturgy or over
+            coffee hour is the natural time, and you'll find people glad to be
+            asked. You're welcome among us.
           </p>
         </div>
       </details>
@@ -597,16 +611,19 @@ import Layout from "../layouts/Layout.astro";
 
     const profile = await res.json();
 
-    // An inquirer has the library and the lessons but not the directory,
-    // so the directory section and its jump link come down rather than
-    // standing there as a door onto a refusal. The directory options in
-    // "My Details" go too — there is nothing to opt into.
+    // An inquirer has the library and the lessons but not the directory.
+    // The section stays, with a note in place of the listing — saying
+    // why, and where to ask instead, reads better than a door that
+    // silently isn't there. The opt-in box in "My Details" does go:
+    // there is nothing to opt into.
     if (profile.role === "inquirer") {
-      for (const id of ["section-directory", "directory-optin"]) {
+      const swap = (id: string, hidden: boolean) => {
         const el = document.getElementById(id);
-        if (el) el.hidden = true;
-      }
-      document.querySelector('a[href="#section-directory"]')?.remove();
+        if (el) el.hidden = hidden;
+      };
+      swap("directory-body", true);
+      swap("directory-inquirer-note", false);
+      swap("directory-optin", true);
     }
 
     setInputValue("first_name", profile.first_name);
