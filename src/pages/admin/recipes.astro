@@ -57,6 +57,29 @@ import Layout from "../../layouts/Layout.astro";
 
       <p id="queue-count" class="mb-3 font-display text-sm uppercase tracking-widest text-brand-tan-dark"></p>
 
+      <!-- Three hundred recipes is too many to scroll. Searches titles,
+           ingredients and categories, with a filter for the states that
+           actually need finding: what is waiting, and what is unfiled. -->
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <label for="admin-search" class="sr-only">Search the recipes</label>
+        <input
+          id="admin-search"
+          type="search"
+          placeholder="Search title, ingredient or category…"
+          class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+        />
+        <label for="admin-filter" class="sr-only">Filter</label>
+        <select id="admin-filter" class="border border-border-soft bg-cream-bg px-3 py-2 text-sm focus:outline-none focus:ring-2">
+          <option value="">All recipes</option>
+          <option value="waiting">Waiting to be posted</option>
+          <option value="posted">Posted</option>
+          <option value="fasting">Fasting book</option>
+          <option value="everyday">Everyday book</option>
+          <option value="unfiled">Not yet filed</option>
+        </select>
+        <span id="admin-shown" class="text-sm text-text-secondary" role="status"></span>
+      </div>
+
       <!-- The two jobs worth doing to the whole queue at once, in plain
            sight: three hundred recipes is too many to file or post one
            at a time, and a button for it hidden in a fold is no button. -->
@@ -246,13 +269,52 @@ import Layout from "../../layouts/Layout.astro";
     </article>`;
   }
 
+  /** Accents folded and punctuation dropped, as elsewhere on the site. */
+  function normalise(value: unknown): string {
+    return String(value ?? "")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function visibleRecipes(): Recipe[] {
+    const query = (document.getElementById("admin-search") as HTMLInputElement | null)?.value ?? "";
+    const filter = (document.getElementById("admin-filter") as HTMLSelectElement | null)?.value ?? "";
+    const terms = normalise(query).split(/\s+/).filter(Boolean);
+
+    return recipes.filter((r) => {
+      switch (filter) {
+        case "waiting": if (r.published) return false; break;
+        case "posted": if (!r.published) return false; break;
+        case "fasting": if (!r.fasting) return false; break;
+        case "everyday": if (r.fasting) return false; break;
+        case "unfiled": if (r.category) return false; break;
+      }
+      if (terms.length === 0) return true;
+      const hay = normalise(
+        [r.title, r.category, r.intro, (r.ingredients ?? []).join(" "), r.submitted_by_name].join(" "),
+      );
+      return terms.every((t) => hay.includes(t));
+    });
+  }
+
   function render() {
     const rows = document.getElementById("recipe-rows") as HTMLDivElement;
     const empty = document.getElementById("empty") as HTMLParagraphElement;
     const count = document.getElementById("queue-count") as HTMLParagraphElement;
+    const shown = visibleRecipes();
+    const shownEl = document.getElementById("admin-shown");
 
-    rows.innerHTML = recipes.map(row).join("");
+    rows.innerHTML = shown.map(row).join("");
     empty.hidden = recipes.length > 0;
+    if (shownEl) {
+      shownEl.textContent =
+        shown.length === recipes.length
+          ? ""
+          : `${shown.length} of ${recipes.length}`;
+    }
 
     const waiting = recipes.filter((r) => !r.published).length;
     count.textContent = waiting
@@ -558,4 +620,10 @@ import Layout from "../../layouts/Layout.astro";
     el.textContent = message;
     el.className = bad ? "w-full text-sm text-liturgical-red" : "w-full text-sm text-text-secondary";
   }
+
+  // Re-render on every keystroke and filter change. The whole collection
+  // is already in the page, so this costs nothing and finding one recipe
+  // among three hundred stops being a scroll.
+  document.getElementById("admin-search")?.addEventListener("input", render);
+  document.getElementById("admin-filter")?.addEventListener("change", render);
 </script>
