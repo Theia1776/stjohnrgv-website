@@ -126,9 +126,56 @@ PLANT_QUALIFIERS = (
     "plant", "vegan", "nut", "sun", "cocoa", "shea", "tahini",
 )
 
-# Where smoke genuinely is the flavour wanted. Elsewhere the swap would
-# change the dish into something else, so the recipe is left alone.
-SMOKE_SUITS = ("barbecue", "bbq", "baked bean", "chili", "sloppy", "burger", "rib")
+# Recipes to leave out of both books entirely.
+SKIP_ENTIRELY = {
+    # Theia: "a pain in the ass cake and nobody makes it anymore" — and
+    # baked Alaska is meringue, so it was never fasting food either.
+    "\"baked alaska\" cake",
+    "baked alaska cake",
+    "baked alaska",
+}
+
+# Worcestershire is in these recipes for smoke, so liquid smoke is the
+# right substitute — but it is far stronger. Theia's rule: a quarter of
+# the Worcestershire measure. Done as arithmetic rather than guessed,
+# because "some liquid smoke" in a recipe helps nobody.
+TBSP_PER = {"tbsp": 1.0, "tablespoon": 1.0, "tsp": 1 / 3, "teaspoon": 1 / 3}
+
+# Thirds and quarters of a teaspoon, written the way a measuring spoon
+# is marked rather than as a decimal.
+FRACTIONS = [
+    (3.0, "1 Tbsp"),
+    (2.25, "2 1/4 tsp"),
+    (2.0, "2 tsp"),
+    (1.5, "1 1/2 tsp"),
+    (1.0, "1 tsp"),
+    (0.75, "3/4 tsp"),
+    (0.5, "1/2 tsp"),
+    (0.25, "1/4 tsp"),
+]
+
+
+def quarter_measure(text: str) -> str | None:
+    """
+    "1 tbsp Worcestershire" -> "3/4 tsp liquid smoke".
+    Returns None when there is no quantity to work from.
+    """
+    m = re.match(r"\s*(\d+(?:\s+\d+/\d+)?|\d+/\d+)\s*(tbsp|tablespoon|tsp|teaspoon)s?\b", text, re.I)
+    if not m:
+        return None
+    amount_text, unit = m.group(1), m.group(2).lower()
+
+    total = 0.0
+    for piece in amount_text.split():
+        if "/" in piece:
+            num, den = piece.split("/")
+            total += float(num) / float(den)
+        else:
+            total += float(piece)
+
+    teaspoons = total * TBSP_PER[unit] * 3 * 0.25
+    nearest = min(FRACTIONS, key=lambda f: abs(f[0] - teaspoons))
+    return nearest[1]
 
 
 def qualified(text: str, start: int) -> bool:
@@ -144,7 +191,6 @@ def assess(recipe: dict) -> dict:
     changes: list[str] = []
     new_ingredients: list[str] = []
     title_low = recipe["title"].lower()
-    smoke_ok = any(word in title_low for word in SMOKE_SUITS)
 
     for raw in recipe["ingredients"]:
         line = raw
@@ -177,8 +223,24 @@ def assess(recipe: dict) -> dict:
             match = re.search(pattern, line, re.I)
             if not match or qualified(line.lower(), match.start()):
                 continue
-            if what == "worcestershire" and not smoke_ok:
-                blockers.append(f"worcestershire ({raw.strip()}) — smoke would change the dish")
+            if what == "worcestershire":
+                # A quarter of the measure, in liquid smoke. Theia puts
+                # the Worcestershire in for smoke, and liquid smoke at
+                # the same quantity would bury the dish.
+                measure = quarter_measure(line)
+                if measure:
+                    line = re.sub(
+                        r"^\s*\S+(\s+\d+/\d+)?\s*\S+\s+" + pattern.strip("\\b"),
+                        f"{measure} liquid smoke",
+                        line,
+                        count=1,
+                        flags=re.I,
+                    )
+                    if "liquid smoke" not in line.lower():
+                        line = f"{measure} liquid smoke"
+                else:
+                    line = re.sub(pattern, "liquid smoke, to taste", line, flags=re.I)
+                changes.append(f"{raw.strip()} → {line.strip()}")
                 break
             if replacement is None:
                 blockers.append(f"{what} ({raw.strip()})")
@@ -208,7 +270,12 @@ def main() -> None:
     fasting_count = 0
     blocked_reasons: dict[str, int] = {}
 
+    skipped = 0
     for recipe in recipes:
+        # Dropped from both books by name.
+        if recipe["title"].strip().lower() in SKIP_ENTIRELY:
+            skipped += 1
+            continue
         verdict = assess(recipe)
 
         # Everyday gets it as written, always.
@@ -252,10 +319,11 @@ def main() -> None:
 
     Path(args.out).write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print(f"{len(recipes)} recipes read.\n")
-    print(f"EVERYDAY book: {len(recipes)} — every recipe, exactly as written")
+    everyday = len(recipes) - skipped
+    print(f"{len(recipes)} recipes read, {skipped} dropped by name.\n")
+    print(f"EVERYDAY book: {everyday} — every recipe, exactly as written")
     print(f"FASTING book:  {fasting_count} — can be made without animal products\n")
-    print(f"{len(recipes) - fasting_count} cannot. Why, counted by first blocker:")
+    print(f"{everyday - fasting_count} cannot. Why, counted by first blocker:")
     for reason, n in sorted(blocked_reasons.items(), key=lambda kv: -kv[1]):
         print(f"  {reason:<24} {n}")
     print(f"\nWrote {len(out)} rows to {args.out}")
