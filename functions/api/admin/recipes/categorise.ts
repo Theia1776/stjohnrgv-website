@@ -106,11 +106,22 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       }
     }
 
+    // How many are STILL unfiled now this batch is done. The page loops,
+    // and a recipe whose title says nothing stays in every batch — so
+    // adding up "left alone" across rounds counts the same stubborn ones
+    // over and over. It once reported 193 unfiled out of 314 recipes.
+    // This is a fact about the table rather than about one pass.
+    const { count: stillUnfiled } = await supabase
+      .from("recipes")
+      .select("id", { count: "exact", head: true })
+      .is("category", null);
+
     return wrap(
       jsonResponse(
         {
           filed,
           left_alone: leftAlone,
+          still_unfiled: stillUnfiled ?? 0,
           remaining: Math.max((unfiled ?? []).length - batch.length, 0),
           examples,
         },

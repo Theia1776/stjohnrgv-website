@@ -394,7 +394,7 @@ import Layout from "../../layouts/Layout.astro";
 
     btn.disabled = true;
     let filed = 0;
-    let leftAlone = 0;
+    let stillUnfiled = 0;
     let examples: { title: string; category: string }[] = [];
 
     try {
@@ -413,7 +413,10 @@ import Layout from "../../layouts/Layout.astro";
           return;
         }
         filed += body.filed ?? 0;
-        leftAlone += body.left_alone ?? 0;
+        // Counted from the table, not summed across rounds: a recipe
+        // whose title says nothing appears in every round, and adding
+        // those up once reported 193 unfiled out of 314 recipes.
+        stillUnfiled = body.still_unfiled ?? 0;
         if (examples.length === 0) examples = body.examples ?? [];
         if ((body.remaining ?? 0) === 0) break;
         // Nothing moved and nothing left to try: stop rather than spin.
@@ -422,7 +425,9 @@ import Layout from "../../layouts/Layout.astro";
 
       say(
         `Filed ${filed}.` +
-          (leftAlone ? ` ${leftAlone} left unfiled — their titles don't say what they are.` : ""),
+          (stillUnfiled
+            ? ` ${stillUnfiled} still unfiled — ${stillUnfiled === 1 ? "its title doesn't" : "their titles don't"} say what ${stillUnfiled === 1 ? "it is" : "they are"}.`
+            : " Everything has a category now."),
       );
       if (examples.length) console.info("Examples of what it filed:", examples);
       await loadRecipes();
