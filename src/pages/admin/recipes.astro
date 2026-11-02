@@ -108,20 +108,10 @@ import Layout from "../../layouts/Layout.astro";
         <button type="button" id="post-all-btn" class="btn btn-primary text-sm">
           Post everything waiting
         </button>
-        <button type="button" id="move-drinks-btn" class="btn btn-secondary text-sm">
-          Move the drinks to Drinks
-        </button>
+        <!-- No standing explanation of what the buttons do. Each one
+             reports what it actually did, here, after it runs — which
+             is the thing worth reading. -->
         <p id="bulk-status" class="w-full text-sm text-text-secondary" role="status"></p>
-        <p class="w-full text-xs text-text-secondary">
-          Filing reads each title and places the obvious ones, touching only
-          recipes with no category — anything you've already sorted is left
-          alone. Posting puts them on the site: fasting recipes are public,
-          everyday ones are for signed-in members. Moving the drinks reads the
-          <em>Misc.</em> shelves — where the lemonades and punches landed
-          before there was a Drinks section — and the Drinks shelves
-          themselves, so it can take back anything it put there wrongly.
-          Anything you filed under a real category it leaves alone.
-        </p>
       </div>
       <div id="recipe-rows" class="space-y-4"></div>
       <p id="empty" hidden class="text-sm italic text-text-secondary">
@@ -608,6 +598,7 @@ import Layout from "../../layouts/Layout.astro";
     let filed = 0;
     let stillUnfiled = 0;
     let examples: { title: string; category: string }[] = [];
+    let failed: string[] = [];
 
     try {
       // Loops until nothing is left, the way the other jobs do.
@@ -630,6 +621,7 @@ import Layout from "../../layouts/Layout.astro";
         // those up once reported 193 unfiled out of 314 recipes.
         stillUnfiled = body.still_unfiled ?? 0;
         if (examples.length === 0) examples = body.examples ?? [];
+        if (body.failed?.length) failed = failed.concat(body.failed);
         if ((body.remaining ?? 0) === 0) break;
         // Nothing moved and nothing left to try: stop rather than spin.
         if ((body.filed ?? 0) === 0 && (body.left_alone ?? 0) === 0) break;
@@ -639,79 +631,15 @@ import Layout from "../../layouts/Layout.astro";
         `Filed ${filed}.` +
           (stillUnfiled
             ? ` ${stillUnfiled} still unfiled — ${stillUnfiled === 1 ? "its title doesn't" : "their titles don't"} say what ${stillUnfiled === 1 ? "it is" : "they are"}.`
-            : " Everything has a category now."),
+            : " Everything has a category now.") +
+          // A write the database refused must never pass as silence.
+          (failed.length ? ` The database refused ${failed.length}: ${failed.join("; ")}` : ""),
+        failed.length > 0,
       );
       if (examples.length) console.info("Examples of what it filed:", examples);
       await loadRecipes();
     } catch (err) {
       say(`Couldn't file them: ${err instanceof Error ? err.message : String(err)}`, true);
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  // ============== MOVING THE DRINKS ==============
-  // The Drinks group arrived after the recipes were filed, so the
-  // lemonades and punches are sitting on Misc. shelves. This re-reads
-  // those shelves and moves only what is plainly a drink.
-
-  document.getElementById("move-drinks-btn")?.addEventListener("click", async () => {
-    const btn = document.getElementById("move-drinks-btn") as HTMLButtonElement;
-    const status = document.getElementById("bulk-status") as HTMLParagraphElement;
-    const say = (message: string, bad = false) => {
-      status.textContent = message;
-      status.className = bad ? "w-full text-sm text-liturgical-red" : "w-full text-sm text-text-secondary";
-    };
-
-    btn.disabled = true;
-    let moved = 0;
-    let examples: { title: string; category: string }[] = [];
-    let stranded: string[] = [];
-    let failed: string[] = [];
-
-    try {
-      for (let round = 0; round < 20; round++) {
-        say(`Reading the Misc. shelves… ${moved} moved so far`);
-        const res = await fetch("/api/admin/recipes/categorise", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "drinks", limit: 80 }),
-        });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          say(body.error ?? `Couldn't move them (${res.status}).`, true);
-          return;
-        }
-        moved += body.moved ?? body.filed ?? 0;
-        if (examples.length === 0) examples = body.examples ?? [];
-        stranded = body.stranded ?? stranded;
-        if (body.failed?.length) failed = failed.concat(body.failed);
-        // Nothing moved this round means nothing will next round: the
-        // candidate list is the same one. Stop rather than spin.
-        if ((body.filed ?? 0) === 0) break;
-        if ((body.remaining ?? 0) === 0) break;
-      }
-
-      // Anything sitting under Drinks that no longer reads as one and
-      // has nowhere obvious to go is named rather than left there: a
-      // dessert among the lemonades is found by chance otherwise.
-      const strandedNote = stranded.length
-        ? ` Filed under Drinks but ${stranded.length === 1 ? "it doesn't look like one" : "they don't look like drinks"} — ` +
-          `please set ${stranded.length === 1 ? "its" : "their"} category by hand: ${stranded.join(", ")}.`
-        : "";
-      say(
-        (moved === 0
-          ? "Nothing needed moving."
-          : `Moved ${moved} ${moved === 1 ? "recipe" : "recipes"}.`) +
-          strandedNote +
-          (failed.length ? ` The database refused ${failed.length}: ${failed.join("; ")}` : ""),
-        failed.length > 0,
-      );
-      if (examples.length) console.info("Examples of what it moved:", examples);
-      await loadRecipes();
-    } catch (err) {
-      say(`Couldn't move them: ${err instanceof Error ? err.message : String(err)}`, true);
     } finally {
       btn.disabled = false;
     }
