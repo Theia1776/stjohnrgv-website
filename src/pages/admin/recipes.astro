@@ -57,6 +57,23 @@ import Layout from "../../layouts/Layout.astro";
 
       <p id="queue-count" class="mb-3 font-display text-sm uppercase tracking-widest text-brand-tan-dark"></p>
 
+      <!-- Shown only while the gluten-free column is missing from the
+           database. The code shipped ahead of its migration for once,
+           so the page has to say which part isn't working rather than
+           letting someone press a button that can't do anything. -->
+      <div
+        id="gluten-pending"
+        hidden
+        class="mb-4 border-l-2 border-liturgical-red bg-cream-card p-4 text-sm leading-relaxed"
+      >
+        <strong class="text-text-primary">The gluten-free mark isn't live yet.</strong>
+        Migration <code>020_recipe_gluten_free.sql</code> still needs running in
+        the Supabase SQL editor. Everything else on this page works as usual;
+        until then the gluten-free buttons will refuse politely, and
+        <a href="/table/gluten-free/" class="font-semibold text-brand-blue-dark">the gluten-free page</a>
+        will be empty — which is true, since nothing can be marked yet.
+      </div>
+
       <!-- Three hundred recipes is too many to scroll. Searches titles,
            ingredients and categories, with a filter for the states that
            actually need finding: what is waiting, and what is unfiled. -->
@@ -383,6 +400,9 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
     const data = await res.json();
+    // The API says so when the gluten-free column isn't there yet.
+    const pendingEl = document.getElementById("gluten-pending");
+    if (pendingEl) pendingEl.hidden = data.gluten_pending !== true;
     // Waiting first, newest within each group. The API orders them this
     // way too, but the page shouldn't depend on that — the queue coming
     // first is the whole point of opening it.

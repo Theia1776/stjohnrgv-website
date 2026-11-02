@@ -267,6 +267,15 @@ const { book, heading, blurb, help } = Astro.props;
       const data = await res.json();
       recipes = (data.recipes ?? []) as Recipe[];
       if (recipes.length === 0) {
+        // Before migration 020 the gluten-free shelf is genuinely
+        // empty, and saying "nothing here yet" is the honest answer
+        // rather than a pretence that something went wrong.
+        if (mode === "gluten-free") {
+          emptyEl.innerHTML =
+            "No recipes have been marked gluten-free yet. The " +
+            '<a href="/table/fasting/" class="text-brand-blue-dark">fasting book</a> ' +
+            "is a good place to start looking — much of it is naturally wheat-free.";
+        }
         emptyEl.hidden = false;
         return;
       }
