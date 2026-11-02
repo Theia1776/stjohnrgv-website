@@ -114,6 +114,7 @@ The parish recipe collection, at `/table/`. Two books: **Fasting**
 | Fasting book | **35**, public to anyone |
 | Everyday book | **279**, signed-in members |
 | Categories | `src/lib/recipe-categories.ts` — four groups, each ending in Misc. |
+| Gluten-free | a column on `recipes`, set by a person only — see below |
 
 **The public/member split is the thing to understand.** The fasting
 book is open to the world, because people search for Orthodox Lenten
@@ -151,7 +152,28 @@ site can change that.
 **Keeping the Fast** at `/table/keeping-the-fast/` answers the question
 every newcomer asks — where the protein comes from — and says that the
 fast bends for the sick, pregnant, nursing, children and those doing
-heavy work, with Fr. Antonios to decide.
+heavy work, with Fr. Antonios to decide. It gets a gold-edged panel of
+its own above the search and the books, and another at the head of the
+fasting book, because as a link at the foot of a grey box people walked
+straight past it into the recipes. If it ever needs to be noticed more,
+the answer is a button and a heading, not a stronger adjective.
+
+### Gluten-free
+A column on `recipes`, not a third book: gluten has nothing to do with
+fasting, and a gluten-free dessert should stay under Desserts rather
+than move to a side collection. `/table/gluten-free/` gathers them
+across both books, open to anyone the way the fasting book is.
+
+**Nothing may set that mark by reading ingredients**, and
+[src/lib/recipe-gluten.ts](../src/lib/recipe-gluten.ts) argues it at
+length. Being wrong one way is a noisy admin warning; being wrong the
+other way makes somebody with coeliac disease ill from food the parish
+called safe. A person sets it — the cook's tick on the share form, or
+the admin toggle. What the matching does is *contradict*: a recipe
+marked gluten-free with bread crumbs in it gets a red panel on its
+admin card, and marking one over that objection asks first. It never
+refuses — tamari and certified oats are real answers an ingredient line
+doesn't give.
 
 ### Where the 314 came from
 Theia's old recipe cards, 281 PDFs on her desktop, read by
@@ -218,6 +240,31 @@ that is the line to change.
 members can read a To header, so this is privacy, not tidiness.
 Registration is the permission for parish mail; the opt-in flag governs
 only automatic lesson announcements.
+
+---
+
+## Do this next
+
+**Migration 020 is not applied.** `recipes.gluten_free` does not exist
+in the database yet. Run
+[020_recipe_gluten_free.sql](../supabase/migrations/020_recipe_gluten_free.sql)
+in the Supabase SQL editor.
+
+Nothing is broken meanwhile — the code was deployed ahead of its
+migration on purpose, the one time that has been done here, because the
+migration needs a laptop and the work was finished on a phone. Every
+query that names the column asks for it, and asks again without it if
+the database says there's no such column; see
+[src/lib/recipe-columns.ts](../src/lib/recipe-columns.ts). Until it is
+run: the gluten-free page is empty, the admin page shows a red banner
+saying so, and the gluten-free buttons refuse in words.
+
+**Once it is applied**, delete `src/lib/recipe-columns.ts` and the
+fallback branches in `functions/api/recipes/index.ts`,
+`functions/api/admin/recipes/index.ts` and
+`functions/api/admin/recipes/[id].ts`. They are dead code at that
+point, and leaving them teaches the next person that shipping ahead of
+a migration is normal here. It is not.
 
 ---
 
@@ -292,7 +339,7 @@ all applied by hand in the Supabase SQL editor.
 `008` master admin · `009`–`010` directory email · `011` library hidden ·
 `012` catechism_lessons · `013`–`014` parish_emails · `015`–`016`
 library text + page numbers · `017` catechism text · `018` recipes ·
-`019` recipe categories.
+`019` recipe categories · `020` recipe gluten_free **(not yet applied)**.
 
 ---
 
