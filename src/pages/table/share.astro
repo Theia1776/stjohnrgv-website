@@ -194,11 +194,55 @@ import { RECIPE_CATEGORIES, categoryValue } from "../../lib/recipe-categories";
       </div>
     </form>
 
-    <div id="thanks" hidden class="mt-8 border-2 border-sacred-gold bg-cream-card p-6 shadow-sm">
+    <!-- What a person wants after pressing send is proof the right
+         thing arrived, and to know they needn't do anything else. So
+         this names the recipe back to them, says which book and
+         whether the gluten-free tick was recorded, and spells out that
+         it won't be on the site yet — otherwise they go looking for
+         it, don't find it, and send it a second time. -->
+    <div
+      id="thanks"
+      hidden
+      tabindex="-1"
+      role="status"
+      aria-live="polite"
+      class="mt-8 border-2 border-sacred-gold bg-cream-card p-6 shadow-sm"
+    >
       <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">Received</p>
-      <h2 class="mt-2 font-display text-xl text-text-primary">Thank you.</h2>
+      <h2 class="mt-2 font-display text-xl text-text-primary">
+        Thank you — we have <span id="thanks-title" class="italic">your recipe</span>.
+      </h2>
       <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+      <dl class="mt-4 space-y-1 text-sm">
+        <div class="flex gap-2">
+          <dt class="uppercase tracking-widest text-text-secondary">Book</dt>
+          <dd id="thanks-book" class="text-text-primary"></dd>
+        </div>
+        <div id="thanks-category-row" hidden class="flex gap-2">
+          <dt class="uppercase tracking-widest text-text-secondary">Kind</dt>
+          <dd id="thanks-category" class="text-text-primary"></dd>
+        </div>
+        <div id="thanks-gf-row" hidden class="flex gap-2">
+          <dt class="uppercase tracking-widest text-text-secondary">Marked</dt>
+          <dd class="text-text-primary">Gluten-free</dd>
+        </div>
+        <div class="flex gap-2">
+          <dt class="uppercase tracking-widest text-text-secondary">Sent</dt>
+          <dd id="thanks-count" class="text-text-primary"></dd>
+        </div>
+      </dl>
+
       <p id="thanks-note" class="mt-4 leading-relaxed text-text-primary/85"></p>
+
+      <p class="mt-4 border-t border-border-soft pt-4 text-sm leading-relaxed text-text-secondary">
+        <strong class="text-text-primary">It isn't on the site yet</strong>, and that
+        is normal — everything is read over at the parish office first, usually
+        within a few days. There's nothing more for you to do, and no need to
+        send it again. If you spot a mistake in it meanwhile, ring the office
+        and we'll fix it before it goes up.
+      </p>
+
       <p class="mt-6 flex flex-wrap gap-3">
         <a href="/table/" class="btn btn-secondary">Back to the table</a>
         <button type="button" id="share-another" class="btn btn-primary">Share another</button>
@@ -349,11 +393,38 @@ import { RECIPE_CATEGORIES, categoryValue } from "../../lib/recipe-categories";
         setStatus(body.error ?? `Couldn't send it (${res.status}).`, true);
         return;
       }
+      // Read back what actually arrived, from the server's copy where
+      // there is one. Echoing the form's own fields would confirm what
+      // they typed rather than what was saved, which is the thing that
+      // needs confirming.
+      const saved = body.recipe ?? {};
+      const fasting =
+        (document.querySelector('input[name="book"]:checked') as HTMLInputElement)?.value !== "everyday";
+      const category = (document.getElementById("category") as HTMLSelectElement).value;
+      const glutenFree = (document.getElementById("gluten_free") as HTMLInputElement).checked;
+
+      (document.getElementById("thanks-title") as HTMLElement).textContent = saved.title ?? title;
+      (document.getElementById("thanks-book") as HTMLElement).textContent = fasting
+        ? "Fasting — open to anyone"
+        : "Everyday — for parish accounts";
+      if (category) {
+        (document.getElementById("thanks-category-row") as HTMLElement).hidden = false;
+        (document.getElementById("thanks-category") as HTMLElement).textContent = category;
+      }
+      (document.getElementById("thanks-gf-row") as HTMLElement).hidden = !glutenFree;
+      (document.getElementById("thanks-count") as HTMLElement).textContent =
+        `${ingredients.length} ${ingredients.length === 1 ? "ingredient" : "ingredients"}, ` +
+        `${directions.length} ${directions.length === 1 ? "step" : "steps"}`;
       (document.getElementById("thanks-note") as HTMLParagraphElement).textContent =
         body.message ?? "Your recipe has been sent to the parish office.";
+
       form.hidden = true;
       thanks.hidden = false;
-      window.scrollTo({ top: 0 });
+      // The panel, not the top of the document: on a long form the top
+      // of the page can be a header with nothing on it, and a person
+      // who sees no change assumes the press didn't take.
+      thanks.scrollIntoView({ behavior: "smooth", block: "start" });
+      thanks.focus();
     } catch (err) {
       setStatus(`Couldn't send it: ${err instanceof Error ? err.message : String(err)}`, true);
     } finally {
