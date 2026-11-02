@@ -30,7 +30,6 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(snickerdoodles?|ginger ?snaps?|madeleines?|macaroons?|spritz|thumbprints?|temptations?|squares?|crispy treats?|church windows)\b/i, group: "Desserts", category: "Cookies" },
   { pattern: /\b(creme brulee|cr[èe]me br[ûu]l[ée]e|curd|posset)\b/i, group: "Desserts", category: "Puddings & Custards" },
   { pattern: /\b(compote|fruit salad|ambrosia)\b/i, group: "Desserts", category: "Misc." },
-  { pattern: /\b(shakes?|malts?|floats?|frappe)\b/i, group: "Soups & Sides", category: "Misc." },
   { pattern: /\b(crawfish|crayfish|etouff?[ée]e|[ée]touf[ée]e|jambalaya|ceviche)\b/i, group: "Main Courses", category: "Fish & Seafood" },
   { pattern: /\b(cheese ball|mayonnaise|aioli|vinaigrette|chutney)\b/i, group: "Soups & Sides", category: "Misc." },
   { pattern: /\b(knots|breadsticks?|garlic bread|waffles?|pancakes?|crepes?)\b/i, group: "Soups & Sides", category: "Breads" },
@@ -39,9 +38,21 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(spanish rice|fried rice|rice)\b/i, group: "Main Courses", category: "Pasta & Grains" },
   { pattern: /\bstuffed (bell )?peppers?\b/i, group: "Main Courses", category: "Vegetables" },
   { pattern: /\bstuffed shells?\b/i, group: "Main Courses", category: "Pasta & Grains" },
-  { pattern: /\b(drinks?|cocktails?|shortcake drink)\b/i, group: "Soups & Sides", category: "Misc." },
   { pattern: /\b(frosting|icing|glaze)\b/i, group: "Desserts", category: "Misc." },
   { pattern: /\b(ice cream|sorbet|sherbet|popsicles?)\b/i, group: "Desserts", category: "Misc." },
+
+  // --- Drinks, checked before the food: "Lemon Dreamy Lemonade" would
+  //     otherwise read as a dessert, and iced tea as a side ---
+  { pattern: /\b(hot cocoa|hot chocolate|mulled|wassail|hot toddy|chai|espresso|latte|cappuccino)\b/i, group: "Drinks", category: "Hot Drinks" },
+  { pattern: /\b(punch|sangria|eggnog)\b/i, group: "Drinks", category: "Punches" },
+  { pattern: /\b(lemonade|limeade|iced tea|slush|smoothie|milk ?shakes?|shakes?|malts?|floats?|frappe|julep|spritzer|agua fresca|cream soda|italian soda|soda pop)\b/i, group: "Drinks", category: "Cold Drinks" },
+  // The last three are weak words that also name food: "Apple Cider
+  // Pork Chops" is a pork dish, "Tea Ring" is a pastry, and plain
+  // "soda" is nearly always baking soda. Cider only counts when the
+  // title ends on it, and tea only when no food word follows.
+  { pattern: /\btea\b(?!\s*(sandwich|ring|bread|loaf|biscuits?|towels?))/i, group: "Drinks", category: "Misc." },
+  { pattern: /\bcider\b\s*$/i, group: "Drinks", category: "Misc." },
+  { pattern: /\b(coffee|cocktails?|drinks?|beverages?|cocoa)\b/i, group: "Drinks", category: "Misc." },
 
   // --- Soups & sides ---
   { pattern: /\b(soups?|chowders?|bisques?|stews?|chili|broths?|gumbo)\b/i, group: "Soups & Sides", category: "Soups" },
@@ -49,7 +60,6 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(salads?|slaw|coleslaw)\b/i, group: "Soups & Sides", category: "Salads" },
   { pattern: /\b(potatoes|fries|stuffing|dressing|casserole|gratin|rice pilaf|greens|sprouts|asparagus|carrots|corn on the cob|baked beans)\b/i, group: "Soups & Sides", category: "Sides" },
   { pattern: /\b(dips?|spreads?|salsa|hummus|guacamole|sauces?|gravy|relish|pickled|pickles|jam|jelly|preserves|marinade|butter sauce)\b/i, group: "Soups & Sides", category: "Misc." },
-  { pattern: /\b(tea|punch|slush|lemonade|cider|cocoa|smoothie|coffee|julep|sangria|eggnog)\b/i, group: "Soups & Sides", category: "Misc." },
 
   // --- Main courses, by the meat that names them ---
   // Plurals matter: a card says "Hamburgers" and "Meatloaves", and

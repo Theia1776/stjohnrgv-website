@@ -52,6 +52,12 @@ export const RECIPE_CATEGORIES: CategoryGroup[] = [
     group: "Desserts",
     categories: ["Cakes", "Pies", "Cookies", "Pastries", "Puddings & Custards", "Misc."],
   },
+  {
+    // Drinks were landing in "Soups & Sides — Misc." for want of
+    // anywhere better, which is where a lemonade does not belong.
+    group: "Drinks",
+    categories: ["Hot Drinks", "Cold Drinks", "Punches", "Misc."],
+  },
 ];
 
 /**
