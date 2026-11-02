@@ -120,10 +120,17 @@ PREMADE = [
     (r"\btoffee\b", "toffee — usually contains butter"),
 ]
 
-# "Peanut butter" is not butter; "coconut milk" is not milk.
+# "Peanut butter" is not butter; "coconut milk" is not milk; and a
+# "Plant-Based Burger" is not a burger. The last of those blocked a
+# vegan meatloaf from the fasting book, which is the opposite of the
+# job — the word "meat" in a recipe title means nothing on its own.
 PLANT_QUALIFIERS = (
     "peanut", "almond", "coconut", "soy", "oat", "cashew", "rice", "hemp",
-    "plant", "vegan", "nut", "sun", "cocoa", "shea", "tahini",
+    "plant", "vegan", "nut", "sun", "cocoa", "shea", "tahini", "walnut",
+    "pecan", "hazelnut", "macadamia", "flax", "sesame", "pea", "potato",
+    "meatless", "veggie", "vegetarian", "mock", "imitation", "faux",
+    "impossible", "beyond", "tofu", "tempeh", "seitan", "jackfruit",
+    "mushroom", "lentil", "chickpea", "bean",
 )
 
 # Recipes to leave out of both books entirely.
@@ -179,10 +186,18 @@ def quarter_measure(text: str) -> str | None:
 
 
 def qualified(text: str, start: int) -> bool:
-    """Is the match preceded by a word that makes it plant food?"""
-    before = text[max(0, start - 24):start].rstrip(" -")
-    words = before.split()
-    return bool(words) and words[-1] in PLANT_QUALIFIERS
+    """
+    Is the match preceded by something that makes it plant food?
+
+    The last three words, not just one, and "-based" stripped off:
+    "Plant-Based Burger" puts "plant-based" immediately before the
+    match, and "vegan worcestershire sauce" puts "vegan" two words back.
+    Checking one bare word missed both.
+    """
+    before = text[max(0, start - 40):start]
+    words = re.split(r"[^a-z]+", before.lower())
+    words = [w for w in words if w][-3:]
+    return any(word in PLANT_QUALIFIERS for word in words)
 
 
 def assess(recipe: dict) -> dict:
