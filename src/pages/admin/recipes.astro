@@ -179,6 +179,47 @@ import Layout from "../../layouts/Layout.astro";
         ${r.notes ? `<p class="mt-3 text-sm text-text-primary/85"><span class="text-xs uppercase tracking-widest text-text-secondary">Notes</span><br>${escapeHtml(r.notes)}</p>` : ""}
       </details>
 
+      <details class="mt-3">
+        <summary class="cursor-pointer text-sm font-semibold text-brand-blue-dark">
+          Edit the details
+        </summary>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Title
+            <input type="text" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                   data-field="title" value="${escapeHtml(r.title)}" />
+          </label>
+          <label class="block text-xs uppercase tracking-widest text-text-secondary">
+            Hands-on
+            <input type="text" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                   data-field="hands_on" value="${escapeHtml(r.hands_on ?? "")}" />
+          </label>
+          <label class="block text-xs uppercase tracking-widest text-text-secondary">
+            Total time
+            <input type="text" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                   data-field="total_time" value="${escapeHtml(r.total_time ?? "")}" />
+          </label>
+          <label class="block text-xs uppercase tracking-widest text-text-secondary">
+            Serves
+            <input type="text" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                   data-field="serves" value="${escapeHtml(r.serves ?? "")}" />
+          </label>
+          <label class="block text-xs uppercase tracking-widest text-text-secondary">
+            Oven
+            <input type="text" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                   data-field="preheat" value="${escapeHtml(r.preheat ?? "")}" />
+          </label>
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Notes
+            <textarea rows="2" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                      data-field="notes">${escapeHtml(r.notes ?? "")}</textarea>
+          </label>
+          <div class="sm:col-span-2">
+            <button type="button" class="btn btn-secondary text-sm" data-action="save-details">Save details</button>
+          </div>
+        </div>
+      </details>
+
       <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-4">
         <label class="sr-only" for="cat-${escapeHtml(r.id)}">Kind of dish</label>
         <select id="cat-${escapeHtml(r.id)}" class="recipe-category border border-border-soft bg-cream-bg px-2 py-1 text-xs focus:outline-none focus:ring-2">
@@ -283,6 +324,18 @@ import Layout from "../../layouts/Layout.astro";
       case "toggle-posted":
         await patch(id, { published: !recipe.published }, statusEl);
         break;
+      case "save-details": {
+        const changes: Record<string, string> = {};
+        for (const field of article!.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(".edit-field")) {
+          changes[field.dataset.field!] = field.value.trim();
+        }
+        if (!changes.title) {
+          if (statusEl) statusEl.textContent = "A title is needed.";
+          return;
+        }
+        await patch(id, changes, statusEl);
+        break;
+      }
       case "toggle-book":
         await patch(id, { fasting: !recipe.fasting }, statusEl);
         break;
