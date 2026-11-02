@@ -1,0 +1,137 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Practical help for fasting, for the fasting book to point at. A
+// newcomer's first Great Lent is the hard one: they know what is not
+// allowed and nobody has told them what to actually eat. This page is
+// the answer to that, and is built to grow — each section stands alone,
+// so another can be added without rearranging anything.
+
+// Grouped the way a person shops rather than by protein content: the
+// numbers are per different serving sizes (a cup, an ounce, a block)
+// and ranking them against each other would compare unlike things.
+// Figures are Theia's, from the USDA, kept exactly as given.
+const proteinGroups = [
+  {
+    group: "Beans & Lentils",
+    note: "The backbone of fasting cooking in every Orthodox country.",
+    foods: [
+      { food: "Lentils", protein: "18 g", per: "per cup" },
+      { food: "Chickpeas", protein: "20 g", per: "per cup" },
+      { food: "Pinto beans", protein: "15 g", per: "per cup" },
+      { food: "Black beans", protein: "14 g", per: "per cup" },
+      { food: "Peas", protein: "8 g", per: "per cup" },
+    ],
+  },
+  {
+    group: "Soy",
+    note: "The most protein for the money, and it takes any flavour you give it.",
+    foods: [
+      { food: "Tofu", protein: "36 g", per: "per block" },
+      { food: "Tempeh", protein: "31 g", per: "per cup" },
+      { food: "Edamame", protein: "17 g", per: "per cup" },
+    ],
+  },
+  {
+    group: "Nuts & Seeds",
+    note: "Easy to keep on hand, and the answer to the mid-afternoon slump.",
+    foods: [
+      { food: "Pumpkin seeds", protein: "12 g", per: "per cup" },
+      { food: "Hemp hearts", protein: "9.5 g", per: "per 3 tablespoons" },
+      { food: "Almonds", protein: "7 g", per: "per ¼ cup" },
+      { food: "Peanuts", protein: "7 g", per: "per ounce" },
+      { food: "Pistachios", protein: "6 g", per: "per ounce" },
+      { food: "Chia seeds", protein: "4.5 g", per: "per ounce" },
+    ],
+  },
+  {
+    group: "Grains",
+    note: "A base that carries protein of its own, unlike white rice.",
+    foods: [{ food: "Quinoa", protein: "8 g", per: "per cup" }],
+  },
+];
+---
+
+<Layout
+  title="Keeping the Fast | An Orthodox Table"
+  description="Practical help for Orthodox fasting — plant-based protein, and what to actually eat when meat and dairy are set aside."
+>
+  <main class="mx-auto max-w-3xl px-4 py-12 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      <a href="/table/" class="text-brand-tan-dark no-underline hover:underline">← An Orthodox Table</a>
+    </p>
+    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Keeping the Fast</h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+
+    <p class="mt-6 text-text-primary/85 leading-relaxed">
+      The first Lent is the hard one. You have been told what is set aside and
+      often nobody has said what to actually eat — and a week of plain rice
+      will make anyone wonder whether they can keep this up. You can. It takes
+      knowing a few things.
+    </p>
+
+    <!-- The chief worry of anyone new to it, answered with numbers. -->
+    <section class="mt-10">
+      <h2 class="font-display text-2xl text-text-primary">Where the protein comes from</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        This is the first question almost everyone asks, and the answer is that
+        it is not difficult — a cup of lentils carries more protein than three
+        eggs. Keep two or three of these in the cupboard and the fast stops
+        being a problem to solve.
+      </p>
+
+      <div class="mt-6 space-y-8">
+        {
+          proteinGroups.map((group) => (
+            <div>
+              <h3 class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+                {group.group}
+              </h3>
+              <p class="mt-1 text-sm italic text-text-secondary">{group.note}</p>
+              <table class="mt-3 w-full border-collapse text-sm">
+                <tbody>
+                  {group.foods.map((row) => (
+                    <tr class="border-b border-border-soft">
+                      <td class="py-2 pr-4 text-text-primary">{row.food}</td>
+                      <td class="w-20 py-2 text-right font-semibold text-text-primary">
+                        {row.protein}
+                      </td>
+                      <td class="w-40 py-2 pl-4 text-text-secondary">{row.per}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="mt-5 text-xs text-text-secondary">
+        Figures from the USDA. Serving sizes differ between foods — a block of
+        tofu is not a cup of lentils — so read each row on its own rather than
+        ranking them against each other.
+      </p>
+    </section>
+
+    <!-- The thing a website must not get wrong. -->
+    <section class="mt-12 border-l-2 border-sacred-gold bg-cream-card p-5">
+      <h2 class="font-display text-base text-text-primary">If you are unwell, pregnant, or caring for a child</h2>
+      <p class="mt-2 text-sm leading-relaxed text-text-primary/85">
+        The fast bends for those it would harm. The Church has always said so.
+        Speak with <strong>Fr. Antonios</strong> — not with a website and not
+        with a well-meaning parishioner. Children, the sick, the pregnant and
+        nursing, the elderly and those doing heavy work are all accounted for,
+        and the rule for you is his to give.
+      </p>
+    </section>
+
+    <p class="mt-10 border-t border-border-soft pt-6 text-sm text-text-secondary">
+      Looking for what today allows? The
+      <a href="/calendar/" class="font-semibold text-brand-blue-dark">parish calendar</a>
+      says plainly whether it is a fast day and whether fish, wine or oil are
+      permitted. Ready to cook?
+      <a href="/table/fasting/" class="font-semibold text-brand-blue-dark">Open the fasting book →</a>
+    </p>
+  </main>
+</Layout>

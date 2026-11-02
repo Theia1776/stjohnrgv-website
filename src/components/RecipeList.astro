@@ -10,8 +10,10 @@ interface Props {
   book: "fasting" | "everyday";
   heading: string;
   blurb: string;
+  /** Where the practical help lives, for the fasting book. */
+  help?: string;
 }
-const { book, heading, blurb } = Astro.props;
+const { book, heading, blurb, help } = Astro.props;
 const fasting = book === "fasting";
 ---
 
@@ -22,6 +24,18 @@ const fasting = book === "fasting";
   <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">{heading}</h1>
   <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
   <p class="mt-5 max-w-2xl text-text-primary/85 leading-relaxed">{blurb}</p>
+
+  {
+    help && (
+      <aside class="mt-6 max-w-2xl border-l-2 border-sacred-gold bg-cream-card p-5">
+        <p class="text-sm leading-relaxed text-text-primary/85">
+          <strong class="text-text-primary">New to fasting?</strong> Where the
+          protein comes from, and what to keep in the cupboard —
+          <a href={help} class="font-semibold text-brand-blue-dark">Keeping the Fast →</a>
+        </p>
+      </aside>
+    )
+  }
 
   <!-- Searching and filtering happen here in the browser: a parish
        collection is small enough that every recipe is already loaded,
