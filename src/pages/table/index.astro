@@ -44,6 +44,22 @@ import Layout from "../../layouts/Layout.astro";
       </p>
     </aside>
 
+    <!-- One box across both books. A cook knows what is in the fridge,
+         not which shelf the dish is on, so searching comes before
+         choosing a book. Signed out it reaches the fasting book only —
+         the same rule the books themselves keep. -->
+    <div class="mt-8">
+      <label for="table-search" class="sr-only">Search every recipe</label>
+      <input
+        id="table-search"
+        type="search"
+        placeholder="Search every recipe — a name, or something in the cupboard…"
+        class="block w-full border border-border-soft bg-cream-card px-4 py-3 focus:outline-none focus:ring-2"
+      />
+      <p id="table-search-note" class="mt-2 text-sm text-text-secondary" role="status"></p>
+      <ul id="table-search-results" class="mt-4 space-y-3"></ul>
+    </div>
+
     <!-- Two entry points on one row, as asked. They fall to one column on
          a phone rather than squeezing to half-width each. -->
     <div class="mt-10 grid gap-6 md:grid-cols-2">
@@ -103,3 +119,129 @@ import Layout from "../../layouts/Layout.astro";
 
   </main>
 </Layout>
+
+<script>
+  // Searching both books from the front page. Everything the viewer is
+  // allowed to see is fetched once and then filtered here — a parish
+  // collection is small, and a dish half-remembered is found by typing
+  // rather than by opening two shelves in turn.
+  type Recipe = {
+    slug: string;
+    title: string;
+    fasting: boolean;
+    category: string | null;
+    intro: string | null;
+    ingredients: string[];
+    total_time: string | null;
+    serves: string | null;
+  };
+
+  const input = document.getElementById("table-search") as HTMLInputElement;
+  const note = document.getElementById("table-search-note") as HTMLParagraphElement;
+  const results = document.getElementById("table-search-results") as HTMLUListElement;
+
+  let recipes: Recipe[] = [];
+  let loaded = false;
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function normalise(value: unknown): string {
+    return String(value ?? "")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  /** Which half of the category to show — "Soups", not the whole path. */
+  function shortCategory(value: string | null): string {
+    if (!value) return "";
+    const parts = String(value).split(" — ");
+    return parts.length > 1 ? parts.slice(1).join(" ") : parts[0];
+  }
+
+  async function ensureLoaded() {
+    if (loaded) return;
+    // No fasting filter: the server returns what this viewer may see,
+    // which is the fasting book alone when signed out.
+    const res = await fetch("/api/recipes", { credentials: "same-origin" });
+    if (!res.ok) {
+      note.textContent = "Could not load the recipes just now.";
+      return;
+    }
+    const data = await res.json();
+    recipes = (data.recipes ?? []) as Recipe[];
+    loaded = true;
+  }
+
+  function render(query: string) {
+    const terms = normalise(query).split(/\s+/).filter(Boolean);
+    if (terms.length === 0) {
+      results.innerHTML = "";
+      note.textContent = "";
+      return;
+    }
+
+    const found = recipes.filter((r) => {
+      const hay = normalise([r.title, r.intro, (r.ingredients ?? []).join(" "), r.category].join(" "));
+      return terms.every((t) => hay.includes(t));
+    });
+
+    if (found.length === 0) {
+      results.innerHTML = "";
+      note.textContent = `Nothing matches "${query}".`;
+      return;
+    }
+
+    const fasting = found.filter((r) => r.fasting).length;
+    note.textContent =
+      `${found.length} ${found.length === 1 ? "recipe" : "recipes"}` +
+      (fasting && fasting < found.length ? ` — ${fasting} fasting, ${found.length - fasting} everyday` : "");
+
+    results.innerHTML = found
+      .slice(0, 40)
+      .map((r) => {
+        const bits = [shortCategory(r.category), r.total_time, r.serves ? `serves ${r.serves}` : ""]
+          .filter(Boolean)
+          .map((b) => escapeHtml(b))
+          .join(" · ");
+        return `<li class="border border-border-soft bg-cream-card p-4">
+          <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
+             class="font-display text-lg text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>
+          <span class="ml-2 border border-border-soft px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-text-secondary">
+            ${r.fasting ? "Fasting" : "Everyday"}
+          </span>
+          ${bits ? `<p class="mt-1 text-xs text-text-secondary">${bits}</p>` : ""}
+        </li>`;
+      })
+      .join("");
+
+    if (found.length > 40) {
+      note.textContent += " — showing the first 40";
+    }
+  }
+
+  let timer: number | undefined;
+  input?.addEventListener("input", () => {
+    window.clearTimeout(timer);
+    const query = input.value.trim();
+    timer = window.setTimeout(async () => {
+      if (query) await ensureLoaded();
+      render(query);
+    }, 180);
+  });
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      input.value = "";
+      render("");
+    }
+  });
+</script>
