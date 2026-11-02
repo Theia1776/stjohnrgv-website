@@ -1,0 +1,248 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// One recipe, laid out as a card to be read on screen and printed on
+// paper. Loaded at runtime from /api/recipes?slug=… so a newly posted
+// recipe needs no rebuild.
+//
+// The printed sheet carries the parish's own name and address where a
+// cookbook would carry its publisher's: someone pins this to a kitchen
+// corkboard for years, and it should say whose kitchen it came from.
+---
+
+<Layout
+  title="Recipe | An Orthodox Table"
+  description="A recipe from An Orthodox Table, St. John of Kronstadt Orthodox Mission."
+>
+  <style is:global>
+    /* Ingredients in two columns on paper and on a wide screen, as on a
+       printed recipe card — one long column wastes half the page and
+       makes a cook scroll while their hands are full. */
+    .ingredient-columns { column-gap: 2.5rem; }
+    @media (min-width: 640px) {
+      .ingredient-columns { column-count: 2; }
+    }
+
+    /* The letter-spaced small caps of the template's section headers. */
+    .recipe-rule {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    @media print {
+      /* Everything that isn't the recipe goes: the site header and
+         footer, the buttons, the back link. What's left is the sheet. */
+      header, footer, nav, .no-print { display: none !important; }
+
+      /* Paper is white and ink is black, whatever theme the screen was
+         in. A cream background would print as a grey wash. */
+      :root, body, .recipe-sheet {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .recipe-sheet {
+        border: 0 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+      }
+      main { padding: 0 !important; }
+      a { color: #000000 !important; text-decoration: none !important; }
+
+      /* Keep a step whole rather than split across a page break. */
+      .recipe-step, .recipe-ingredient { break-inside: avoid; }
+      .print-footer { display: block !important; }
+
+      @page { margin: 0.6in; }
+    }
+  </style>
+
+  <main class="mx-auto max-w-3xl px-4 py-10 md:px-6">
+    <p class="no-print font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      <a href="/table/" class="text-brand-tan-dark no-underline hover:underline">← An Orthodox Table</a>
+    </p>
+
+    <p id="recipe-loading" class="mt-8 text-sm italic text-text-secondary">Loading…</p>
+    <p id="recipe-error" hidden role="alert" class="mt-8 text-sm text-liturgical-red"></p>
+
+    <article id="recipe-sheet" hidden class="recipe-sheet mt-6 border border-border-soft bg-cream-card p-6 shadow-sm md:p-10">
+      <!-- Where the template had its logo. On paper this is the only
+           thing identifying whose recipe it is. -->
+      <div class="flex items-start justify-between gap-6 border-b border-border-soft pb-5">
+        <div class="flex items-start gap-3">
+          <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
+          <span class="leading-tight">
+            <span class="block font-display text-base md:text-lg">St. John of Kronstadt</span>
+            <span class="block text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+              Orthodox Mission · RGV
+            </span>
+          </span>
+        </div>
+        <span id="recipe-book" class="recipe-rule text-right text-text-secondary"></span>
+      </div>
+
+      <h1 id="recipe-title" class="mt-6 font-display text-3xl text-text-primary md:text-4xl"></h1>
+      <p id="recipe-meta" class="mt-2 text-sm text-text-secondary"></p>
+      <p id="recipe-from" class="mt-1 text-sm italic text-text-secondary"></p>
+      <p id="recipe-intro" class="mt-4 max-w-2xl leading-relaxed text-text-primary/85"></p>
+
+      <section id="recipe-preheat-block" hidden class="mt-8">
+        <h2 class="recipe-rule text-text-secondary">Preheat Temperature</h2>
+        <p id="recipe-preheat" class="mt-2 text-text-primary"></p>
+      </section>
+
+      <section class="mt-8">
+        <h2 class="recipe-rule text-text-secondary">Ingredients</h2>
+        <ul id="recipe-ingredients" class="ingredient-columns mt-3 space-y-1.5 text-text-primary"></ul>
+      </section>
+
+      <section class="mt-8">
+        <h2 class="recipe-rule text-text-secondary">Directions</h2>
+        <ol id="recipe-directions" class="mt-3 space-y-4 text-text-primary"></ol>
+      </section>
+
+      <section id="recipe-notes-block" hidden class="mt-8">
+        <h2 class="recipe-rule text-text-secondary">Notes</h2>
+        <p id="recipe-notes" class="mt-2 whitespace-pre-wrap leading-relaxed text-text-primary/85"></p>
+      </section>
+
+      <!-- Only on paper. A sheet that outlives the browser tab should
+           say where it came from and how to find more. -->
+      <div class="print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
+        <p>St. John of Kronstadt Orthodox Mission · 39737 Palm Drive, Bayview, TX 78566 · (956) 434-6874</p>
+        <p class="mt-1">An Orthodox Table — stjohnrgv.org/table</p>
+      </div>
+    </article>
+
+    <div id="recipe-actions" hidden class="no-print mt-6 flex flex-wrap items-center gap-3">
+      <button type="button" id="print-recipe" class="btn btn-primary">Print or save as PDF</button>
+      <span id="print-note" class="text-sm text-text-secondary"></span>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Recipe = {
+    slug: string;
+    title: string;
+    fasting: boolean;
+    hands_on: string | null;
+    total_time: string | null;
+    serves: string | null;
+    preheat: string | null;
+    intro: string | null;
+    ingredients: string[];
+    directions: string[];
+    notes: string | null;
+    submitted_by_name: string | null;
+  };
+
+  const loadingEl = document.getElementById("recipe-loading") as HTMLParagraphElement;
+  const errorEl = document.getElementById("recipe-error") as HTMLParagraphElement;
+  const sheetEl = document.getElementById("recipe-sheet") as HTMLElement;
+  const actionsEl = document.getElementById("recipe-actions") as HTMLDivElement;
+
+  function showError(message: string) {
+    loadingEl.hidden = true;
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function setText(id: string, value: string) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  (async () => {
+    const slug = (new URLSearchParams(location.search).get("slug") || "").trim();
+    if (!slug) {
+      showError("No recipe chosen. Pick one from An Orthodox Table.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/recipes?slug=${encodeURIComponent(slug)}`, {
+        credentials: "same-origin",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showError(body.error ?? `Could not load this recipe (${res.status}).`);
+        return;
+      }
+      const recipe = body.recipe as Recipe;
+
+      document.title = `${recipe.title} | An Orthodox Table`;
+      setText("recipe-book", recipe.fasting ? "Fasting Recipe" : "Everyday Recipe");
+      setText("recipe-title", recipe.title);
+
+      // Only the parts the cook filled in — an empty "Serves" reads as a
+      // mistake, where its absence reads as "doesn't matter".
+      const meta = [
+        recipe.hands_on ? `Hands-on ${recipe.hands_on}` : "",
+        recipe.total_time ? `Total ${recipe.total_time}` : "",
+        recipe.serves ? `Serves ${recipe.serves}` : "",
+      ].filter(Boolean);
+      setText("recipe-meta", meta.join("  |  "));
+      setText("recipe-from", recipe.submitted_by_name ? `Shared by ${recipe.submitted_by_name}` : "");
+      setText("recipe-intro", recipe.intro ?? "");
+
+      if (recipe.preheat) {
+        (document.getElementById("recipe-preheat-block") as HTMLElement).hidden = false;
+        setText("recipe-preheat", recipe.preheat);
+      }
+
+      const ingredients = document.getElementById("recipe-ingredients") as HTMLUListElement;
+      for (const item of recipe.ingredients ?? []) {
+        const li = document.createElement("li");
+        li.className = "recipe-ingredient";
+        li.textContent = item;
+        ingredients.appendChild(li);
+      }
+
+      const directions = document.getElementById("recipe-directions") as HTMLOListElement;
+      (recipe.directions ?? []).forEach((step, i) => {
+        const li = document.createElement("li");
+        li.className = "recipe-step flex gap-3 leading-relaxed";
+        const n = document.createElement("span");
+        n.className = "font-display text-sm text-brand-tan-dark";
+        n.textContent = `${i + 1}.`;
+        const body = document.createElement("span");
+        body.textContent = step;
+        li.append(n, body);
+        directions.appendChild(li);
+      });
+
+      if (recipe.notes) {
+        (document.getElementById("recipe-notes-block") as HTMLElement).hidden = false;
+        setText("recipe-notes", recipe.notes);
+      }
+
+      loadingEl.hidden = true;
+      sheetEl.hidden = false;
+
+      // Printing is for people with an account. Said plainly to everyone
+      // else rather than leaving a button that does nothing — and said
+      // honestly, because a page you can read is a page you can print,
+      // and no website can change that.
+      const profileRes = await fetch("/api/profile", { credentials: "same-origin", cache: "no-store" });
+      const signedIn = profileRes.ok;
+      actionsEl.hidden = false;
+      if (signedIn) {
+        setText("print-note", "Prints on one sheet with the parish's details at the foot.");
+      } else {
+        (document.getElementById("print-recipe") as HTMLButtonElement).hidden = true;
+        const note = document.getElementById("print-note") as HTMLSpanElement;
+        note.innerHTML =
+          'Saving a tidy copy is for parish accounts — ' +
+          '<a href="/register" class="font-semibold text-brand-blue-dark">create one</a>, ' +
+          'or <a href="/login/" class="font-semibold text-brand-blue-dark">sign in</a>.';
+      }
+    } catch (err) {
+      showError(`Could not load this recipe: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  })();
+
+  document.getElementById("print-recipe")?.addEventListener("click", () => window.print());
+</script>

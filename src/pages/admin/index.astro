@@ -46,6 +46,9 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
         <a href="#section-email" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Email the Parish</a>
         <a href="#section-catechism" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Catechism Lessons</a>
         <a href="#section-library" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Parish Library</a>
+        <a href="#section-recipes" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">
+          Recipes <span id="jump-recipes-badge" class="hidden rounded-full bg-liturgical-red px-1.5 py-0.5 text-[0.65rem] font-semibold text-white"></span>
+        </a>
         <a href="#section-saints" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Saints</a>
         <a href="#section-links" class="jump-link text-text-secondary no-underline hover:text-brand-blue-dark">Useful Links</a>
       </nav>
@@ -154,6 +157,29 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
             <p class="mt-4">
               <a href="/admin/catechism/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
                 Upload a lesson →
+              </a>
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ─────────────── RECIPES ─────────────── -->
+      <section id="section-recipes" class="admin-section mt-8 scroll-mt-24">
+        <details class="admin-fold" open>
+          <summary class="admin-summary">
+            <span class="fold-chevron" aria-hidden="true">▸</span>
+            <span class="font-display text-xl text-text-primary">An Orthodox Table</span>
+            <span id="recipes-count" class="ml-2 text-sm font-normal text-text-secondary"></span>
+          </summary>
+          <div class="mt-4 border border-border-soft bg-cream-card p-5 shadow-sm">
+            <p class="text-sm text-text-secondary">
+              Recipes shared by catechumens and members. Nothing appears on the
+              site until it's posted.
+            </p>
+            <p id="recipes-msg" class="mt-3 text-sm italic text-text-secondary">Loading…</p>
+            <p class="mt-4">
+              <a href="/admin/recipes/" class="font-display text-sm font-semibold uppercase tracking-widest text-brand-blue-dark no-underline hover:underline">
+                Review recipes →
               </a>
             </p>
           </div>
@@ -574,5 +600,42 @@ const saintCount = Object.keys(import.meta.glob("../../data/saints/*.json")).len
     loadEmail();
     loadCatechism();
     loadLibrary();
+  })();
+
+  // ============== RECIPES ==============
+  // Only the count and what's waiting. The reviewing happens on
+  // /admin/recipes/, which can show a whole recipe at once.
+  (async () => {
+    const msg = document.getElementById("recipes-msg") as HTMLParagraphElement | null;
+    if (!msg) return;
+    try {
+      const res = await fetch("/api/admin/recipes", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { recipes, waiting } = (await res.json()) as {
+        recipes: { published: boolean; fasting: boolean }[];
+        waiting: number;
+      };
+
+      const posted = recipes.filter((r) => r.published).length;
+      setText("recipes-count", `(${posted} posted${waiting > 0 ? `, ${waiting} waiting` : ""})`);
+
+      // The badge earns attention only when something needs doing.
+      const badge = document.getElementById("jump-recipes-badge");
+      if (badge && waiting > 0) {
+        badge.textContent = String(waiting);
+        badge.classList.remove("hidden");
+      }
+
+      if (recipes.length === 0) {
+        msg.textContent = "No recipes yet. They'll appear here as people send them in.";
+        return;
+      }
+      const fasting = recipes.filter((r) => r.published && r.fasting).length;
+      msg.textContent = waiting
+        ? `${waiting} waiting to be read. ${posted} posted — ${fasting} fasting, ${posted - fasting} everyday.`
+        : `${posted} posted — ${fasting} fasting, ${posted - fasting} everyday.`;
+    } catch (err) {
+      msg.textContent = `Couldn't load recipes: ${err instanceof Error ? err.message : String(err)}`;
+    }
   })();
 </script>

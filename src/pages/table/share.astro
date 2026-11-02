@@ -1,0 +1,321 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Sharing a recipe. The form grows with the recipe: a cook adds as many
+// ingredient and step lines as the dish needs rather than squeezing it
+// into a fixed number of boxes, which is what makes people give up and
+// paste everything into one field.
+---
+
+<Layout
+  title="Share a Recipe | An Orthodox Table"
+  description="Add one of your recipes to An Orthodox Table."
+>
+  <meta slot="head" name="robots" content="noindex" />
+
+  <main class="mx-auto max-w-3xl px-4 py-12 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      <a href="/table/" class="text-brand-tan-dark no-underline hover:underline">← An Orthodox Table</a>
+    </p>
+    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Share a Recipe</h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+
+    <p id="gate-note" hidden class="mt-6 border-l-2 border-sacred-gold bg-cream-card p-4 text-sm"></p>
+
+    <form id="recipe-form" hidden class="mt-8 space-y-8">
+      <p class="text-text-primary/85 leading-relaxed">
+        Fill in as much as the recipe needs — the times and the oven
+        temperature are optional, and plenty of good dishes have neither.
+        It comes to the parish office first and goes up once it's been
+        looked over.
+      </p>
+
+      <!-- Which book -->
+      <fieldset>
+        <legend class="text-sm font-semibold text-text-primary">Which book?</legend>
+        <div class="mt-3 space-y-2">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="book" value="fasting" checked class="mt-1 h-4 w-4" />
+            <span>
+              <span class="font-semibold text-text-primary">Fasting</span>
+              <span class="mt-0.5 block text-xs text-text-secondary">
+                No meat, dairy or eggs — nothing from an animal.
+              </span>
+            </span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="book" value="everyday" class="mt-1 h-4 w-4" />
+            <span>
+              <span class="font-semibold text-text-primary">Everyday</span>
+              <span class="mt-0.5 block text-xs text-text-secondary">
+                Feast days, coffee hour, anything else.
+              </span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="title" class="block text-sm font-semibold text-text-primary">
+          What is it called? <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+        </label>
+        <input
+          id="title"
+          type="text"
+          required
+          maxlength="200"
+          placeholder="Lenten Lentil Soup"
+          class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2"
+        />
+      </div>
+
+      <div>
+        <label for="intro" class="block text-sm font-semibold text-text-primary">
+          A line or two about it
+        </label>
+        <textarea
+          id="intro"
+          rows="3"
+          maxlength="1200"
+          placeholder="My grandmother made this every Wednesday in Lent."
+          class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2"
+        ></textarea>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="hands_on" class="block text-sm font-semibold text-text-primary">Hands-on time</label>
+          <input id="hands_on" type="text" maxlength="60" placeholder="15 min"
+            class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2" />
+        </div>
+        <div>
+          <label for="total_time" class="block text-sm font-semibold text-text-primary">Total time</label>
+          <input id="total_time" type="text" maxlength="60" placeholder="1 hr 30 min"
+            class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2" />
+        </div>
+        <div>
+          <label for="serves" class="block text-sm font-semibold text-text-primary">Serves</label>
+          <input id="serves" type="text" maxlength="60" placeholder="4 to 6"
+            class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2" />
+        </div>
+        <div>
+          <label for="preheat" class="block text-sm font-semibold text-text-primary">Oven temperature</label>
+          <input id="preheat" type="text" maxlength="60" placeholder="350°F"
+            class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2" />
+        </div>
+      </div>
+
+      <!-- Ingredients — one line each, as many as it takes -->
+      <fieldset>
+        <legend class="text-sm font-semibold text-text-primary">
+          Ingredients <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+        </legend>
+        <p class="mt-1 text-xs text-text-secondary">
+          One per line, the way you'd write it on a card — "2 cups brown lentils".
+        </p>
+        <div id="ingredient-rows" class="mt-3 space-y-2"></div>
+        <button type="button" id="add-ingredient" class="btn btn-secondary mt-3 text-sm">
+          + Add an ingredient
+        </button>
+      </fieldset>
+
+      <!-- Directions — numbered automatically -->
+      <fieldset>
+        <legend class="text-sm font-semibold text-text-primary">
+          Directions <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+        </legend>
+        <p class="mt-1 text-xs text-text-secondary">
+          One step per box. They'll be numbered for you.
+        </p>
+        <div id="direction-rows" class="mt-3 space-y-2"></div>
+        <button type="button" id="add-direction" class="btn btn-secondary mt-3 text-sm">
+          + Add a step
+        </button>
+      </fieldset>
+
+      <div>
+        <label for="notes" class="block text-sm font-semibold text-text-primary">Notes</label>
+        <textarea
+          id="notes"
+          rows="3"
+          maxlength="1200"
+          placeholder="Good with crusty bread. Keeps three days."
+          class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2"
+        ></textarea>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4 border-t border-border-soft pt-6">
+        <button type="submit" id="submit-recipe" class="btn btn-primary btn-lg">Send it in</button>
+        <span id="submit-status" class="text-sm text-text-secondary" role="status"></span>
+      </div>
+    </form>
+
+    <div id="thanks" hidden class="mt-8 border-2 border-sacred-gold bg-cream-card p-6 shadow-sm">
+      <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">Received</p>
+      <h2 class="mt-2 font-display text-xl text-text-primary">Thank you.</h2>
+      <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+      <p id="thanks-note" class="mt-4 leading-relaxed text-text-primary/85"></p>
+      <p class="mt-6 flex flex-wrap gap-3">
+        <a href="/table/" class="btn btn-secondary">Back to the table</a>
+        <button type="button" id="share-another" class="btn btn-primary">Share another</button>
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById("recipe-form") as HTMLFormElement;
+  const gateNote = document.getElementById("gate-note") as HTMLParagraphElement;
+  const thanks = document.getElementById("thanks") as HTMLDivElement;
+
+  // ---- rows that come and go ----
+  function addRow(containerId: string, placeholder: string, isStep: boolean) {
+    const container = document.getElementById(containerId) as HTMLDivElement;
+    const row = document.createElement("div");
+    row.className = "flex items-start gap-2";
+
+    const field = isStep ? document.createElement("textarea") : document.createElement("input");
+    if (field instanceof HTMLTextAreaElement) field.rows = 2;
+    else field.type = "text";
+    field.placeholder = placeholder;
+    field.maxLength = isStep ? 2000 : 400;
+    field.className =
+      "min-w-0 flex-1 border border-border-soft bg-cream-card px-3 py-2 text-sm focus:outline-none focus:ring-2";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "border border-border-soft px-2.5 py-2 text-sm text-text-secondary hover:text-liturgical-red";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Remove this line");
+    // Never remove the last one — an empty list with no box at all looks
+    // like the form is broken.
+    remove.addEventListener("click", () => {
+      if (container.children.length > 1) row.remove();
+      else field.value = "";
+      renumber();
+    });
+
+    row.append(field, remove);
+    container.appendChild(row);
+    renumber();
+    return field;
+  }
+
+  /** The steps show their numbers, so they have to be kept honest. */
+  function renumber() {
+    const rows = document.querySelectorAll("#direction-rows > div");
+    rows.forEach((row, i) => {
+      const field = row.querySelector("textarea, input") as HTMLTextAreaElement | null;
+      if (field) field.setAttribute("aria-label", `Step ${i + 1}`);
+      let badge = row.querySelector(".step-number") as HTMLElement | null;
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "step-number pt-2 font-display text-sm text-brand-tan-dark";
+        row.prepend(badge);
+      }
+      badge.textContent = `${i + 1}.`;
+    });
+  }
+
+  function values(containerId: string): string[] {
+    return [...document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`#${containerId} textarea, #${containerId} input`)]
+      .map((f) => f.value.trim())
+      .filter(Boolean);
+  }
+
+  document.getElementById("add-ingredient")?.addEventListener("click", () => {
+    addRow("ingredient-rows", "2 cups brown lentils", false).focus();
+  });
+  document.getElementById("add-direction")?.addEventListener("click", () => {
+    addRow("direction-rows", "Rinse the lentils and put them in a large pot.", true).focus();
+  });
+
+  function setStatus(message: string, bad = false) {
+    const el = document.getElementById("submit-status") as HTMLSpanElement;
+    el.textContent = message;
+    el.className = bad ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
+  }
+
+  // ---- who may share ----
+  (async () => {
+    const res = await fetch("/api/profile", { credentials: "same-origin", cache: "no-store" });
+    if (res.status === 401 || !res.ok) {
+      gateNote.innerHTML =
+        'Sharing a recipe needs a parish account. ' +
+        '<a href="/register" class="font-semibold text-brand-blue-dark">Create one</a> or ' +
+        '<a href="/login/?next=/table/share/" class="font-semibold text-brand-blue-dark">sign in</a>, ' +
+        'and you\'re very welcome to cook from the collection in the meantime.';
+      gateNote.hidden = false;
+      return;
+    }
+    const profile = await res.json();
+    if (!["member", "catechumen", "admin"].includes(profile.role)) {
+      gateNote.textContent =
+        "Sharing a recipe is for catechumens and members. You're very welcome to cook " +
+        "from the collection in the meantime — everything in both books is open to you.";
+      gateNote.hidden = false;
+      return;
+    }
+
+    // Start with a few of each so the shape is obvious at a glance.
+    for (let i = 0; i < 3; i++) addRow("ingredient-rows", i === 0 ? "2 cups brown lentils" : "", false);
+    for (let i = 0; i < 2; i++) {
+      addRow("direction-rows", i === 0 ? "Rinse the lentils and put them in a large pot." : "", true);
+    }
+    form.hidden = false;
+  })();
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = (document.getElementById("title") as HTMLInputElement).value.trim();
+    const ingredients = values("ingredient-rows");
+    const directions = values("direction-rows");
+
+    if (!title) return setStatus("It needs a name.", true);
+    if (ingredients.length === 0) return setStatus("Add at least one ingredient.", true);
+    if (directions.length === 0) return setStatus("Add at least one step.", true);
+
+    const btn = document.getElementById("submit-recipe") as HTMLButtonElement;
+    btn.disabled = true;
+    setStatus("Sending…");
+
+    try {
+      const res = await fetch("/api/recipes", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          fasting:
+            (document.querySelector('input[name="book"]:checked') as HTMLInputElement)?.value !== "everyday",
+          hands_on: (document.getElementById("hands_on") as HTMLInputElement).value,
+          total_time: (document.getElementById("total_time") as HTMLInputElement).value,
+          serves: (document.getElementById("serves") as HTMLInputElement).value,
+          preheat: (document.getElementById("preheat") as HTMLInputElement).value,
+          intro: (document.getElementById("intro") as HTMLTextAreaElement).value,
+          notes: (document.getElementById("notes") as HTMLTextAreaElement).value,
+          ingredients,
+          directions,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatus(body.error ?? `Couldn't send it (${res.status}).`, true);
+        return;
+      }
+      (document.getElementById("thanks-note") as HTMLParagraphElement).textContent =
+        body.message ?? "Your recipe has been sent to the parish office.";
+      form.hidden = true;
+      thanks.hidden = false;
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      setStatus(`Couldn't send it: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("share-another")?.addEventListener("click", () => {
+    location.reload();
+  });
+</script>

@@ -1,0 +1,159 @@
+---
+// One book of An Orthodox Table. Both /table/fasting/ and
+// /table/everyday/ render this with a different `book`, so the two
+// shelves can't drift apart in look or behaviour.
+//
+// Recipes load at runtime from /api/recipes, so a newly posted one
+// appears without a rebuild — the same table-driven pattern as the
+// library and the lessons.
+interface Props {
+  book: "fasting" | "everyday";
+  heading: string;
+  blurb: string;
+}
+const { book, heading, blurb } = Astro.props;
+const fasting = book === "fasting";
+---
+
+<main class="mx-auto max-w-5xl px-4 py-12 md:px-6">
+  <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+    <a href="/table/" class="text-brand-tan-dark no-underline hover:underline">← An Orthodox Table</a>
+  </p>
+  <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">{heading}</h1>
+  <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+  <p class="mt-5 max-w-2xl text-text-primary/85 leading-relaxed">{blurb}</p>
+
+  <!-- Searching and filtering happen here in the browser: a parish
+       collection is small enough that every recipe is already loaded,
+       and a dish you half-remember is found by typing, not by paging. -->
+  <div class="mt-8 flex flex-wrap items-center gap-3">
+    <label for="recipe-search" class="sr-only">Search these recipes</label>
+    <input
+      id="recipe-search"
+      type="search"
+      placeholder="Search by name or ingredient…"
+      class="min-w-0 flex-1 border border-border-soft bg-cream-card px-3 py-2 text-sm focus:outline-none focus:ring-2"
+    />
+    <span id="recipe-count" class="text-sm text-text-secondary" role="status"></span>
+  </div>
+
+  <p id="recipe-loading" class="mt-8 text-sm italic text-text-secondary">Loading recipes…</p>
+  <p id="recipe-error" hidden role="alert" class="mt-8 text-sm text-liturgical-red"></p>
+  <p id="recipe-empty" hidden class="mt-8 text-sm italic text-text-secondary">
+    Nothing here yet. If you have one to share,
+    <a href="/table/share/" class="text-brand-blue-dark">send it in</a>.
+  </p>
+
+  <ul id="recipe-list" class="mt-8 grid gap-4 sm:grid-cols-2" data-fasting={String(fasting)}></ul>
+
+  <p class="mt-12 border-t border-border-soft pt-6 text-sm text-text-secondary">
+    Have one to add? <a href="/table/share/" class="font-semibold text-brand-blue-dark">Share a recipe →</a>
+  </p>
+</main>
+
+<script>
+  type Recipe = {
+    slug: string;
+    title: string;
+    hands_on: string | null;
+    total_time: string | null;
+    serves: string | null;
+    intro: string | null;
+    ingredients: string[];
+    submitted_by_name: string | null;
+  };
+
+  let recipes: Recipe[] = [];
+
+  const listEl = document.getElementById("recipe-list") as HTMLUListElement;
+  const loadingEl = document.getElementById("recipe-loading") as HTMLParagraphElement;
+  const errorEl = document.getElementById("recipe-error") as HTMLParagraphElement;
+  const emptyEl = document.getElementById("recipe-empty") as HTMLParagraphElement;
+  const countEl = document.getElementById("recipe-count") as HTMLSpanElement;
+  const searchEl = document.getElementById("recipe-search") as HTMLInputElement;
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /** Accents folded and punctuation dropped, as elsewhere on the site. */
+  function normalise(value: unknown): string {
+    return String(value ?? "")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function card(r: Recipe): string {
+    // The times a cook actually wants before opening anything.
+    const meta = [r.total_time ? `${r.total_time}` : "", r.serves ? `Serves ${r.serves}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+    return `<li class="border border-border-soft bg-cream-card p-5 shadow-sm">
+      <h2 class="font-display text-xl">
+        <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
+           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>
+      </h2>
+      ${meta ? `<p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(meta)}</p>` : ""}
+      ${r.intro ? `<p class="mt-2 text-sm text-text-primary/85">${escapeHtml(r.intro.slice(0, 160))}${r.intro.length > 160 ? "…" : ""}</p>` : ""}
+      ${r.submitted_by_name ? `<p class="mt-3 text-xs italic text-text-secondary">from ${escapeHtml(r.submitted_by_name)}</p>` : ""}
+    </li>`;
+  }
+
+  function render() {
+    const terms = normalise(searchEl.value).split(/\s+/).filter(Boolean);
+    // Ingredients are searched too, because the question is usually
+    // "what can I do with these lentils", not "what was it called".
+    const shown = terms.length
+      ? recipes.filter((r) => {
+          const hay = normalise([r.title, r.intro, (r.ingredients ?? []).join(" ")].join(" "));
+          return terms.every((t) => hay.includes(t));
+        })
+      : recipes;
+
+    listEl.innerHTML = shown.map(card).join("");
+    countEl.textContent = shown.length
+      ? `${shown.length} ${shown.length === 1 ? "recipe" : "recipes"}`
+      : "";
+    emptyEl.hidden = shown.length > 0 || recipes.length === 0;
+    if (recipes.length > 0 && shown.length === 0) {
+      emptyEl.hidden = false;
+      emptyEl.textContent = `Nothing matches "${searchEl.value.trim()}".`;
+    }
+  }
+
+  searchEl.addEventListener("input", render);
+
+  (async () => {
+    try {
+      const res = await fetch(`/api/recipes?fasting=${listEl.dataset.fasting === "true" ? "true" : "false"}`, {
+        credentials: "same-origin",
+      });
+      loadingEl.hidden = true;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        errorEl.textContent = `Could not load the recipes: ${body.error ?? res.status}`;
+        errorEl.hidden = false;
+        return;
+      }
+      const data = await res.json();
+      recipes = (data.recipes ?? []) as Recipe[];
+      if (recipes.length === 0) {
+        emptyEl.hidden = false;
+        return;
+      }
+      render();
+    } catch (err) {
+      loadingEl.hidden = true;
+      errorEl.textContent = `Could not load the recipes: ${err instanceof Error ? err.message : String(err)}`;
+      errorEl.hidden = false;
+    }
+  })();
+</script>

@@ -1,0 +1,238 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Admin screen for An Orthodox Table. The ones waiting come first,
+// because clearing the queue is what this page is opened for.
+//
+// A recipe can be read in full here without leaving the page: deciding
+// whether a dish really is fasting means reading the ingredients, and
+// nobody should have to open a second tab to do it.
+---
+
+<Layout
+  title="Recipes Admin | St. John of Kronstadt"
+  description="Review and post recipes shared with the parish."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-5xl px-4 py-8 md:px-6">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="mb-2 font-display text-3xl text-text-primary md:text-4xl">An Orthodox Table</h1>
+    <p class="mb-6 text-text-secondary">
+      Recipes shared by catechumens and members. Nothing appears on the site
+      until it's posted here — read the ingredients before posting one to the
+      fasting book.
+    </p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+    <div id="error-msg" hidden role="alert" class="mb-4 text-liturgical-red"></div>
+
+    <div id="app" hidden>
+      <p id="queue-count" class="mb-4 font-display text-sm uppercase tracking-widest text-brand-tan-dark"></p>
+      <div id="recipe-rows" class="space-y-4"></div>
+      <p id="empty" hidden class="text-sm italic text-text-secondary">
+        No recipes yet. They'll appear here as people send them in.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Recipe = {
+    id: string;
+    slug: string;
+    title: string;
+    fasting: boolean;
+    hands_on: string | null;
+    total_time: string | null;
+    serves: string | null;
+    preheat: string | null;
+    intro: string | null;
+    ingredients: string[];
+    directions: string[];
+    notes: string | null;
+    submitted_by_name: string | null;
+    published: boolean;
+    created_at: string;
+  };
+
+  let recipes: Recipe[] = [];
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function showError(message: string) {
+    const el = document.getElementById("error-msg") as HTMLDivElement;
+    el.textContent = message;
+    el.hidden = false;
+  }
+
+  function formatDate(value: string): string {
+    try {
+      return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return value;
+    }
+  }
+
+  function row(r: Recipe): string {
+    const meta = [r.hands_on, r.total_time, r.serves ? `serves ${r.serves}` : "", r.preheat]
+      .filter(Boolean)
+      .map((m) => escapeHtml(m))
+      .join(" · ");
+
+    return `<article class="border ${r.published ? "border-border-soft" : "border-sacred-gold"} bg-cream-card p-5 shadow-sm" data-id="${escapeHtml(r.id)}">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 class="font-display text-xl text-text-primary">${escapeHtml(r.title)}</h2>
+          <p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">
+            ${r.fasting ? "Fasting" : "Everyday"}
+            ${r.submitted_by_name ? ` · from ${escapeHtml(r.submitted_by_name)}` : ""}
+            · ${escapeHtml(formatDate(r.created_at))}
+          </p>
+          ${meta ? `<p class="mt-1 text-xs text-text-secondary">${meta}</p>` : ""}
+        </div>
+        <span class="whitespace-nowrap border px-2 py-0.5 text-[0.65rem] uppercase tracking-wider ${
+          r.published
+            ? "border-border-soft text-text-secondary"
+            : "border-sacred-gold text-brand-tan-dark"
+        }">${r.published ? "Posted" : "Waiting"}</span>
+      </div>
+
+      ${r.intro ? `<p class="mt-3 text-sm italic text-text-primary/85">${escapeHtml(r.intro)}</p>` : ""}
+
+      <!-- Read it here. Judging a fasting recipe means reading what's in
+           it, and that shouldn't need a second tab. -->
+      <details class="mt-3">
+        <summary class="cursor-pointer text-sm font-semibold text-brand-blue-dark">
+          Read the recipe
+        </summary>
+        <div class="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <h3 class="text-xs uppercase tracking-widest text-text-secondary">Ingredients</h3>
+            <ul class="mt-2 space-y-1 text-sm">
+              ${(r.ingredients ?? []).map((i) => `<li>${escapeHtml(i)}</li>`).join("")}
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-xs uppercase tracking-widest text-text-secondary">Directions</h3>
+            <ol class="mt-2 space-y-2 text-sm">
+              ${(r.directions ?? []).map((d, i) => `<li><span class="text-brand-tan-dark">${i + 1}.</span> ${escapeHtml(d)}</li>`).join("")}
+            </ol>
+          </div>
+        </div>
+        ${r.notes ? `<p class="mt-3 text-sm text-text-primary/85"><span class="text-xs uppercase tracking-widest text-text-secondary">Notes</span><br>${escapeHtml(r.notes)}</p>` : ""}
+      </details>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-4">
+        <button type="button" class="btn ${r.published ? "btn-secondary" : "btn-primary"} text-sm" data-action="toggle-posted">
+          ${r.published ? "Un-post" : "Post it"}
+        </button>
+        <button type="button" class="btn btn-secondary text-sm" data-action="toggle-book">
+          Move to ${r.fasting ? "Everyday" : "Fasting"}
+        </button>
+        ${r.published ? `<a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}" target="_blank" rel="noopener" class="btn btn-secondary text-sm">View</a>` : ""}
+        <button type="button" class="btn btn-secondary text-sm ml-auto" data-action="delete">Delete</button>
+        <span class="row-status text-sm text-text-secondary"></span>
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    const rows = document.getElementById("recipe-rows") as HTMLDivElement;
+    const empty = document.getElementById("empty") as HTMLParagraphElement;
+    const count = document.getElementById("queue-count") as HTMLParagraphElement;
+
+    rows.innerHTML = recipes.map(row).join("");
+    empty.hidden = recipes.length > 0;
+
+    const waiting = recipes.filter((r) => !r.published).length;
+    count.textContent = waiting
+      ? `${waiting} waiting to be posted`
+      : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"}, all posted`;
+  }
+
+  async function loadRecipes() {
+    const res = await fetch("/api/admin/recipes", { credentials: "same-origin", cache: "no-store" });
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return;
+    }
+    (document.getElementById("loading") as HTMLDivElement).hidden = true;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      showError(`Couldn't load the recipes: ${body.error ?? res.status}`);
+      return;
+    }
+    const data = await res.json();
+    // Waiting first, newest within each group. The API orders them this
+    // way too, but the page shouldn't depend on that — the queue coming
+    // first is the whole point of opening it.
+    recipes = ((data.recipes ?? []) as Recipe[]).sort((a, b) => {
+      if (a.published !== b.published) return a.published ? 1 : -1;
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
+    (document.getElementById("app") as HTMLDivElement).hidden = false;
+    render();
+  }
+
+  async function patch(id: string, changes: Record<string, unknown>, statusEl: HTMLElement | null) {
+    if (statusEl) statusEl.textContent = "Saving…";
+    const res = await fetch(`/api/admin/recipes/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(changes),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (statusEl) statusEl.textContent = body.error ?? `Failed (${res.status})`;
+      return false;
+    }
+    await loadRecipes();
+    return true;
+  }
+
+  document.getElementById("recipe-rows")?.addEventListener("click", async (event) => {
+    const btn = (event.target as HTMLElement | null)?.closest("[data-action]") as HTMLElement | null;
+    if (!btn) return;
+    const article = btn.closest("article") as HTMLElement | null;
+    const id = article?.dataset.id ?? "";
+    if (!id) return;
+    const recipe = recipes.find((r) => r.id === id);
+    if (!recipe) return;
+    const statusEl = article?.querySelector(".row-status") as HTMLElement | null;
+
+    switch (btn.dataset.action) {
+      case "toggle-posted":
+        await patch(id, { published: !recipe.published }, statusEl);
+        break;
+      case "toggle-book":
+        await patch(id, { fasting: !recipe.fasting }, statusEl);
+        break;
+      case "delete": {
+        if (!window.confirm(`Delete "${recipe.title}"? This can't be undone.`)) return;
+        if (statusEl) statusEl.textContent = "Deleting…";
+        const res = await fetch(`/api/admin/recipes/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (statusEl) statusEl.textContent = body.error ?? `Failed (${res.status})`;
+          return;
+        }
+        await loadRecipes();
+        break;
+      }
+    }
+  });
+
+  void loadRecipes();
+</script>

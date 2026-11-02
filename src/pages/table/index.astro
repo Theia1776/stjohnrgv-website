@@ -1,0 +1,94 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// An Orthodox Table — the front of the parish recipe collection.
+// Two shelves, side by side on one row: the fasting book and everything
+// else. Deliberately only two choices, because a cook arriving here
+// already knows which kind of day it is.
+---
+
+<Layout
+  title="An Orthodox Table | St. John of Kronstadt Orthodox Mission"
+  description="Recipes and a guide to eating Orthodox — fasting dishes and everyday cooking shared by our parish."
+>
+  <main class="mx-auto max-w-5xl px-4 py-12 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      St. John of Kronstadt Orthodox Mission
+    </p>
+    <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">An Orthodox Table</h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+    <p class="mt-5 max-w-2xl font-display text-lg text-text-primary/85 md:text-xl">
+      Recipes and a guide to eating Orthodox.
+    </p>
+
+    <p class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
+      The Church keeps roughly half the year as fast, and a fast is not a
+      hardship to be endured in silence — it has its own cooking, handed
+      between households for centuries. These are our parish's, shared by
+      the people who make them.
+    </p>
+
+    <!-- Two entry points on one row, as asked. They fall to one column on
+         a phone rather than squeezing to half-width each. -->
+    <div class="mt-10 grid gap-6 md:grid-cols-2">
+      <a
+        href="/table/fasting/"
+        class="group block border border-border-soft bg-cream-card p-7 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+      >
+        <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">Book One</span>
+        <h2 class="mt-2 font-display text-2xl text-text-primary group-hover:text-brand-blue-dark">
+          Fasting Recipes
+        </h2>
+        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+        <p class="mt-4 text-sm text-text-primary/85 leading-relaxed">
+          No meat, dairy or eggs. What we cook on Wednesdays and Fridays,
+          through Great Lent, and the other fasts of the year.
+        </p>
+        <p class="mt-5 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+          Open the fasting book →
+        </p>
+      </a>
+
+      <a
+        href="/table/everyday/"
+        class="group block border border-border-soft bg-cream-card p-7 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+      >
+        <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">Book Two</span>
+        <h2 class="mt-2 font-display text-2xl text-text-primary group-hover:text-brand-blue-dark">
+          Everyday Recipes
+        </h2>
+        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+        <p class="mt-4 text-sm text-text-primary/85 leading-relaxed">
+          Feast days, Pascha, coffee hour, and anything else our people
+          want to pass along.
+        </p>
+        <p class="mt-5 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+          Open the everyday book →
+        </p>
+      </a>
+    </div>
+
+    <section class="mt-12 border-t border-border-soft pt-8">
+      <h2 class="font-display text-xl text-text-primary">Share one of yours</h2>
+      <p class="mt-3 max-w-2xl text-text-primary/85 leading-relaxed">
+        Catechumens and members can add recipes to either book. Fill in the
+        form and it comes to the parish office; once it's been looked over
+        it goes up with your name on it.
+      </p>
+      <p class="mt-5">
+        <a href="/table/share/" class="btn btn-primary">Share a recipe</a>
+      </p>
+    </section>
+
+    <section class="mt-12 border-t border-border-soft pt-8">
+      <h2 class="font-display text-xl text-text-primary">What the fast asks</h2>
+      <p class="mt-3 max-w-2xl text-text-primary/85 leading-relaxed">
+        The fasting rule for any given day is on the
+        <a href="/calendar/" class="font-semibold text-brand-blue-dark">parish calendar</a> —
+        it says plainly whether the day is a fast, whether fish, wine or oil
+        are allowed, and which season it belongs to. When in doubt, ask Fr.
+        Antonios rather than a website.
+      </p>
+    </section>
+  </main>
+</Layout>
