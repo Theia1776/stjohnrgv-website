@@ -1,20 +1,25 @@
 ---
-// One book of An Orthodox Table. Both /table/fasting/ and
-// /table/everyday/ render this with a different `book`, so the two
-// shelves can't drift apart in look or behaviour.
+// One shelf of An Orthodox Table. /table/fasting/, /table/everyday/
+// and /table/gluten-free/ all render this with a different `book`, so
+// they can't drift apart in look or behaviour.
+//
+// Gluten-free is the odd one: it isn't a book but a cut across both,
+// because a gluten-free dish may be fasting or not. It asks the server
+// for the gluten-free recipes with no fasting filter, which means a
+// signed-out visitor gets the gluten-free fasting ones — the same rule
+// the books keep, narrowed rather than replaced.
 //
 // Recipes load at runtime from /api/recipes, so a newly posted one
 // appears without a rebuild — the same table-driven pattern as the
 // library and the lessons.
 interface Props {
-  book: "fasting" | "everyday";
+  book: "fasting" | "everyday" | "gluten-free";
   heading: string;
   blurb: string;
   /** Where the practical help lives, for the fasting book. */
   help?: string;
 }
 const { book, heading, blurb, help } = Astro.props;
-const fasting = book === "fasting";
 ---
 
 <main class="mx-auto max-w-5xl px-4 py-12 md:px-6">
@@ -65,7 +70,7 @@ const fasting = book === "fasting";
     <a href="/table/share/" class="text-brand-blue-dark">send it in</a>.
   </p>
 
-  <div id="recipe-list" class="mt-8 space-y-10" data-fasting={String(fasting)}></div>
+  <div id="recipe-list" class="mt-8 space-y-10" data-book={book}></div>
 
   <p class="mt-12 border-t border-border-soft pt-6 text-sm text-text-secondary">
     Have one to add? <a href="/table/share/" class="font-semibold text-brand-blue-dark">Share a recipe →</a>
@@ -78,6 +83,8 @@ const fasting = book === "fasting";
   type Recipe = {
     slug: string;
     title: string;
+    fasting: boolean;
+    gluten_free: boolean;
     category: string | null;
     hands_on: string | null;
     total_time: string | null;
@@ -116,16 +123,31 @@ const fasting = book === "fasting";
       .trim();
   }
 
+  const mode = listEl.dataset.book ?? "fasting";
+
   function card(r: Recipe): string {
     // The times a cook actually wants before opening anything.
     const meta = [r.total_time ? `${r.total_time}` : "", r.serves ? `Serves ${r.serves}` : ""]
       .filter(Boolean)
       .join(" · ");
+    // The gluten-free shelf mixes both books, so each card has to say
+    // which one it came from; inside a book that label would be noise.
+    const book =
+      mode === "gluten-free"
+        ? `<span class="ml-2 border border-border-soft px-1.5 py-0.5 align-middle text-[0.6rem] uppercase tracking-wider text-text-secondary">${
+            r.fasting ? "Fasting" : "Everyday"
+          }</span>`
+        : "";
+    // And inside a book, the gluten-free ones are worth marking.
+    const gf =
+      mode !== "gluten-free" && r.gluten_free
+        ? `<span class="ml-2 border border-sacred-gold px-1.5 py-0.5 align-middle text-[0.6rem] uppercase tracking-wider text-brand-tan-dark">GF</span>`
+        : "";
     return `<li class="border border-border-soft bg-cream-card p-5 shadow-sm">
       ${r.category ? `<p class="mb-1 text-[0.65rem] uppercase tracking-widest text-brand-tan-dark">${escapeHtml(categoryOf(r.category))}</p>` : ""}
       <h3 class="font-display text-xl">
         <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
-           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>
+           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>${book}${gf}
       </h3>
       ${meta ? `<p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(meta)}</p>` : ""}
       ${r.intro ? `<p class="mt-2 text-sm text-text-primary/85">${escapeHtml(r.intro.slice(0, 160))}${r.intro.length > 160 ? "…" : ""}</p>` : ""}
@@ -210,7 +232,14 @@ const fasting = book === "fasting";
 
   (async () => {
     try {
-      const res = await fetch(`/api/recipes?fasting=${listEl.dataset.fasting === "true" ? "true" : "false"}`, {
+      // Gluten-free asks for no book at all and narrows instead, so a
+      // signed-out visitor gets the gluten-free fasting recipes rather
+      // than a 403 on a shelf that was never one book's to begin with.
+      const query =
+        listEl.dataset.book === "gluten-free"
+          ? "gluten_free=true"
+          : `fasting=${listEl.dataset.book === "fasting" ? "true" : "false"}`;
+      const res = await fetch(`/api/recipes?${query}`, {
         credentials: "same-origin",
       });
       loadingEl.hidden = true;

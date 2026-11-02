@@ -80,7 +80,12 @@ import Layout from "../../layouts/Layout.astro";
             </span>
           </span>
         </div>
-        <span id="recipe-book" class="recipe-rule text-right text-text-secondary"></span>
+        <span class="text-right">
+          <span id="recipe-book" class="recipe-rule block text-text-secondary"></span>
+          <span id="recipe-gf" hidden class="mt-1 block text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+            Gluten-Free
+          </span>
+        </span>
       </div>
 
       <h1 id="recipe-title" class="mt-6 font-display text-3xl text-text-primary md:text-4xl"></h1>
@@ -110,6 +115,12 @@ import Layout from "../../layouts/Layout.astro";
 
       <!-- Only on paper. A sheet that outlives the browser tab should
            say where it came from and how to find more. -->
+      <div id="recipe-gf-note" hidden class="mt-8 border-l-2 border-sacred-gold pl-4 text-xs leading-relaxed text-text-secondary">
+        Marked gluten-free by the cook who shared it. Gluten hides in soy
+        sauce, stock cubes, gravy mixes, malt vinegar and most oats — if
+        you are coeliac, please read the packets as well.
+      </div>
+
       <div class="print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
         <p>St. John of Kronstadt Orthodox Mission · 39737 Palm Drive, Bayview, TX 78566 · (956) 434-6874</p>
         <p class="mt-1">An Orthodox Table — stjohnrgv.org/table</p>
@@ -128,6 +139,7 @@ import Layout from "../../layouts/Layout.astro";
     slug: string;
     title: string;
     fasting: boolean;
+    gluten_free: boolean;
     hands_on: string | null;
     total_time: string | null;
     serves: string | null;
@@ -175,6 +187,12 @@ import Layout from "../../layouts/Layout.astro";
 
       document.title = `${recipe.title} | An Orthodox Table`;
       setText("recipe-book", recipe.fasting ? "Fasting Recipe" : "Everyday Recipe");
+      if (recipe.gluten_free) {
+        (document.getElementById("recipe-gf") as HTMLElement).hidden = false;
+        // On paper too: a sheet pinned inside a cupboard door outlives
+        // the page that explained the caution.
+        (document.getElementById("recipe-gf-note") as HTMLElement).hidden = false;
+      }
       setText("recipe-title", recipe.title);
 
       // Only the parts the cook filled in — an empty "Serves" reads as a

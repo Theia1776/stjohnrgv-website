@@ -105,6 +105,30 @@ import Layout from "../../layouts/Layout.astro";
       </a>
     </div>
 
+    <!-- Across the row rather than on it. Gluten-free isn't a third
+         book — a gluten-free dish sits in whichever book it belongs to
+         and is marked — so it reads as a way through both, which is
+         what it is. -->
+    <a
+      href="/table/gluten-free/"
+      class="group mt-6 block border border-border-soft bg-cream-card p-6 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+    >
+      <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+        Across both books
+      </span>
+      <h2 class="mt-2 font-display text-xl text-text-primary group-hover:text-brand-blue-dark">
+        Gluten-Free Recipes
+      </h2>
+      <p class="mt-3 max-w-2xl text-sm text-text-primary/85 leading-relaxed">
+        Everything from either book made without wheat, barley or rye.
+        Coeliac disease doesn't take fast days off, and nobody should have
+        to read four hundred recipes to find the ones they can eat.
+      </p>
+      <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+        See the gluten-free recipes →
+      </p>
+    </a>
+
     <!-- The parish's older collection, which lives in the library
          rather than here. Linked so a cook looking for fasting food
          finds it, instead of it sitting unread behind a catalogue. -->
@@ -150,6 +174,7 @@ import Layout from "../../layouts/Layout.astro";
     slug: string;
     title: string;
     fasting: boolean;
+    gluten_free: boolean;
     category: string | null;
     intro: string | null;
     ingredients: string[];
@@ -240,6 +265,7 @@ import Layout from "../../layouts/Layout.astro";
           <span class="ml-2 border border-border-soft px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-text-secondary">
             ${r.fasting ? "Fasting" : "Everyday"}
           </span>
+          ${r.gluten_free ? '<span class="ml-1 border border-sacred-gold px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-brand-tan-dark">GF</span>' : ""}
           ${bits ? `<p class="mt-1 text-xs text-text-secondary">${bits}</p>` : ""}
         </li>`;
       })

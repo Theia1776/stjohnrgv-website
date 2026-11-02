@@ -16,7 +16,7 @@ interface Env {
 }
 
 const RECIPE_FIELDS =
-  "id, slug, title, fasting, category, hands_on, total_time, serves, preheat, intro, " +
+  "id, slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
   "ingredients, directions, notes, submitted_by_name, published, created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {

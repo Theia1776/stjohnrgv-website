@@ -56,6 +56,27 @@ import { RECIPE_CATEGORIES, categoryValue } from "../../lib/recipe-categories";
         </div>
       </fieldset>
 
+      <!-- Gluten is nothing to do with fasting — a lentil soup can be
+           both, a Pascha bread neither — so it's a tick rather than a
+           third book, and the recipe keeps its proper shelf. The
+           wording asks the cook to be sure, because the people reading
+           this are coeliac and the hidden sources catch everyone out. -->
+      <fieldset class="border border-border-soft bg-cream-card p-4">
+        <legend class="px-1 text-sm font-semibold text-text-primary">Gluten</legend>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input id="gluten_free" type="checkbox" class="mt-1 h-4 w-4" />
+          <span>
+            <span class="font-semibold text-text-primary">This one is gluten-free</span>
+            <span class="mt-0.5 block text-xs leading-relaxed text-text-secondary">
+              Only tick this if you're sure. Gluten hides in soy sauce,
+              stock cubes and gravy mixes, in most oats, and in malt and
+              seasoning blends — so if a brand matters, please say which
+              one you use in the notes below.
+            </span>
+          </span>
+        </label>
+      </fieldset>
+
       <div>
         <label for="title" class="block text-sm font-semibold text-text-primary">
           What is it called? <span aria-hidden="true" class="text-brand-tan-dark">*</span>
@@ -311,6 +332,7 @@ import { RECIPE_CATEGORIES, categoryValue } from "../../lib/recipe-categories";
           title,
           fasting:
             (document.querySelector('input[name="book"]:checked') as HTMLInputElement)?.value !== "everyday",
+          gluten_free: (document.getElementById("gluten_free") as HTMLInputElement).checked,
           category: (document.getElementById("category") as HTMLSelectElement).value,
           hands_on: (document.getElementById("hands_on") as HTMLInputElement).value,
           total_time: (document.getElementById("total_time") as HTMLInputElement).value,

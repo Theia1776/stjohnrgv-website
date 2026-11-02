@@ -25,7 +25,7 @@ const MAX_FIELD = 400;
 const MAX_STEP = 2000;
 
 const RECIPE_FIELDS =
-  "id, slug, title, fasting, category, hands_on, total_time, serves, preheat, intro, " +
+  "id, slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
   "ingredients, directions, notes, submitted_by_name, published, created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -94,6 +94,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     const updates: Record<string, unknown> = {};
     if (typeof body.published === "boolean") updates.published = body.published;
     if (typeof body.fasting === "boolean") updates.fasting = body.fasting;
+    if (typeof body.gluten_free === "boolean") updates.gluten_free = body.gluten_free;
     // Clearing it is allowed — an empty string means "no category yet",
     // which is where a recipe sits before anyone has filed it.
     if ("category" in body) {

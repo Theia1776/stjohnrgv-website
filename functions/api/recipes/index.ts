@@ -15,6 +15,7 @@
  * the thing worth a second pair of eyes.
  *
  * GET query: ?fasting=true | false  (omit for both)
+ *            ?gluten_free=true      (crosses both books)
  * POST body: { title, fasting, hands_on?, total_time?, serves?,
  *              preheat?, intro?, ingredients[], directions[], notes? }
  */
@@ -35,7 +36,7 @@ const MAX_STEP = 2000;
 
 /** Listed for readers; never the unposted ones. */
 const RECIPE_FIELDS =
-  "slug, title, fasting, category, hands_on, total_time, serves, preheat, intro, " +
+  "slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
   "ingredients, directions, notes, submitted_by_name, created_at";
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -90,6 +91,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   const url = new URL(context.request.url);
   const fastingParam = url.searchParams.get("fasting");
+  const glutenFreeOnly = url.searchParams.get("gluten_free") === "true";
   const slug = url.searchParams.get("slug")?.trim() ?? "";
 
   const supabase = createClient(SUPABASE_URL, context.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -130,6 +132,12 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   if (fastingParam === "true") query = query.eq("fasting", true);
   else if (fastingParam === "false") query = query.eq("fasting", false);
+
+  // Gluten-free crosses both books, so it narrows whatever the viewer
+  // is already allowed to see rather than replacing the rule: signed
+  // out it means the gluten-free fasting recipes, which is the right
+  // answer and not an empty page.
+  if (glutenFreeOnly) query = query.eq("gluten_free", true);
 
   // Asked for the everyday book while signed out: say so rather than
   // answering with an empty shelf, which reads as "there is nothing
@@ -242,6 +250,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         slug,
         title,
         fasting: body.fasting !== false,
+        // Only ever what the cook ticked. Nothing here reads the
+        // ingredients to decide this — see src/lib/recipe-gluten.ts
+        // for why that would be the wrong kind of helpful.
+        gluten_free: body.gluten_free === true,
         // Checked against the shared list rather than trusted: a value
         // that isn't offered anywhere would file the recipe on a shelf
         // no page knows how to show.

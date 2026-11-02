@@ -75,7 +75,8 @@ import Layout from "../../layouts/Layout.astro";
           <option value="posted">Posted</option>
           <option value="fasting">Fasting book</option>
           <option value="everyday">Everyday book</option>
-          <option value="unfiled">Not yet filed</option>
+          <option value="gluten-free">Gluten-free</option>
+        <option value="unfiled">Not yet filed</option>
         </select>
         <span id="admin-shown" class="text-sm text-text-secondary" role="status"></span>
       </div>
@@ -114,12 +115,14 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   import { RECIPE_CATEGORIES, categoryOf, categoryValue } from "../../lib/recipe-categories";
+  import { glutenWarnings } from "../../lib/recipe-gluten";
 
   type Recipe = {
     id: string;
     slug: string;
     title: string;
     fasting: boolean;
+    gluten_free: boolean;
     category: string | null;
     hands_on: string | null;
     total_time: string | null;
@@ -159,6 +162,36 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
+  /**
+   * A recipe marked gluten-free whose ingredients say otherwise.
+   *
+   * Shown, never acted on. The mark is a person's judgement and this
+   * cannot overrule it — a cook may well be using tamari, or certified
+   * oats, or a gluten-free flour the line doesn't name. But a contested
+   * mark should be visible on the card rather than discovered by
+   * somebody with coeliac disease, so it says what caught its eye and
+   * leaves the decision where it belongs.
+   */
+  function glutenNotice(r: Recipe): string {
+    if (!r.gluten_free) return "";
+    const warnings = glutenWarnings(r.ingredients ?? []);
+    if (warnings.length === 0) return "";
+    const items = warnings
+      .map((w) => `<li>${escapeHtml(w.line)} <span class="text-text-secondary">— ${escapeHtml(w.word)}</span></li>`)
+      .join("");
+    return `<div class="mt-3 border-l-2 border-liturgical-red bg-cream-bg p-3">
+      <p class="text-xs font-semibold uppercase tracking-widest text-liturgical-red">
+        Marked gluten-free, but worth a look
+      </p>
+      <ul class="mt-2 space-y-0.5 text-sm text-text-primary/85">${items}</ul>
+      <p class="mt-2 text-xs text-text-secondary">
+        Fine if the cook is using tamari, certified oats or a gluten-free
+        flour — the line just doesn't say so. Worth a note on the recipe if
+        the brand matters.
+      </p>
+    </div>`;
+  }
+
   function row(r: Recipe): string {
     const meta = [r.hands_on, r.total_time, r.serves ? `serves ${r.serves}` : "", r.preheat]
       .filter(Boolean)
@@ -176,12 +209,17 @@ import Layout from "../../layouts/Layout.astro";
           </p>
           ${meta ? `<p class="mt-1 text-xs text-text-secondary">${meta}</p>` : ""}
         </div>
-        <span class="whitespace-nowrap border px-2 py-0.5 text-[0.65rem] uppercase tracking-wider ${
-          r.published
-            ? "border-border-soft text-text-secondary"
-            : "border-sacred-gold text-brand-tan-dark"
-        }">${r.published ? "Posted" : "Waiting"}</span>
+        <div class="flex flex-wrap items-center gap-2">
+          ${r.gluten_free ? '<span class="whitespace-nowrap border border-sacred-gold px-2 py-0.5 text-[0.65rem] uppercase tracking-wider text-brand-tan-dark">Gluten-free</span>' : ""}
+          <span class="whitespace-nowrap border px-2 py-0.5 text-[0.65rem] uppercase tracking-wider ${
+            r.published
+              ? "border-border-soft text-text-secondary"
+              : "border-sacred-gold text-brand-tan-dark"
+          }">${r.published ? "Posted" : "Waiting"}</span>
+        </div>
       </div>
+
+      ${glutenNotice(r)}
 
       ${r.intro ? `<p class="mt-3 text-sm italic text-text-primary/85">${escapeHtml(r.intro)}</p>` : ""}
 
@@ -268,6 +306,9 @@ import Layout from "../../layouts/Layout.astro";
         <button type="button" class="btn btn-secondary text-sm" data-action="toggle-book">
           Move to ${r.fasting ? "Everyday" : "Fasting"}
         </button>
+        <button type="button" class="btn btn-secondary text-sm" data-action="toggle-gluten-free">
+          ${r.gluten_free ? "Not gluten-free" : "Mark gluten-free"}
+        </button>
         ${r.published ? `<a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}" target="_blank" rel="noopener" class="btn btn-secondary text-sm">View</a>` : ""}
         <button type="button" class="btn btn-secondary text-sm ml-auto" data-action="delete">Delete</button>
         <span class="row-status text-sm text-text-secondary"></span>
@@ -296,6 +337,7 @@ import Layout from "../../layouts/Layout.astro";
         case "posted": if (!r.published) return false; break;
         case "fasting": if (!r.fasting) return false; break;
         case "everyday": if (r.fasting) return false; break;
+        case "gluten-free": if (!r.gluten_free) return false; break;
         case "unfiled": if (r.category) return false; break;
       }
       if (terms.length === 0) return true;
@@ -407,6 +449,29 @@ import Layout from "../../layouts/Layout.astro";
       case "toggle-book":
         await patch(id, { fasting: !recipe.fasting }, statusEl);
         break;
+      case "toggle-gluten-free": {
+        // Ask before granting the mark over an objection. Never before
+        // removing it — taking a claim back is always the safe way.
+        if (!recipe.gluten_free) {
+          const warnings = glutenWarnings(recipe.ingredients ?? []);
+          if (warnings.length) {
+            const shown = warnings.slice(0, 6).map((w) => `  • ${w.line}  (${w.word})`);
+            if (warnings.length > 6) shown.push(`  …and ${warnings.length - 6} more`);
+            const ok = window.confirm(
+              [
+                "These ingredients look like they contain gluten:",
+                "",
+                ...shown,
+                "",
+                `Mark "${recipe.title}" gluten-free anyway?`,
+              ].join("\u000a"),
+            );
+            if (!ok) return;
+          }
+        }
+        await patch(id, { gluten_free: !recipe.gluten_free }, statusEl);
+        break;
+      }
       case "delete": {
         if (!window.confirm(`Delete "${recipe.title}"? This can't be undone.`)) return;
         if (statusEl) statusEl.textContent = "Deleting…";
