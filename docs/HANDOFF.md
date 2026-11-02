@@ -103,14 +103,87 @@ appear immediately under **My Learning** with no deploy.
 
 ---
 
+## An Orthodox Table
+
+The parish recipe collection, at `/table/`. Two books: **Fasting**
+(vegan — no meat, dairy or eggs) and **Everyday**.
+
+| | |
+|---|---|
+| Recipes | **314**, all posted |
+| Fasting book | **35**, public to anyone |
+| Everyday book | **279**, signed-in members |
+| Categories | `src/lib/recipe-categories.ts` — three groups, each ending in Misc. |
+
+**The public/member split is the thing to understand.** The fasting
+book is open to the world, because people search for Orthodox Lenten
+cooking and that is a good door into a parish. The everyday book is the
+families' own and stays inside. Enforced in
+[functions/api/recipes/index.ts](../functions/api/recipes/index.ts), so
+a direct link to an everyday recipe is refused too, and the listing is
+cached **private** — what comes back depends on who is asking.
+
+Catechumens and members submit at `/table/share/`; the form grows with
+the recipe rather than offering a fixed number of boxes. Nothing appears
+until an admin posts it from `/admin/recipes/`, which has search,
+filters, per-card editing, and two whole-queue jobs: **file the unfiled
+by title** and **post everything waiting**.
+
+Each recipe prints as a card carrying the parish's name, address and
+phone where a cookbook carries its publisher's. Printing is offered to
+account holders; a page that can be read can always be printed, and no
+site can change that.
+
+**Keeping the Fast** at `/table/keeping-the-fast/` answers the question
+every newcomer asks — where the protein comes from — and says that the
+fast bends for the sick, pregnant, nursing, children and those doing
+heavy work, with Fr. Antonios to decide.
+
+### Where the 314 came from
+Theia's old recipe cards, 281 PDFs on her desktop, read by
+[scripts/parse-recipe-pdfs.py](../scripts/parse-recipe-pdfs.py) and
+sorted by
+[scripts/sort-recipes-for-books.py](../scripts/sort-recipes-for-books.py)
+under her rules: everything to Everyday as written; to Fasting only what
+can honestly be made without an animal **with bones** — honey allowed,
+eggs and cream disqualifying, butter, milk and cheese swapped, and
+Worcestershire becoming liquid smoke at a quarter of the measure.
+
+**That sorting took four passes to trust, and the failures are the
+lesson.** The first called Mongolian Beef, Ribs, Goulash and Chili vegan
+because it knew "beef" and not "hamburger", "steak" or "brisket". The
+second let Fish Tacos through on "Mahi-Mahi" and "Mayo". The third tried
+to make a box of macaroni and cheese fasting by renaming it. The fourth
+blocked a *vegan* meatloaf because "Plant-Based Burger" reads as a
+burger. Any word-matching over food is wrong until proven otherwise on
+the real list — check what it lets through, not just what it blocks.
+
+**The St Philaret cookbook stays in the library**, linked from `/table/`
+rather than imported. Of its 262 credited recipes, 175 name a commercial
+food blog; a parish gathering those into its own book is a different
+thing from republishing them on a public website.
+
+---
+
 ## Who may do what
+
+**Four roles**, in `profiles.role`: `inquirer`, `catechumen`, `member`,
+`admin`. Inquirer is the step before catechumen — someone looking into
+the faith. They read the whole library and all the lessons and receive
+parish email; what they do not get is the **directory** (it carries
+other people's addresses and phone numbers) or **downloads** of
+anything. Both enforced in the API, not by leaving a button undrawn.
+
 
 | | |
 |---|---|
 | Read a library book | public tier: anyone · parishioner tier: signed in · hidden: admins |
 | **Download** a library book | **admins only** |
 | Read a lesson | any signed-in member (drafts: admins) |
-| **Download** a lesson | **any signed-in member** |
+| **Download** a lesson | catechumens, members, admins — **not inquirers** |
+| Read the fasting recipes | **anyone, signed in or not** |
+| Read the everyday recipes | signed-in accounts only |
+| Share a recipe | catechumens, members, admins |
 
 The download rule is enforced in
 [functions/api/library/file.ts](../functions/api/library/file.ts) on
@@ -139,9 +212,14 @@ only automatic lesson announcements.
   [reset-code.ts](../src/lib/reset-code.ts) — drops requests with no
   word to the user. Both are tight for mail that takes minutes.
   Members can change a password from `/account/` without any of this.
-- **Duplicates in the catalogue.** The same book arrived from the old
-  library and from MEGA under different filenames, so some titles appear
-  twice.
+- **Recipe slugs keep their original title.** Renaming a recipe in the
+  admin changes the title but not the URL, so one renamed from "Small
+  Batch #1800" still lives at that address. Links don't break, which is
+  why it works this way, but the address can read oddly.
+- **Duplicates in the catalogue** are dealt with: 67 byte-identical
+  pairs were removed, freeing 568 MB. Two pairs remain that only *look*
+  alike — the 0.2 MB and 33.7 MB "On the Holy Spirit" among them — and
+  are left for a person to judge. The tool is on `/admin/library/`.
 - **Imported titles are only as good as their filenames**, and every
   imported book landed in category **Other**.
 - **`PDF_MAX_BYTES` is still 50 MB** for books and 25 MB for lessons.
@@ -170,6 +248,17 @@ only automatic lesson announcements.
 - **Don't `.trim()` a storage key.** One book is genuinely named
   `" Lord, What Shall I Do…"` with a leading space, and trimming made it
   unreachable while it sat in the bucket the whole time.
+- **A whole-queue job must be sent in batches.** One request asked to
+  do three hundred inserts, deletes or updates runs out of room part
+  way: the duplicate cleanup stopped at 48 of 68 and called the rest
+  "skipped". Every such job now loops in the page.
+- **Don't sum a count across those batches.** The filing job added up
+  "left alone" each round and reported 193 unfiled out of 314 recipes,
+  because a recipe nothing can place stays in every round. Count the
+  state of the table, not the passes.
+- **Don't hide a button a person needs in a fold.** The filing button
+  sat inside "Import a recipe file"; Theia sorted hundreds of recipes by
+  hand without knowing it existed.
 - **Deploy code only after its migration is applied.** Selecting a
   column that doesn't exist yet fails the whole query and takes the page
   down, not just the new feature.
@@ -184,7 +273,8 @@ all applied by hand in the Supabase SQL editor.
 `001`–`006` profiles, coffee hour, library · `007` password_resets ·
 `008` master admin · `009`–`010` directory email · `011` library hidden ·
 `012` catechism_lessons · `013`–`014` parish_emails · `015`–`016`
-library text + page numbers · `017` catechism text.
+library text + page numbers · `017` catechism text · `018` recipes ·
+`019` recipe categories.
 
 ---
 
