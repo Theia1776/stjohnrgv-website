@@ -32,11 +32,14 @@ const { book, heading, blurb, help } = Astro.props;
 
   {
     help && (
-      <aside class="mt-6 max-w-2xl border-l-2 border-sacred-gold bg-cream-card p-5">
-        <p class="text-sm leading-relaxed text-text-primary/85">
-          <strong class="text-text-primary">New to fasting?</strong> Where the
-          protein comes from, and what to keep in the cupboard —
-          <a href={help} class="font-semibold text-brand-blue-dark">Keeping the Fast →</a>
+      <aside class="mt-6 max-w-2xl border-2 border-sacred-gold bg-cream-card p-5">
+        <p class="leading-relaxed text-text-primary/85">
+          <strong class="text-text-primary">New to fasting?</strong> Read this
+          before you cook from here — where the protein comes from, what to
+          keep in the cupboard, and who the fast bends for.
+        </p>
+        <p class="mt-4">
+          <a href={help} class="btn btn-primary">Read Keeping the Fast first</a>
         </p>
       </aside>
     )

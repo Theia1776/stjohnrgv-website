@@ -116,10 +116,11 @@ import Layout from "../../layouts/Layout.astro";
           Filing reads each title and places the obvious ones, touching only
           recipes with no category — anything you've already sorted is left
           alone. Posting puts them on the site: fasting recipes are public,
-          everyday ones are for signed-in members. Moving the drinks looks
-          over the <em>Misc.</em> shelves only — where the lemonades and
-          punches landed before there was a Drinks section — and leaves
-          anything you filed under a real category exactly where it is.
+          everyday ones are for signed-in members. Moving the drinks reads the
+          <em>Misc.</em> shelves — where the lemonades and punches landed
+          before there was a Drinks section — and the Drinks shelves
+          themselves, so it can take back anything it put there wrongly.
+          Anything you filed under a real category it leaves alone.
         </p>
       </div>
       <div id="recipe-rows" class="space-y-4"></div>
@@ -660,6 +661,7 @@ import Layout from "../../layouts/Layout.astro";
     btn.disabled = true;
     let moved = 0;
     let examples: { title: string; category: string }[] = [];
+    let stranded: string[] = [];
 
     try {
       for (let round = 0; round < 20; round++) {
@@ -677,16 +679,24 @@ import Layout from "../../layouts/Layout.astro";
         }
         moved += body.moved ?? body.filed ?? 0;
         if (examples.length === 0) examples = body.examples ?? [];
+        stranded = body.stranded ?? stranded;
         // Nothing moved this round means nothing will next round: the
         // candidate list is the same one. Stop rather than spin.
         if ((body.filed ?? 0) === 0) break;
         if ((body.remaining ?? 0) === 0) break;
       }
 
+      // Anything sitting under Drinks that no longer reads as one and
+      // has nowhere obvious to go is named rather than left there: a
+      // dessert among the lemonades is found by chance otherwise.
+      const strandedNote = stranded.length
+        ? ` Filed under Drinks but ${stranded.length === 1 ? "it doesn't look like one" : "they don't look like drinks"} — ` +
+          `please set ${stranded.length === 1 ? "its" : "their"} category by hand: ${stranded.join(", ")}.`
+        : "";
       say(
-        moved === 0
-          ? "No drinks left on the Misc. shelves — nothing to move."
-          : `Moved ${moved} ${moved === 1 ? "recipe" : "recipes"} into Drinks.`,
+        (moved === 0
+          ? "Nothing needed moving."
+          : `Moved ${moved} ${moved === 1 ? "recipe" : "recipes"}.`) + strandedNote,
       );
       if (examples.length) console.info("Examples of what it moved:", examples);
       await loadRecipes();

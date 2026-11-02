@@ -46,13 +46,15 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(hot cocoa|hot chocolate|mulled|wassail|hot toddy|chai|espresso|latte|cappuccino)\b/i, group: "Drinks", category: "Hot Drinks" },
   { pattern: /\b(punch|sangria|eggnog)\b/i, group: "Drinks", category: "Punches" },
   { pattern: /\b(lemonade|limeade|iced tea|slush|smoothie|milk ?shakes?|shakes?|malts?|floats?|frappe|julep|spritzer|agua fresca|cream soda|italian soda|soda pop)\b/i, group: "Drinks", category: "Cold Drinks" },
-  // The last three are weak words that also name food: "Apple Cider
-  // Pork Chops" is a pork dish, "Tea Ring" is a pastry, and plain
-  // "soda" is nearly always baking soda. Cider only counts when the
-  // title ends on it, and tea only when no food word follows.
+  // These are weak words that also name food: "Apple Cider Pork Chops"
+  // is a pork dish, "Tea Ring" is a pastry, "Oranges in Coffee Syrup"
+  // is a dessert, and plain "soda" is nearly always baking soda. Cider
+  // only counts when the title ends on it; tea and coffee only when no
+  // food word follows them.
   { pattern: /\btea\b(?!\s*(sandwich|ring|bread|loaf|biscuits?|towels?))/i, group: "Drinks", category: "Misc." },
+  { pattern: /\bcoffee\b(?!\s*(syrup|cake|beans?|rub|glaze|frosting|icing|ice cream|crusted|braised|sauce))/i, group: "Drinks", category: "Misc." },
   { pattern: /\bcider\b\s*$/i, group: "Drinks", category: "Misc." },
-  { pattern: /\b(coffee|cocktails?|drinks?|beverages?|cocoa)\b/i, group: "Drinks", category: "Misc." },
+  { pattern: /\b(cocktails?|drinks?|beverages?|cocoa)\b/i, group: "Drinks", category: "Misc." },
 
   // --- Soups & sides ---
   { pattern: /\b(soups?|chowders?|bisques?|stews?|chili|broths?|gumbo)\b/i, group: "Soups & Sides", category: "Soups" },

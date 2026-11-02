@@ -40,6 +40,17 @@ const MISC_SHELVES = RECIPE_CATEGORIES.filter((g) => g.group !== "Drinks").map((
   categoryValue(g.group, "Misc."),
 );
 
+/**
+ * The Drinks shelves, revisited too, so the job can undo its own
+ * mistakes. The first run read "Oranges in Coffee Syrup" as a drink on
+ * the word "coffee"; the rule was tightened, and pressing the button
+ * again should put it right rather than leaving a dessert among the
+ * lemonades for somebody to notice by chance.
+ */
+const DRINK_SHELVES = (RECIPE_CATEGORIES.find((g) => g.group === "Drinks")?.categories ?? []).map(
+  (c) => categoryValue("Drinks", c),
+);
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
 }
@@ -86,7 +97,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // the Misc. shelves instead — see the note at the top.
     const query = supabase.from("recipes").select("id, title, fasting, ingredients, category");
     const { data: candidates, error } = await (drinksMode
-      ? query.in("category", MISC_SHELVES)
+      ? query.in("category", [...MISC_SHELVES, ...DRINK_SHELVES])
       : query.is("category", null)
     ).order("title", { ascending: true });
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
@@ -101,6 +112,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     let leftAlone = 0;
     let examined = 0;
     const examples: { title: string; category: string }[] = [];
+    /** On a Drinks shelf, no longer reads as one, nowhere to send it. */
+    const stranded: string[] = [];
 
     for (const recipe of batch) {
       if (drinksMode && filed >= limit) break;
@@ -110,10 +123,31 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         Array.isArray(recipe.ingredients) ? (recipe.ingredients as string[]) : [],
         recipe.fasting === true,
       );
-      // In drinks mode a guess of anything but a drink means the recipe
-      // is on the right shelf already. Moving it would be second-
-      // guessing a sorting decision, which is not what was asked for.
-      if (!guess.value || (drinksMode && groupOf(guess.value) !== "Drinks")) {
+      if (drinksMode) {
+        const onDrinkShelf = groupOf(recipe.category as string) === "Drinks";
+        const readsAsDrink = Boolean(guess.value) && groupOf(guess.value!) === "Drinks";
+
+        // Already where it belongs, either way round.
+        if (onDrinkShelf === readsAsDrink && guess.value === recipe.category) {
+          leftAlone++;
+          continue;
+        }
+        // On a Misc. shelf and not a drink: that is a sorting decision
+        // and not ours to revisit.
+        if (!onDrinkShelf && !readsAsDrink) {
+          leftAlone++;
+          continue;
+        }
+        // On a drink shelf and no longer readable as a drink, with
+        // nothing confident to put in its place. Named in the reply so
+        // it can be fixed by hand rather than sitting there unnoticed.
+        if (onDrinkShelf && !readsAsDrink && !guess.value) {
+          stranded.push(String(recipe.title ?? ""));
+          leftAlone++;
+          continue;
+        }
+      }
+      if (!guess.value) {
         leftAlone++;
         continue;
       }
@@ -134,9 +168,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     if (drinksMode) {
-      // A moved row leaves the Misc. shelves, so the next call sees a
-      // shorter list. `remaining` is what this call did not get to
-      // before it ran out of writes. No "unfiled" count applies here.
+      // A moved row leaves the shelves it was read from, so the next
+      // call sees a shorter list. `remaining` is what this call did not
+      // get to before it ran out of writes.
       return wrap(
         jsonResponse(
           {
@@ -145,6 +179,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
             still_unfiled: 0,
             remaining: Math.max(batch.length - examined, 0),
             examples,
+            stranded,
           },
           200,
         ),
