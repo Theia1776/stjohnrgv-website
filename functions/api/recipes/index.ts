@@ -76,8 +76,16 @@ function cleanField(value: unknown): string {
 // GET — the posted recipes
 // ============================================================
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  // The fasting book is open to the world: people search for Orthodox
+  // Lenten cooking, and that is a good door into a parish. The everyday
+  // book is the families' own — feast-day food and grandmothers'
+  // recipes — and stays inside the parish.
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+  const signedIn = Boolean(session.user);
+
   if (!context.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return jsonResponse({ error: "Server not configured." }, 500);
+    return wrap(jsonResponse({ error: "Server not configured." }, 500));
   }
 
   const url = new URL(context.request.url);
@@ -97,9 +105,21 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       .eq("slug", slug)
       .eq("published", true)
       .maybeSingle();
-    if (error) return jsonResponse({ error: error.message }, 500);
-    if (!data) return jsonResponse({ error: "Recipe not found." }, 404);
-    return jsonResponse({ recipe: data }, 200);
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    if (!data) return wrap(jsonResponse({ error: "Recipe not found." }, 404));
+    if (!data.fasting && !signedIn) {
+      return wrap(
+        jsonResponse(
+          {
+            error:
+              "This one is from the everyday book, which our parish keeps among " +
+              "its own. The fasting recipes are open to everyone.",
+          },
+          403,
+        ),
+      );
+    }
+    return wrap(jsonResponse({ recipe: data }, 200));
   }
 
   let query = supabase
@@ -111,18 +131,40 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   if (fastingParam === "true") query = query.eq("fasting", true);
   else if (fastingParam === "false") query = query.eq("fasting", false);
 
-  const { data, error } = await query;
-  if (error) return jsonResponse({ error: error.message }, 500);
+  // Asked for the everyday book while signed out: say so rather than
+  // answering with an empty shelf, which reads as "there is nothing
+  // here" instead of "this is not yours to see yet".
+  if (!signedIn && fastingParam === "false") {
+    return wrap(
+      jsonResponse(
+        {
+          error:
+            "The everyday recipes are for our parish. The fasting book is open " +
+            "to everyone.",
+          needs_account: true,
+        },
+        403,
+      ),
+    );
+  }
+  // No filter and signed out means the fasting book only.
+  if (!signedIn) query = query.eq("fasting", true);
 
-  return new Response(JSON.stringify({ recipes: data ?? [] }), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-      // Recipes change rarely; a few minutes at the edge keeps the
-      // listing quick without anyone waiting on a new one for long.
-      "Cache-Control": "public, max-age=300",
-    },
-  });
+  const { data, error } = await query;
+  if (error) return wrap(jsonResponse({ error: error.message }, 500));
+
+  return wrap(
+    new Response(JSON.stringify({ recipes: data ?? [], viewer_signed_in: signedIn }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        // Private, not public: what comes back depends on whether the
+        // asker is signed in, and a shared cache would hand one
+        // person's answer to the next.
+        "Cache-Control": "private, max-age=120",
+      },
+    }),
+  );
 }
 
 // ============================================================

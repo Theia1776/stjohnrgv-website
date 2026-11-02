@@ -216,6 +216,21 @@ const fasting = book === "fasting";
       loadingEl.hidden = true;
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        // Not an error — this shelf simply isn't theirs yet. Said as an
+        // invitation, with the door pointed at, rather than as a fault.
+        if (res.status === 403 && body.needs_account) {
+          errorEl.className = "mt-8 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed";
+          errorEl.innerHTML =
+            `${body.error} ` +
+            '<a href="/register" class="font-semibold text-brand-blue-dark">Create an account</a> or ' +
+            '<a href="/login/?next=/table/everyday/" class="font-semibold text-brand-blue-dark">sign in</a>, ' +
+            'and in the meantime the ' +
+            '<a href="/table/fasting/" class="font-semibold text-brand-blue-dark">fasting book</a> is yours.';
+          errorEl.hidden = false;
+          (document.getElementById("recipe-search") as HTMLInputElement).hidden = true;
+          (document.getElementById("recipe-category") as HTMLSelectElement).hidden = true;
+          return;
+        }
         errorEl.textContent = `Could not load the recipes: ${body.error ?? res.status}`;
         errorEl.hidden = false;
         return;
