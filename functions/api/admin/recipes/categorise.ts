@@ -142,7 +142,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         // nothing confident to put in its place. Named in the reply so
         // it can be fixed by hand rather than sitting there unnoticed.
         if (onDrinkShelf && !readsAsDrink && !guess.value) {
-          stranded.push(String(recipe.title ?? ""));
+          // The book goes in the label because several recipes exist
+          // twice, once per book — "Oranges in Coffee Syrup, Oranges in
+          // Coffee Syrup" read like a bug rather than like two rows.
+          stranded.push(
+            `${String(recipe.title ?? "")} (${recipe.fasting === true ? "fasting" : "everyday"})`,
+          );
           leftAlone++;
           continue;
         }

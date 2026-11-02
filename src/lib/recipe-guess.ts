@@ -76,6 +76,12 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(pasta|spaghetti|lasagna|rigatoni|penne|gnocchi|macaroni|noodles?|risotto|quinoa|couscous|pilaf|pizza|calzone)\b/i, group: "Main Courses", category: "Pasta & Grains" },
   { pattern: /\b(vegetables?|veggie|ratatouille|stir[- ]?fry|eggplant|zucchini|squash|cauliflower|broccoli|mushrooms?|tofu|tempeh|seitan)\b/i, group: "Main Courses", category: "Vegetables" },
   { pattern: /\b(tacos?|enchiladas?|burritos?|quesadillas?|wraps?|sandwich(es)?|burgers?|sliders?)\b/i, group: "Main Courses", category: "Misc." },
+
+  // Fruit in a syrup is a pudding. Deliberately the LAST rule in the
+  // list, after every meat: "Oranges in Coffee Syrup" is a dessert but
+  // "Ham with Cherry Syrup" is a ham, and putting this last lets the
+  // meat win without needing a second rule to say so.
+  { pattern: /\b(oranges?|peach(es)?|pears?|plums?|apricots?|cherr(y|ies)|figs?|berries|rhubarb|pineapple)\b.*\bsyrup\b/i, group: "Desserts", category: "Misc." },
 ];
 
 // A fasting recipe can never be filed under a meat. "Vegan Meatloaf"
