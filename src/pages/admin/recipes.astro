@@ -51,6 +51,21 @@ import Layout from "../../layouts/Layout.astro";
             <button type="button" id="import-btn" class="btn btn-secondary text-sm">Import</button>
           </div>
           <p id="import-status" class="mt-3 text-sm text-text-secondary" role="status"></p>
+
+          <!-- Three hundred recipes arrived unfiled. Most say what they
+               are in their own title. -->
+          <div class="mt-5 border-t border-border-soft pt-4">
+            <button type="button" id="categorise-btn" class="btn btn-secondary text-sm">
+              File the unfiled by title
+            </button>
+            <p class="mt-2 text-xs text-text-secondary">
+              Reads each title and files the obvious ones — a pie under Pies, a
+              soup under Soups. Only touches recipes with no category, so
+              anything you have already sorted is left alone, and anything it
+              can't place stays unfiled rather than guessing.
+            </p>
+            <p id="categorise-status" class="mt-2 text-sm text-text-secondary" role="status"></p>
+          </div>
         </div>
       </details>
 
@@ -357,6 +372,57 @@ import Layout from "../../layouts/Layout.astro";
       await loadRecipes();
     } catch (err) {
       setImportStatus(`Import failed: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ============== FILING THE UNFILED ==============
+
+  document.getElementById("categorise-btn")?.addEventListener("click", async () => {
+    const btn = document.getElementById("categorise-btn") as HTMLButtonElement;
+    const status = document.getElementById("categorise-status") as HTMLParagraphElement;
+    const say = (message: string, bad = false) => {
+      status.textContent = message;
+      status.className = bad ? "mt-2 text-sm text-liturgical-red" : "mt-2 text-sm text-text-secondary";
+    };
+
+    btn.disabled = true;
+    let filed = 0;
+    let leftAlone = 0;
+    let examples: { title: string; category: string }[] = [];
+
+    try {
+      // Loops until nothing is left, the way the other jobs do.
+      for (let round = 0; round < 20; round++) {
+        say(`Reading titles… ${filed} filed so far`);
+        const res = await fetch("/api/admin/recipes/categorise", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ limit: 80 }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          say(body.error ?? `Couldn't file them (${res.status}).`, true);
+          return;
+        }
+        filed += body.filed ?? 0;
+        leftAlone += body.left_alone ?? 0;
+        if (examples.length === 0) examples = body.examples ?? [];
+        if ((body.remaining ?? 0) === 0) break;
+        // Nothing moved and nothing left to try: stop rather than spin.
+        if ((body.filed ?? 0) === 0 && (body.left_alone ?? 0) === 0) break;
+      }
+
+      say(
+        `Filed ${filed}.` +
+          (leftAlone ? ` ${leftAlone} left unfiled — their titles don't say what they are.` : ""),
+      );
+      if (examples.length) console.info("Examples of what it filed:", examples);
+      await loadRecipes();
+    } catch (err) {
+      say(`Couldn't file them: ${err instanceof Error ? err.message : String(err)}`, true);
     } finally {
       btn.disabled = false;
     }
