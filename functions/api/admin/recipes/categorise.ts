@@ -114,6 +114,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const examples: { title: string; category: string }[] = [];
     /** On a Drinks shelf, no longer reads as one, nowhere to send it. */
     const stranded: string[] = [];
+    /** Writes the database refused, which must never pass as silence. */
+    const failed: string[] = [];
 
     for (const recipe of batch) {
       if (drinksMode && filed >= limit) break;
@@ -163,6 +165,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         ? update.eq("category", recipe.category as string)
         : update.is("category", null));
       if (updateError) {
+        // Counting a failed write as "left alone" hid it completely:
+        // the job would report a tidy number and one recipe would
+        // quietly stay where it was. Say so instead.
+        failed.push(`${String(recipe.title ?? "")} — ${updateError.message}`);
         leftAlone++;
         continue;
       }
@@ -185,6 +191,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
             remaining: Math.max(batch.length - examined, 0),
             examples,
             stranded,
+            failed,
           },
           200,
         ),
@@ -206,6 +213,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         {
           filed,
           left_alone: leftAlone,
+          failed,
           still_unfiled: stillUnfiled ?? 0,
           remaining: Math.max((unfiled ?? []).length - batch.length, 0),
           examples,

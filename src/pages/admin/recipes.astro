@@ -221,7 +221,7 @@ import Layout from "../../layouts/Layout.astro";
         <div>
           <h2 class="font-display text-xl text-text-primary">${escapeHtml(r.title)}</h2>
           <p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">
-            ${r.fasting ? "Fasting" : "Everyday"}${r.category ? ` · ${escapeHtml(categoryOf(r.category))}` : " · unfiled"}
+            ${r.fasting ? "Fasting" : "Everyday"}${r.category ? ` · ${escapeHtml(r.category)}` : " · unfiled"}
             ${r.submitted_by_name ? ` · from ${escapeHtml(r.submitted_by_name)}` : ""}
             · ${escapeHtml(formatDate(r.created_at))}
           </p>
@@ -313,7 +313,12 @@ import Layout from "../../layouts/Layout.astro";
             (g) => `<optgroup label="${escapeHtml(g.group)}">${g.categories
               .map((c) => {
                 const value = categoryValue(g.group, c);
-                return `<option value="${escapeHtml(value)}"${r.category === value ? " selected" : ""}>${escapeHtml(c)}</option>`;
+                // A closed <select> shows only the option's own text,
+                // not the optgroup it sits under — so four shelves all
+                // read "Misc." and there is no telling a drink from a
+                // pudding. The ambiguous ones carry their group.
+                const label = c === "Misc." ? `${g.group} — Misc.` : c;
+                return `<option value="${escapeHtml(value)}"${r.category === value ? " selected" : ""}>${escapeHtml(label)}</option>`;
               })
               .join("")}</optgroup>`,
           ).join("")}
@@ -662,6 +667,7 @@ import Layout from "../../layouts/Layout.astro";
     let moved = 0;
     let examples: { title: string; category: string }[] = [];
     let stranded: string[] = [];
+    let failed: string[] = [];
 
     try {
       for (let round = 0; round < 20; round++) {
@@ -680,6 +686,7 @@ import Layout from "../../layouts/Layout.astro";
         moved += body.moved ?? body.filed ?? 0;
         if (examples.length === 0) examples = body.examples ?? [];
         stranded = body.stranded ?? stranded;
+        if (body.failed?.length) failed = failed.concat(body.failed);
         // Nothing moved this round means nothing will next round: the
         // candidate list is the same one. Stop rather than spin.
         if ((body.filed ?? 0) === 0) break;
@@ -696,7 +703,10 @@ import Layout from "../../layouts/Layout.astro";
       say(
         (moved === 0
           ? "Nothing needed moving."
-          : `Moved ${moved} ${moved === 1 ? "recipe" : "recipes"}.`) + strandedNote,
+          : `Moved ${moved} ${moved === 1 ? "recipe" : "recipes"}.`) +
+          strandedNote +
+          (failed.length ? ` The database refused ${failed.length}: ${failed.join("; ")}` : ""),
+        failed.length > 0,
       );
       if (examples.length) console.info("Examples of what it moved:", examples);
       await loadRecipes();
