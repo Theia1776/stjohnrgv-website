@@ -13,6 +13,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
+import { allCategoryValues } from "../../../../src/lib/recipe-categories";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -24,7 +25,7 @@ const MAX_FIELD = 400;
 const MAX_STEP = 2000;
 
 const RECIPE_FIELDS =
-  "id, slug, title, fasting, hands_on, total_time, serves, preheat, intro, " +
+  "id, slug, title, fasting, category, hands_on, total_time, serves, preheat, intro, " +
   "ingredients, directions, notes, submitted_by_name, published, created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -93,6 +94,15 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     const updates: Record<string, unknown> = {};
     if (typeof body.published === "boolean") updates.published = body.published;
     if (typeof body.fasting === "boolean") updates.fasting = body.fasting;
+    // Clearing it is allowed — an empty string means "no category yet",
+    // which is where a recipe sits before anyone has filed it.
+    if ("category" in body) {
+      const value = String(body.category ?? "");
+      if (value && !allCategoryValues().includes(value)) {
+        return wrap!(jsonResponse({ error: `"${value}" isn't one of the categories.` }, 400));
+      }
+      updates.category = value || null;
+    }
 
     if (typeof body.title === "string") {
       const title = cleanField(body.title);

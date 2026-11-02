@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { RECIPE_CATEGORIES, categoryValue } from "../../lib/recipe-categories";
 
 // Sharing a recipe. The form grows with the recipe: a cook adds as many
 // ingredient and step lines as the dish needs rather than squeezing it
@@ -67,6 +68,28 @@ import Layout from "../../layouts/Layout.astro";
           placeholder="Lenten Lentil Soup"
           class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2"
         />
+      </div>
+
+      <div>
+        <label for="category" class="block text-sm font-semibold text-text-primary">
+          What kind of dish?
+        </label>
+        <select
+          id="category"
+          class="mt-1.5 block w-full border border-border-soft bg-cream-card px-3 py-2 focus:outline-none focus:ring-2"
+        >
+          <option value="">— choose one —</option>
+          {RECIPE_CATEGORIES.map((group) => (
+            <optgroup label={group.group}>
+              {group.categories.map((category) => (
+                <option value={categoryValue(group.group, category)}>{category}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <p class="mt-1 text-xs text-text-secondary">
+          Every group has a Misc. if nothing else fits.
+        </p>
       </div>
 
       <div>
@@ -288,6 +311,7 @@ import Layout from "../../layouts/Layout.astro";
           title,
           fasting:
             (document.querySelector('input[name="book"]:checked') as HTMLInputElement)?.value !== "everyday",
+          category: (document.getElementById("category") as HTMLSelectElement).value,
           hands_on: (document.getElementById("hands_on") as HTMLInputElement).value,
           total_time: (document.getElementById("total_time") as HTMLInputElement).value,
           serves: (document.getElementById("serves") as HTMLInputElement).value,

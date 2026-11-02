@@ -38,11 +38,14 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { RECIPE_CATEGORIES, categoryOf, categoryValue } from "../../lib/recipe-categories";
+
   type Recipe = {
     id: string;
     slug: string;
     title: string;
     fasting: boolean;
+    category: string | null;
     hands_on: string | null;
     total_time: string | null;
     serves: string | null;
@@ -92,7 +95,7 @@ import Layout from "../../layouts/Layout.astro";
         <div>
           <h2 class="font-display text-xl text-text-primary">${escapeHtml(r.title)}</h2>
           <p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">
-            ${r.fasting ? "Fasting" : "Everyday"}
+            ${r.fasting ? "Fasting" : "Everyday"}${r.category ? ` · ${escapeHtml(categoryOf(r.category))}` : " · unfiled"}
             ${r.submitted_by_name ? ` · from ${escapeHtml(r.submitted_by_name)}` : ""}
             · ${escapeHtml(formatDate(r.created_at))}
           </p>
@@ -131,6 +134,18 @@ import Layout from "../../layouts/Layout.astro";
       </details>
 
       <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-4">
+        <label class="sr-only" for="cat-${escapeHtml(r.id)}">Kind of dish</label>
+        <select id="cat-${escapeHtml(r.id)}" class="recipe-category border border-border-soft bg-cream-bg px-2 py-1 text-xs focus:outline-none focus:ring-2">
+          <option value="">— no category —</option>
+          ${RECIPE_CATEGORIES.map(
+            (g) => `<optgroup label="${escapeHtml(g.group)}">${g.categories
+              .map((c) => {
+                const value = categoryValue(g.group, c);
+                return `<option value="${escapeHtml(value)}"${r.category === value ? " selected" : ""}>${escapeHtml(c)}</option>`;
+              })
+              .join("")}</optgroup>`,
+          ).join("")}
+        </select>
         <button type="button" class="btn ${r.published ? "btn-secondary" : "btn-primary"} text-sm" data-action="toggle-posted">
           ${r.published ? "Un-post" : "Post it"}
         </button>
@@ -198,6 +213,15 @@ import Layout from "../../layouts/Layout.astro";
     await loadRecipes();
     return true;
   }
+
+  document.getElementById("recipe-rows")?.addEventListener("change", async (event) => {
+    const select = (event.target as HTMLElement | null)?.closest(".recipe-category") as HTMLSelectElement | null;
+    if (!select) return;
+    const article = select.closest("article") as HTMLElement | null;
+    const id = article?.dataset.id ?? "";
+    if (!id) return;
+    await patch(id, { category: select.value }, article?.querySelector(".row-status") as HTMLElement | null);
+  });
 
   document.getElementById("recipe-rows")?.addEventListener("click", async (event) => {
     const btn = (event.target as HTMLElement | null)?.closest("[data-action]") as HTMLElement | null;

@@ -34,6 +34,13 @@ const fasting = book === "fasting";
       placeholder="Search by name or ingredient…"
       class="min-w-0 flex-1 border border-border-soft bg-cream-card px-3 py-2 text-sm focus:outline-none focus:ring-2"
     />
+    <label for="recipe-category" class="sr-only">Filter by kind of dish</label>
+    <select
+      id="recipe-category"
+      class="border border-border-soft bg-cream-card px-3 py-2 text-sm focus:outline-none focus:ring-2"
+    >
+      <option value="">All kinds</option>
+    </select>
     <span id="recipe-count" class="text-sm text-text-secondary" role="status"></span>
   </div>
 
@@ -44,7 +51,7 @@ const fasting = book === "fasting";
     <a href="/table/share/" class="text-brand-blue-dark">send it in</a>.
   </p>
 
-  <ul id="recipe-list" class="mt-8 grid gap-4 sm:grid-cols-2" data-fasting={String(fasting)}></ul>
+  <div id="recipe-list" class="mt-8 space-y-10" data-fasting={String(fasting)}></div>
 
   <p class="mt-12 border-t border-border-soft pt-6 text-sm text-text-secondary">
     Have one to add? <a href="/table/share/" class="font-semibold text-brand-blue-dark">Share a recipe →</a>
@@ -52,9 +59,12 @@ const fasting = book === "fasting";
 </main>
 
 <script>
+  import { RECIPE_CATEGORIES, categoryOf, groupOf } from "../lib/recipe-categories";
+
   type Recipe = {
     slug: string;
     title: string;
+    category: string | null;
     hands_on: string | null;
     total_time: string | null;
     serves: string | null;
@@ -65,7 +75,8 @@ const fasting = book === "fasting";
 
   let recipes: Recipe[] = [];
 
-  const listEl = document.getElementById("recipe-list") as HTMLUListElement;
+  const listEl = document.getElementById("recipe-list") as HTMLDivElement;
+  const categoryEl = document.getElementById("recipe-category") as HTMLSelectElement;
   const loadingEl = document.getElementById("recipe-loading") as HTMLParagraphElement;
   const errorEl = document.getElementById("recipe-error") as HTMLParagraphElement;
   const emptyEl = document.getElementById("recipe-empty") as HTMLParagraphElement;
@@ -97,10 +108,11 @@ const fasting = book === "fasting";
       .filter(Boolean)
       .join(" · ");
     return `<li class="border border-border-soft bg-cream-card p-5 shadow-sm">
-      <h2 class="font-display text-xl">
+      ${r.category ? `<p class="mb-1 text-[0.65rem] uppercase tracking-widest text-brand-tan-dark">${escapeHtml(categoryOf(r.category))}</p>` : ""}
+      <h3 class="font-display text-xl">
         <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
            class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>
-      </h2>
+      </h3>
       ${meta ? `<p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(meta)}</p>` : ""}
       ${r.intro ? `<p class="mt-2 text-sm text-text-primary/85">${escapeHtml(r.intro.slice(0, 160))}${r.intro.length > 160 ? "…" : ""}</p>` : ""}
       ${r.submitted_by_name ? `<p class="mt-3 text-xs italic text-text-secondary">from ${escapeHtml(r.submitted_by_name)}</p>` : ""}
@@ -111,14 +123,39 @@ const fasting = book === "fasting";
     const terms = normalise(searchEl.value).split(/\s+/).filter(Boolean);
     // Ingredients are searched too, because the question is usually
     // "what can I do with these lentils", not "what was it called".
+    const wanted = categoryEl.value;
+    const inCategory = wanted ? recipes.filter((r) => r.category === wanted) : recipes;
     const shown = terms.length
-      ? recipes.filter((r) => {
+      ? inCategory.filter((r) => {
           const hay = normalise([r.title, r.intro, (r.ingredients ?? []).join(" ")].join(" "));
           return terms.every((t) => hay.includes(t));
         })
-      : recipes;
+      : inCategory;
 
-    listEl.innerHTML = shown.map(card).join("");
+    // Grouped under headings, in the order the groups are defined, with
+    // anything unfiled last. A flat grid of eighty recipes is a wall;
+    // the groups are how a cook narrows it without typing.
+    const order = [...RECIPE_CATEGORIES.map((g) => g.group), ""];
+    const byGroup = new Map<string, Recipe[]>();
+    for (const r of shown) {
+      const key = groupOf(r.category);
+      if (!byGroup.has(key)) byGroup.set(key, []);
+      byGroup.get(key)!.push(r);
+    }
+
+    listEl.innerHTML = order
+      .filter((g) => byGroup.has(g))
+      .map((g) => {
+        const rows = byGroup.get(g)!;
+        const label = g || "Not yet filed";
+        return `<section>
+          <h2 class="font-display text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(label)}</h2>
+          <div class="mt-1 h-px w-12 bg-liturgical-current"></div>
+          <ul class="mt-4 grid gap-4 sm:grid-cols-2">${rows.map(card).join("")}</ul>
+        </section>`;
+      })
+      .join("");
+
     countEl.textContent = shown.length
       ? `${shown.length} ${shown.length === 1 ? "recipe" : "recipes"}`
       : "";
@@ -130,6 +167,32 @@ const fasting = book === "fasting";
   }
 
   searchEl.addEventListener("input", render);
+  categoryEl.addEventListener("change", render);
+
+  /**
+   * Only the categories this book actually has. Offering "Lamb" in the
+   * fasting book, or any empty shelf, invites a filter that returns
+   * nothing and looks broken.
+   */
+  function fillCategoryFilter() {
+    const present = new Set(recipes.map((r) => r.category).filter(Boolean) as string[]);
+    for (const group of RECIPE_CATEGORIES) {
+      const values = group.categories
+        .map((c) => `${group.group} — ${c}`)
+        .filter((v) => present.has(v));
+      if (values.length === 0) continue;
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = group.group;
+      for (const value of values) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = categoryOf(value);
+        optgroup.appendChild(option);
+      }
+      categoryEl.appendChild(optgroup);
+    }
+    categoryEl.hidden = categoryEl.options.length <= 1;
+  }
 
   (async () => {
     try {
@@ -149,6 +212,7 @@ const fasting = book === "fasting";
         emptyEl.hidden = false;
         return;
       }
+      fillCategoryFilter();
       render();
     } catch (err) {
       loadingEl.hidden = true;

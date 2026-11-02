@@ -21,6 +21,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
+import { allCategoryValues } from "../../../src/lib/recipe-categories";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -34,7 +35,7 @@ const MAX_STEP = 2000;
 
 /** Listed for readers; never the unposted ones. */
 const RECIPE_FIELDS =
-  "slug, title, fasting, hands_on, total_time, serves, preheat, intro, " +
+  "slug, title, fasting, category, hands_on, total_time, serves, preheat, intro, " +
   "ingredients, directions, notes, submitted_by_name, created_at";
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -199,6 +200,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         slug,
         title,
         fasting: body.fasting !== false,
+        // Checked against the shared list rather than trusted: a value
+        // that isn't offered anywhere would file the recipe on a shelf
+        // no page knows how to show.
+        category: allCategoryValues().includes(String(body.category ?? ""))
+          ? String(body.category)
+          : null,
         hands_on: cleanField(body.hands_on) || null,
         total_time: cleanField(body.total_time) || null,
         serves: cleanField(body.serves) || null,
