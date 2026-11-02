@@ -113,7 +113,7 @@ The parish recipe collection, at `/table/`. Two books: **Fasting**
 | Recipes | **314**, all posted |
 | Fasting book | **35**, public to anyone |
 | Everyday book | **279**, signed-in members |
-| Categories | `src/lib/recipe-categories.ts` — three groups, each ending in Misc. |
+| Categories | `src/lib/recipe-categories.ts` — four groups, each ending in Misc. |
 
 **The public/member split is the thing to understand.** The fasting
 book is open to the world, because people search for Orthodox Lenten
@@ -126,8 +126,22 @@ cached **private** — what comes back depends on who is asking.
 Catechumens and members submit at `/table/share/`; the form grows with
 the recipe rather than offering a fixed number of boxes. Nothing appears
 until an admin posts it from `/admin/recipes/`, which has search,
-filters, per-card editing, and two whole-queue jobs: **file the unfiled
-by title** and **post everything waiting**.
+filters, per-card editing, and three whole-queue jobs: **file the
+unfiled by title**, **post everything waiting** and **move the drinks to
+Drinks**.
+
+**Adding a group after the recipes are filed** is the pattern the Drinks
+section set. The filing job only touches the *unfiled*, deliberately, so
+recipes that belong in a new group are already sitting on whichever
+Misc. shelf was least wrong — the lemonades were under Soups & Sides.
+`mode: "drinks"` on
+[categorise.ts](../functions/api/admin/recipes/categorise.ts) re-reads
+the **Misc. shelves only** and moves what the guesser now places in
+Drinks; a recipe filed under a real category is a sorting decision and
+is never revisited. Its batch cap counts **writes, not rows** — capping
+rows wedges it, because the recipes staying put sit at the front of the
+alphabet and fill every batch while the ones behind them are never
+reached.
 
 Each recipe prints as a card carrying the parish's name, address and
 phone where a cookbook carries its publisher's. Printing is offered to
@@ -150,7 +164,11 @@ eggs and cream disqualifying, butter, milk and cheese swapped, and
 Worcestershire becoming liquid smoke at a quarter of the measure.
 
 **That sorting took four passes to trust, and the failures are the
-lesson.** The first called Mongolian Beef, Ribs, Goulash and Chili vegan
+lesson.** It happened again with the drinks: "Apple Cider Pork Chops"
+was filed as a drink, "Irish Soda Bread" as a cold one. Cider, soda and
+tea all name food as well, so cider now counts only at the end of a
+title, soda only in "cream soda" and the like, and tea only when no food
+word follows. The first sorting called Mongolian Beef, Ribs, Goulash and Chili vegan
 because it knew "beef" and not "hamburger", "steak" or "brisket". The
 second let Fish Tacos through on "Mahi-Mahi" and "Mayo". The third tried
 to make a box of macaroni and cheese fasting by renaming it. The fourth
