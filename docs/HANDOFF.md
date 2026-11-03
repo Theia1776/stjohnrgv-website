@@ -41,6 +41,7 @@ https://stjohnrgv.org in about two minutes.
 | Books and lessons | **Cloudflare R2**, bucket `library`, bound to Pages as `LIBRARY_BUCKET` |
 | Email | Resend; domain `stjohnrgv.org` verified, sends as `no-reply@stjohnrgv.org` |
 | Master admin | `theiagoodner@proton.me` — only she may grant or revoke the admin role |
+| The parish | **39737 Palm Lane**, Bayview, TX 78566 · (956) 434-6874 · `parishoffice@` and `frantonios@stjohnrgv.org` |
 
 **Cloudflare Pages → Production env vars:**
 `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESET_EMAIL_FROM`,
@@ -307,6 +308,34 @@ only automatic lesson announcements.
 
 ---
 
+## Search, and the hostname trap
+
+**One hostname.** `functions/_middleware.ts` 301s anything that is not
+`stjohnrgv.org` to the apex. It exists because a search for the parish
+by name returned **stjohnrgv.pages.dev** — Cloudflare's build domain
+was serving the whole site, answering 200, and allowing crawling, while
+every page's canonical tag pointed politely at the apex and was treated
+as the hint it is. Per-deployment preview hosts still render, with
+`X-Robots-Tag: noindex`, so a preview can never become a rival copy.
+
+**The sitemap must not contradict a noindex.** Six pages were being
+submitted while telling Google to skip them. Anything carrying a
+noindex belongs in the filter in `astro.config.mjs` as well.
+
+**Nothing is noindexed that holds content.** What remains is admin
+tools, auth pages, a member's own lesson view, and templates that need
+a `?slug=` to show anything. `/directory/` and `/coffee-hour/` stay
+closed because they carry other people's addresses and phone numbers —
+that is privacy, not SEO.
+
+**The two things still outstanding are not in the repo**: the parish has
+no Google Business Profile and no Search Console verification. For a
+local church the Business Profile is most of local SEO. Nothing further
+on-page will move much until those exist. See
+[docs/02-seo-strategy.md](02-seo-strategy.md).
+
+---
+
 ## Traps that have already cost a day
 
 - **Astro silently drops a second top-level `<script>`** in a page. Add
@@ -333,6 +362,11 @@ only automatic lesson announcements.
 - **Don't hide a button a person needs in a fold.** The filing button
   sat inside "Import a recipe file"; Theia sorted hundreds of recipes by
   hand without knowing it existed.
+- **A 200 does not mean the file exists.** This site answers unknown
+  URLs with the 404 page, as HTML, with status 200. `/og-image.jpg`
+  "existed" that way for months while every shared link showed a blank
+  thumbnail, and a deploy check for `/saints-data.json` passed before
+  the file was built. Check the content type or the content.
 - **Deploy code only after its migration is applied.** Selecting a
   column that doesn't exist yet fails the whole query and takes the page
   down, not just the new feature. This was broken once on purpose, for

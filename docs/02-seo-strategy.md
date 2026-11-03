@@ -1,32 +1,81 @@
 # 02 — SEO Strategy
 ## St. John of Kronstadt Orthodox Mission — Search Engine Optimization Blueprint
 
-**Document Type:** Formal SEO Specification  
-**Version:** 1.0  
-**Prepared For:** Claude Code / Development Handoff  
-**Date:** May 2026  
+**Document Type:** SEO specification and running state
+**Version:** 2.0
+**Written:** May 2026, for a WordPress site being replaced
+**Last checked against the live site:** 3 November 2026
 
 ---
 
-## 1. Current SEO Assessment
+## 1. Where this actually stands
 
-| Factor | Current Status | Score |
-|---|---|---|
-| Title tags | Generic / missing | ❌ |
-| Meta descriptions | Missing | ❌ |
-| Schema.org markup | None | ❌ |
-| Google Business Profile | Not claimed | ❌ |
-| Page speed (Lighthouse) | ~45/100 (WordPress unoptimized) | ❌ |
-| Mobile responsiveness | Basic | ⚠️ |
-| Keyword targeting | None | ❌ |
-| Internal linking | Minimal | ❌ |
-| Fresh content / blog | Rarely updated | ❌ |
-| Backlinks | Minimal | ❌ |
-| Spanish-language content | None | ❌ |
-| Image alt text | Missing | ❌ |
+Version 1.0 of this document described the old WordPress site and
+scored it ~20/100. That site is gone. What follows was measured
+against the live Astro site on 3 November 2026, not estimated.
 
-**Estimated Overall SEO Score: ~20 / 100**  
-**Target Score: 90+ / 100**
+| Factor | State |
+|---|---|
+| Title tags | Written per page, keyword-led |
+| Meta descriptions | On every page; all within display length |
+| Schema.org markup | Church + LocalBusiness with address, geo, hours, memberOf |
+| Canonical URLs | Every page |
+| Sitemap + robots.txt | Both, and the sitemap lists only indexable pages |
+| HTTPS | Enforced, with HSTS |
+| Image alt text | Every image on the site |
+| Page weight | Homepage 6.8 KB · calendar 16 KB |
+| Google Business Profile | **Still not claimed** |
+| Google Search Console | **Still not verified** |
+| Spanish-language content | **None.** Google-translate proxy only |
+| Backlinks | Minimal |
+
+**The two blanks in that table are now the whole job.** The on-page
+work is done; nothing further in sections 3, 4 or 6 will move the
+needle while the parish has no Business Profile and no Search Console.
+For a local church the Business Profile *is* local SEO — it is what
+puts the parish in the map panel for "orthodox church near me".
+
+### What was wrong on 3 November 2026, and is now fixed
+
+These were found by audit, not by a reported problem, which is the
+point: none of them announced themselves.
+
+- **Google had indexed `stjohnrgv.pages.dev`, not `stjohnrgv.org`.** The
+  Cloudflare build domain served the whole site, answered 200, and
+  allowed crawling. Canonical tags pointed at the apex and were treated
+  as the hint they are. `functions/_middleware.ts` now 301s every
+  non-canonical hostname — www included — to the apex.
+- **The street name was wrong everywhere.** "Palm Drive" in seventeen
+  places including both schema blocks and the map embed. It is **39737
+  Palm Lane**. Fixed; note the address below was wrong in v1.0 of this
+  document too.
+- **`og:image` pointed at a file that did not exist**, so every shared
+  link showed a blank thumbnail. Built by `scripts/make-og-image.py`.
+- **`shepherd@stjohnrgv.org`** was published as the pastoral contact and
+  is not a mailbox. It is `frantonios@stjohnrgv.org`.
+- **`/learn/orthodox-history/` was `noindex`** — 1,295 words on Decree
+  362 and the Catacomb Church, the best match the parish has for that
+  search, hidden from Google. Indexed, and linked from `/about/` and
+  `/learn/` so it is not an orphan.
+- **The sitemap submitted six noindexed or empty pages.** Now 21 real
+  ones.
+- **The calendar page was 11.7 MB** — the saints catalogue inlined,
+  twice. Now 16 KB with the catalogue fetched once from
+  `/saints-data.json`.
+
+### Still open
+
+- **Spanish content.** The RGV is majority Spanish-speaking and the site
+  offers only a Google-translate proxy, which Google does not index as
+  Spanish content. A real `/es/` page is the single biggest untapped
+  opportunity here; the keyword table below already has the terms.
+- **The library is not findable.** 690 books, and the reader is a
+  template needing `?slug=`, so no individual book has an indexable
+  URL. Per-book pages for the public-tier titles would be a substantial
+  draw for a niche with little competition.
+- **NAP consistency.** At least one directory
+  (bibletimes.app) lists the parish under Brownsville. Third-party
+  listings should be corrected to match.
 
 ---
 
@@ -185,7 +234,7 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
   "email": "contact@stjohnrgv.org",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "39737 Palm Drive",
+    "streetAddress": "39737 Palm Lane",
     "addressLocality": "Bayview",
     "addressRegion": "TX",
     "postalCode": "78566",
@@ -242,7 +291,7 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
 **This is the single highest-impact SEO action.** A fully completed GBP listing drives the majority of "near me" and local map searches.
 
 ### Step-by-Step Setup
-1. Go to **business.google.com** and claim the listing for the address: `39737 Palm Drive, Bayview, TX 78566`
+1. Go to **business.google.com** and claim the listing for the address: `39737 Palm Lane, Bayview, TX 78566`
 2. Verify via postcard or phone
 3. Set business category: **"Orthodox Church"** (primary), "Christian Church" (secondary)
 4. Add **all service areas:** Bayview TX, Brownsville TX, McAllen TX, Harlingen TX, Rio Grande Valley TX
@@ -270,15 +319,15 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
 ## 6. Technical SEO Checklist
 
 ### Core Technical Requirements
-- [ ] HTTPS enabled (SSL certificate — free via Let's Encrypt / Netlify)
-- [ ] Canonical URLs on every page
-- [ ] XML sitemap at `https://stjohnrgv.org/sitemap.xml`
-- [ ] `robots.txt` configured correctly
-- [ ] 301 redirect from `orthodoxtexas.com` to `stjohnrgv.org` (after domain migration)
-- [ ] Open Graph tags on every page (for social sharing)
-- [ ] Twitter Card meta tags
-- [ ] Favicon and Apple Touch Icon
-- [ ] `lang="en"` (or `lang="es"` for Spanish page) on `<html>` tag
+- [x] HTTPS enabled (SSL certificate — free via Let's Encrypt / Netlify)
+- [x] Canonical URLs on every page
+- [x] XML sitemap — at `/sitemap-index.xml`, not the path named here
+- [x] `robots.txt` configured correctly
+- [x] 301 redirects to the canonical host — see `functions/_middleware.ts`
+- [x] Open Graph tags on every page (for social sharing)
+- [x] Twitter Card meta tags
+- [x] Favicon · [ ] Apple Touch Icon still missing
+- [x] `lang="en"` (or `lang="es"` for Spanish page) on `<html>` tag
 - [ ] `hreflang` tags for English/Spanish pages:
   ```html
   <link rel="alternate" hreflang="en" href="https://stjohnrgv.org/" />
@@ -286,15 +335,15 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
   ```
 
 ### Performance (Lighthouse 90+ Target)
-- [ ] All images converted to **WebP** format
-- [ ] Images lazy-loaded (`loading="lazy"`)
+- [x] Images processed by Astro's `<Image>` (WebP where it helps)
+- [x] Images lazy-loaded (`loading="lazy"`)
 - [ ] Images have explicit `width` and `height` attributes (prevents layout shift)
-- [ ] All images have descriptive `alt` text
-- [ ] CSS and JS minified
-- [ ] Google Fonts loaded with `font-display: swap`
+- [x] All images have descriptive `alt` text
+- [x] CSS and JS minified
+- [x] Google Fonts loaded with `font-display: swap`
 - [ ] No render-blocking resources
-- [ ] Static site (no WordPress / PHP server overhead)
-- [ ] CDN hosting (Netlify or Vercel — both free)
+- [x] Static site (no WordPress / PHP server overhead)
+- [x] CDN hosting (Netlify or Vercel — both free)
 
 ### Image Alt Text Examples
 ```html
