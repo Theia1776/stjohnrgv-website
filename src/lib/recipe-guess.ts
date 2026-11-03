@@ -108,6 +108,15 @@ export function guessCategory(
 ): GuessResult {
   const name = String(title ?? "");
 
+  // "How to Press Tofu" is a technique, not a dish. Left unfiled
+  // rather than guessed at: the rules below read the ingredient in the
+  // title and would file it as a main course, putting a how-to guide
+  // among the dinners. Unfiled is honest and takes one dropdown to
+  // correct; a guide filed as a main course has to be noticed first.
+  if (/^\s*how\s+to\b/i.test(name)) {
+    return { value: null, why: `"${name}" reads as a technique rather than a dish` };
+  }
+
   for (const rule of RULES) {
     if (!rule.pattern.test(name)) continue;
 

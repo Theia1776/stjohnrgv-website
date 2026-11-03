@@ -42,24 +42,20 @@ const { book, heading, blurb, help } = Astro.props;
           <a href={help} class="btn btn-primary">Read Keeping the Fast first</a>
         </p>
 
-        <!-- Basic techniques, put up front rather than left for a cook
-             to discover halfway through. Tofu is the one that catches
-             people: used straight from the packet it is wet and bland,
-             and someone who tries it that way once decides they don't
-             like tofu rather than that nobody told them to press it.
-             Filled in by the script below, and only shown when the
-             recipes it points at actually exist — so it appears by
-             itself when they are posted, and never as a dead link. -->
-        <div id="technique-note" hidden class="mt-5 border-t border-border-soft pt-4">
-          <p class="text-sm font-semibold text-text-primary">
-            Cooking with tofu? Start with these.
-          </p>
-          <p class="mt-1 text-sm leading-relaxed text-text-secondary">
-            Straight from the packet it is wet and will not brown. These two
-            are the whole difference, and every tofu recipe here assumes them.
-          </p>
-          <ul id="technique-links" class="mt-2 space-y-1 text-sm"></ul>
-        </div>
+        <!-- Tofu earns its own line here because it is the thing
+             most likely to make someone give up on fasting food: used
+             straight from the packet it is waterlogged, and people
+             conclude they dislike tofu rather than that nobody taught
+             them to press it. The lesson lives on Keeping the Fast,
+             with both recipes in full beneath it. -->
+        <p class="mt-4 border-t border-border-soft pt-4 text-sm leading-relaxed text-text-secondary">
+          <strong class="text-text-primary">Cooking with tofu?</strong>
+          Press it first, then crisp it — that is the whole difference
+          between tofu people like and tofu they don't.
+          <a href={`${help}#tofu`} class="font-semibold text-brand-blue-dark">
+            How to do both &rarr;
+          </a>
+        </p>
       </aside>
     )
   }
@@ -228,47 +224,6 @@ const { book, heading, blurb, help } = Astro.props;
   categoryEl.addEventListener("change", render);
 
   /**
-   * The handful of recipes that are really techniques, linked at the
-   * top of the fasting book so a cook meets them before the dish that
-   * needs them rather than after.
-   *
-   * Matched on the title rather than hard-coded to a slug, because the
-   * slug is made from whatever the recipe was first called and these
-   * were written before the recipes existed. Matched loosely for the
-   * same reason — "Crispy Tofu (Pan-Fried)" and "Crispy Tofu" should
-   * both find it.
-   *
-   * Nothing is shown when nothing matches, so this costs nothing until
-   * the recipes are posted and then appears on its own.
-   */
-  const TECHNIQUES = [
-    { needle: "press tofu", label: "How to Press Tofu" },
-    { needle: "crispy tofu", label: "Crispy Tofu (Pan-Fried)" },
-  ];
-
-  function showTechniques() {
-    const note = document.getElementById("technique-note");
-    const list = document.getElementById("technique-links");
-    if (!note || !list) return;
-
-    const found = TECHNIQUES.map((t) => {
-      const match = recipes.find((r) => normalise(r.title).includes(t.needle));
-      return match ? { slug: match.slug, title: match.title } : null;
-    }).filter(Boolean) as { slug: string; title: string }[];
-
-    if (found.length === 0) return;
-
-    list.innerHTML = found
-      .map(
-        (r) =>
-          `<li><a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
-             class="font-semibold text-brand-blue-dark">${escapeHtml(r.title)} &rarr;</a></li>`,
-      )
-      .join("");
-    note.hidden = false;
-  }
-
-  /**
    * Only the categories this book actually has. Offering "Lamb" in the
    * fasting book, or any empty shelf, invites a filter that returns
    * nothing and looks broken.
@@ -343,7 +298,6 @@ const { book, heading, blurb, help } = Astro.props;
         return;
       }
       fillCategoryFilter();
-      showTechniques();
       render();
     } catch (err) {
       loadingEl.hidden = true;
