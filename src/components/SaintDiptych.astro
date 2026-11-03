@@ -176,7 +176,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 <script type="application/json" id="diptych-icon-urls" is:inline set:html={saintIconUrlsJson}></script>
 
 <script is:inline>
-  (function () {
+  function initDiptych() {
     // Whichever block the page actually printed. The calendar inlines
     // the same records for its own modal, so this component reuses
     // that one rather than shipping 2,389 saints a second time; on any
@@ -308,7 +308,22 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
         host.dataset.state = 'closed';
       }
     });
-  })();
+  }
+
+  // Run once the document is parsed, not at this point in it.
+  //
+  // This script used to sit directly beneath its own data block, so the
+  // data was always there by the time it ran. Now that it can read a
+  // block the *page* printed, it can no longer assume that: on
+  // /calendar/ the shared block comes several hundred lines lower, so
+  // the lookup found nothing, the function returned early, and the
+  // Saint of the Day silently never appeared. Waiting for
+  // DOMContentLoaded makes the order stop mattering either way.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDiptych);
+  } else {
+    initDiptych();
+  }
 </script>
 
 <style>
