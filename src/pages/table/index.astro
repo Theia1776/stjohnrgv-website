@@ -1,5 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
 
 // An Orthodox Table — the front of the parish recipe collection.
 // Two shelves, side by side on one row: the fasting book and everything
@@ -150,6 +152,72 @@ import Layout from "../../layouts/Layout.astro";
         See the gluten-free recipes →
       </p>
     </a>
+
+    <!-- The patron of cooks, and the reason a parish keeps a recipe
+         collection at all: the kitchen is somewhere holiness happens,
+         not an interruption of it. Placed after the books because the
+         practical business of choosing one comes first, and a cook who
+         has found what they came for is the one most likely to read
+         this. -->
+    <section class="mt-14 border-t border-border-soft pt-10">
+      <div class="grid items-start gap-8 md:grid-cols-[minmax(0,18rem)_1fr]">
+        <figure class="m-0">
+          <Image
+            src={euphrosynos}
+            alt="An icon of St. Euphrosynos the Cook painted on a wooden kitchen board, hanging on a plaster wall between bunches of drying herbs, garlic and chillies, with a lit beeswax candle before it. The saint holds a branch bearing three apples."
+            width={288}
+            densities={[1, 2]}
+            class="w-full border border-border-soft shadow-sm"
+            loading="lazy"
+          />
+          <figcaption class="mt-2 text-xs italic text-text-secondary">
+            St. Euphrosynos the Cook, with the three apples of Paradise.
+          </figcaption>
+        </figure>
+
+        <div>
+          <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+            Our patron in the kitchen
+          </p>
+          <h2 class="mt-2 font-display text-2xl text-text-primary">
+            St. Euphrosynos the Cook
+          </h2>
+          <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
+
+          <p class="mt-4 text-text-primary/85 leading-relaxed">
+            He was a cook in a Palestinian monastery, and by every outward
+            measure the least of the brethren — unlearned, unremarkable, often
+            reproached, and silent about it. He prayed over the pots. The
+            brothers thought little of him.
+          </p>
+          <p class="mt-4 text-text-primary/85 leading-relaxed">
+            A priest of that monastery asked God to show him what is kept for
+            the righteous, and dreamt of Paradise. There, keeping the garden,
+            he found the kitchen cook. He asked Euphrosynos how he came to be
+            in such a place, and was told: through the great mercy of God. He
+            asked whether he might take something back with him, and
+            Euphrosynos picked three apples, wrapped them in a cloth, and gave
+            them to him.
+          </p>
+          <p class="mt-4 text-text-primary/85 leading-relaxed">
+            The priest woke with the cloth beside him and the fragrance of the
+            fruit still in it. When he told the brethren, Euphrosynos left the
+            monastery rather than be honoured for it, and was not seen again.
+          </p>
+          <p class="mt-4 text-text-primary/85 leading-relaxed">
+            He is commemorated on <strong>11 September</strong>, and he is why a
+            collection of recipes belongs to a parish at all. The cooking is not
+            an interruption of the life of prayer. For him it was the whole of
+            it.
+          </p>
+          <p class="mt-5 text-sm text-text-secondary">
+            His life is in the parish's
+            <a href="/learn/saints/" class="font-semibold text-brand-blue-dark">saints catalogue</a>,
+            told in full.
+          </p>
+        </div>
+      </div>
+    </section>
 
     <!-- The parish's older collection, which lives in the library
          rather than here. Linked so a cook looking for fasting food
