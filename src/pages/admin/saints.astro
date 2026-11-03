@@ -374,6 +374,9 @@ import Layout from "../../layouts/Layout.astro";
       try {
         const res = await fetch("/api/admin/save-saint", {
           method: "POST",
+          // The endpoint now wants an admin session as well as the
+          // password, so the cookie has to travel with the request.
+          credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password: adminPassword, data }),
         });

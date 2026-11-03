@@ -7,9 +7,21 @@
  * Contents API. Cloudflare Pages picks up the new commit and redeploys
  * automatically — no manual push step.
  *
+ * **Two gates, both required**: a signed-in admin session, and the
+ * shared password below. The session check came second and matters
+ * most. This was the one endpoint on the site outside the session
+ * system, protected by a password alone — with no rate limit, so an
+ * attacker could try as many as they liked, and a success commits to
+ * the repository's main branch. The slug pattern means the worst case
+ * was only ever a defaced saint page rather than arbitrary code, but a
+ * guessable shared secret should not be the only thing standing there.
+ *
  * Required env vars (Cloudflare Pages → Settings → Environment Variables):
- *   ADMIN_PASSWORD     — the admin gate. Pick anything; rotate by
- *                        editing the env var.
+ *   SUPABASE_SERVICE_ROLE_KEY — to read the caller's role.
+ *   ADMIN_PASSWORD     — the second gate, kept as well as the session
+ *                        because this one writes to git rather than to
+ *                        a table, and a borrowed laptop with a live
+ *                        session should not be enough on its own.
  *   GITHUB_TOKEN       — fine-grained PAT or classic PAT with
  *                        "Contents: Read and write" on this repo.
  *
@@ -35,7 +47,12 @@
  *   502 { error } — upstream GitHub failure
  */
 
+import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
+import { SUPABASE_URL } from "../../../src/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
 interface Env {
+  SUPABASE_SERVICE_ROLE_KEY: string;
   ADMIN_PASSWORD: string;
   GITHUB_TOKEN: string;
   GITHUB_REPO_OWNER?: string;
@@ -120,22 +137,41 @@ export async function onRequestPost(
 ): Promise<Response> {
   const env = context.env;
 
+  // Gate one: a signed-in admin. Checked before the password is even
+  // looked at, so an anonymous caller cannot sit here guessing it.
+  const session = await verifySession(context.request);
+  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
+  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized." }, 401));
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
+    return wrap(jsonResponse({ error: "Server not configured." }, 500));
+  }
+  const supabase = createClient(SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", session.user.id)
+    .single();
+  if (profile?.role !== "admin") return wrap(jsonResponse({ error: "Forbidden" }, 403));
+
   if (!env.ADMIN_PASSWORD || !env.GITHUB_TOKEN) {
-    return jsonResponse(
+    return wrap(jsonResponse(
       { error: "Server not configured. Missing ADMIN_PASSWORD or GITHUB_TOKEN." },
       500,
-    );
+    ));
   }
 
   let body: { password?: unknown; data?: unknown };
   try {
     body = await context.request.json();
   } catch (_e) {
-    return jsonResponse({ error: "Invalid JSON body." }, 400);
+    return wrap(jsonResponse({ error: "Invalid JSON body." }, 400));
   }
 
+  // Gate two: the shared password.
   if (typeof body.password !== "string" || !safeCompare(body.password, env.ADMIN_PASSWORD)) {
-    return jsonResponse({ error: "Unauthorized." }, 401);
+    return wrap(jsonResponse({ error: "Unauthorized." }, 401));
   }
 
   const data = body.data as Record<string, unknown> | undefined;
