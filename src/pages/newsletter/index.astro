@@ -1,0 +1,131 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// The back issues. Loaded at runtime so a newly published issue
+// appears without a rebuild — the same pattern as the library, the
+// lessons and the recipes.
+---
+
+<Layout
+  title="Parish Newsletter | St. John of Kronstadt Orthodox Mission"
+  description="News, notices and a word from Fr. Antonios — the newsletter of St. John of Kronstadt Orthodox Mission."
+>
+  <main class="mx-auto max-w-4xl px-4 py-12 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      St. John of Kronstadt Orthodox Mission
+    </p>
+    <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Parish Newsletter</h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+    <p class="mt-5 max-w-2xl text-text-primary/85 leading-relaxed">
+      What is happening in the parish — services and feasts, a word from
+      Fr. Antonios, and the people to keep in your prayers. It comes by
+      email to everyone with a parish account, and every issue stays here
+      to be read again.
+    </p>
+
+    <p id="news-loading" class="mt-10 text-sm italic text-text-secondary">Loading the back issues…</p>
+    <p id="news-error" hidden role="alert" class="mt-10 text-sm text-liturgical-red"></p>
+
+    <div id="news-signin" hidden class="mt-10 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
+      <p>
+        <strong class="text-text-primary">Most issues are for the parish.</strong>
+        A newsletter carries our people's names — who is ill, who is travelling,
+        whose child was baptised — so it is kept among us rather than put on the
+        open internet.
+      </p>
+      <p class="mt-3">
+        <a href="/login/?next=/newsletter/" class="font-semibold text-brand-blue-dark">Sign in</a>
+        to read them, or
+        <a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.
+      </p>
+    </div>
+
+    <p id="news-empty" hidden class="mt-10 text-sm italic text-text-secondary">
+      No issues yet. The first one will appear here.
+    </p>
+
+    <ul id="news-list" class="mt-10 space-y-6"></ul>
+  </main>
+</Layout>
+
+<script>
+  type Issue = {
+    slug: string;
+    title: string;
+    issue_label: string | null;
+    intro: string | null;
+    audience: string;
+    published_at: string | null;
+  };
+
+  const listEl = document.getElementById("news-list") as HTMLUListElement;
+  const loadingEl = document.getElementById("news-loading") as HTMLParagraphElement;
+  const errorEl = document.getElementById("news-error") as HTMLParagraphElement;
+  const emptyEl = document.getElementById("news-empty") as HTMLParagraphElement;
+  const signinEl = document.getElementById("news-signin") as HTMLDivElement;
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function when(value: string | null): string {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  }
+
+  function card(issue: Issue): string {
+    const date = when(issue.published_at);
+    const above = [issue.issue_label, date].filter(Boolean).map(escapeHtml).join(" · ");
+    return `<li class="border border-border-soft bg-cream-card p-6 shadow-sm">
+      ${above ? `<p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">${above}</p>` : ""}
+      <h2 class="mt-2 font-display text-2xl">
+        <a href="/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}"
+           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(issue.title)}</a>
+      </h2>
+      ${issue.intro ? `<p class="mt-3 text-text-primary/85 leading-relaxed">${escapeHtml(issue.intro.slice(0, 220))}${issue.intro.length > 220 ? "…" : ""}</p>` : ""}
+      <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+        <a href="/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}" class="no-underline hover:underline">Read this issue →</a>
+      </p>
+    </li>`;
+  }
+
+  (async () => {
+    try {
+      const res = await fetch("/api/newsletter", { credentials: "same-origin" });
+      loadingEl.hidden = true;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        errorEl.textContent = `Could not load the newsletter: ${body.error ?? res.status}`;
+        errorEl.hidden = false;
+        return;
+      }
+      const data = await res.json();
+      const issues = (data.issues ?? []) as Issue[];
+
+      if (issues.length === 0) {
+        // Signed out, an empty list usually means the parish issues
+        // were withheld rather than that nothing was ever written. Say
+        // which, instead of letting it read as "this parish has no
+        // newsletter".
+        if (!data.viewer_signed_in) signinEl.hidden = false;
+        else emptyEl.hidden = false;
+        return;
+      }
+
+      listEl.innerHTML = issues.map(card).join("");
+      if (!data.viewer_signed_in) signinEl.hidden = false;
+    } catch (err) {
+      loadingEl.hidden = true;
+      errorEl.textContent = `Could not load the newsletter: ${err instanceof Error ? err.message : String(err)}`;
+      errorEl.hidden = false;
+    }
+  })();
+</script>

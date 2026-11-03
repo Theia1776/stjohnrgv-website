@@ -1,0 +1,186 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// One issue, laid out to be read on screen and printed for the
+// noticeboard or for a parishioner who doesn't use email. Same
+// approach as a recipe card: the printed sheet carries the parish's
+// own name and address, because on paper that is the only thing
+// saying whose it is.
+---
+
+<Layout title="Parish Newsletter | St. John of Kronstadt Orthodox Mission">
+  <meta slot="head" name="robots" content="noindex" />
+
+  <style is:global>
+    @media print {
+      header, footer, nav, .no-print { display: none !important; }
+      /* Paper is already white; a cream wash wastes toner and makes
+         the text harder to read. */
+      body, .issue-sheet { background: #fff !important; box-shadow: none !important; }
+      .issue-sheet { border: 0 !important; padding: 0 !important; }
+      .print-footer { display: block !important; }
+      a[href]::after { content: ""; }
+    }
+  </style>
+
+  <main class="mx-auto max-w-3xl px-4 py-10 md:px-6">
+    <p class="no-print font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      <a href="/newsletter/" class="text-brand-tan-dark no-underline hover:underline">
+        ← All issues
+      </a>
+    </p>
+
+    <p id="issue-loading" class="mt-8 text-sm italic text-text-secondary">Loading…</p>
+    <div id="issue-error" hidden role="alert" class="mt-8 text-sm"></div>
+
+    <article id="issue-sheet" hidden class="issue-sheet mt-6 border border-border-soft bg-cream-card p-6 shadow-sm md:p-10">
+      <div class="flex items-start gap-3 border-b border-border-soft pb-5">
+        <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
+        <span class="leading-tight">
+          <span class="block font-display text-base md:text-lg">St. John of Kronstadt</span>
+          <span class="block text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
+            Orthodox Mission · RGV
+          </span>
+        </span>
+      </div>
+
+      <p id="issue-label" class="mt-6 font-display text-xs uppercase tracking-widest text-brand-tan-dark"></p>
+      <h1 id="issue-title" class="mt-2 font-display text-3xl text-text-primary md:text-4xl"></h1>
+      <p id="issue-date" class="mt-2 text-sm text-text-secondary"></p>
+
+      <div id="issue-intro" class="mt-6 space-y-4 leading-relaxed text-text-primary/85"></div>
+      <div id="issue-sections" class="mt-2"></div>
+      <div id="issue-closing" hidden class="mt-8 border-t border-border-soft pt-6 space-y-4 leading-relaxed text-text-primary/85"></div>
+
+      <div class="print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
+        <p>St. John of Kronstadt Orthodox Mission · 39737 Palm Drive, Bayview, TX 78566 · (956) 434-6874</p>
+        <p class="mt-1">stjohnrgv.org</p>
+      </div>
+    </article>
+
+    <div id="issue-actions" hidden class="no-print mt-6 flex flex-wrap items-center gap-3">
+      <button type="button" id="print-issue" class="btn btn-secondary">Print this issue</button>
+      <span class="text-sm text-text-secondary">
+        For the noticeboard, or for anyone who doesn't use email.
+      </span>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Section = { heading: string; body: string };
+  type Issue = {
+    slug: string;
+    title: string;
+    issue_label: string | null;
+    intro: string | null;
+    sections: Section[] | null;
+    closing: string | null;
+    published_at: string | null;
+  };
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /** Blank lines part paragraphs — the only formatting there is. */
+  function paragraphs(text: string | null): string {
+    return String(text ?? "")
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+      .join("");
+  }
+
+  function setText(id: string, value: string) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  const slug = new URLSearchParams(location.search).get("slug") ?? "";
+  const errorEl = document.getElementById("issue-error") as HTMLDivElement;
+
+  function showError(html: string, gentle = false) {
+    (document.getElementById("issue-loading") as HTMLElement).hidden = true;
+    errorEl.className = gentle
+      ? "mt-8 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed"
+      : "mt-8 text-sm text-liturgical-red";
+    errorEl.innerHTML = html;
+    errorEl.hidden = false;
+  }
+
+  (async () => {
+    if (!slug) {
+      showError('No issue was named. <a href="/newsletter/" class="font-semibold text-brand-blue-dark">See all issues</a>.');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/newsletter?slug=${encodeURIComponent(slug)}`, {
+        credentials: "same-origin",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Not an error — this issue simply isn't theirs to read yet.
+        // Said as an invitation, with the door pointed at.
+        if (res.status === 403 && body.needs_account) {
+          showError(
+            `${escapeHtml(body.error)} ` +
+              `<a href="/login/?next=${encodeURIComponent(location.pathname + location.search)}" class="font-semibold text-brand-blue-dark">Sign in</a> or ` +
+              '<a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.',
+            true,
+          );
+          return;
+        }
+        showError(escapeHtml(body.error ?? `Could not load this issue (${res.status}).`));
+        return;
+      }
+
+      const issue = body.issue as Issue;
+      document.title = `${issue.title} | Parish Newsletter`;
+      setText("issue-label", issue.issue_label ?? "");
+      setText("issue-title", issue.title);
+      setText(
+        "issue-date",
+        issue.published_at
+          ? new Date(issue.published_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "",
+      );
+
+      (document.getElementById("issue-intro") as HTMLElement).innerHTML = paragraphs(issue.intro);
+
+      const sections = Array.isArray(issue.sections) ? issue.sections : [];
+      (document.getElementById("issue-sections") as HTMLElement).innerHTML = sections
+        .map(
+          (s) => `<section class="mt-8">
+            ${s.heading ? `<h2 class="font-display text-xl text-text-primary">${escapeHtml(s.heading)}</h2><div class="mt-2 h-px w-12 bg-liturgical-current"></div>` : ""}
+            <div class="mt-3 space-y-4 leading-relaxed text-text-primary/85">${paragraphs(s.body)}</div>
+          </section>`,
+        )
+        .join("");
+
+      if (issue.closing) {
+        const closing = document.getElementById("issue-closing") as HTMLElement;
+        closing.hidden = false;
+        closing.innerHTML = paragraphs(issue.closing);
+      }
+
+      (document.getElementById("issue-loading") as HTMLElement).hidden = true;
+      (document.getElementById("issue-sheet") as HTMLElement).hidden = false;
+      (document.getElementById("issue-actions") as HTMLElement).hidden = false;
+    } catch (err) {
+      showError(escapeHtml(`Could not load this issue: ${err instanceof Error ? err.message : String(err)}`));
+    }
+  })();
+
+  document.getElementById("print-issue")?.addEventListener("click", () => window.print());
+</script>

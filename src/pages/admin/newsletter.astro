@@ -1,0 +1,535 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+// Writing the parish newsletter.
+//
+// Three separate presses on purpose — save, publish, send — because
+// they undo differently. A saved draft is private. A published issue
+// can be un-published. An email that has gone out cannot be recalled
+// from anybody's inbox, so sending is its own deliberate act with its
+// own confirmation, and never a side effect of saving.
+---
+
+<Layout
+  title="Newsletter | St. John of Kronstadt"
+  description="Write and send the parish newsletter."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-4xl px-4 py-8 md:px-6">
+    <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Admin</p>
+    <h1 class="mb-2 font-display text-3xl text-text-primary md:text-4xl">Parish Newsletter</h1>
+    <p class="mb-6 text-text-secondary">
+      Write it once. It gets a page on the site and goes out by email to
+      everyone with a parish account.
+    </p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+    <div id="error-msg" hidden role="alert" class="mb-4 text-liturgical-red"></div>
+
+    <div id="app" hidden>
+      <div id="email-warning" hidden class="mb-6 border-l-2 border-liturgical-red bg-cream-card p-4 text-sm">
+        <strong class="text-text-primary">Email isn't set up on the server.</strong>
+        Issues can be written and published, but nothing can be sent until
+        <code>RESEND_API_KEY</code> is set in Cloudflare.
+      </div>
+
+      <div id="pending-warning" hidden class="mb-6 border-l-2 border-liturgical-red bg-cream-card p-4 text-sm leading-relaxed">
+        <strong class="text-text-primary">The newsletter table isn't in the database yet.</strong>
+        Run <code>021_newsletters.sql</code> in the Supabase SQL editor and
+        reload this page.
+      </div>
+
+      <!-- Writing. One issue at a time; the editor fills with whichever
+           issue is being worked on and is otherwise a blank new one. -->
+      <section class="mb-8 border border-border-soft bg-cream-card p-5">
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="editor-heading" class="font-display text-xl text-text-primary">A new issue</h2>
+          <button type="button" id="new-issue" hidden class="btn btn-secondary text-sm">
+            Start a new one instead
+          </button>
+        </div>
+
+        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+          <label class="block text-xs uppercase tracking-widest text-text-secondary">
+            Issue label
+            <input id="f-label" type="text" maxlength="100" placeholder="November 2026"
+              class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary" />
+          </label>
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Title <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+            <input id="f-title" type="text" maxlength="200" placeholder="The Nativity Fast Begins"
+              class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary" />
+          </label>
+        </div>
+
+        <label class="mt-4 block text-xs uppercase tracking-widest text-text-secondary">
+          Opening
+          <textarea id="f-intro" rows="3" placeholder="A line or two to begin with."
+            class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"></textarea>
+        </label>
+
+        <div class="mt-5">
+          <p class="text-xs uppercase tracking-widest text-text-secondary">Sections</p>
+          <div id="sections" class="mt-2 space-y-4"></div>
+          <button type="button" id="add-section" class="btn btn-secondary mt-3 text-sm">
+            Add a section
+          </button>
+        </div>
+
+        <label class="mt-5 block text-xs uppercase tracking-widest text-text-secondary">
+          Closing
+          <textarea id="f-closing" rows="2" placeholder="Service times, a closing line."
+            class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"></textarea>
+        </label>
+
+        <fieldset class="mt-5 border border-border-soft p-4">
+          <legend class="px-1 text-xs uppercase tracking-widest text-text-secondary">Who may read it</legend>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="audience" value="parish" checked class="mt-1 h-4 w-4" />
+            <span>
+              <span class="text-sm font-semibold text-text-primary">Our parish</span>
+              <span class="mt-0.5 block text-xs text-text-secondary">
+                Signed-in accounts only. Right for anything naming our people —
+                who is ill, who is travelling, whose child was baptised.
+              </span>
+            </span>
+          </label>
+          <label class="mt-3 flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="audience" value="public" class="mt-1 h-4 w-4" />
+            <span>
+              <span class="text-sm font-semibold text-text-primary">Anyone</span>
+              <span class="mt-0.5 block text-xs text-text-secondary">
+                Readable by the whole internet, and findable by search. Only for
+                an issue you have read back with that in mind.
+              </span>
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="mt-5 flex flex-wrap items-center gap-3 border-t border-border-soft pt-4">
+          <button type="button" id="save-issue" class="btn btn-primary text-sm">Save draft</button>
+          <a id="preview-link" hidden href="#" target="_blank" rel="noopener" class="btn btn-secondary text-sm">
+            Preview the page
+          </a>
+          <span id="editor-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </section>
+
+      <h2 class="mb-3 font-display text-xl text-text-primary">Issues</h2>
+      <p id="issues-empty" hidden class="text-sm italic text-text-secondary">
+        Nothing written yet.
+      </p>
+      <div id="issue-rows" class="space-y-4"></div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  type Section = { heading: string; body: string };
+  type Issue = {
+    id: string;
+    slug: string;
+    title: string;
+    issue_label: string | null;
+    intro: string | null;
+    sections: Section[] | null;
+    closing: string | null;
+    audience: string;
+    published: boolean;
+    published_at: string | null;
+    sent_at: string | null;
+    sent_count: number;
+    sent_attempted: number;
+    send_error: string | null;
+    written_by_name: string | null;
+    created_at: string;
+  };
+
+  let issues: Issue[] = [];
+  /** The issue being edited, or null for a new one. */
+  let editingId: string | null = null;
+
+  const $ = (id: string) => document.getElementById(id) as HTMLElement;
+  const input = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const area = (id: string) => document.getElementById(id) as HTMLTextAreaElement;
+
+  function escapeHtml(value: unknown): string {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function when(value: string | null): string {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  }
+
+  function say(message: string, bad = false) {
+    const el = $("editor-status");
+    el.textContent = message;
+    el.className = bad ? "text-sm text-liturgical-red" : "text-sm text-text-secondary";
+  }
+
+  // ============== THE SECTION ROWS ==============
+  // The form grows with the issue rather than offering a fixed number
+  // of boxes, the same as the recipe form.
+
+  function sectionRow(section: Section = { heading: "", body: "" }): HTMLDivElement {
+    const row = document.createElement("div");
+    row.className = "section-row border border-border-soft bg-cream-bg p-3";
+    row.innerHTML = `
+      <div class="flex items-start gap-2">
+        <input type="text" maxlength="200" placeholder="Heading"
+               class="s-heading min-w-0 flex-1 border border-border-soft bg-cream-card px-2 py-1.5 text-sm" />
+        <button type="button" class="s-remove btn btn-secondary text-xs" aria-label="Remove this section">Remove</button>
+      </div>
+      <textarea rows="4" placeholder="What this section says."
+                class="s-body mt-2 block w-full border border-border-soft bg-cream-card px-2 py-1.5 text-sm"></textarea>`;
+    (row.querySelector(".s-heading") as HTMLInputElement).value = section.heading ?? "";
+    (row.querySelector(".s-body") as HTMLTextAreaElement).value = section.body ?? "";
+    row.querySelector(".s-remove")?.addEventListener("click", () => row.remove());
+    return row;
+  }
+
+  /**
+   * The rows that have something to say, and the headings that don't.
+   *
+   * A heading with nothing under it is dropped — it would go out as a
+   * title followed by blank space — but it is dropped *out loud*, in
+   * the save confirmation, because silently throwing away something
+   * somebody typed is how a person comes to distrust a form.
+   */
+  function readSections(): { kept: Section[]; dropped: string[] } {
+    const all = Array.from(document.querySelectorAll<HTMLDivElement>(".section-row")).map((row) => ({
+      heading: (row.querySelector(".s-heading") as HTMLInputElement).value.trim(),
+      body: (row.querySelector(".s-body") as HTMLTextAreaElement).value.trim(),
+    }));
+    return {
+      kept: all.filter((s) => s.body),
+      dropped: all.filter((s) => s.heading && !s.body).map((s) => s.heading),
+    };
+  }
+
+  document.getElementById("add-section")?.addEventListener("click", () => {
+    $("sections").appendChild(sectionRow());
+  });
+
+  // ============== LOADING ONE INTO THE EDITOR ==============
+
+  function loadIntoEditor(issue: Issue | null) {
+    editingId = issue?.id ?? null;
+    input("f-label").value = issue?.issue_label ?? "";
+    input("f-title").value = issue?.title ?? "";
+    area("f-intro").value = issue?.intro ?? "";
+    area("f-closing").value = issue?.closing ?? "";
+
+    const audience = issue?.audience === "public" ? "public" : "parish";
+    (document.querySelector(`input[name="audience"][value="${audience}"]`) as HTMLInputElement).checked = true;
+
+    const holder = $("sections");
+    holder.innerHTML = "";
+    const existing = Array.isArray(issue?.sections) ? issue!.sections! : [];
+    if (existing.length === 0) holder.appendChild(sectionRow());
+    else for (const s of existing) holder.appendChild(sectionRow(s));
+
+    $("editor-heading").textContent = issue ? `Editing: ${issue.title}` : "A new issue";
+    ($("new-issue") as HTMLElement).hidden = !issue;
+    const preview = $("preview-link") as HTMLAnchorElement;
+    if (issue) {
+      preview.hidden = false;
+      preview.href = `/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}`;
+    } else {
+      preview.hidden = true;
+    }
+    say("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.getElementById("new-issue")?.addEventListener("click", () => loadIntoEditor(null));
+
+  // ============== SAVING ==============
+
+  document.getElementById("save-issue")?.addEventListener("click", async () => {
+    const title = input("f-title").value.trim();
+    if (!title) {
+      say("The issue needs a title.", true);
+      input("f-title").focus();
+      return;
+    }
+
+    const { kept, dropped } = readSections();
+    const payload = {
+      title,
+      issue_label: input("f-label").value.trim(),
+      intro: area("f-intro").value.trim(),
+      closing: area("f-closing").value.trim(),
+      sections: kept,
+      audience:
+        (document.querySelector('input[name="audience"]:checked') as HTMLInputElement)?.value === "public"
+          ? "public"
+          : "parish",
+    };
+
+    const btn = document.getElementById("save-issue") as HTMLButtonElement;
+    btn.disabled = true;
+    say("Saving…");
+    try {
+      const res = await fetch(
+        editingId ? `/api/admin/newsletter/${encodeURIComponent(editingId)}` : "/api/admin/newsletter",
+        {
+          method: editingId ? "PATCH" : "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        say(body.error ?? `Couldn't save it (${res.status}).`, true);
+        return;
+      }
+      const saved = body.issue as Issue;
+      // Named back, with the count, so it is plain that the right
+      // thing was saved and not an empty form.
+      const count = (saved.sections ?? []).length;
+      say(
+        `Saved "${saved.title}" — ${count} ${count === 1 ? "section" : "sections"}, ` +
+          `${saved.audience === "public" ? "readable by anyone" : "for our parish"}. ` +
+          (saved.published ? "It is live on the site." : "Still a draft; publish it below.") +
+          (dropped.length
+            ? ` Left out ${dropped.length === 1 ? "a heading with nothing under it" : "headings with nothing under them"}: ${dropped.join(", ")}.`
+            : ""),
+      );
+      await loadIssues();
+      loadIntoEditor(issues.find((i) => i.id === saved.id) ?? saved);
+    } catch (err) {
+      say(`Couldn't save it: ${err instanceof Error ? err.message : String(err)}`, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ============== THE LIST ==============
+
+  function row(issue: Issue): string {
+    const sent = issue.sent_at
+      ? `Emailed to ${issue.sent_count} on ${escapeHtml(when(issue.sent_at))}` +
+        (issue.sent_count < issue.sent_attempted
+          ? ` — ${issue.sent_attempted - issue.sent_count} failed`
+          : "")
+      : "Not emailed yet";
+
+    return `<article class="border ${issue.published ? "border-border-soft" : "border-sacred-gold"} bg-cream-card p-5 shadow-sm" data-id="${escapeHtml(issue.id)}">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="font-display text-lg text-text-primary">${escapeHtml(issue.title)}</h3>
+          <p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">
+            ${issue.issue_label ? `${escapeHtml(issue.issue_label)} · ` : ""}${issue.audience === "public" ? "Anyone may read" : "Our parish"}${issue.published_at ? ` · ${escapeHtml(when(issue.published_at))}` : ""}
+          </p>
+          <p class="mt-1 text-xs ${issue.send_error ? "text-liturgical-red" : "text-text-secondary"}">${sent}</p>
+        </div>
+        <span class="whitespace-nowrap border px-2 py-0.5 text-[0.65rem] uppercase tracking-wider ${
+          issue.published ? "border-border-soft text-text-secondary" : "border-sacred-gold text-brand-tan-dark"
+        }">${issue.published ? "Published" : "Draft"}</span>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-soft pt-4">
+        <button type="button" class="btn btn-secondary text-sm" data-action="edit">Open</button>
+        <button type="button" class="btn ${issue.published ? "btn-secondary" : "btn-primary"} text-sm" data-action="toggle-published">
+          ${issue.published ? "Un-publish" : "Publish"}
+        </button>
+        ${
+          issue.published
+            ? `<button type="button" class="btn btn-primary text-sm" data-action="send">
+                 ${issue.sent_at ? "Send again" : "Send to the parish"}
+               </button>
+               <a href="/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}" target="_blank" rel="noopener" class="btn btn-secondary text-sm">View</a>`
+            : ""
+        }
+        ${issue.sent_at ? "" : `<button type="button" class="btn btn-secondary text-sm ml-auto" data-action="delete">Delete</button>`}
+        <span class="row-status w-full text-sm text-text-secondary" role="status"></span>
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    $("issue-rows").innerHTML = issues.map(row).join("");
+    ($("issues-empty") as HTMLElement).hidden = issues.length > 0;
+  }
+
+  async function patch(id: string, changes: Record<string, unknown>, statusEl: HTMLElement | null) {
+    if (statusEl) statusEl.textContent = "Saving…";
+    const res = await fetch(`/api/admin/newsletter/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(changes),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (statusEl) {
+        statusEl.textContent = body.error ?? `Failed (${res.status})`;
+        statusEl.className = "row-status w-full text-sm text-liturgical-red";
+      }
+      return false;
+    }
+    await loadIssues();
+    return true;
+  }
+
+  $("issue-rows").addEventListener("click", async (event) => {
+    const btn = (event.target as HTMLElement | null)?.closest("[data-action]") as HTMLElement | null;
+    if (!btn) return;
+    const article = btn.closest("article") as HTMLElement | null;
+    const id = article?.dataset.id;
+    if (!id) return;
+    const issue = issues.find((i) => i.id === id);
+    if (!issue) return;
+    const statusEl = article?.querySelector(".row-status") as HTMLElement | null;
+
+    switch (btn.dataset.action) {
+      case "edit":
+        loadIntoEditor(issue);
+        break;
+
+      case "toggle-published": {
+        if (issue.published && issue.sent_at) {
+          const ok = window.confirm(
+            [
+              `"${issue.title}" has already been emailed to ${issue.sent_count}.`,
+              "",
+              "Un-publishing takes its page down. Every copy in a parishioner's",
+              "inbox links to that page, and those links will stop working.",
+              "",
+              "Un-publish it anyway?",
+            ].join("\u000a"),
+          );
+          if (!ok) return;
+        }
+        await patch(id, { published: !issue.published }, statusEl);
+        break;
+      }
+
+      case "send": {
+        // The one action on this site that cannot be undone. It asks
+        // plainly, with the number of people and where it is going
+        // from, and asks a second time if it has gone before.
+        const again = Boolean(issue.sent_at);
+        const first = window.confirm(
+          [
+            again
+              ? `"${issue.title}" already went out to ${issue.sent_count} on ${when(issue.sent_at)}.`
+              : `Email "${issue.title}" to everyone with a parish account?`,
+            "",
+            again
+              ? "Sending again delivers a SECOND copy to every one of them."
+              : "It goes out from the parish office, with everybody on BCC so",
+            again ? "" : "nobody sees another member's address.",
+            "",
+            "An email cannot be recalled once it has gone.",
+          ]
+            .filter((l) => l !== "")
+            .join("\u000a"),
+        );
+        if (!first) return;
+
+        if (statusEl) {
+          statusEl.textContent = "Sending…";
+          statusEl.className = "row-status w-full text-sm text-text-secondary";
+        }
+        const res = await fetch("/api/admin/newsletter/send", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, sender: "office", again }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (statusEl) {
+            statusEl.textContent = body.error ?? `Couldn't send it (${res.status}).`;
+            statusEl.className = "row-status w-full text-sm text-liturgical-red";
+          }
+          return;
+        }
+        if (statusEl) {
+          statusEl.textContent =
+            `Sent to ${body.delivered} of ${body.attempted}, from ${body.sender_address}.` +
+            (body.error ? ` Some failed: ${body.error}` : "") +
+            (body.log_error ? ` (The send wasn't recorded: ${body.log_error})` : "");
+          statusEl.className = `row-status w-full text-sm ${body.error ? "text-liturgical-red" : "text-text-secondary"}`;
+        }
+        await loadIssues();
+        break;
+      }
+
+      case "delete": {
+        if (!window.confirm(`Delete the draft "${issue.title}"? This can't be undone.`)) return;
+        if (statusEl) statusEl.textContent = "Deleting…";
+        const res = await fetch(`/api/admin/newsletter/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (statusEl) {
+            statusEl.textContent = body.error ?? `Failed (${res.status})`;
+            statusEl.className = "row-status w-full text-sm text-liturgical-red";
+          }
+          return;
+        }
+        if (editingId === id) loadIntoEditor(null);
+        await loadIssues();
+        break;
+      }
+    }
+  });
+
+  // ============== LOADING ==============
+
+  async function loadIssues() {
+    const res = await fetch("/api/admin/newsletter", { credentials: "same-origin", cache: "no-store" });
+    if (res.status === 401 || res.status === 403) {
+      window.location.assign("/");
+      return;
+    }
+    $("loading").hidden = true;
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // The table not existing is the expected state until migration
+      // 021 is run, and saying so beats a raw Postgres error.
+      const missing = /newsletters/.test(String(body.error ?? "")) && /does not exist|schema cache/i.test(String(body.error ?? ""));
+      if (missing) {
+        $("app").hidden = false;
+        ($("pending-warning") as HTMLElement).hidden = false;
+        return;
+      }
+      const el = $("error-msg");
+      el.textContent = `Couldn't load the newsletter: ${body.error ?? res.status}`;
+      el.hidden = false;
+      return;
+    }
+    issues = (body.issues ?? []) as Issue[];
+    ($("email-warning") as HTMLElement).hidden = body.email_configured !== false;
+    $("app").hidden = false;
+    render();
+  }
+
+  (async () => {
+    try {
+      await loadIssues();
+      if (!editingId) loadIntoEditor(null);
+    } catch (err) {
+      $("loading").hidden = true;
+      const el = $("error-msg");
+      el.textContent = `Couldn't load the newsletter: ${err instanceof Error ? err.message : String(err)}`;
+      el.hidden = false;
+    }
+  })();
+</script>
