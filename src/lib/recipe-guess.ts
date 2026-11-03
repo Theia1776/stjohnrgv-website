@@ -34,7 +34,6 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(cheese ball|mayonnaise|aioli|vinaigrette|chutney)\b/i, group: "Soups & Sides", category: "Misc." },
   { pattern: /\b(knots|breadsticks?|garlic bread|waffles?|pancakes?|crepes?)\b/i, group: "Soups & Sides", category: "Breads" },
   { pattern: /\b(jell-?o|gelatin salad)\b/i, group: "Desserts", category: "Misc." },
-  { pattern: /\b(grilled cheese|melts?|paninis?)\b/i, group: "Main Courses", category: "Misc." },
   { pattern: /\b(spanish rice|fried rice|rice)\b/i, group: "Main Courses", category: "Pasta & Grains" },
   { pattern: /\bstuffed (bell )?peppers?\b/i, group: "Main Courses", category: "Vegetables" },
   { pattern: /\bstuffed shells?\b/i, group: "Main Courses", category: "Pasta & Grains" },
@@ -66,6 +65,16 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(potatoes|fries|stuffing|dressing|casserole|gratin|rice pilaf|greens|sprouts|asparagus|carrots|corn on the cob|baked beans)\b/i, group: "Soups & Sides", category: "Sides" },
   { pattern: /\b(dips?|spreads?|salsa|hummus|guacamole|sauces?|gravy|relish|pickled|pickles|jam|jelly|preserves|marinade|butter sauce|queso)\b/i, group: "Soups & Sides", category: "Misc." },
 
+  // --- Lunches ---
+  // A burger and a sloppy joe are sandwiches; nobody calls them that,
+  // so they are named here rather than left to the word "sandwich".
+  { pattern: /\b(sandwich(es)?|burgers?|sliders?|sloppy joes?|grilled cheese|melts?|paninis?|subs?|hoagies?|po.?boys?)\b/i, group: "Lunches", category: "Sandwiches" },
+  // Bowls before wraps: a "Burrito Bowl" is a bowl, and it says both.
+  // Safe this late — the dessert rules have already claimed "Punch
+  // Bowl Cake" and "Trifle Bowl".
+  { pattern: /\bbowls?\b/i, group: "Lunches", category: "Bowls" },
+  { pattern: /\b(wraps?|burritos?|crunchwraps?|quesadillas?)\b/i, group: "Lunches", category: "Wraps & Burritos" },
+
   // --- Main courses, by the meat that names them ---
   // Plurals matter: a card says "Hamburgers" and "Meatloaves", and
   // without the optional ending neither matched at all.
@@ -78,10 +87,11 @@ const RULES: { pattern: RegExp; group: string; category: string }[] = [
   { pattern: /\b(lentils?|chickpeas?|beans?|dal|falafel|hummus bowl)\b/i, group: "Main Courses", category: "Beans & Lentils" },
   { pattern: /\b(pasta|spaghetti|lasagna|rigatoni|penne|gnocchi|macaroni|noodles?|risotto|quinoa|couscous|pilaf|pizza|calzone)\b/i, group: "Main Courses", category: "Pasta & Grains" },
   { pattern: /\b(vegetables?|veggie|ratatouille|stir[- ]?fry|eggplant|zucchini|squash|cauliflower|broccoli|mushrooms?|tofu|tempeh|seitan)\b/i, group: "Main Courses", category: "Vegetables" },
-  { pattern: /\b(tacos?|enchiladas?|burritos?|quesadillas?|wraps?|sandwich(es)?|burgers?|sliders?|sloppy joes?|crunchwraps?)\b/i, group: "Main Courses", category: "Misc." },
-  // A bowl is a main course. Safe this late in the list — the dessert
-  // rules have already claimed "Punch Bowl Cake".
-  { pattern: /\bbowls?\b/i, group: "Main Courses", category: "Misc." },
+  // Tacos and enchiladas stay main courses — in this parish they are as
+  // often dinner as lunch. AFTER the meats on purpose, so "Beef Tacos"
+  // files under Beef, where it is actually useful, rather than landing
+  // on a Misc. shelf.
+  { pattern: /\b(tacos?|enchiladas?)\b/i, group: "Main Courses", category: "Misc." },
 
   // Fruit in a syrup is a pudding. Deliberately the LAST rule in the
   // list, after every meat: "Oranges in Coffee Syrup" is a dessert but

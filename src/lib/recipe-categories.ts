@@ -34,6 +34,20 @@ export const RECIPE_CATEGORIES: CategoryGroup[] = [
     categories: ["Soups", "Breads", "Sides", "Salads", "Misc."],
   },
   {
+    // Sandwiches had no home. They were landing in "Main Courses —
+    // Misc." with the wraps and the grilled cheese, which is true as
+    // far as it goes — a sandwich is a main course — but it answers
+    // the wrong question. Nobody asks what to have as a main course;
+    // they ask what to make for lunch.
+    //
+    // Kept narrow on purpose. Soups and salads are lunch too, and they
+    // already have shelves in Soups & Sides; repeating them here would
+    // give a cook two places to look and the guesser an arbitrary
+    // choice between them. Only what has nowhere better to be.
+    group: "Lunches",
+    categories: ["Sandwiches", "Wraps & Burritos", "Bowls", "Misc."],
+  },
+  {
     group: "Main Courses",
     categories: [
       "Beef",
