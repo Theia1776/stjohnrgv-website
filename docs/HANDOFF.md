@@ -205,6 +205,38 @@ thing from republishing them on a public website.
 
 ---
 
+## The newsletter
+
+At `/newsletter/`, written at `/admin/newsletter/`. One issue is used
+twice — a page on the site and an email to everyone with an account —
+and [src/lib/newsletter.ts](../src/lib/newsletter.ts) renders both from
+the same row so they cannot drift apart.
+
+**`audience` defaults to `parish`, and that default is the whole
+point.** A newsletter names people: who is ill, who is travelling,
+whose child was baptised. A mistake towards "public" puts a
+parishioner's illness on the open internet and there is no taking it
+back. An outward-facing issue is switched over per issue, deliberately.
+Signed out, parish issues are not even listed — a row marked "locked"
+would itself say that the parish discussed somebody this month.
+
+**Save, publish and send are three presses** because they undo
+differently: a draft is private, a published issue can be un-published,
+an email cannot be recalled. So sending says how many people and which
+address it leaves from, and asks again before delivering a second copy
+to a parish that already has one. An issue must be published before it
+can be sent — the email carries a link to its page — and one that has
+been emailed cannot be deleted, only un-published, because every copy
+in an inbox links back to it.
+
+Sending reuses the rules from `/api/admin/email`: parish address on the
+To, everyone on BCC in batches of 49, out as the office or Fr.
+Antonios and never an admin's own mailbox. Nothing accepts markup;
+blank lines part paragraphs and everything is escaped on the way into
+the HTML.
+
+---
+
 ## Who may do what
 
 **Four roles**, in `profiles.role`: `inquirer`, `catechumen`, `member`,
@@ -244,6 +276,20 @@ only automatic lesson announcements.
 ---
 
 ## Do this next
+
+**Two migrations are waiting.** Run both in the Supabase SQL editor:
+
+| | |
+|---|---|
+| [020_recipe_gluten_free.sql](../supabase/migrations/020_recipe_gluten_free.sql) | the `recipes.gluten_free` column |
+| [021_newsletters.sql](../supabase/migrations/021_newsletters.sql) | the whole `newsletters` table |
+
+Until 021 is run the newsletter can't be written at all — `/admin/newsletter/`
+says so in a red banner, and `/newsletter/`, which is in the main
+navigation, answers "no issues yet", which is true. Nothing to unpick
+afterwards: the tolerance there is a single narrow check in
+[functions/api/newsletter/index.ts](../functions/api/newsletter/index.ts)
+that can stay.
 
 **Migration 020 is not applied.** `recipes.gluten_free` does not exist
 in the database yet. Run
@@ -339,7 +385,8 @@ all applied by hand in the Supabase SQL editor.
 `008` master admin · `009`–`010` directory email · `011` library hidden ·
 `012` catechism_lessons · `013`–`014` parish_emails · `015`–`016`
 library text + page numbers · `017` catechism text · `018` recipes ·
-`019` recipe categories · `020` recipe gluten_free **(not yet applied)**.
+`019` recipe categories · `020` recipe gluten_free **(not yet applied)** ·
+`021` newsletters **(not yet applied)**.
 
 ---
 
