@@ -12,11 +12,111 @@ import Layout from "../../layouts/Layout.astro";
 //
 // Written to grow. Each topic is its own <section> with an id, so a
 // new one is added without disturbing what is here.
+
+// The cupboard list. Kept as data rather than hand-written markup so a
+// line can be added without touching layout, the way the protein table
+// on Keeping the Fast works.
+//
+// Brands are named on purpose: a person standing in an aisle wants to
+// know what to reach for, not a principle. They are named WITH the
+// warning that recipes change, because they do, and a parish website
+// cannot keep up with them.
+const cupboard = [
+  {
+    group: "Tins",
+    items: [
+      "Beans — kidney, black, pinto, chickpea",
+      "Tomato sauce and tomato paste",
+      "Fruit and vegetables",
+      "Coconut milk",
+      "Soups — some Amy's and Well Yes! are, but read the tin",
+    ],
+  },
+  {
+    group: "Dry goods",
+    items: [
+      "Pasta, rice, oats",
+      "Lentils, beans, split peas",
+      "Bread and tortillas",
+      "Nuts and seeds",
+      "Spices and salt",
+    ],
+  },
+  {
+    group: "Baking",
+    items: [
+      "Flour, cornstarch, baking powder, baking soda",
+      "Organic sugar — see Reading labels below",
+      "Cocoa powder and vanilla extract",
+      "Chocolate chips, dairy-free",
+    ],
+  },
+  {
+    group: "Freezer",
+    items: [
+      "Fruit and vegetables",
+      "Fries and diced potatoes",
+      "Waffles — read the box, not all are",
+      "Ice cream — So Delicious, Ben & Jerry's non-dairy line",
+      "Pizza — Daiya, some Amy's",
+      "Ready meals — Gardein, Sweet Earth",
+    ],
+  },
+  {
+    group: "Oils, sauces and condiments",
+    items: [
+      "Olive oil and a plain cooking oil",
+      "Vinegar, ketchup, mustard",
+      "Hot sauce — some contain dairy",
+      "Maple syrup",
+      "Pasta sauce — some contain meat or cheese, read it",
+      "Mayonnaise — Vegenaise, Just Mayo, Hellmann's vegan",
+      "Peanut butter and jelly",
+    ],
+  },
+  {
+    group: "Instead of dairy",
+    items: [
+      "Milk — oat, almond, cashew, coconut, soy",
+      "Creamer — Silk, Nutpods, So Delicious, Califia",
+      "Yogurt — Silk, So Delicious, Ripple, Chobani non-dairy, Kite Hill",
+      "Cheese — Violife, Daiya, Follow Your Heart, Chao. Note that lactose-free is not the same thing",
+      "Cream cheese — Tofutti, Kite Hill",
+    ],
+  },
+  {
+    group: "Instead of meat",
+    items: [
+      "Tofu and tempeh",
+      "Lentils and beans — much the cheapest of these",
+      "Mince and burgers — Impossible, Beyond, Gardein, MorningStar, Dr. Praeger's",
+      "Bacon — Lightlife, Sweet Earth",
+      "Sausage — Lightlife, Gardein, Field Roast, Beyond",
+      "Chicken-style — Gardein, MorningStar",
+    ],
+  },
+];
+
+// The names animal products hide under, which is the part nobody
+// tells you.
+const hiddenNames = [
+  { name: "Casein", what: "a milk protein" },
+  { name: "Whey", what: "also milk" },
+  { name: "Lactose", what: "milk sugar" },
+  { name: "Gelatin", what: "boiled bone and hide — sweets, marshmallows, some yogurts" },
+  { name: "Isinglass", what: "fish, used to clarify some beers and wines" },
+  { name: "Carmine", what: "crushed insects, used as red colouring" },
+  { name: "Lard, suet, tallow", what: "rendered animal fat" },
+  {
+    name: "Sugar filtered through bone char",
+    what: "never stated on the label — organic sugar never is, so buy organic when it matters",
+  },
+];
 ---
 
 <Layout
   title="An Introduction to Vegan Eating | An Orthodox Table"
-  description="How to cook for the Orthodox fast — starting with tofu, which almost everyone has had badly. From St. John of Kronstadt Orthodox Mission, Bayview TX."
+  description="How to cook for the Orthodox fast — what to keep in the cupboard, how to read a label, and how to cook tofu so you actually like it. St. John of Kronstadt Orthodox Mission, Bayview TX."
 >
   <main class="mx-auto max-w-3xl px-4 py-12 md:px-6">
     <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
@@ -37,10 +137,64 @@ import Layout from "../../layouts/Layout.astro";
       This is the practical half. Not what the fast asks of you — that is
       <a href="/table/keeping-the-fast/" class="font-semibold text-brand-blue-dark">Keeping the Fast</a>,
       along with who it bends for and why — but how to cook once you have
-      agreed to it. It begins where most people come unstuck.
+      agreed to it.
     </p>
 
-    <!-- Tofu first, because it is the thing most likely to decide
+    <!-- A page this long needs a way in. -->
+    <nav aria-label="On this page" class="mt-8 border border-border-soft bg-cream-card p-5">
+      <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">On this page</p>
+      <ul class="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
+        <li><a href="#start-here" class="text-brand-blue-dark">Start from what you already eat</a></li>
+        <li><a href="#try-things" class="text-brand-blue-dark">Then add to it</a></li>
+        <li><a href="#tofu" class="text-brand-blue-dark">Tofu, done properly</a></li>
+        <li><a href="#cost" class="text-brand-blue-dark">What it costs</a></li>
+        <li><a href="#cupboard" class="text-brand-blue-dark">A cupboard to shop from</a></li>
+        <li><a href="#labels" class="text-brand-blue-dark">Reading labels</a></li>
+        <li><a href="#vitamins" class="text-brand-blue-dark">Vitamins and B12</a></li>
+      </ul>
+    </nav>
+
+    <!-- The first thing to say to somebody who feels they are losing
+         everything, and the thing that actually settles them: most of
+         what they eat already qualifies. -->
+    <section id="start-here" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">Start from what you already eat</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        Changing how you eat can feel like being asked to give up everything at
+        once. It isn't, and the quickest way to see that is to notice how much
+        of what you already eat is fasting food. Pasta. Peanut butter and jelly.
+        Rice and beans. Potatoes. Berries and apples. Most crisps and crackers.
+        Oatmeal. Hummus and pita.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        <strong class="text-text-primary">Write your own list down</strong> — on
+        your phone, or on the fridge where you will see it. On the evening when
+        you are tired and certain there is nothing in the house to eat, the list
+        is the answer, and you will not think of it unaided at that hour.
+      </p>
+    </section>
+
+    <section id="try-things" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">Then add to it</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        The fast is also an invitation to cook things you would never otherwise
+        have tried. A cuisine that was already mostly fasting food — Indian,
+        Ethiopian, much of the Levant and the Mediterranean. A vegetable cooked
+        a way you haven't cooked it. A restaurant in town you have walked past
+        for years.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        Every time something turns out well, put it on the list. After a season
+        or two there will be more on it than you can cook in a week, and the
+        list becomes how you write the shopping. Some people keep three: what
+        the family will actually eat, what is quick on a weeknight, and what is
+        worth the trouble on a Sunday.
+      </p>
+    </section>
+
+    <!-- Tofu early, because it is the thing most likely to decide
          whether somebody keeps fasting or gives up on it. Almost
          everyone who says they dislike tofu has only met it
          waterlogged — a texture problem, and a fixable one. Somebody
@@ -141,6 +295,111 @@ import Layout from "../../layouts/Layout.astro";
         Once you have those two, the tofu dishes in the
         <a href="/table/fasting/" class="font-semibold text-brand-blue-dark">fasting book</a>
         — fajitas, tacos, scramble, teriyaki — all start from the same place.
+      </p>
+    </section>
+
+    <section id="cost" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">What it costs</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        If you have looked at the vegan shelf and seen the price of the cheese
+        and the mince, don't let it put you off — but do know that none of it is
+        necessary. Those are conveniences, and they are the most expensive way
+        to keep a fast. Buy them when you can and want to, not as a rule.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        The cheap way is also the older way. Rather than swapping the beef in
+        your spaghetti sauce for vegan beef, make it with lentils. Rice,
+        vegetables and beans costs almost nothing and is what most of the
+        fasting world has always eaten. Whole food is cheaper than processed
+        food here as everywhere: the dried beans and lentils aisle, a shop with
+        a decent bulk section, and a look at what the essentials cost in two or
+        three different shops will do more for the grocery bill than anything
+        else on this page.
+      </p>
+    </section>
+
+    <section id="cupboard" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">A cupboard to shop from</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        Not a list to buy in one trip. Keep a few things from each row and most
+        of what is in the fasting book is already within reach.
+      </p>
+
+      <div class="mt-6 space-y-7">
+        {
+          cupboard.map((row) => (
+            <div>
+              <h3 class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+                {row.group}
+              </h3>
+              <ul class="mt-2 space-y-1 text-sm leading-relaxed text-text-primary/85">
+                {row.items.map((item) => (
+                  <li class="border-b border-border-soft pb-1">{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="mt-5 text-xs text-text-secondary">
+        Brands are named because a person standing in an aisle wants to know
+        what to reach for. They do change their recipes, and a parish website
+        cannot keep up with them — so the label still decides.
+      </p>
+    </section>
+
+    <section id="labels" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">Reading labels</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        Animal products hide under names that do not sound like animals, which
+        is the part nobody warns you about. These are the ones worth knowing by
+        sight.
+      </p>
+
+      <dl class="mt-5 space-y-2">
+        {
+          hiddenNames.map((row) => (
+            <div class="flex flex-wrap items-baseline gap-x-3 border-b border-border-soft pb-2">
+              <dt class="font-semibold text-text-primary">{row.name}</dt>
+              <dd class="text-sm text-text-secondary">{row.what}</dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      <!-- Our rule and the internet's rule differ here, and somebody
+           following generic vegan advice will refuse food they could
+           have eaten. Worth saying plainly. -->
+      <div class="mt-6 border-l-2 border-sacred-gold bg-cream-card p-5">
+        <h3 class="font-display text-base text-text-primary">Honey is allowed</h3>
+        <p class="mt-2 text-sm leading-relaxed text-text-primary/85">
+          Strict vegan guidance excludes honey, and most of the advice you will
+          find online does. Our fast does not. What is set aside is the flesh
+          and produce of animals with bones, and bees are not among them. So a
+          barbecue sauce that lists honey is a problem for a vegan and not for
+          you — worth knowing before you put back something you never needed to.
+        </p>
+      </div>
+    </section>
+
+    <section id="vitamins" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">Vitamins and B12</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        B12 comes almost entirely from animal foods, and a long fast is the one
+        thing on this page worth asking about rather than reading about. A
+        multivitamin and a B12 supplement are what most people take.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        <strong class="text-text-primary">Speak with your doctor, and with Fr.
+        Antonios.</strong> A website does not know your bloodwork and cannot
+        give you a rule. Between the two of them you will get an answer that
+        fits you — and if the answer is that the fast should bend, that is a
+        normal thing for it to do.
       </p>
     </section>
 
