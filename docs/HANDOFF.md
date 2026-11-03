@@ -328,10 +328,17 @@ a `?slug=` to show anything. `/directory/` and `/coffee-hour/` stay
 closed because they carry other people's addresses and phone numbers —
 that is privacy, not SEO.
 
-**The two things still outstanding are not in the repo**: the parish has
-no Google Business Profile and no Search Console verification. For a
-local church the Business Profile is most of local SEO. Nothing further
-on-page will move much until those exist. See
+**Two things will never be done, and both have reasons.** Google
+demands video verification for a Business Profile and offers no
+alternative; the church is home-based and Fr. Antonios has declined, so
+the parish cannot appear in the local map panel at all. And there is no
+Spanish content on purpose — the parish has no Spanish-speaking clergy,
+so drawing a Spanish-only speaker to a liturgy they could not follow
+would be a disservice. **Don't raise either again.**
+
+That leaves organic search on what the parish genuinely has: the
+library, the history page, the recipes. Google Search Console is still
+worth verifying — free, no video. See
 [docs/02-seo-strategy.md](02-seo-strategy.md).
 
 ---

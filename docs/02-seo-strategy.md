@@ -24,16 +24,43 @@ against the live Astro site on 3 November 2026, not estimated.
 | HTTPS | Enforced, with HSTS |
 | Image alt text | Every image on the site |
 | Page weight | Homepage 6.8 KB · calendar 16 KB |
-| Google Business Profile | **Still not claimed** |
+| Google Business Profile | **Not possible — see below** |
 | Google Search Console | **Still not verified** |
-| Spanish-language content | **None.** Google-translate proxy only |
+| Spanish-language content | **None, by decision — see below** |
 | Backlinks | Minimal |
 
-**The two blanks in that table are now the whole job.** The on-page
-work is done; nothing further in sections 3, 4 or 6 will move the
-needle while the parish has no Business Profile and no Search Console.
-For a local church the Business Profile *is* local SEO — it is what
-puts the parish in the map panel for "orthodox church near me".
+### Two things this parish cannot and will not do
+
+Both were raised as gaps on 3 November 2026 and both are closed. They
+are recorded here with their reasons so nobody proposes them again.
+
+**Google Business Profile — not available to this parish.** Google
+requires video verification for the listing, and will not offer an
+alternative method. St. John is a home-based church and Fr. Antonios
+has declined to have the inside of a home filmed for Google. That is
+the end of it. The practical consequence is real and should be
+understood rather than worked around: **this parish cannot appear in
+the local map panel**, which is where most "orthodox church near me"
+searches are answered. Section 5 of this document is therefore dead
+and is kept only as a record of what was tried.
+
+**Spanish-language content — a decision, not an oversight.** The RGV is
+majority Spanish-speaking and a `/es/` page would rank. The parish does
+not have Spanish-speaking clergy, so someone who speaks only Spanish
+could not follow the service. Drawing them to a liturgy they cannot
+understand would be a disservice dressed up as outreach. The
+Google-translate proxy in the header stays, for someone who reads
+English well enough to attend but prefers Spanish for the website. The
+keyword table in section 2 keeps its Spanish terms for the day the
+parish has someone who can serve those enquirers.
+
+**What this leaves.** Local listings are off the table and a whole
+language is off the table, so everything rests on *organic* search for
+what the parish actually has that nobody else does: 690 Orthodox
+titles, a True Orthodox history page, and a growing fasting-recipe
+collection. Those are the assets. Google Search Console is still worth
+verifying — it is free, needs no video, and is the only way to see what
+Google thinks of the site at all.
 
 ### What was wrong on 3 November 2026, and is now fixed
 
@@ -65,10 +92,6 @@ point: none of them announced themselves.
 
 ### Still open
 
-- **Spanish content.** The RGV is majority Spanish-speaking and the site
-  offers only a Google-translate proxy, which Google does not index as
-  Spanish content. A real `/es/` page is the single biggest untapped
-  opportunity here; the keyword table below already has the terms.
 - **The library is not findable.** 690 books, and the reader is a
   template needing `?slug=`, so no individual book has an indexable
   URL. Per-book pages for the public-tier titles would be a substantial
@@ -287,6 +310,11 @@ Implement the following JSON-LD on every page (in the `<head>`). This tells Goog
 ---
 
 ## 5. Google Business Profile (GBP) Setup
+
+> **Not applicable.** Google demands video verification and offers this
+> parish no alternative; Fr. Antonios has declined, the church being
+> home-based. Kept as a record of what was attempted, not as a task.
+
 
 **This is the single highest-impact SEO action.** A fully completed GBP listing drives the majority of "near me" and local map searches.
 
