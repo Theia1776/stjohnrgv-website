@@ -19,23 +19,90 @@ import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
     </p>
     <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">An Orthodox Table</h1>
     <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
-    <p class="mt-5 max-w-2xl font-display text-lg text-text-primary/85 md:text-xl">
-      Recipes and a guide to eating Orthodox.
-    </p>
+    <!-- The icon floats so the text runs round it rather than sitting
+         in a rigid column beside it. Floated and not a grid on
+         purpose: the opening line, the paragraph about the fast and
+         St. Euphrosynos' own story are different lengths, and a float
+         lets them close over the bottom of the picture instead of
+         leaving a column of white space wherever the shorter one
+         ends.
 
-    <p class="mt-6 max-w-2xl text-text-primary/85 leading-relaxed">
-      The Church keeps roughly half the year as fast, and a fast is not a
-      hardship to be endured in silence — it has its own cooking, handed
-      between households for centuries. These are our parish's, shared by
-      the people who make them.
-    </p>
+         On a phone it un-floats and sits above the text, because a
+         288px picture beside a paragraph at that width leaves a
+         measure nobody can read. -->
+    <div class="mt-6">
+      <figure class="patron-figure m-0 mb-5 sm:float-left sm:mb-4 sm:mr-7 sm:w-64 md:w-72">
+        <Image
+          src={euphrosynos}
+          alt="An icon of St. Euphrosynos the Cook painted on a wooden kitchen board, hanging on a plaster wall between bunches of drying herbs, garlic and chillies, with a lit beeswax candle before it. The saint holds a branch bearing three apples."
+          width={288}
+          densities={[1, 2]}
+          class="w-full border border-border-soft shadow-sm"
+        />
+        <figcaption class="mt-2 text-xs italic text-text-secondary">
+          St. Euphrosynos the Cook, with the three apples of Paradise.
+        </figcaption>
+      </figure>
 
-    <!-- This was a link at the foot of a grey box and people walked
-         straight past it into the recipes. It is the first thing
-         someone new to fasting needs, so it now looks like the first
-         thing: its own panel, before the search and before the books,
+      <p class="font-display text-lg text-text-primary/85 md:text-xl">
+        Recipes and a guide to eating Orthodox.
+      </p>
+
+      <p class="mt-5 text-text-primary/85 leading-relaxed">
+        The Church keeps roughly half the year as fast, and a fast is not a
+        hardship to be endured in silence — it has its own cooking, handed
+        between households for centuries. These are our parish's, shared by
+        the people who make them.
+      </p>
+
+      <h2 class="mt-7 font-display text-xl text-text-primary">
+        St. Euphrosynos the Cook
+      </h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        He was a cook in a Palestinian monastery, and he prayed over the pots.
+        He was unlearned, often reproached, and said nothing about it. The
+        brothers thought little of him.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        A priest of that monastery asked God to show him what is kept for the
+        righteous, and dreamt of Paradise. There, keeping the garden, he found
+        the kitchen cook. He asked Euphrosynos how he came to be in such a
+        place, and was told: through the great mercy of God. He asked whether
+        he might take something back with him, and Euphrosynos picked three
+        apples, wrapped them in a cloth, and gave them to him.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        The priest woke with the cloth beside him and the fragrance of the
+        fruit still in it. When he told the brethren, Euphrosynos left the
+        monastery rather than be honoured for it, and was not seen again.
+      </p>
+      <p class="mt-4 text-text-primary/85 leading-relaxed">
+        He is commemorated on <strong>11 September</strong>, and he is why a
+        collection of recipes belongs to a parish at all. The cooking is not an
+        interruption of the life of prayer. For him it was the whole of it.
+      </p>
+      <p class="mt-4">
+        <a
+          href="/learn/saints/?saint=euphrosynus-the-cook-of-alexandria"
+          class="font-semibold text-brand-blue-dark"
+        >
+          Read his life in full →
+        </a>
+      </p>
+
+      <!-- Closes the float so the panel below starts on a clean line
+           however long the text above it runs. -->
+      <div class="clear-both"></div>
+    </div>
+
+    <!-- Second on the page, after the patron. A link at the foot of a
+         grey box got walked straight past, so this is its own panel
          with a button rather than a sentence that happens to be
-         underlined. -->
+         underlined — and it sits before the search and the books,
+         because a person new to fasting needs the direction before
+         they need three hundred recipes. -->
     <section class="mt-8 max-w-2xl border-2 border-sacred-gold bg-cream-card p-6">
       <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
         New to fasting? Start here
@@ -152,72 +219,6 @@ import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
         See the gluten-free recipes →
       </p>
     </a>
-
-    <!-- The patron of cooks, and the reason a parish keeps a recipe
-         collection at all: the kitchen is somewhere holiness happens,
-         not an interruption of it. Placed after the books because the
-         practical business of choosing one comes first, and a cook who
-         has found what they came for is the one most likely to read
-         this. -->
-    <section class="mt-14 border-t border-border-soft pt-10">
-      <div class="grid items-start gap-8 md:grid-cols-[minmax(0,18rem)_1fr]">
-        <figure class="m-0">
-          <Image
-            src={euphrosynos}
-            alt="An icon of St. Euphrosynos the Cook painted on a wooden kitchen board, hanging on a plaster wall between bunches of drying herbs, garlic and chillies, with a lit beeswax candle before it. The saint holds a branch bearing three apples."
-            width={288}
-            densities={[1, 2]}
-            class="w-full border border-border-soft shadow-sm"
-            loading="lazy"
-          />
-          <figcaption class="mt-2 text-xs italic text-text-secondary">
-            St. Euphrosynos the Cook, with the three apples of Paradise.
-          </figcaption>
-        </figure>
-
-        <div>
-          <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
-            Our patron in the kitchen
-          </p>
-          <h2 class="mt-2 font-display text-2xl text-text-primary">
-            St. Euphrosynos the Cook
-          </h2>
-          <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
-
-          <p class="mt-4 text-text-primary/85 leading-relaxed">
-            He was a cook in a Palestinian monastery, and by every outward
-            measure the least of the brethren — unlearned, unremarkable, often
-            reproached, and silent about it. He prayed over the pots. The
-            brothers thought little of him.
-          </p>
-          <p class="mt-4 text-text-primary/85 leading-relaxed">
-            A priest of that monastery asked God to show him what is kept for
-            the righteous, and dreamt of Paradise. There, keeping the garden,
-            he found the kitchen cook. He asked Euphrosynos how he came to be
-            in such a place, and was told: through the great mercy of God. He
-            asked whether he might take something back with him, and
-            Euphrosynos picked three apples, wrapped them in a cloth, and gave
-            them to him.
-          </p>
-          <p class="mt-4 text-text-primary/85 leading-relaxed">
-            The priest woke with the cloth beside him and the fragrance of the
-            fruit still in it. When he told the brethren, Euphrosynos left the
-            monastery rather than be honoured for it, and was not seen again.
-          </p>
-          <p class="mt-4 text-text-primary/85 leading-relaxed">
-            He is commemorated on <strong>11 September</strong>, and he is why a
-            collection of recipes belongs to a parish at all. The cooking is not
-            an interruption of the life of prayer. For him it was the whole of
-            it.
-          </p>
-          <p class="mt-5 text-sm text-text-secondary">
-            His life is in the parish's
-            <a href="/learn/saints/" class="font-semibold text-brand-blue-dark">saints catalogue</a>,
-            told in full.
-          </p>
-        </div>
-      </div>
-    </section>
 
     <!-- The parish's older collection, which lives in the library
          rather than here. Linked so a cook looking for fasting food

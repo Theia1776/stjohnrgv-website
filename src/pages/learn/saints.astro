@@ -514,7 +514,34 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
     function closeModal() {
       modal.classList.add("hidden");
       document.body.style.overflow = "";
+      // Drop ?saint= so the back button and a refresh don't reopen it.
+      if (new URLSearchParams(location.search).has("saint")) {
+        const url = new URL(location.href);
+        url.searchParams.delete("saint");
+        history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
     }
+
+    /**
+     * Open a particular saint from the address: ?saint=<slug>.
+     *
+     * The catalogue shows each life in a modal rather than on its own
+     * page, so until now there was no way to send somebody to one
+     * saint — a link could only land them on the catalogue to search
+     * for him. An Orthodox Table links to St. Euphrosynos this way.
+     *
+     * Unknown slugs are ignored rather than complained about: the
+     * catalogue is still the right place to arrive.
+     */
+    function openFromAddress() {
+      const slug = new URLSearchParams(location.search).get("saint");
+      if (!slug) return;
+      const idx = saints.findIndex((s) => s.slug === slug);
+      if (idx === -1) return;
+      openModal(idx);
+      modalPanel.scrollTop = 0;
+    }
+    openFromAddress();
 
     modal.addEventListener("click", (e) => {
       if (!modalPanel.contains(e.target)) closeModal();
