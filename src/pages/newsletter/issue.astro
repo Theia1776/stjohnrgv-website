@@ -94,6 +94,15 @@ import Layout from "../../layouts/Layout.astro";
     <p id="issue-loading" class="mt-8 text-sm italic text-text-secondary">Loading…</p>
     <div id="issue-error" hidden role="alert" class="mt-8 text-sm"></div>
 
+    <p
+      id="issue-draft"
+      hidden
+      class="no-print mt-6 border-l-2 border-liturgical-red bg-cream-card p-4 text-sm"
+    >
+      <strong class="text-text-primary">This issue is still a draft.</strong>
+      Only admins can see this page, and it has not been emailed to anyone.
+    </p>
+
     <article id="issue-sheet" hidden class="nl-sheet mt-6">
       <!-- Masthead -->
       <header class="nl-masthead border-b-2 border-sacred-gold pb-5">
@@ -294,6 +303,7 @@ import Layout from "../../layouts/Layout.astro";
       }
 
       const issue = body.issue as Issue;
+      if (body.draft) (document.getElementById("issue-draft") as HTMLElement).hidden = false;
       document.title = `${issue.title} | Parish Newsletter`;
       setText("issue-label", issue.issue_label ?? "");
       setText("issue-title", issue.title);

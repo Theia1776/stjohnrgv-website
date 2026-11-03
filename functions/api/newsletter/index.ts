@@ -61,12 +61,29 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     if (slug) {
       const { data, error } = await supabase
         .from("newsletters")
-        .select(FULL_FIELDS)
+        .select(`${FULL_FIELDS}, published`)
         .eq("slug", slug)
-        .eq("published", true)
         .maybeSingle();
       if (error) return wrap(jsonResponse({ error: error.message }, 500));
       if (!data) return wrap(jsonResponse({ error: "No such issue." }, 404));
+
+      // A draft is visible to an admin and to nobody else, so an issue
+      // can be read on its own page before it is published. Without
+      // this the only way to see how an issue looks is to publish it,
+      // which is a poor reason to put something in front of the parish.
+      if (!data.published) {
+        const isAdmin = session.user
+          ? (
+              await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", session.user.id)
+                .single()
+            ).data?.role === "admin"
+          : false;
+        if (!isAdmin) return wrap(jsonResponse({ error: "No such issue." }, 404));
+        return wrap(jsonResponse({ issue: data, viewer_signed_in: signedIn, draft: true }, 200));
+      }
 
       if (data.audience !== "public" && !signedIn) {
         return wrap(
