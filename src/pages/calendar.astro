@@ -1,18 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SaintDiptych from "../components/SaintDiptych.astro";
-import { saints, normalizeName } from "../lib/saints-lookup";
-
-// Pre-attach a normalized name to each saint so the client doesn't
-// have to re-normalize on every modal open. Inlined as JSON below
-// next to the existing inline scripts; the modal opener checks this
-// list first before falling through to /api/saint.
-const localSaintsForClient = saints.map((s) => ({
-  ...s,
-  _norm: normalizeName(s.name),
-  _normAliases: (s.aliases ?? []).map((a) => normalizeName(a)).filter(Boolean),
-}));
-const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u003c");
+// The saints catalogue is no longer inlined here. It is served as
+// /saints-data.json and fetched once — see src/pages/saints-data.json.ts.
 ---
 
 <Layout
@@ -60,7 +50,7 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
          whenever the user navigates Prev / Next / Today, so the book
          always reflects the displayed day, not just today. -->
     <div class="mb-12 flex justify-center">
-      <SaintDiptych sharedSaintsDataId="local-saints-data" />
+      <SaintDiptych />
     </div>
 
     <div class="mx-auto max-w-3xl">
@@ -140,11 +130,6 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
     </div>
   </div>
 
-  <!-- Local saints database (build-time snapshot of src/data/saints/).
-       The modal opener checks this list before falling through to
-       /api/saint, so a saint already in the parish catalog renders
-       its full local life/troparion/kontakion with no round-trip. -->
-  <script type="application/json" id="local-saints-data" is:inline set:html={localSaintsJson}></script>
 
   <script is:inline>
     const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -551,12 +536,24 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       showModal();
     }
 
-    // ---- Local saints DB (inlined at build time) ----
-    // Mirrors src/lib/saints-lookup.ts so the modal can do a
-    // synchronous in-page lookup before falling back to /api/saint.
-    const LOCAL_SAINTS = JSON.parse(
-      document.getElementById('local-saints-data').textContent,
-    );
+    // ---- Local saints DB ----
+    // Fetched once from /saints-data.json and shared with the Saint of
+    // the Day diptych through window.__saintsData, which both ask for
+    // and neither owns. This used to be inlined into the document,
+    // which made the page 5.9 MB.
+    //
+    // A failure resolves to an empty list rather than rejecting: the
+    // catalogue is an enrichment, and the modal falls back to fetching
+    // the saint from HTC. A calendar that still works without its
+    // biographies beats one that throws.
+    function loadSaints() {
+      if (!window.__saintsData) {
+        window.__saintsData = fetch('/saints-data.json')
+          .then((r) => (r.ok ? r.json() : []))
+          .catch(() => []);
+      }
+      return window.__saintsData;
+    }
     const PREFIX_RE_CLIENT =
       /^(?:(?:the\s+)?(?:saint(?:ed)?|holy|venerable|monk|martyr|hieromartyr|righteous|apostle|prophet|blessed)\s+)+/i;
     function normalizeNameClient(s) {
@@ -567,9 +564,10 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       n = n.replace(/\s+/g, ' ').trim();
       return n;
     }
-    function findLocalSaint(calendarName) {
+    async function findLocalSaint(calendarName) {
       const target = normalizeNameClient(calendarName);
       if (!target) return null;
+      const LOCAL_SAINTS = await loadSaints();
       for (const s of LOCAL_SAINTS) {
         if (s._norm && (target.includes(s._norm) || s._norm.includes(target))) {
           return s;
@@ -650,8 +648,8 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
       modalTitle.textContent = saint.name || '';
       showModal();
 
-      // Try the parish saints catalog first — synchronous, no fetch.
-      const local = findLocalSaint(saint.name);
+      // Try the parish saints catalog first.
+      const local = await findLocalSaint(saint.name);
       if (local) {
         renderLocalSaintInModal(local);
         return;

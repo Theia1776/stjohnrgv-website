@@ -20,24 +20,10 @@
  *   - skip the bio if life starts with the "Little is known…" stub
  */
 
-import { saints } from "../lib/saints-lookup";
-
-interface Props {
-  /**
-   * The id of a saints JSON block the page has already inlined, if it
-   * has one. Set it and this component reads that instead of printing
-   * its own copy.
-   *
-   * It exists because /calendar/ inlines the whole saints database for
-   * its own modal, and this component was inlining it again a few
-   * hundred lines further down — 2,389 saints twice, an 11.2 MB page
-   * that still cost 3.4 MB over the wire after compression, against
-   * 6.8 KB for the homepage. The two payloads were the same records;
-   * the calendar's merely carries two extra pre-normalised fields.
-   */
-  sharedSaintsDataId?: string;
-}
-const { sharedSaintsDataId } = Astro.props;
+// The saints themselves are no longer inlined here — the client
+// fetches /saints-data.json once and shares it with anything else on
+// the page that wants it. Only the icon map below is still printed,
+// being a few kilobytes of build-time asset URLs nothing else has.
 
 // Build a slug → URL map at build time. import.meta.glob with eager:true
 // resolves to the same processed asset URLs Astro's <Image> component
@@ -57,10 +43,8 @@ for (const [path, mod] of Object.entries(iconModules)) {
   saintIconUrls[slug] = mod.default.src;
 }
 
-// Inline saints data + icon-URL map for the client. Escape `<` in
-// each so saint life text containing "</script>" can't break out
-// of the JSON tag.
-const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
+// Escape `<` so a filename containing "</script>" cannot break out of
+// the JSON tag.
 const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c");
 ---
 
@@ -167,29 +151,32 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
   </div>
 </div>
 
-<!-- Saints data + iconSlug → URL map inlined for the diptych client script -->
-{
-  !sharedSaintsDataId && (
-    <script type="application/json" id="diptych-saints-data" is:inline set:html={saintsJson} />
-  )
-}
+<!-- iconSlug → URL map for the diptych client script -->
 <script type="application/json" id="diptych-icon-urls" is:inline set:html={saintIconUrlsJson}></script>
 
 <script is:inline>
-  function initDiptych() {
-    // Whichever block the page actually printed. The calendar inlines
-    // the same records for its own modal, so this component reuses
-    // that one rather than shipping 2,389 saints a second time; on any
-    // other page it finds its own. `define:vars` cannot be used to
-    // pass the id in — Astro ignores it on an `is:inline` script.
-    const dataEl =
-      document.getElementById('local-saints-data') ||
-      document.getElementById('diptych-saints-data');
+  /**
+   * One fetch of /saints-data.json for the whole page, memoised on
+   * window so this component and the calendar's modal share it rather
+   * than each pulling 2,389 saints down separately. Whichever asks
+   * first creates the promise; the other awaits the same one.
+   */
+  function loadSaints() {
+    if (!window.__saintsData) {
+      window.__saintsData = fetch('/saints-data.json')
+        .then((r) => (r.ok ? r.json() : []))
+        .catch(() => []);
+    }
+    return window.__saintsData;
+  }
+
+  async function initDiptych() {
     const iconUrlsEl = document.getElementById('diptych-icon-urls');
     const host = document.getElementById('saint-diptych');
-    if (!dataEl || !host) return;
+    if (!host) return;
 
-    const saints = JSON.parse(dataEl.textContent);
+    const saints = await loadSaints();
+    if (!saints.length) return;
     const ICON_URLS = iconUrlsEl ? JSON.parse(iconUrlsEl.textContent) : {};
     const MONTHS = [
       'January','February','March','April','May','June',
