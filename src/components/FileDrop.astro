@@ -1,0 +1,136 @@
+---
+/**
+ * Turns every plain `<input type="file">` on the page into a box you
+ * can click or drop a file onto.
+ *
+ * The browser's own control is a small grey button saying "Choose
+ * file" with the filename in tiny text beside it. Anyone who has used
+ * it before finds it; anyone who hasn't looks for the big dashed
+ * rectangle that every other site has taught them to expect. This
+ * admin will not always be run by the person who built it, and the
+ * next person should not have to be told where to click.
+ *
+ * Written as an upgrade rather than a component to drop in, for two
+ * reasons. The markup on four admin pages stays as it is — a plain
+ * file input, which still works with no JavaScript at all. And the
+ * newsletter builds its section rows in JavaScript, so its inputs
+ * appear long after the page has loaded; a MutationObserver catches
+ * those the moment they arrive.
+ *
+ * Include it once per page: <FileDrop />
+ *
+ * Opt a particular input out with `data-no-filedrop`, or by giving it
+ * the `hidden` class — the avatar picker on /account/ already has its
+ * own control and is left alone.
+ */
+---
+
+<script>
+  (function () {
+    const UPGRADED = "data-filedrop";
+
+    function label(input: HTMLInputElement): string {
+      const accept = (input.getAttribute("accept") ?? "").toLowerCase();
+      if (accept.includes("image/")) return "Choose a picture, or drag it here";
+      if (accept.includes("json")) return "Choose a file, or drag it here";
+      if (accept.includes("pdf")) return "Choose a PDF, or drag it here";
+      return "Choose a file, or drag it here";
+    }
+
+    function upgrade(input: HTMLInputElement) {
+      if (input.hasAttribute(UPGRADED)) return;
+      if (input.hasAttribute("data-no-filedrop")) return;
+      // Already has a control of its own.
+      if (input.classList.contains("hidden")) return;
+      if (input.closest("label")) return;
+
+      input.setAttribute(UPGRADED, "");
+
+      const box = document.createElement("label");
+      box.className =
+        "filedrop group flex cursor-pointer flex-col items-center justify-center gap-1 " +
+        "border-2 border-dashed border-border-soft bg-cream-bg px-4 py-5 text-center " +
+        "transition-colors hover:border-brand-blue-dark";
+
+      const icon = document.createElement("span");
+      icon.setAttribute("aria-hidden", "true");
+      icon.className = "text-xl text-brand-tan-dark";
+      icon.textContent = "↑";
+
+      const text = document.createElement("span");
+      text.className = "filedrop-text text-sm text-text-primary";
+      text.textContent = label(input);
+
+      const name = document.createElement("span");
+      name.className = "filedrop-name text-xs text-text-secondary";
+
+      input.replaceWith(box);
+      // Visually hidden rather than display:none, so it stays
+      // focusable by keyboard and the label still drives it.
+      input.className = `${input.className} sr-only`.trim();
+      box.append(input, icon, text, name);
+
+      function show() {
+        const file = input.files?.[0];
+        name.textContent = file ? `${file.name} — ${Math.round(file.size / 1024)} KB` : "";
+        text.textContent = file ? "Choose a different one" : label(input);
+      }
+      input.addEventListener("change", show);
+
+      // Drag and drop. Each dragover must be cancelled or the browser
+      // opens the file instead of letting the page have it.
+      for (const evt of ["dragenter", "dragover"]) {
+        box.addEventListener(evt, (e) => {
+          e.preventDefault();
+          box.classList.add("border-brand-blue-dark", "bg-brand-blue-pale");
+        });
+      }
+      for (const evt of ["dragleave", "drop"]) {
+        box.addEventListener(evt, (e) => {
+          e.preventDefault();
+          box.classList.remove("border-brand-blue-dark", "bg-brand-blue-pale");
+        });
+      }
+      box.addEventListener("drop", (e) => {
+        const dropped = (e as DragEvent).dataTransfer?.files;
+        if (!dropped || dropped.length === 0) return;
+        // Assigning a DataTransfer's list is the only way to put a
+        // dropped file into an <input>, and it is what every upload
+        // button the page already has expects to read.
+        const dt = new DataTransfer();
+        dt.items.add(dropped[0]);
+        input.files = dt.files;
+        show();
+        // So anything already listening for a change still hears one.
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    }
+
+    function upgradeAll(root: ParentNode = document) {
+      root.querySelectorAll<HTMLInputElement>('input[type="file"]').forEach(upgrade);
+    }
+
+    function start() {
+      upgradeAll();
+      // The newsletter adds section rows after load; catch their
+      // inputs as they appear rather than asking each page to call
+      // something after it builds one.
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node.nodeType !== 1) continue;
+            const el = node as HTMLElement;
+            if (el.matches?.('input[type="file"]')) upgrade(el as HTMLInputElement);
+            else upgradeAll(el);
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", start);
+    } else {
+      start();
+    }
+  })();
+</script>
