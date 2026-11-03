@@ -17,6 +17,18 @@
 export interface NewsletterSection {
   heading: string;
   body: string;
+  /**
+   * An R2 key under `newsletter/`, or an absolute URL. Optional: a
+   * newsletter that is nothing but prose is one people stop opening,
+   * so a section can carry a photograph, and the page lays it beside
+   * the text rather than above it.
+   */
+  image?: string;
+  image_alt?: string;
+  image_caption?: string;
+  /** A line lifted out of the body and set large, as a printed newsletter does. */
+  quote?: string;
+  quote_by?: string;
 }
 
 export interface NewsletterIssue {
@@ -35,6 +47,25 @@ export const PARISH = {
   phone: "(956) 434-6874",
   site: "https://stjohnrgv.org",
 } as const;
+
+/**
+ * Where an image actually lives.
+ *
+ * Stored as a bare R2 key (`newsletter/advent-2026/choir.jpg`) rather
+ * than a URL, so the serving route can change without rewriting every
+ * issue. An absolute URL is passed through untouched, for the case
+ * where a photograph is already hosted somewhere.
+ *
+ * `absolute` matters for email: a relative path in an inbox resolves
+ * against the mail client, not against the parish, and shows nothing.
+ */
+export function imageUrl(key: string | null | undefined, absolute = false): string {
+  const k = String(key ?? "").trim();
+  if (!k) return "";
+  if (/^https?:\/\//i.test(k)) return k;
+  const path = `/api/newsletter/image?key=${encodeURIComponent(k)}`;
+  return absolute ? `${PARISH.site}${path}` : path;
+}
 
 export function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -61,10 +92,19 @@ export function slugifyIssue(title: string): string {
 export function readSections(value: unknown): NewsletterSection[] {
   if (!Array.isArray(value)) return [];
   return value
-    .map((s) => ({
-      heading: typeof (s as NewsletterSection)?.heading === "string" ? (s as NewsletterSection).heading.trim() : "",
-      body: typeof (s as NewsletterSection)?.body === "string" ? (s as NewsletterSection).body.trim() : "",
-    }))
+    .map((raw) => {
+      const s = (raw ?? {}) as Record<string, unknown>;
+      const str = (k: string) => (typeof s[k] === "string" ? (s[k] as string).trim() : "");
+      return {
+        heading: str("heading"),
+        body: str("body"),
+        image: str("image"),
+        image_alt: str("image_alt"),
+        image_caption: str("image_caption"),
+        quote: str("quote"),
+        quote_by: str("quote_by"),
+      };
+    })
     // A section needs something to say. An empty row is one the writer
     // added and didn't use, and a heading with nothing under it is the
     // same thing half-finished — it would go out to the whole parish
@@ -73,7 +113,7 @@ export function readSections(value: unknown): NewsletterSection[] {
     //
     // A body with NO heading is kept on purpose: an unheaded paragraph
     // between two sections is a normal thing to want.
-    .filter((s) => s.body);
+    .filter((s) => s.body || s.image);
 }
 
 /** Blank lines part paragraphs; single newlines are line breaks. */

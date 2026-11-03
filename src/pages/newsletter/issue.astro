@@ -1,29 +1,90 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 
-// One issue, laid out to be read on screen and printed for the
-// noticeboard or for a parishioner who doesn't use email. Same
-// approach as a recipe card: the printed sheet carries the parish's
-// own name and address, because on paper that is the only thing
-// saying whose it is.
+// One issue of the parish newsletter.
+//
+// Two presentations of one issue, from one set of data:
+//
+//   On screen it scrolls — a masthead, a lead with a drop cap, then
+//   sections that alternate their photographs left and right so the
+//   page does not read as one long column of grey text. A newsletter
+//   nobody wants to look at is a newsletter nobody reads.
+//
+//   On paper it becomes a printed newsletter: two columns, the lead
+//   across the top, sections kept off page breaks, and the parish's
+//   name and address at the foot of every sheet. Printed for the
+//   noticeboard and for parishioners who do not use email.
+//
+// The rendering is in the browser rather than at build time because an
+// issue is a database row — posting one must not need a deploy.
 ---
 
 <Layout title="Parish Newsletter | St. John of Kronstadt Orthodox Mission">
   <meta slot="head" name="robots" content="noindex" />
 
   <style is:global>
+    /* ---------- On screen ---------- */
+
+    /* The opening letter of the lead, as a printed newsletter sets it. */
+    .nl-lead::first-letter {
+      float: left;
+      font-family: var(--font-display, serif);
+      font-size: 3.6rem;
+      line-height: 0.82;
+      padding: 0.1rem 0.5rem 0 0;
+      color: var(--color-brand-tan-dark);
+    }
+
+    /* The gold rule that stands before every headline. */
+    .nl-head {
+      border-left: 4px solid var(--color-sacred-gold);
+      padding-left: 0.85rem;
+    }
+
+    .nl-body p { margin-bottom: 1em; }
+    .nl-body p:last-child { margin-bottom: 0; }
+
+    /* ---------- On paper ---------- */
     @media print {
       header, footer, nav, .no-print { display: none !important; }
-      /* Paper is already white; a cream wash wastes toner and makes
-         the text harder to read. */
-      body, .issue-sheet { background: #fff !important; box-shadow: none !important; }
-      .issue-sheet { border: 0 !important; padding: 0 !important; }
-      .print-footer { display: block !important; }
+
+      body, .nl-sheet {
+        background: #fff !important;
+        box-shadow: none !important;
+        color: #000 !important;
+      }
+
+      @page {
+        margin: 14mm 12mm 16mm;
+      }
+
+      .nl-sheet { border: 0 !important; padding: 0 !important; max-width: none !important; }
+
+      /* The masthead spans both columns at the top of the first sheet. */
+      .nl-masthead { border-bottom: 2px solid #000; }
+      .nl-lead::first-letter { color: #000; }
+
+      /* Two columns, the way a newsletter is read on paper. A single
+         measure across a sheet of A4 is far too wide for comfort. */
+      .nl-columns {
+        column-count: 2;
+        column-gap: 10mm;
+        column-rule: 1px solid #ddd;
+      }
+
+      /* A headline must not be the last thing on a page, and a section
+         should not be split across sheets if it can be helped. */
+      .nl-section { break-inside: avoid-page; }
+      .nl-head { break-after: avoid-page; }
+      figure, blockquote { break-inside: avoid; }
+
+      .nl-print-footer { display: block !important; }
       a[href]::after { content: ""; }
+      img { max-width: 100% !important; }
     }
   </style>
 
-  <main class="mx-auto max-w-3xl px-4 py-10 md:px-6">
+  <main class="mx-auto max-w-4xl px-4 py-10 md:px-6">
     <p class="no-print font-display text-xs uppercase tracking-widest text-brand-tan-dark">
       <a href="/newsletter/" class="text-brand-tan-dark no-underline hover:underline">
         ← All issues
@@ -33,42 +94,70 @@ import Layout from "../../layouts/Layout.astro";
     <p id="issue-loading" class="mt-8 text-sm italic text-text-secondary">Loading…</p>
     <div id="issue-error" hidden role="alert" class="mt-8 text-sm"></div>
 
-    <article id="issue-sheet" hidden class="issue-sheet mt-6 border border-border-soft bg-cream-card p-6 shadow-sm md:p-10">
-      <div class="flex items-start gap-3 border-b border-border-soft pb-5">
-        <span aria-hidden="true" class="text-3xl text-sacred-gold">☩</span>
-        <span class="leading-tight">
-          <span class="block font-display text-base md:text-lg">St. John of Kronstadt</span>
-          <span class="block text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">
-            Orthodox Mission · RGV
-          </span>
-        </span>
-      </div>
+    <article id="issue-sheet" hidden class="nl-sheet mt-6">
+      <!-- Masthead -->
+      <header class="nl-masthead border-b-2 border-sacred-gold pb-5">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <p id="issue-label" class="font-display text-xs uppercase tracking-[0.2em] text-brand-tan-dark"></p>
+          <p id="issue-date" class="font-display text-xs uppercase tracking-[0.2em] text-brand-tan-dark"></p>
+        </div>
+        <h1
+          id="issue-title"
+          class="mt-3 font-display text-4xl leading-tight text-text-primary md:text-5xl"
+        ></h1>
+        <p class="mt-2 font-display text-[0.7rem] uppercase tracking-[0.3em] text-text-secondary">
+          St. John of Kronstadt Orthodox Mission
+        </p>
+      </header>
 
-      <p id="issue-label" class="mt-6 font-display text-xs uppercase tracking-widest text-brand-tan-dark"></p>
-      <h1 id="issue-title" class="mt-2 font-display text-3xl text-text-primary md:text-4xl"></h1>
-      <p id="issue-date" class="mt-2 text-sm text-text-secondary"></p>
+      <figure id="issue-hero" hidden class="mt-6 m-0">
+        <img id="issue-hero-img" alt="" class="w-full border border-border-soft" />
+        <figcaption
+          id="issue-hero-caption"
+          class="mt-2 text-xs italic text-text-secondary"
+        ></figcaption>
+      </figure>
 
-      <div id="issue-intro" class="mt-6 space-y-4 leading-relaxed text-text-primary/85"></div>
-      <div id="issue-sections" class="mt-2"></div>
-      <div id="issue-closing" hidden class="mt-8 border-t border-border-soft pt-6 space-y-4 leading-relaxed text-text-primary/85"></div>
+      <div id="issue-intro" class="nl-lead nl-body mt-7 text-lg leading-relaxed text-text-primary/90"></div>
 
-      <div class="print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
-        <p>St. John of Kronstadt Orthodox Mission · 39737 Palm Lane, Bayview, TX 78566 · (956) 434-6874</p>
+      <div id="issue-sections" class="nl-columns"></div>
+
+      <div
+        id="issue-closing"
+        hidden
+        class="nl-body mt-10 border-t-2 border-sacred-gold bg-cream-card p-5 leading-relaxed text-text-primary/85"
+      ></div>
+
+      <!-- Only on paper. A sheet pinned to a noticeboard has to say
+           whose it is and how to find them. -->
+      <div class="nl-print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
+        <p>
+          St. John of Kronstadt Orthodox Mission · 39737 Palm Lane, Bayview, TX 78566 ·
+          (956) 434-6874
+        </p>
         <p class="mt-1">stjohnrgv.org</p>
       </div>
     </article>
 
-    <div id="issue-actions" hidden class="no-print mt-6 flex flex-wrap items-center gap-3">
+    <div id="issue-actions" hidden class="no-print mt-8 flex flex-wrap items-center gap-3">
       <button type="button" id="print-issue" class="btn btn-secondary">Print this issue</button>
       <span class="text-sm text-text-secondary">
-        For the noticeboard, or for anyone who doesn't use email.
+        Prints as a newsletter — two columns, with the parish's details at the foot.
       </span>
     </div>
   </main>
 </Layout>
 
 <script>
-  type Section = { heading: string; body: string };
+  type Section = {
+    heading: string;
+    body: string;
+    image?: string;
+    image_alt?: string;
+    image_caption?: string;
+    quote?: string;
+    quote_by?: string;
+  };
   type Issue = {
     slug: string;
     title: string;
@@ -76,6 +165,8 @@ import Layout from "../../layouts/Layout.astro";
     intro: string | null;
     sections: Section[] | null;
     closing: string | null;
+    hero_image?: string | null;
+    hero_image_alt?: string | null;
     published_at: string | null;
   };
 
@@ -89,13 +180,21 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   /** Blank lines part paragraphs — the only formatting there is. */
-  function paragraphs(text: string | null): string {
+  function paragraphs(text: string | null | undefined): string {
     return String(text ?? "")
       .split(/\n{2,}/)
       .map((p) => p.trim())
       .filter(Boolean)
       .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
       .join("");
+  }
+
+  /** Stored as an R2 key; an absolute URL passes through. */
+  function imageSrc(key: string | null | undefined): string {
+    const k = String(key ?? "").trim();
+    if (!k) return "";
+    if (/^https?:\/\//i.test(k)) return k;
+    return `/api/newsletter/image?key=${encodeURIComponent(k)}`;
   }
 
   function setText(id: string, value: string) {
@@ -115,9 +214,63 @@ import Layout from "../../layouts/Layout.astro";
     errorEl.hidden = false;
   }
 
+  /**
+   * One section. The photograph alternates side by side with the text
+   * and swaps sides down the page, which is what stops a long issue
+   * looking like a wall. A section with no photograph simply runs the
+   * full measure.
+   */
+  function sectionHtml(s: Section, index: number): string {
+    const img = imageSrc(s.image);
+    const figure = img
+      ? `<figure class="m-0">
+           <img src="${escapeHtml(img)}" alt="${escapeHtml(s.image_alt ?? "")}"
+                class="w-full border border-border-soft" loading="lazy" />
+           ${
+             s.image_caption
+               ? `<figcaption class="mt-1.5 text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
+               : ""
+           }
+         </figure>`
+      : "";
+
+    const quote = s.quote
+      ? `<blockquote class="mt-5 border-y border-border-soft py-4 text-center">
+           <p class="font-display text-lg italic leading-relaxed text-text-primary/90">
+             &ldquo;${escapeHtml(s.quote)}&rdquo;
+           </p>
+           ${
+             s.quote_by
+               ? `<cite class="mt-2 block text-xs uppercase not-italic tracking-widest text-brand-tan-dark">${escapeHtml(s.quote_by)}</cite>`
+               : ""
+           }
+         </blockquote>`
+      : "";
+
+    const prose = `<div class="nl-body leading-relaxed text-text-primary/85">${paragraphs(s.body)}</div>`;
+
+    // Image left on even sections, right on odd. Purely so the eye has
+    // somewhere different to go as it comes down the page.
+    const withImage = index % 2 === 0
+      ? `<div class="mt-4 grid gap-5 sm:grid-cols-[minmax(0,14rem)_1fr]">${figure}${prose}</div>`
+      : `<div class="mt-4 grid gap-5 sm:grid-cols-[1fr_minmax(0,14rem)]">${prose}${figure}</div>`;
+
+    return `<section class="nl-section mt-9 break-inside-avoid">
+      ${
+        s.heading
+          ? `<h2 class="nl-head font-display text-2xl text-text-primary">${escapeHtml(s.heading)}</h2>`
+          : ""
+      }
+      ${img ? withImage : `<div class="mt-4">${prose}</div>`}
+      ${quote}
+    </section>`;
+  }
+
   (async () => {
     if (!slug) {
-      showError('No issue was named. <a href="/newsletter/" class="font-semibold text-brand-blue-dark">See all issues</a>.');
+      showError(
+        'No issue was named. <a href="/newsletter/" class="font-semibold text-brand-blue-dark">See all issues</a>.',
+      );
       return;
     }
     try {
@@ -127,7 +280,6 @@ import Layout from "../../layouts/Layout.astro";
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         // Not an error — this issue simply isn't theirs to read yet.
-        // Said as an invitation, with the door pointed at.
         if (res.status === 403 && body.needs_account) {
           showError(
             `${escapeHtml(body.error)} ` +
@@ -156,16 +308,22 @@ import Layout from "../../layouts/Layout.astro";
           : "",
       );
 
+      const hero = imageSrc(issue.hero_image);
+      if (hero) {
+        (document.getElementById("issue-hero") as HTMLElement).hidden = false;
+        const heroImg = document.getElementById("issue-hero-img") as HTMLImageElement;
+        heroImg.src = hero;
+        heroImg.alt = issue.hero_image_alt ?? "";
+        const cap = document.getElementById("issue-hero-caption") as HTMLElement;
+        cap.textContent = issue.hero_image_alt ?? "";
+        cap.hidden = !issue.hero_image_alt;
+      }
+
       (document.getElementById("issue-intro") as HTMLElement).innerHTML = paragraphs(issue.intro);
 
       const sections = Array.isArray(issue.sections) ? issue.sections : [];
       (document.getElementById("issue-sections") as HTMLElement).innerHTML = sections
-        .map(
-          (s) => `<section class="mt-8">
-            ${s.heading ? `<h2 class="font-display text-xl text-text-primary">${escapeHtml(s.heading)}</h2><div class="mt-2 h-px w-12 bg-liturgical-current"></div>` : ""}
-            <div class="mt-3 space-y-4 leading-relaxed text-text-primary/85">${paragraphs(s.body)}</div>
-          </section>`,
-        )
+        .map(sectionHtml)
         .join("");
 
       if (issue.closing) {
@@ -178,7 +336,11 @@ import Layout from "../../layouts/Layout.astro";
       (document.getElementById("issue-sheet") as HTMLElement).hidden = false;
       (document.getElementById("issue-actions") as HTMLElement).hidden = false;
     } catch (err) {
-      showError(escapeHtml(`Could not load this issue: ${err instanceof Error ? err.message : String(err)}`));
+      showError(
+        escapeHtml(
+          `Could not load this issue: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
     }
   })();
 
