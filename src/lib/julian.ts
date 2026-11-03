@@ -99,6 +99,31 @@ export function newStyleLabel(feast: string): string {
   return toNewStyle(feast).label;
 }
 
+/**
+ * "September 11 / September 24" — Old Style first, then the day it
+ * falls on, which is how Orthodox calendars have always written it.
+ *
+ * Both, rather than one or the other, because each alone misleads
+ * somebody. The Julian date alone sends a parishioner to church
+ * thirteen days early. The civil date alone quietly drops the
+ * reckoning the parish actually keeps, which is the thing Fr. and
+ * anyone used to the old calendar will look for first.
+ *
+ * A movable feast has no number to convert and is returned as it is,
+ * not doubled up into a meaningless pair.
+ */
+export function bothStyles(feast: string, separator = " / "): string {
+  const converted = toNewStyle(feast);
+  if (!converted.converted) return converted.label;
+  return `${String(feast).trim()}${separator}${converted.label}`;
+}
+
+/** A list of feasts, each shown both ways. */
+export function bothStylesList(feasts: unknown, separator = " · "): string {
+  if (!Array.isArray(feasts)) return "";
+  return feasts.map((f) => bothStyles(String(f))).join(separator);
+}
+
 /** A list of feasts, each converted, joined for display. */
 export function newStyleList(feasts: unknown, separator = " · "): string {
   if (!Array.isArray(feasts)) return "";

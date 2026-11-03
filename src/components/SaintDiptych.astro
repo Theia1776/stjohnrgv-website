@@ -188,8 +188,13 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
     dt.setUTCDate(dt.getUTCDate() + 13);
     return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
   }
+  function bothStyles(feast) {
+    const ns = newStyleLabel(feast);
+    const t = String(feast ?? '').trim();
+    return ns === t ? t : t + ' / ' + ns;
+  }
   function newStyleList(feasts, sep) {
-    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+    return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';
   }
 
   async function initDiptych() {
@@ -244,7 +249,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 
       // Right-panel text fields
       host.querySelector('[data-saint-name]').textContent = saint.name || '';
-      host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + newStyleLabel(feastKey);
+      host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + bothStyles(feastKey);
 
       // Bio: skip the stub placeholder used for entries we haven't
       // written yet.

@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { newStyleLabel, newStyleList } from "../../lib/julian.ts";
+import { newStyleLabel, bothStyles } from "../../lib/julian.ts";
 
 interface Saint {
   name: string;
@@ -70,12 +70,13 @@ saints.forEach((saint, idx) => {
     // falls on, or the Repose of St. John of Kronstadt — Julian
     // December 20 — files under December when a parishioner would be
     // looking in January. See src/lib/julian.ts.
-    const shown = newStyleLabel(feast);
-    const c = classifyFeast(shown);
+    // Bucket by the day it falls on, but print both — Old Style
+    // first, the way an Orthodox calendar writes it.
+    const c = classifyFeast(newStyleLabel(feast));
     if (c.kind === "fixed") {
-      monthBuckets[c.month].push({ idx, name: saint.name, feast: shown, day: c.day });
+      monthBuckets[c.month].push({ idx, name: saint.name, feast: bothStyles(feast), day: c.day });
     } else {
-      movableFeasts.push(shown);
+      movableFeasts.push(feast);
     }
   });
   if (movableFeasts.length > 0) {
@@ -138,6 +139,13 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
           lives for the private use of our parish. Our catalog of
           <span id="saints-count">{totalCount.toLocaleString()}</span>
           saints would not exist without their generosity.
+        </p>
+        <!-- Said once, here, rather than on every one of 2,389 rows. -->
+        <p class="mt-4 text-sm text-text-secondary">
+          Feast days are given <strong class="text-text-primary">Old Style / New Style</strong> —
+          the Julian date our parish reckons by, then the day it falls on
+          the civil calendar. St. Euphrosynos the Cook is September 11 /
+          September 24.
         </p>
       </div>
 
@@ -345,8 +353,13 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
     dt.setUTCDate(dt.getUTCDate() + 13);
     return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
   }
+  function bothStyles(feast) {
+    const ns = newStyleLabel(feast);
+    const t = String(feast ?? '').trim();
+    return ns === t ? t : t + ' / ' + ns;
+  }
   function newStyleList(feasts, sep) {
-    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+    return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';
   }
 
     const saints = JSON.parse(document.getElementById("saints-data").textContent);

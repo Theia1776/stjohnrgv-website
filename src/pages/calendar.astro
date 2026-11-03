@@ -554,8 +554,13 @@ import SaintDiptych from "../components/SaintDiptych.astro";
     dt.setUTCDate(dt.getUTCDate() + 13);
     return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
   }
+  function bothStyles(feast) {
+    const ns = newStyleLabel(feast);
+    const t = String(feast ?? '').trim();
+    return ns === t ? t : t + ' / ' + ns;
+  }
   function newStyleList(feasts, sep) {
-    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+    return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';
   }
 
     // ---- Local saints DB ----
