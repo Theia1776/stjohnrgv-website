@@ -28,7 +28,8 @@ interface Env {
 
 /** The whole issue, for the page that shows one. */
 const FULL_FIELDS =
-  "slug, title, issue_label, intro, sections, closing, audience, published_at, written_by_name";
+  "slug, title, issue_label, intro, sections, closing, audience, published_at, " +
+  "written_by_name, hero_image, hero_image_alt";
 
 /** Enough for a list of back issues — not every word of every one. */
 const LIST_FIELDS = "slug, title, issue_label, intro, audience, published_at";

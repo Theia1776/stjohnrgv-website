@@ -22,7 +22,7 @@ interface Env {
 const FIELDS =
   "id, slug, title, issue_label, intro, sections, closing, audience, published, " +
   "published_at, sent_at, sent_count, sent_attempted, send_error, written_by_name, " +
-  "created_at, updated_at";
+  "hero_image, hero_image_alt, created_at, updated_at";
 
 const MAX_SECTIONS = 30;
 const MAX_HEADING = 200;
@@ -133,6 +133,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         intro: typeof body.intro === "string" ? body.intro.trim().slice(0, MAX_BODY) || null : null,
         sections: cleanSections(body.sections),
         closing: typeof body.closing === "string" ? body.closing.trim().slice(0, MAX_BODY) || null : null,
+        hero_image: typeof body.hero_image === "string" ? body.hero_image.trim() || null : null,
+        hero_image_alt:
+          typeof body.hero_image_alt === "string" ? body.hero_image_alt.trim() || null : null,
         // The careful default. An issue is parish-only until somebody
         // decides otherwise about that particular issue.
         audience: body.audience === "public" ? "public" : "parish",

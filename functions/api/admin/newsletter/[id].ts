@@ -24,7 +24,7 @@ interface Env {
 const FIELDS =
   "id, slug, title, issue_label, intro, sections, closing, audience, published, " +
   "published_at, sent_at, sent_count, sent_attempted, send_error, written_by_name, " +
-  "created_at, updated_at";
+  "hero_image, hero_image_alt, created_at, updated_at";
 
 const MAX_SECTIONS = 30;
 const MAX_HEADING = 200;
@@ -89,6 +89,12 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
     if ("issue_label" in body) {
       updates.issue_label =
         typeof body.issue_label === "string" ? body.issue_label.trim().slice(0, 100) || null : null;
+    }
+    // The photograph under the masthead, stored as an R2 key.
+    for (const field of ["hero_image", "hero_image_alt"] as const) {
+      if (field in body) {
+        updates[field] = typeof body[field] === "string" ? (body[field] as string).trim() || null : null;
+      }
     }
     for (const field of ["intro", "closing"] as const) {
       if (field in body) {

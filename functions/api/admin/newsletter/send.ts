@@ -118,7 +118,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const { data: issue, error: loadError } = await supabase
       .from("newsletters")
-      .select("id, slug, title, issue_label, intro, sections, closing, published, published_at, sent_at, sent_count")
+      .select("id, slug, title, issue_label, intro, sections, closing, published, published_at, sent_at, sent_count, hero_image, hero_image_alt")
       .eq("id", id)
       .single();
     if (loadError) return wrap(jsonResponse({ error: loadError.message }, 500));

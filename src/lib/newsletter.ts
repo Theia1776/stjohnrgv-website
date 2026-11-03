@@ -38,6 +38,8 @@ export interface NewsletterIssue {
   intro?: string | null;
   sections?: NewsletterSection[] | null;
   closing?: string | null;
+  hero_image?: string | null;
+  hero_image_alt?: string | null;
   published_at?: string | null;
 }
 
@@ -149,7 +151,13 @@ export function issueToText(issue: NewsletterIssue): string {
 
   for (const section of readSections(issue.sections)) {
     if (section.heading) lines.push(section.heading, "-".repeat(Math.min(section.heading.length, 60)));
+    // Someone reading in plain text gets told what the picture was of
+    // rather than silently missing it.
+    if (section.image && section.image_alt) lines.push(`[photograph: ${section.image_alt}]`);
     if (section.body) lines.push(section.body);
+    if (section.quote) {
+      lines.push(`    "${section.quote}"` + (section.quote_by ? ` — ${section.quote_by}` : ""));
+    }
     lines.push("");
   }
 
@@ -174,12 +182,36 @@ export function issueToText(issue: NewsletterIssue): string {
  * phone, and in whatever the parish council uses.
  */
 export function issueToHtml(issue: NewsletterIssue): string {
+  // Every src must be absolute: a relative path in an inbox resolves
+  // against the mail client and shows nothing. Images are given a
+  // width and no float — mail clients ignore most layout, and a
+  // photograph stacked above its text is the one arrangement that
+  // survives everywhere.
   const sections = readSections(issue.sections)
-    .map(
-      (s) =>
-        `${s.heading ? `<h2 style="margin:1.75em 0 .5em;font-size:17px;line-height:1.3;color:#1f3a5f;">${escapeHtml(s.heading)}</h2>` : ""}${paragraphs(s.body)}`,
-    )
+    .map((s) => {
+      const src = imageUrl(s.image, true);
+      const figure = src
+        ? `<img src="${escapeHtml(src)}" alt="${escapeHtml(s.image_alt ?? "")}" width="556" style="display:block;width:100%;max-width:556px;height:auto;border:1px solid #e0d9c8;margin:0 0 .5em;">` +
+          (s.image_caption
+            ? `<p style="margin:0 0 1em;font-size:12px;font-style:italic;color:#7a7a7a;">${escapeHtml(s.image_caption)}</p>`
+            : "")
+        : "";
+      const quote = s.quote
+        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e0d9c8;border-bottom:1px solid #e0d9c8;padding:14px 0;margin:1em 0;">
+             <p style="margin:0;font-size:17px;font-style:italic;line-height:1.5;color:#2b2b2b;text-align:center;">&ldquo;${escapeHtml(s.quote)}&rdquo;</p>
+             ${s.quote_by ? `<p style="margin:.5em 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a7a5c;text-align:center;">${escapeHtml(s.quote_by)}</p>` : ""}
+           </td></tr></table>`
+        : "";
+      const heading = s.heading
+        ? `<h2 style="margin:1.75em 0 .5em;font-size:17px;line-height:1.3;color:#1f3a5f;">${escapeHtml(s.heading)}</h2>`
+        : "";
+      return heading + figure + paragraphs(s.body) + quote;
+    })
     .join("");
+
+  const hero = imageUrl(issue.hero_image, true)
+    ? `<img src="${escapeHtml(imageUrl(issue.hero_image, true))}" alt="${escapeHtml(issue.hero_image_alt ?? "")}" width="556" style="display:block;width:100%;max-width:556px;height:auto;border:1px solid #e0d9c8;margin:0 0 1.25em;">`
+    : "";
 
   const label = issue.issue_label
     ? `<p style="margin:0 0 .5em;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8a7a5c;">${escapeHtml(issue.issue_label)}</p>`
@@ -201,6 +233,7 @@ export function issueToHtml(issue: NewsletterIssue): string {
     ${label}
     <h1 style="margin:0 0 .25em;font-size:26px;line-height:1.2;color:#1f3a5f;">${escapeHtml(issue.title)}</h1>
     ${issue.published_at ? `<p style="margin:0 0 1.5em;font-size:13px;color:#7a7a7a;">${escapeHtml(issueDate(issue.published_at))}</p>` : ""}
+    ${hero}
     ${issue.intro ? paragraphs(issue.intro) : ""}
     ${sections}
     ${issue.closing ? `<div style="margin-top:2em;padding-top:1.25em;border-top:1px solid #e0d9c8;">${paragraphs(issue.closing)}</div>` : ""}
