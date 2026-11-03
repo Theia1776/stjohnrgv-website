@@ -83,7 +83,7 @@ Four cards in a grid:
 - Link: "Full Calendar →" → `/calendar/`
 
 **F. Contact / Location Strip**
-- Address: 39737 Palm Drive, Bayview, TX 78566
+- Address: 39737 Palm Lane, Bayview, TX 78566
 - Phone: 956-434-6874 (tap-to-call)
 - Priest: Fr. Antonios Altermatt
 - Google Maps embed (static or interactive)
@@ -163,7 +163,7 @@ Four cards in a grid:
 - Format: Feast name · OS date · NS date · Service type · Time
 
 **C. Location**
-- Full address: 39737 Palm Drive, Bayview, TX 78566
+- Full address: 39737 Palm Lane, Bayview, TX 78566
 - Interactive Google Maps embed
 - Turn-by-turn written directions from Brownsville / McAllen
 - Parking instructions
@@ -452,7 +452,7 @@ Bottom bar: © 2026 St. John of Kronstadt Orthodox Mission · Privacy Policy · 
 const SYSTEM_PROMPT = `You are a warm, welcoming assistant for St. John of Kronstadt Orthodox Mission in Bayview, TX (Rio Grande Valley). 
 
 You help seekers, inquirers, and visitors learn about:
-- The parish: address (39737 Palm Drive, Bayview TX 78566), phone (956-434-6874), Priest Antonios Altermatt
+- The parish: address (39737 Palm Lane, Bayview TX 78566), phone (956-434-6874), Priest Antonios Altermatt
 - Service times: Sunday Liturgy 9:00 AM, Saturday Vespers 6:00 PM
 - Orthodox Christianity: faith, practice, sacraments, the Julian Calendar
 - What to expect at a first visit

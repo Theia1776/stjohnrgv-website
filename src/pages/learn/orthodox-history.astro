@@ -6,12 +6,16 @@ import Layout from "../../layouts/Layout.astro";
   title="The Witness of the Catacomb Church | St. John of Kronstadt Orthodox Mission"
   description="A historical narrative of True Orthodoxy, the martyrdom of the Royal Family, Patriarch Tikhon's Decree 362, the Sergianist schism, and the Catacomb Church's witness through the Soviet era."
 >
-  <!-- Unlisted page: noindex so search engines skip it, no nav link
-       points here. Reachable only via direct URL. Holds the longer
-       historical narrative previously on /about/ — moved here per
-       Fr.'s direction so the public About page stays focused on
-       this specific parish rather than reading as a treatise. -->
-  <meta slot="head" name="robots" content="noindex,nofollow" />
+  <!-- Indexed. It holds the longer historical narrative that used to
+       be on /about/, moved here per Fr.'s direction so the public
+       About page stays about this parish rather than reading as a
+       treatise. For a while it also carried noindex, which was a
+       different decision smuggled in with that one: thirteen hundred
+       words on Decree 362, the Sergianist schism and the Catacomb
+       Church are exactly what somebody searching this subject is
+       looking for, and the parish had told Google to skip them.
+       Keeping it out of the main navigation is the point; keeping it
+       out of the index was not. -->
 
   <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
     <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">

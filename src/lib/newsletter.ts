@@ -31,7 +31,7 @@ export interface NewsletterIssue {
 
 export const PARISH = {
   name: "St. John of Kronstadt Orthodox Mission",
-  address: "39737 Palm Drive, Bayview, TX 78566",
+  address: "39737 Palm Lane, Bayview, TX 78566",
   phone: "(956) 434-6874",
   site: "https://stjohnrgv.org",
 } as const;

@@ -29,10 +29,6 @@ export default defineConfig({
         !page.includes('/login') &&
         !page.includes('/reset-password') &&
         !page.includes('/seasons-preview') &&
-        // noindex by Fr.'s direction — the long historical narrative is
-        // reachable by direct link only, so the About page stays about
-        // this parish.
-        !page.includes('/learn/orthodox-history') &&
         // noindex, and an account-holders' form besides.
         !page.includes('/table/share') &&
         // Templates that need a ?slug= to show anything. Without one

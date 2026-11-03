@@ -14,7 +14,7 @@
 |---|---|
 | **Full Name** | St. John of Kronstadt Orthodox Mission |
 | **Short Name** | St. John RGV |
-| **Location** | 39737 Palm Drive, Bayview, TX 78566 |
+| **Location** | 39737 Palm Lane, Bayview, TX 78566 |
 | **Region** | Rio Grande Valley, South Texas |
 | **Phone** | 956-434-6874 |
 | **Priest** | Fr. Antonios Altermatt |
