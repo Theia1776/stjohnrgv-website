@@ -60,7 +60,7 @@ const localSaintsJson = JSON.stringify(localSaintsForClient).replace(/</g, "\\u0
          whenever the user navigates Prev / Next / Today, so the book
          always reflects the displayed day, not just today. -->
     <div class="mb-12 flex justify-center">
-      <SaintDiptych />
+      <SaintDiptych sharedSaintsDataId="local-saints-data" />
     </div>
 
     <div class="mx-auto max-w-3xl">
