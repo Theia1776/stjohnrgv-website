@@ -14,7 +14,6 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
 import { allCategoryValues } from "../../../../src/lib/recipe-categories";
-import { missingGlutenColumn, recipeFields } from "../../../../src/lib/recipe-columns";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -25,26 +24,9 @@ const MAX_DIRECTIONS = 40;
 const MAX_FIELD = 400;
 const MAX_STEP = 2000;
 
-const RECIPE_PARTS = [
-  "id",
-  "slug",
-  "title",
-  "fasting",
-  "gluten_free",
-  "category",
-  "hands_on",
-  "total_time",
-  "serves",
-  "preheat",
-  "intro",
-  "ingredients",
-  "directions",
-  "notes",
-  "submitted_by_name",
-  "published",
-  "created_at",
-  "updated_at",
-];
+const RECIPE_FIELDS =
+  "id, slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
+  "ingredients, directions, notes, submitted_by_name, published, created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -156,34 +138,12 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       return wrap!(jsonResponse({ error: "No editable fields supplied." }, 400));
     }
 
-    const save = (withGluten: boolean) =>
-      supabase!
-        .from("recipes")
-        .update(updates)
-        .eq("id", id)
-        .select(recipeFields(RECIPE_PARTS, withGluten))
-        .single();
-
-    let { data, error } = await save(true);
-    if (missingGlutenColumn(error)) {
-      // Migration 020 not applied yet — see src/lib/recipe-columns.ts.
-      // Marking a recipe gluten-free is the one edit that genuinely
-      // cannot be done, so it is refused in words rather than by a 500
-      // that looks like the site is broken.
-      if ("gluten_free" in updates) {
-        return wrap!(
-          jsonResponse(
-            {
-              error:
-                "The gluten-free mark needs migration 020 run in Supabase first. " +
-                "Everything else on this card saves as normal.",
-            },
-            409,
-          ),
-        );
-      }
-      ({ data, error } = await save(false));
-    }
+    const { data, error } = await supabase!
+      .from("recipes")
+      .update(updates)
+      .eq("id", id)
+      .select(RECIPE_FIELDS)
+      .single();
     if (error) return wrap!(jsonResponse({ error: error.message }, 500));
     if (!data) return wrap!(jsonResponse({ error: "Recipe not found." }, 404));
 

@@ -23,7 +23,6 @@ import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 import { allCategoryValues } from "../../../src/lib/recipe-categories";
-import { missingGlutenColumn, recipeFields } from "../../../src/lib/recipe-columns";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -36,24 +35,9 @@ const MAX_FIELD = 400;
 const MAX_STEP = 2000;
 
 /** Listed for readers; never the unposted ones. */
-const RECIPE_PARTS = [
-  "slug",
-  "title",
-  "fasting",
-  "gluten_free",
-  "category",
-  "hands_on",
-  "total_time",
-  "serves",
-  "preheat",
-  "intro",
-  "ingredients",
-  "directions",
-  "notes",
-  "submitted_by_name",
-  "created_at",
-];
-const fields = (withGluten: boolean) => recipeFields(RECIPE_PARTS, withGluten);
+const RECIPE_FIELDS =
+  "slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
+  "ingredients, directions, notes, submitted_by_name, created_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -117,17 +101,12 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   // One recipe, for the page that prints it. Same endpoint rather than
   // its own file, as the library does with /api/library/book?slug=.
   if (slug) {
-    const one = (withGluten: boolean) =>
-      supabase
-        .from("recipes")
-        .select(fields(withGluten))
-        .eq("slug", slug)
-        .eq("published", true)
-        .maybeSingle();
-
-    let { data, error } = await one(true);
-    // Migration 020 not applied yet — see src/lib/recipe-columns.ts.
-    if (missingGlutenColumn(error)) ({ data, error } = await one(false));
+    const { data, error } = await supabase
+      .from("recipes")
+      .select(RECIPE_FIELDS)
+      .eq("slug", slug)
+      .eq("published", true)
+      .maybeSingle();
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
     if (!data) return wrap(jsonResponse({ error: "Recipe not found." }, 404));
     if (!data.fasting && !signedIn) {
@@ -162,47 +141,29 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     );
   }
 
-  const listing = (withGluten: boolean) => {
-    let query = supabase
-      .from("recipes")
-      .select(fields(withGluten))
-      .eq("published", true)
-      .order("title", { ascending: true });
+  let query = supabase
+    .from("recipes")
+    .select(RECIPE_FIELDS)
+    .eq("published", true)
+    .order("title", { ascending: true });
 
-    if (fastingParam === "true") query = query.eq("fasting", true);
-    else if (fastingParam === "false") query = query.eq("fasting", false);
+  if (fastingParam === "true") query = query.eq("fasting", true);
+  else if (fastingParam === "false") query = query.eq("fasting", false);
 
-    // Gluten-free crosses both books, so it narrows whatever the viewer
-    // is already allowed to see rather than replacing the rule: signed
-    // out it means the gluten-free fasting recipes, which is the right
-    // answer and not an empty page.
-    if (glutenFreeOnly && withGluten) query = query.eq("gluten_free", true);
+  // Gluten-free crosses both books, so it narrows whatever the viewer
+  // is already allowed to see rather than replacing the rule: signed
+  // out it means the gluten-free fasting recipes, which is the right
+  // answer and not an empty page.
+  if (glutenFreeOnly) query = query.eq("gluten_free", true);
 
-    // No filter and signed out means the fasting book only.
-    if (!signedIn) query = query.eq("fasting", true);
-    return query;
-  };
+  // No filter and signed out means the fasting book only.
+  if (!signedIn) query = query.eq("fasting", true);
 
-  let { data, error } = await listing(true);
-  // Migration 020 not applied yet — see src/lib/recipe-columns.ts.
-  let glutenPending = false;
-  if (missingGlutenColumn(error)) {
-    glutenPending = true;
-    // Nothing can be marked gluten-free while the column is missing, so
-    // that listing is empty rather than unfiltered. An unfiltered one
-    // would offer every recipe in the parish as gluten-free, which is
-    // the one wrong answer that could actually hurt somebody.
-    if (glutenFreeOnly) {
-      data = [];
-      error = null;
-    } else {
-      ({ data, error } = await listing(false));
-    }
-  }
+  const { data, error } = await query;
   if (error) return wrap(jsonResponse({ error: error.message }, 500));
 
   return wrap(
-    new Response(JSON.stringify({ recipes: data ?? [], viewer_signed_in: signedIn, gluten_pending: glutenPending }), {
+    new Response(JSON.stringify({ recipes: data ?? [], viewer_signed_in: signedIn }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -284,44 +245,39 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const { data: taken } = await supabase.from("recipes").select("slug").eq("slug", slug).maybeSingle();
     if (taken) slug = `${slug}-${crypto.randomUUID().slice(0, 6)}`;
 
-    const newRecipe = (withGluten: boolean) => ({
-      slug,
-      title,
-      fasting: body.fasting !== false,
-      // Only ever what the cook ticked. Nothing here reads the
-      // ingredients to decide this — see src/lib/recipe-gluten.ts
-      // for why that would be the wrong kind of helpful.
-      ...(withGluten ? { gluten_free: body.gluten_free === true } : {}),
-      // Checked against the shared list rather than trusted: a value
-      // that isn't offered anywhere would file the recipe on a shelf
-      // no page knows how to show.
-      category: allCategoryValues().includes(String(body.category ?? ""))
-        ? String(body.category)
-        : null,
-      hands_on: cleanField(body.hands_on) || null,
-      total_time: cleanField(body.total_time) || null,
-      serves: cleanField(body.serves) || null,
-      preheat: cleanField(body.preheat) || null,
-      intro: typeof body.intro === "string" ? body.intro.trim().slice(0, 1200) || null : null,
-      ingredients,
-      directions,
-      notes: typeof body.notes === "string" ? body.notes.trim().slice(0, 1200) || null : null,
-      submitted_by: session.user.id,
-      submitted_by_name: submitterName || null,
-      // An admin's own recipe still waits, so the queue is the one
-      // place every recipe passes through and nothing gets forgotten
-      // in a half-finished state.
-      published: false,
-    });
-
-    const send = (withGluten: boolean) =>
-      supabase.from("recipes").insert(newRecipe(withGluten)).select("slug, title").single();
-
-    let { data: inserted, error } = await send(true);
-    // Migration 020 not applied yet. Losing the tick is a pity; losing
-    // the recipe would be worse, so it goes in without it and an admin
-    // can mark it once the column exists.
-    if (missingGlutenColumn(error)) ({ data: inserted, error } = await send(false));
+    const { data: inserted, error } = await supabase
+      .from("recipes")
+      .insert({
+        slug,
+        title,
+        fasting: body.fasting !== false,
+        // Only ever what the cook ticked. Nothing here reads the
+        // ingredients to decide this — see src/lib/recipe-gluten.ts
+        // for why that would be the wrong kind of helpful.
+        gluten_free: body.gluten_free === true,
+        // Checked against the shared list rather than trusted: a value
+        // that isn't offered anywhere would file the recipe on a shelf
+        // no page knows how to show.
+        category: allCategoryValues().includes(String(body.category ?? ""))
+          ? String(body.category)
+          : null,
+        hands_on: cleanField(body.hands_on) || null,
+        total_time: cleanField(body.total_time) || null,
+        serves: cleanField(body.serves) || null,
+        preheat: cleanField(body.preheat) || null,
+        intro: typeof body.intro === "string" ? body.intro.trim().slice(0, 1200) || null : null,
+        ingredients,
+        directions,
+        notes: typeof body.notes === "string" ? body.notes.trim().slice(0, 1200) || null : null,
+        submitted_by: session.user.id,
+        submitted_by_name: submitterName || null,
+        // An admin's own recipe still waits, so the queue is the one
+        // place every recipe passes through and nothing gets forgotten
+        // in a half-finished state.
+        published: false,
+      })
+      .select("slug, title")
+      .single();
 
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
 

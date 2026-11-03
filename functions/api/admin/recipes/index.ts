@@ -10,32 +10,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
-import { missingGlutenColumn, recipeFields } from "../../../../src/lib/recipe-columns";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
 }
 
-const RECIPE_PARTS = [
-  "id",
-  "slug",
-  "title",
-  "fasting",
-  "gluten_free",
-  "category",
-  "hands_on",
-  "total_time",
-  "serves",
-  "preheat",
-  "intro",
-  "ingredients",
-  "directions",
-  "notes",
-  "submitted_by_name",
-  "published",
-  "created_at",
-  "updated_at",
-];
+const RECIPE_FIELDS =
+  "id, slug, title, fasting, gluten_free, category, hands_on, total_time, serves, preheat, intro, " +
+  "ingredients, directions, notes, submitted_by_name, published, created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -67,22 +49,11 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     // Waiting first, then newest. Someone opening this page is here to
     // clear the queue, not to browse what's already posted.
-    const queue = (withGluten: boolean) =>
-      supabase
-        .from("recipes")
-        .select(recipeFields(RECIPE_PARTS, withGluten))
-        .order("published", { ascending: true })
-        .order("created_at", { ascending: false });
-
-    let { data, error } = await queue(true);
-    // Migration 020 not applied yet — see src/lib/recipe-columns.ts.
-    // The page is told, so it can say so rather than letting an admin
-    // press a button that cannot work.
-    let glutenPending = false;
-    if (missingGlutenColumn(error)) {
-      glutenPending = true;
-      ({ data, error } = await queue(false));
-    }
+    const { data, error } = await supabase
+      .from("recipes")
+      .select(RECIPE_FIELDS)
+      .order("published", { ascending: true })
+      .order("created_at", { ascending: false });
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
 
     const recipes = data ?? [];
@@ -91,7 +62,6 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
         {
           recipes,
           waiting: recipes.filter((r) => !r.published).length,
-          gluten_pending: glutenPending,
         },
         200,
       ),

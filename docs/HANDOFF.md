@@ -127,22 +127,24 @@ cached **private** — what comes back depends on who is asking.
 Catechumens and members submit at `/table/share/`; the form grows with
 the recipe rather than offering a fixed number of boxes. Nothing appears
 until an admin posts it from `/admin/recipes/`, which has search,
-filters, per-card editing, and three whole-queue jobs: **file the
-unfiled by title**, **post everything waiting** and **move the drinks to
-Drinks**.
+filters, per-card editing, and two whole-queue jobs: **file the unfiled
+by title** and **post everything waiting**. No standing explanation of
+what those buttons do — each reports what it actually did, afterwards,
+which is the part worth reading.
 
-**Adding a group after the recipes are filed** is the pattern the Drinks
-section set. The filing job only touches the *unfiled*, deliberately, so
-recipes that belong in a new group are already sitting on whichever
-Misc. shelf was least wrong — the lemonades were under Soups & Sides.
-`mode: "drinks"` on
-[categorise.ts](../functions/api/admin/recipes/categorise.ts) re-reads
-the **Misc. shelves only** and moves what the guesser now places in
-Drinks; a recipe filed under a real category is a sorting decision and
-is never revisited. Its batch cap counts **writes, not rows** — capping
-rows wedges it, because the recipes staying put sit at the front of the
-alphabet and fill every batch while the ones behind them are never
-reached.
+**If a category group is ever added after the recipes are filed**, note
+that the filing job only touches the *unfiled*, deliberately — so
+recipes belonging in the new group are already sitting on whichever
+Misc. shelf was least wrong. That happened with Drinks: the lemonades
+were under Soups & Sides. A temporary `mode: "drinks"` on
+[categorise.ts](../functions/api/admin/recipes/categorise.ts) re-read
+the Misc. shelves, moved what the guesser now placed in Drinks, left
+anything filed under a real category alone, and was deleted once it had
+finished. Two things to copy if it's needed again: cap the batch on
+**writes, not rows** (capping rows wedges it — the recipes staying put
+sit at the front of the alphabet and fill every batch), and have it
+read the *new* group's shelves too, so it can take back what it put
+there wrongly.
 
 Each recipe prints as a card carrying the parish's name, address and
 phone where a cookbook carries its publisher's. Printing is offered to
@@ -275,45 +277,6 @@ only automatic lesson announcements.
 
 ---
 
-## Do this next
-
-**Two migrations are waiting.** Run both in the Supabase SQL editor:
-
-| | |
-|---|---|
-| [020_recipe_gluten_free.sql](../supabase/migrations/020_recipe_gluten_free.sql) | the `recipes.gluten_free` column |
-| [021_newsletters.sql](../supabase/migrations/021_newsletters.sql) | the whole `newsletters` table |
-
-Until 021 is run the newsletter can't be written at all — `/admin/newsletter/`
-says so in a red banner, and `/newsletter/`, which is in the main
-navigation, answers "no issues yet", which is true. Nothing to unpick
-afterwards: the tolerance there is a single narrow check in
-[functions/api/newsletter/index.ts](../functions/api/newsletter/index.ts)
-that can stay.
-
-**Migration 020 is not applied.** `recipes.gluten_free` does not exist
-in the database yet. Run
-[020_recipe_gluten_free.sql](../supabase/migrations/020_recipe_gluten_free.sql)
-in the Supabase SQL editor.
-
-Nothing is broken meanwhile — the code was deployed ahead of its
-migration on purpose, the one time that has been done here, because the
-migration needs a laptop and the work was finished on a phone. Every
-query that names the column asks for it, and asks again without it if
-the database says there's no such column; see
-[src/lib/recipe-columns.ts](../src/lib/recipe-columns.ts). Until it is
-run: the gluten-free page is empty, the admin page shows a red banner
-saying so, and the gluten-free buttons refuse in words.
-
-**Once it is applied**, delete `src/lib/recipe-columns.ts` and the
-fallback branches in `functions/api/recipes/index.ts`,
-`functions/api/admin/recipes/index.ts` and
-`functions/api/admin/recipes/[id].ts`. They are dead code at that
-point, and leaving them teaches the next person that shipping ahead of
-a migration is normal here. It is not.
-
----
-
 ## Known rough edges
 
 - **The password-reset flow fails quietly in two places.** A failed
@@ -372,7 +335,17 @@ a migration is normal here. It is not.
   hand without knowing it existed.
 - **Deploy code only after its migration is applied.** Selecting a
   column that doesn't exist yet fails the whole query and takes the page
-  down, not just the new feature.
+  down, not just the new feature. This was broken once on purpose, for
+  the gluten-free column, because the migration needed a laptop and the
+  work finished on a phone: every query asked for the column and asked
+  again without it. It worked, and the shim was deleted the same day the
+  migration ran. If it is ever done again, note that a missing column is
+  reported as `42703` on a read and `PGRST204` on a write — checking
+  only the first lets submissions fail with a 500.
+- **Don't leave a one-off tool lying around.** The drinks-moving button
+  and its endpoint mode were deleted once the drinks were filed. A
+  button nobody needs, backed by a code path nothing calls, costs more
+  in confusion than it would to write again.
 
 ---
 
@@ -385,8 +358,8 @@ all applied by hand in the Supabase SQL editor.
 `008` master admin · `009`–`010` directory email · `011` library hidden ·
 `012` catechism_lessons · `013`–`014` parish_emails · `015`–`016`
 library text + page numbers · `017` catechism text · `018` recipes ·
-`019` recipe categories · `020` recipe gluten_free **(not yet applied)** ·
-`021` newsletters **(not yet applied)**.
+`019` recipe categories · `020` recipe gluten_free ·
+`021` newsletters.
 
 ---
 
