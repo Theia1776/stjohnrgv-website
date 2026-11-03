@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import { newStyleLabel, newStyleList } from "../../lib/julian.ts";
 
 interface Saint {
   name: string;
@@ -65,11 +66,16 @@ const movableBucket: Entry[] = [];
 saints.forEach((saint, idx) => {
   const movableFeasts: string[] = [];
   saint.feasts.forEach((feast) => {
-    const c = classifyFeast(feast);
+    // The catalogue stores Old Style. Bucket by the day it actually
+    // falls on, or the Repose of St. John of Kronstadt — Julian
+    // December 20 — files under December when a parishioner would be
+    // looking in January. See src/lib/julian.ts.
+    const shown = newStyleLabel(feast);
+    const c = classifyFeast(shown);
     if (c.kind === "fixed") {
-      monthBuckets[c.month].push({ idx, name: saint.name, feast, day: c.day });
+      monthBuckets[c.month].push({ idx, name: saint.name, feast: shown, day: c.day });
     } else {
-      movableFeasts.push(feast);
+      movableFeasts.push(shown);
     }
   });
   if (movableFeasts.length > 0) {
@@ -321,6 +327,28 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
   <script type="application/json" id="saints-data" is:inline set:html={saintsJson}></script>
 
   <script is:inline>
+  /**
+   * Old Style -> the day it falls on. The catalogue stores Julian
+   * dates; this parish keeps the old calendar, so the civil date is
+   * thirteen days later. Mirrors src/lib/julian.ts — change both.
+   * Movable feasts have no number and pass through untouched.
+   */
+  const NS_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function newStyleLabel(feast) {
+    const m = /^([A-Za-z]+)\s+(\d{1,2})$/.exec(String(feast ?? '').trim());
+    if (!m) return String(feast ?? '').trim();
+    const mi = NS_MONTHS.findIndex((n) => n.toLowerCase() === m[1].toLowerCase());
+    const d = Number(m[2]);
+    if (mi === -1 || d < 1 || d > 31) return String(feast).trim();
+    const dt = new Date(Date.UTC(2024, mi, d));
+    if (dt.getUTCMonth() !== mi) return String(feast).trim();
+    dt.setUTCDate(dt.getUTCDate() + 13);
+    return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+  }
+  function newStyleList(feasts, sep) {
+    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+  }
+
     const saints = JSON.parse(document.getElementById("saints-data").textContent);
 
     // ============================================================
@@ -403,7 +431,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
             class="block w-full text-left focus:outline-none"
           >
             <span class="font-display text-text-primary hover:underline">${escapeHtml(s.name)}</span>
-            <span class="block text-sm text-text-secondary">${escapeHtml(s.feasts.join(" · "))}</span>
+            <span class="block text-sm text-text-secondary">${escapeHtml(newStyleList(s.feasts))}</span>
           </button>
         </li>
       `).join("");
@@ -449,7 +477,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
       modalTitle.textContent = saint.name || "";
 
       const feastText = (saint.feasts && saint.feasts.length)
-        ? "Commemorated on " + saint.feasts.join(" · ")
+        ? "Commemorated on " + newStyleList(saint.feasts)
         : "";
       modalFeasts.textContent = feastText;
       modalFeasts.hidden = !feastText;

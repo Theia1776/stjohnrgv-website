@@ -170,6 +170,28 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
     return window.__saintsData;
   }
 
+  /**
+   * Old Style -> the day it falls on. The catalogue stores Julian
+   * dates; this parish keeps the old calendar, so the civil date is
+   * thirteen days later. Mirrors src/lib/julian.ts — change both.
+   * Movable feasts have no number and pass through untouched.
+   */
+  const NS_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function newStyleLabel(feast) {
+    const m = /^([A-Za-z]+)\s+(\d{1,2})$/.exec(String(feast ?? '').trim());
+    if (!m) return String(feast ?? '').trim();
+    const mi = NS_MONTHS.findIndex((n) => n.toLowerCase() === m[1].toLowerCase());
+    const d = Number(m[2]);
+    if (mi === -1 || d < 1 || d > 31) return String(feast).trim();
+    const dt = new Date(Date.UTC(2024, mi, d));
+    if (dt.getUTCMonth() !== mi) return String(feast).trim();
+    dt.setUTCDate(dt.getUTCDate() + 13);
+    return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+  }
+  function newStyleList(feasts, sep) {
+    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+  }
+
   async function initDiptych() {
     const iconUrlsEl = document.getElementById('diptych-icon-urls');
     const host = document.getElementById('saint-diptych');
@@ -222,7 +244,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 
       // Right-panel text fields
       host.querySelector('[data-saint-name]').textContent = saint.name || '';
-      host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + feastKey;
+      host.querySelector('[data-saint-feast]').textContent = 'Commemorated on ' + newStyleLabel(feastKey);
 
       // Bio: skip the stub placeholder used for entries we haven't
       // written yet.

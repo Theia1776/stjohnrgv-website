@@ -536,6 +536,28 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       showModal();
     }
 
+  /**
+   * Old Style -> the day it falls on. The catalogue stores Julian
+   * dates; this parish keeps the old calendar, so the civil date is
+   * thirteen days later. Mirrors src/lib/julian.ts — change both.
+   * Movable feasts have no number and pass through untouched.
+   */
+  const NS_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function newStyleLabel(feast) {
+    const m = /^([A-Za-z]+)\s+(\d{1,2})$/.exec(String(feast ?? '').trim());
+    if (!m) return String(feast ?? '').trim();
+    const mi = NS_MONTHS.findIndex((n) => n.toLowerCase() === m[1].toLowerCase());
+    const d = Number(m[2]);
+    if (mi === -1 || d < 1 || d > 31) return String(feast).trim();
+    const dt = new Date(Date.UTC(2024, mi, d));
+    if (dt.getUTCMonth() !== mi) return String(feast).trim();
+    dt.setUTCDate(dt.getUTCDate() + 13);
+    return NS_MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+  }
+  function newStyleList(feasts, sep) {
+    return Array.isArray(feasts) ? feasts.map(newStyleLabel).join(sep || ' · ') : '';
+  }
+
     // ---- Local saints DB ----
     // Fetched once from /saints-data.json and shared with the Saint of
     // the Day diptych through window.__saintsData, which both ask for
@@ -592,7 +614,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
         '<p class="mb-3 font-display text-xs uppercase tracking-widest text-brand-tan-dark">From our parish saints catalog</p>',
       );
       if (local.feasts && local.feasts.length) {
-        parts.push(`<p class="mb-3 text-sm italic text-text-secondary">Commemorated on ${escapeHtml(local.feasts.join(' · '))}</p>`);
+        parts.push(`<p class="mb-3 text-sm italic text-text-secondary">Commemorated on ${escapeHtml(newStyleList(local.feasts))}</p>`);
       }
       if (local.life && local.life.trim()) {
         parts.push(`<div class="whitespace-pre-wrap text-text-primary leading-relaxed">${escapeHtml(local.life)}</div>`);
