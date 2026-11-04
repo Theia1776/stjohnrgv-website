@@ -6,14 +6,15 @@ import Layout from "../../layouts/Layout.astro";
 // fast sets aside and not what to actually cook.
 //
 // Deliberately separate from Keeping the Fast, which answers what the
-// fast asks of a person — the rule, and who it bends for. This page
+// fast asks of a person — the rule, and who to speak to if they cannot
+// keep it. This page
 // answers the other half: how to cook under it. The two link to each
 // other and neither repeats the other.
 //
 // Written to grow. Each topic is its own <section> with an id, so a
 // new one is added without disturbing what is here.
 
-// The cupboard list. Kept as data rather than hand-written markup so a
+// What to keep on hand. Kept as data rather than hand-written markup so a
 // line can be added without touching layout, the way the protein table
 // on Keeping the Fast works.
 //
@@ -21,7 +22,7 @@ import Layout from "../../layouts/Layout.astro";
 // know what to reach for, not a principle. They are named WITH the
 // warning that recipes change, because they do, and a parish website
 // cannot keep up with them.
-const cupboard = [
+const onHand = [
   {
     group: "Tins",
     items: [
@@ -117,7 +118,7 @@ const hiddenNames = [
 
 <Layout
   title="An Introduction to Vegan Eating | An Orthodox Table"
-  description="How to cook for the Orthodox fast — what to keep in the cupboard, how to read a label, and how to cook tofu so you actually like it. St. John of Kronstadt Orthodox Mission, Bayview TX."
+  description="How to cook for the Orthodox fast — what to keep on hand, how to read a label, and how to cook tofu so you actually like it. St. John of Kronstadt Orthodox Mission, Bayview TX."
 >
   <main class="mx-auto max-w-3xl px-4 py-12 md:px-6">
     <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
@@ -137,8 +138,8 @@ const hiddenNames = [
     <p class="mt-4 text-text-primary/85 leading-relaxed">
       This is the practical half. Not what the fast asks of you — that is
       <a href="/table/keeping-the-fast/" class="font-semibold text-brand-blue-dark">Keeping the Fast</a>,
-      along with who it bends for and why — but how to cook once you have
-      agreed to it.
+      along with who to speak to if you cannot keep it — but how to cook once
+      you have agreed to it.
     </p>
 
     <!-- A page this long needs a way in. -->
@@ -149,7 +150,7 @@ const hiddenNames = [
         <li><a href="#try-things" class="text-brand-blue-dark">Then add to it</a></li>
         <li><a href="#tofu" class="text-brand-blue-dark">Tofu, done properly</a></li>
         <li><a href="#cost" class="text-brand-blue-dark">What it costs</a></li>
-        <li><a href="#cupboard" class="text-brand-blue-dark">A cupboard to shop from</a></li>
+        <li><a href="#on-hand" class="text-brand-blue-dark">What to keep on hand</a></li>
         <li><a href="#labels" class="text-brand-blue-dark">Reading labels</a></li>
         <li><a href="#vitamins" class="text-brand-blue-dark">Vitamins and B12</a></li>
       </ul>
@@ -157,7 +158,7 @@ const hiddenNames = [
 
     <!-- Theia's words. The order is the point: the reframing comes
          first, because the obstacle is how the fast is being thought
-         about rather than what is in the cupboard. Only once it is a
+         about rather than what you have on hand. Only once it is a
          small thing freely given does the practical business of lists
          and planning make any sense. -->
     <section id="start-here" class="mt-14 scroll-mt-24">
@@ -339,8 +340,8 @@ const hiddenNames = [
       </p>
     </section>
 
-    <section id="cupboard" class="mt-14 scroll-mt-24">
-      <h2 class="font-display text-2xl text-text-primary">A cupboard to shop from</h2>
+    <section id="on-hand" class="mt-14 scroll-mt-24">
+      <h2 class="font-display text-2xl text-text-primary">What to keep on hand</h2>
       <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
       <p class="mt-4 text-text-primary/85 leading-relaxed">
         Not a list to buy in one trip. Keep a few things from each row and most
@@ -349,7 +350,7 @@ const hiddenNames = [
 
       <div class="mt-6 space-y-7">
         {
-          cupboard.map((row) => (
+          onHand.map((row) => (
             <div>
               <h3 class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
                 {row.group}
@@ -418,8 +419,8 @@ const hiddenNames = [
         <strong class="text-text-primary">Speak with your doctor, and with Fr.
         Antonios.</strong> A website does not know your bloodwork and cannot
         give you a rule. Between the two of them you will get an answer that
-        fits you — and if the answer is that the fast should bend, that is a
-        normal thing for it to do.
+        fits you, and if Fr. Antonios sets you a different rule, that is his to
+        set.
       </p>
     </section>
 
@@ -436,7 +437,8 @@ const hiddenNames = [
     <p class="mt-10 border-t border-border-soft pt-6 text-sm text-text-secondary">
       The recipes themselves are in the
       <a href="/table/fasting/" class="font-semibold text-brand-blue-dark">fasting book</a>,
-      open to anyone. What the fast asks, and who it bends for, is on
+      open to anyone. What the fast asks, and who to speak to if you cannot
+      keep it, is on
       <a href="/table/keeping-the-fast/" class="font-semibold text-brand-blue-dark">Keeping the Fast</a>.
     </p>
   </main>
