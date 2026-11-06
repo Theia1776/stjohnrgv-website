@@ -234,13 +234,18 @@ import Layout from "../../layouts/Layout.astro";
    */
   function sectionHtml(s: Section): string {
     const img = imageSrc(s.image);
+    // The whole picture, every time. This used to be forced into a
+    // 3:1 letterbox with object-cover, which threw away half of a
+    // painting somebody had commissioned and composed — the subject
+    // along with it. It is capped in width instead, so a tall-ish
+    // picture is small rather than cut.
     const figure = img
-      ? `<figure class="m-0">
+      ? `<figure class="m-0 mx-auto max-w-[640px]">
            <img src="${escapeHtml(img)}" alt="${escapeHtml(s.image_alt ?? "")}"
-                class="aspect-[3/1] w-full border border-border-soft object-cover" loading="lazy" />
+                class="block h-auto w-full border border-border-soft" loading="lazy" />
            ${
              s.image_caption
-               ? `<figcaption class="mt-1.5 text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
+               ? `<figcaption class="mt-1.5 text-center text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
                : ""
            }
          </figure>`
