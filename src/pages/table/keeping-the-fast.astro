@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 
 // Practical help for fasting, for the fasting book to point at. A
-// newcomer's first Great Lent is the hard one: they know what is not
+// a newcomer knows what is set aside and often not what to put in its
 // allowed and nobody has told them what to actually eat. This page is
 // the answer to that, and is built to grow — each section stands alone,
 // so another can be added without rearranging anything.
@@ -47,7 +47,13 @@ const proteinGroups = [
   {
     group: "Grains",
     note: "A base that carries protein of its own, unlike white rice.",
-    foods: [{ food: "Quinoa", protein: "8 g", per: "per cup" }],
+    foods: [
+      { food: "Quinoa", protein: "8 g", per: "per cup" },
+      { food: "Whole wheat pasta", protein: "7.5 g", per: "per cup, cooked" },
+      { food: "Oats", protein: "6 g", per: "per cup, cooked" },
+      { food: "Bulgur", protein: "6 g", per: "per cup, cooked" },
+      { food: "Brown rice", protein: "5 g", per: "per cup, cooked" },
+    ],
   },
 ];
 ---
@@ -88,8 +94,8 @@ const proteinGroups = [
     </p>
     <p class="mt-4 text-text-primary/85 leading-relaxed">
       Below we will go over: where the protein comes from, and who to speak to
-      if you cannot keep the fast. The cooking itself — what to keep in, how to shop, and the one
-      or two techniques worth learning early — is in
+      if you cannot keep the fast. The cooking itself — what to keep in the house,
+      how to shop, and the one or two techniques worth learning early — is in
       <a href="/table/vegan-eating/" class="font-semibold text-brand-blue-dark">An Introduction to Vegan Eating</a>.
     </p>
 
