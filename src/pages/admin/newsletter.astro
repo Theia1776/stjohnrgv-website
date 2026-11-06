@@ -221,8 +221,11 @@ import FileDrop from "../../components/FileDrop.astro";
     row.className = "section-row border border-border-soft bg-cream-bg p-3";
     row.innerHTML = `
       <div class="flex items-start gap-2">
+        <span class="s-number mt-1.5 w-5 shrink-0 text-right text-xs text-text-secondary"></span>
         <input type="text" maxlength="200" placeholder="Heading"
                class="s-heading min-w-0 flex-1 border border-border-soft bg-cream-card px-2 py-1.5 text-sm" />
+        <button type="button" class="s-up btn btn-secondary px-2 text-xs" aria-label="Move this section up" title="Move up">&uarr;</button>
+        <button type="button" class="s-down btn btn-secondary px-2 text-xs" aria-label="Move this section down" title="Move down">&darr;</button>
         <button type="button" class="s-remove btn btn-secondary text-xs" aria-label="Remove this section">Remove</button>
       </div>
       <textarea rows="4" placeholder="What this section says."
@@ -270,9 +273,58 @@ import FileDrop from "../../components/FileDrop.astro";
       (row.querySelector(".s-upload-status") as HTMLElement).textContent = "Attached.";
     }
 
-    row.querySelector(".s-remove")?.addEventListener("click", () => row.remove());
+    row.querySelector(".s-remove")?.addEventListener("click", () => {
+      row.remove();
+      renumberSections();
+    });
+    row.querySelector(".s-up")?.addEventListener("click", () => moveSection(row, -1));
+    row.querySelector(".s-down")?.addEventListener("click", () => moveSection(row, 1));
     row.querySelector(".s-upload")?.addEventListener("click", () => uploadImage(row));
     return row;
+  }
+
+  /**
+   * Move a section one place up or down.
+   *
+   * The order of the rows in the page IS the order of the issue —
+   * readSections() walks them top to bottom — so moving the element is
+   * the whole of it. Nothing is saved until Save draft is pressed, the
+   * same as every other edit on this form.
+   */
+  function moveSection(row: HTMLElement, direction: -1 | 1) {
+    const sibling =
+      direction === -1 ? row.previousElementSibling : row.nextElementSibling;
+    if (!sibling) return;
+    if (direction === -1) sibling.before(row);
+    else sibling.after(row);
+    renumberSections();
+    // Keep it under the cursor: a row that jumps off screen is a row
+    // you have to go looking for again.
+    row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    (row.querySelector(".s-heading") as HTMLInputElement)?.focus({ preventScroll: true });
+  }
+
+  /**
+   * Number the rows, and grey out the arrows that would do nothing.
+   * Without the numbers a long issue is hard to keep straight while
+   * shuffling it.
+   */
+  function renumberSections() {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>(".section-row"));
+    rows.forEach((r, i) => {
+      const n = r.querySelector(".s-number");
+      if (n) n.textContent = String(i + 1);
+      const up = r.querySelector(".s-up") as HTMLButtonElement | null;
+      const down = r.querySelector(".s-down") as HTMLButtonElement | null;
+      if (up) {
+        up.disabled = i === 0;
+        up.classList.toggle("opacity-30", i === 0);
+      }
+      if (down) {
+        down.disabled = i === rows.length - 1;
+        down.classList.toggle("opacity-30", i === rows.length - 1);
+      }
+    });
   }
 
   /** An R2 key becomes a path; an absolute URL is left alone. */
@@ -363,7 +415,11 @@ import FileDrop from "../../components/FileDrop.astro";
   }
 
   document.getElementById("add-section")?.addEventListener("click", () => {
-    $("sections").appendChild(sectionRow());
+    const row = sectionRow();
+    $("sections").appendChild(row);
+    renumberSections();
+    (row.querySelector(".s-heading") as HTMLInputElement)?.focus();
+    row.scrollIntoView({ block: "nearest", behavior: "smooth" });
   });
 
   // ============== LOADING ONE INTO THE EDITOR ==============
@@ -400,6 +456,7 @@ import FileDrop from "../../components/FileDrop.astro";
     const existing = Array.isArray(issue?.sections) ? issue!.sections! : [];
     if (existing.length === 0) holder.appendChild(sectionRow());
     else for (const s of existing) holder.appendChild(sectionRow(s));
+    renumberSections();
 
     $("editor-heading").textContent = issue ? `Editing: ${issue.title}` : "A new issue";
     ($("new-issue") as HTMLElement).hidden = !issue;
