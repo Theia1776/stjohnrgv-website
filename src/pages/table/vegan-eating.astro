@@ -25,13 +25,13 @@ import Layout from "../../layouts/Layout.astro";
 // cannot keep up with them.
 const onHand = [
   {
-    group: "Tins",
+    group: "Canned",
     items: [
       "Beans — kidney, black, pinto, chickpea",
       "Tomato sauce and tomato paste",
       "Fruit and vegetables",
       "Coconut milk",
-      "Soups — some Amy's and Well Yes! are, but read the tin",
+      "Soups — some Amy's and Well Yes! are vegan, but read the can",
     ],
   },
   {
@@ -58,10 +58,10 @@ const onHand = [
     items: [
       "Fruit and vegetables",
       "Fries and diced potatoes",
-      "Waffles — read the box, not all are",
+      "Waffles — read the box, not all of them are vegan",
       "Ice cream — So Delicious, Ben & Jerry's non-dairy line",
       "Pizza — Daiya, some Amy's",
-      "Ready meals — Gardein, Sweet Earth",
+      "Frozen meals — Gardein, Sweet Earth",
     ],
   },
   {
@@ -91,8 +91,8 @@ const onHand = [
     group: "Instead of meat",
     items: [
       "Tofu and tempeh",
-      "Lentils and beans — much the cheapest of these",
-      "Mince and burgers — Impossible, Beyond, Gardein, MorningStar, Dr. Praeger's",
+      "Lentils and beans — by far the cheapest of these",
+      "Ground beef substitutes and burgers — Impossible, Beyond, Gardein, MorningStar, Dr. Praeger's",
       "Bacon — Lightlife, Sweet Earth",
       "Sausage — Field Roast, Lightlife, Beyond, Gardein",
       "Chicken-style — Gardein, MorningStar",
@@ -108,11 +108,11 @@ const hiddenNames = [
   { name: "Lactose", what: "milk sugar" },
   { name: "Gelatin", what: "boiled bone and hide — sweets, marshmallows, some yogurts" },
   { name: "Isinglass", what: "fish, used to clarify some beers and wines" },
-  { name: "Carmine", what: "crushed insects, used as red colouring" },
+  { name: "Carmine", what: "crushed insects, used as red coloring" },
   { name: "Lard, suet, tallow", what: "rendered animal fat" },
   {
     name: "Sugar filtered through bone char",
-    what: "never stated on the label — organic sugar never is, so buy organic when it matters",
+    what: "the label won't say — organic sugar never uses it, so buy organic when it matters",
   },
 ];
 ---
@@ -131,16 +131,15 @@ const hiddenNames = [
     <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
 
     <p class="mt-6 text-lg text-text-primary/85 leading-relaxed">
-      Nearly half the year is kept as a fast, and for most of it that means
-      eating no meat, dairy or eggs. If you are new to this, the difficulty is
-      rarely the rule — it is standing in the kitchen on a Wednesday evening
-      with no idea what to make.
+      Nearly half the year is a fast, and for most of it that means no meat,
+      dairy or eggs. The rule itself is simple enough. The hard part is
+      standing in your kitchen on a Wednesday night with no idea what to
+      make.
     </p>
     <p class="mt-4 text-text-primary/85 leading-relaxed">
-      This is the practical half. Not what the fast asks of you — that is
-      <a href="/table/keeping-the-fast/" class="font-semibold text-brand-blue-dark">Keeping the Fast</a>,
-      along with who to speak to if you cannot keep it — but how to cook once
-      you have agreed to it.
+      So this page is about the cooking. What the fast actually asks of you,
+      and who to talk to if you can't keep it, is on
+      <a href="/table/keeping-the-fast/" class="font-semibold text-brand-blue-dark">Keeping the Fast</a>.
     </p>
 
     <!-- A page this long needs a way in. -->
@@ -240,8 +239,8 @@ const hiddenNames = [
         taco or a bowl.
       </p>
       <p class="mt-4 text-text-primary/85 leading-relaxed">
-        It is worth learning once, early, because it is the difference
-        between a fast of plain rice and a fast you can keep.
+        Learn it once, early. It's the difference between a fast of plain rice
+        and a fast you can actually keep.
       </p>
 
       <div class="mt-8 grid gap-6 md:grid-cols-2">
@@ -263,8 +262,8 @@ const hiddenNames = [
               <strong>Without one:</strong> lay the block — or slices, which
               press better — on a folded towel on a board, put another towel
               and board on top, and weigh it down with a cast-iron pan or a
-              few tins. Enough weight to squeeze, not enough to crush. Swap the
-              towels when they are soaked.
+              few cans. Enough weight to squeeze, not enough to crush. Swap the
+              towels when they get soaked.
             </li>
           </ul>
           <p class="mt-3 text-sm leading-relaxed text-text-secondary">
@@ -322,20 +321,18 @@ const hiddenNames = [
       <h2 class="font-display text-2xl text-text-primary">What it costs</h2>
       <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
       <p class="mt-4 text-text-primary/85 leading-relaxed">
-        If you have looked at the vegan shelf and seen the price of the cheese
-        and the mince, don't let it put you off — but do know that none of it is
-        necessary. Those are conveniences, and they are the most expensive way
-        to keep a fast. Buy them when you can and want to, not as a rule.
+        If you've looked at the vegan shelf and seen what the cheese and the
+        fake ground beef cost, don't let it put you off — but know you don't
+        need any of it. That stuff is convenience, and it's the most expensive
+        way to fast. Buy it when you want to, not because you have to.
       </p>
       <p class="mt-4 text-text-primary/85 leading-relaxed">
-        The cheap way is also the older way. Rather than swapping the beef in
-        your spaghetti sauce for vegan beef, make it with lentils. Rice,
-        vegetables and beans costs almost nothing and is what most of the
-        fasting world has always eaten. Whole food is cheaper than processed
-        food here as everywhere: the dried beans and lentils aisle, a shop with
-        a decent bulk section, and a look at what the essentials cost in two or
-        three different shops will do more for the grocery bill than anything
-        else on this page.
+        The cheap way is also the old way. Instead of swapping the beef in your
+        spaghetti sauce for vegan beef, make it with lentils. Rice, vegetables
+        and beans costs almost nothing, and it's what most of the fasting world
+        has always eaten. Dried beans and lentils, a store with a good bulk
+        section, and comparing prices at two or three stores will do more for
+        your grocery bill than anything else on this page.
       </p>
     </section>
 
@@ -365,9 +362,9 @@ const hiddenNames = [
       </div>
 
       <p class="mt-5 text-xs text-text-secondary">
-        Brands are named because a person standing in an aisle wants to know
-        what to reach for. They do change their recipes, and a parish website
-        cannot keep up with them — so the label still decides.
+        We name brands because standing in an aisle you want to know what to
+        grab. Companies change their recipes though, and we can't keep up with
+        them — so always check the label.
       </p>
     </section>
 
@@ -375,9 +372,9 @@ const hiddenNames = [
       <h2 class="font-display text-2xl text-text-primary">Reading labels</h2>
       <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
       <p class="mt-4 text-text-primary/85 leading-relaxed">
-        Animal products hide under names that do not sound like animals, which
-        is the part nobody warns you about. These are the ones worth knowing by
-        sight.
+        Animal products hide under names that don't sound like animals, and
+        that's the part nobody warns you about. These are the ones worth knowing
+        on sight.
       </p>
 
       <dl class="mt-5 space-y-2">
