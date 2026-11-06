@@ -159,8 +159,11 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   type Section = {
+    key?: string;
     heading: string;
     body: string;
+    /** Unticked in the admin form — kept in the draft, not printed. */
+    include?: boolean;
     image?: string;
     image_alt?: string;
     image_caption?: string;
@@ -331,7 +334,13 @@ import Layout from "../../layouts/Layout.astro";
 
       (document.getElementById("issue-intro") as HTMLElement).innerHTML = paragraphs(issue.intro);
 
-      const sections = Array.isArray(issue.sections) ? issue.sections : [];
+      // The permanent sections are stored every month whether or not
+      // they are used, so what is printed is only the ones ticked and
+      // actually written. A heading with nothing under it would reach
+      // the parish as a title followed by blank space.
+      const sections = (Array.isArray(issue.sections) ? issue.sections : []).filter(
+        (s) => s.include !== false && (s.body || s.image),
+      );
       (document.getElementById("issue-sections") as HTMLElement).innerHTML = sections
         .map((sec) => sectionHtml(sec))
         .join("");

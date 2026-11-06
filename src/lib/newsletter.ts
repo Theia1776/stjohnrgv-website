@@ -15,8 +15,24 @@
  */
 
 export interface NewsletterSection {
+  /**
+   * Which permanent slot this is — "narthex", "table" and so on. The
+   * issue has the same handful of sections every month, and the key is
+   * how a saved draft finds its slot again rather than matching on a
+   * heading somebody has since reworded. A section the writer added
+   * herself has no key.
+   */
+  key?: string;
   heading: string;
   body: string;
+  /**
+   * Whether this section goes out in this issue. A permanent section
+   * with the box unticked keeps everything typed into it and simply
+   * isn't printed — a month with nothing to report under one heading
+   * shouldn't cost the writer the text she wrote last month.
+   * Absent means included.
+   */
+  include?: boolean;
   /**
    * An R2 key under `newsletter/`, or an absolute URL. Optional: a
    * newsletter that is nothing but prose is one people stop opening,
@@ -90,16 +106,39 @@ export function slugifyIssue(title: string): string {
   );
 }
 
-/** Whatever came out of jsonb, as sections with both halves present. */
-export function readSections(value: unknown): NewsletterSection[] {
+export const MAX_SECTIONS = 30;
+export const MAX_HEADING = 200;
+export const MAX_BODY = 8000;
+
+/**
+ * Sections as they should be *stored* — every field the form collects,
+ * trimmed and capped, nothing thrown away.
+ *
+ * This is the only place that decides what a stored section looks like.
+ * It used to be written out twice, once in each save route, and both
+ * copies kept only the heading and the body — so an uploaded
+ * photograph was discarded the moment the draft was saved, having
+ * shown a perfectly good preview first. One function, called by both.
+ *
+ * An empty row is dropped, because the form is generous about offering
+ * rows and the writer shouldn't have to tidy up after it. A permanent
+ * slot (anything carrying a `key`) is kept even when empty: it is part
+ * of the issue's shape, and losing it would mean rebuilding the same
+ * six headings every month.
+ */
+export function cleanSections(value: unknown): NewsletterSection[] {
   if (!Array.isArray(value)) return [];
   return value
     .map((raw) => {
       const s = (raw ?? {}) as Record<string, unknown>;
       const str = (k: string) => (typeof s[k] === "string" ? (s[k] as string).trim() : "");
       return {
-        heading: str("heading"),
-        body: str("body"),
+        key: str("key").slice(0, 40),
+        heading: str("heading").slice(0, MAX_HEADING),
+        body: str("body").slice(0, MAX_BODY),
+        // Only an explicit false holds a section back. Anything saved
+        // before this existed therefore goes out, as it did before.
+        include: s.include === false ? false : true,
         image: str("image"),
         image_alt: str("image_alt"),
         image_caption: str("image_caption"),
@@ -107,15 +146,24 @@ export function readSections(value: unknown): NewsletterSection[] {
         quote_by: str("quote_by"),
       };
     })
-    // A section needs something to say. An empty row is one the writer
-    // added and didn't use, and a heading with nothing under it is the
-    // same thing half-finished — it would go out to the whole parish
-    // as a title followed by blank space, which reads as broken.
-    // Dropping both here lets the form be generous about offering rows.
-    //
-    // A body with NO heading is kept on purpose: an unheaded paragraph
-    // between two sections is a normal thing to want.
-    .filter((s) => s.body || s.image);
+    .filter((s) => s.key || s.body || s.image)
+    .slice(0, MAX_SECTIONS);
+}
+
+/**
+ * Sections as they should be *printed* — on the page, in the email and
+ * in the plain-text copy.
+ *
+ * Two things are left out here and nowhere else. A section with its box
+ * unticked, which the writer is holding back this month. And a heading
+ * with nothing under it, which would reach the parish as a title
+ * followed by blank space and read as broken.
+ *
+ * A body with NO heading is kept on purpose: an unheaded paragraph
+ * between two sections is a normal thing to want.
+ */
+export function readSections(value: unknown): NewsletterSection[] {
+  return cleanSections(value).filter((s) => s.include !== false && (s.body || s.image));
 }
 
 /** Blank lines part paragraphs; single newlines are line breaks. */

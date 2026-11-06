@@ -15,7 +15,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL } from "../../../../src/lib/supabase";
 import { verifySession, withSessionCookies } from "../../../../src/lib/session.ts";
-import { readSections } from "../../../../src/lib/newsletter";
+import { MAX_BODY, cleanSections } from "../../../../src/lib/newsletter";
 
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -25,10 +25,6 @@ const FIELDS =
   "id, slug, title, issue_label, intro, sections, closing, audience, published, " +
   "published_at, sent_at, sent_count, sent_attempted, send_error, written_by_name, " +
   "hero_image, hero_image_alt, created_at, updated_at";
-
-const MAX_SECTIONS = 30;
-const MAX_HEADING = 200;
-const MAX_BODY = 8000;
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -103,9 +99,7 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       }
     }
     if ("sections" in body) {
-      updates.sections = readSections(body.sections)
-        .slice(0, MAX_SECTIONS)
-        .map((s) => ({ heading: s.heading.slice(0, MAX_HEADING), body: s.body.slice(0, MAX_BODY) }));
+      updates.sections = cleanSections(body.sections);
     }
     if ("audience" in body) {
       const audience = String(body.audience ?? "");

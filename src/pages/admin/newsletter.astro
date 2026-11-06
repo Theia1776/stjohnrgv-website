@@ -53,9 +53,12 @@ import FileDrop from "../../components/FileDrop.astro";
 
         <div class="mt-4 grid gap-4 sm:grid-cols-3">
           <label class="block text-xs uppercase tracking-widest text-text-secondary">
-            Issue label
+            Edition
             <input id="f-label" type="text" maxlength="100" placeholder="November 2026"
               class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary" />
+            <span class="mt-1 block normal-case tracking-normal text-[0.7rem] text-text-secondary">
+              Fills in the month and year on its own. Change it if you want something else.
+            </span>
           </label>
           <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
             Title <span aria-hidden="true" class="text-brand-tan-dark">*</span>
@@ -95,9 +98,14 @@ import FileDrop from "../../components/FileDrop.astro";
 
         <div class="mt-5">
           <p class="text-xs uppercase tracking-widest text-text-secondary">Sections</p>
-          <div id="sections" class="mt-2 space-y-4"></div>
+          <p class="mt-1 text-xs leading-relaxed text-text-secondary">
+            The six standing sections are always here. Untick one and it stays
+            saved but doesn't go out, so a quiet month costs you nothing you
+            wrote. Add your own below them for anything else.
+          </p>
+          <div id="sections" class="mt-3 space-y-4"></div>
           <button type="button" id="add-section" class="btn btn-secondary mt-3 text-sm">
-            Add a section
+            Add another section
           </button>
         </div>
 
@@ -152,8 +160,12 @@ import FileDrop from "../../components/FileDrop.astro";
 
 <script>
   type Section = {
+    /** Which standing section this is, or "" for one of her own. */
+    key?: string;
     heading: string;
     body: string;
+    /** Unticked: kept in the draft, left out of the issue. */
+    include?: boolean;
     image?: string;
     image_alt?: string;
     image_caption?: string;
@@ -213,21 +225,128 @@ import FileDrop from "../../components/FileDrop.astro";
   }
 
   // ============== THE SECTION ROWS ==============
-  // The form grows with the issue rather than offering a fixed number
-  // of boxes, the same as the recipe form.
+
+  /**
+   * The standing sections. The issue has the same shape every month,
+   * so these are always on the form and always saved — the tick box
+   * decides whether one goes out, not whether it exists.
+   *
+   * `aliases` are old headings that mean the same section, so a draft
+   * written before this existed finds its slot instead of appearing
+   * twice. They are matched with punctuation and case ignored.
+   */
+  const FIXED: { key: string; heading: string; hint: string; aliases: string[] }[] = [
+    {
+      key: "narthex",
+      heading: "Notes From the Narthex",
+      hint: "Fr.'s note",
+      aliases: [
+        "a letter from fr antonios",
+        "a letter from father antonios",
+        "from the desk of fr antonios",
+        "from the desk of father antonios",
+        "from the desk",
+      ],
+    },
+    { key: "table", heading: "An Orthodox Table", hint: "Matushka's section", aliases: ["orthodox table"] },
+    {
+      key: "online",
+      heading: "Come and See, Online",
+      hint: "news from the website",
+      aliases: ["website news", "from the website", "news from the website"],
+    },
+    { key: "prayer", heading: "Prayer Requests", hint: "", aliases: ["prayer list", "prayers"] },
+    {
+      key: "services",
+      heading: "Service Schedule",
+      hint: "",
+      aliases: ["service changes", "services", "service times"],
+    },
+    { key: "events", heading: "Upcoming Events", hint: "", aliases: ["upcoming", "events"] },
+  ];
+
+  const slotOf = (key: string | undefined) => FIXED.find((f) => f.key === key) ?? null;
+
+  /** Headings compared the way a person would: case and punctuation off. */
+  const normalize = (s: string) =>
+    String(s ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+  /** Which standing section an old heading was, if any. */
+  function matchSlot(heading: string): string {
+    const h = normalize(heading);
+    if (!h) return "";
+    for (const f of FIXED) {
+      if (h === normalize(f.heading)) return f.key;
+      if (f.aliases.some((a) => h === normalize(a))) return f.key;
+    }
+    return "";
+  }
+
+  /**
+   * The rows to show for an issue: whatever was saved, in the order it
+   * was saved, with any standing section it is missing added on the
+   * end. A draft written before the standing sections existed comes
+   * back with its headings recognised rather than duplicated.
+   */
+  function buildSections(stored: Section[]): Section[] {
+    const used = new Set<string>();
+    const out: Section[] = [];
+
+    for (const s of stored) {
+      const key = slotOf(s.key) ? s.key! : matchSlot(s.heading);
+      if (key && !used.has(key)) {
+        used.add(key);
+        out.push({ ...s, key, heading: slotOf(key)!.heading });
+      } else {
+        out.push({ ...s, key: "" });
+      }
+    }
+    for (const f of FIXED) {
+      if (!used.has(f.key)) out.push({ key: f.key, heading: f.heading, body: "", include: true });
+    }
+    return out;
+  }
 
   function sectionRow(section: Section = { heading: "", body: "" }): HTMLDivElement {
+    const slot = slotOf(section.key);
     const row = document.createElement("div");
     row.className = "section-row border border-border-soft bg-cream-bg p-3";
+    if (slot) row.dataset.key = slot.key;
+
+    // A standing section's heading is fixed, so it is shown rather than
+    // typed. One she added herself keeps an editable box. Either way
+    // the value lives on `.s-heading`, so everything downstream reads
+    // it the same way.
+    const headingField = slot
+      ? `<span class="min-w-0 flex-1 py-1.5">
+           <span class="block font-display text-sm text-text-primary">${escapeHtml(slot.heading)}</span>
+           ${slot.hint ? `<span class="block text-xs text-text-secondary">${escapeHtml(slot.hint)}</span>` : ""}
+         </span>
+         <input type="hidden" class="s-heading" />`
+      : `<input type="text" maxlength="200" placeholder="Heading"
+                class="s-heading min-w-0 flex-1 border border-border-soft bg-cream-card px-2 py-1.5 text-sm" />`;
+
     row.innerHTML = `
       <div class="flex items-start gap-2">
         <span class="s-number mt-1.5 w-5 shrink-0 text-right text-xs text-text-secondary"></span>
-        <input type="text" maxlength="200" placeholder="Heading"
-               class="s-heading min-w-0 flex-1 border border-border-soft bg-cream-card px-2 py-1.5 text-sm" />
+        ${headingField}
         <button type="button" class="s-up btn btn-secondary px-2 text-xs" aria-label="Move this section up" title="Move up">&uarr;</button>
         <button type="button" class="s-down btn btn-secondary px-2 text-xs" aria-label="Move this section down" title="Move down">&darr;</button>
-        <button type="button" class="s-remove btn btn-secondary text-xs" aria-label="Remove this section">Remove</button>
+        ${
+          slot
+            ? ""
+            : `<button type="button" class="s-remove btn btn-secondary text-xs" aria-label="Remove this section">Remove</button>`
+        }
       </div>
+
+      <label class="s-include-label mt-2 ml-7 flex cursor-pointer items-center gap-2 text-xs text-text-secondary">
+        <input type="checkbox" class="s-include h-4 w-4" checked />
+        <span class="s-include-text">In this issue</span>
+      </label>
+
       <textarea rows="4" placeholder="What this section says."
                 class="s-body mt-2 block w-full border border-border-soft bg-cream-card px-2 py-1.5 text-sm"></textarea>
 
@@ -256,7 +375,10 @@ import FileDrop from "../../components/FileDrop.astro";
         </div>
       </details>`;
 
-    (row.querySelector(".s-heading") as HTMLInputElement).value = section.heading ?? "";
+    (row.querySelector(".s-heading") as HTMLInputElement).value = slot
+      ? slot.heading
+      : section.heading ?? "";
+    (row.querySelector(".s-include") as HTMLInputElement).checked = section.include !== false;
     (row.querySelector(".s-body") as HTMLTextAreaElement).value = section.body ?? "";
     (row.querySelector(".s-image") as HTMLInputElement).value = section.image ?? "";
     (row.querySelector(".s-image-alt") as HTMLInputElement).value = section.image_alt ?? "";
@@ -280,7 +402,23 @@ import FileDrop from "../../components/FileDrop.astro";
     row.querySelector(".s-up")?.addEventListener("click", () => moveSection(row, -1));
     row.querySelector(".s-down")?.addEventListener("click", () => moveSection(row, 1));
     row.querySelector(".s-upload")?.addEventListener("click", () => uploadImage(row));
+    row.querySelector(".s-include")?.addEventListener("change", () => markIncluded(row));
+    markIncluded(row);
     return row;
+  }
+
+  /**
+   * Show at a glance whether a section is going out.
+   *
+   * A tick box on its own is easy to miss on a long form — the row
+   * itself fades, so scrolling the page shows which sections are in
+   * this issue without reading every box.
+   */
+  function markIncluded(row: HTMLElement) {
+    const on = (row.querySelector(".s-include") as HTMLInputElement | null)?.checked !== false;
+    row.classList.toggle("opacity-60", !on);
+    const text = row.querySelector(".s-include-text");
+    if (text) text.textContent = on ? "In this issue" : "Left out of this issue — still saved";
   }
 
   /**
@@ -301,7 +439,11 @@ import FileDrop from "../../components/FileDrop.astro";
     // Keep it under the cursor: a row that jumps off screen is a row
     // you have to go looking for again.
     row.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    (row.querySelector(".s-heading") as HTMLInputElement)?.focus({ preventScroll: true });
+    // A standing section's heading is a hidden input, so focus goes to
+    // the text instead — otherwise the keyboard is left nowhere.
+    const target = (row.querySelector('.s-heading:not([type="hidden"])') ??
+      row.querySelector(".s-body")) as HTMLElement | null;
+    target?.focus({ preventScroll: true });
   }
 
   /**
@@ -388,29 +530,39 @@ import FileDrop from "../../components/FileDrop.astro";
   }
 
   /**
-   * The rows that have something to say, and the headings that don't.
+   * What to save, what will print, and what is being left behind.
    *
-   * A heading with nothing under it is dropped — it would go out as a
-   * title followed by blank space — but it is dropped *out loud*, in
+   * A standing section is always saved, empty or unticked, because it
+   * is part of the issue's shape and rebuilding it every month is the
+   * work this form is meant to take off her. One she added herself is
+   * dropped if it has nothing under it — but dropped *out loud*, in
    * the save confirmation, because silently throwing away something
    * somebody typed is how a person comes to distrust a form.
    */
-  function readSections(): { kept: Section[]; dropped: string[] } {
+  function readSections(): { kept: Section[]; dropped: string[]; holding: string[] } {
     const val = (row: HTMLElement, cls: string) =>
       (row.querySelector(cls) as HTMLInputElement | HTMLTextAreaElement | null)?.value.trim() ?? "";
     const all = Array.from(document.querySelectorAll<HTMLDivElement>(".section-row")).map((row) => ({
+      key: row.dataset.key ?? "",
       heading: val(row, ".s-heading"),
       body: val(row, ".s-body"),
+      include: (row.querySelector(".s-include") as HTMLInputElement | null)?.checked !== false,
       image: val(row, ".s-image"),
       image_alt: val(row, ".s-image-alt"),
       image_caption: val(row, ".s-image-caption"),
       quote: val(row, ".s-quote"),
       quote_by: val(row, ".s-quote-by"),
     }));
+
+    const kept = all.filter((s) => s.key || s.body || s.image);
     return {
-      // A section earns its place with words or with a picture.
-      kept: all.filter((s) => s.body || s.image),
-      dropped: all.filter((s) => s.heading && !s.body && !s.image).map((s) => s.heading),
+      kept,
+      dropped: all.filter((s) => !s.key && s.heading && !s.body && !s.image).map((s) => s.heading),
+      // Written, but not going out this month. An empty standing
+      // section isn't worth naming — there was nothing in it.
+      holding: kept
+        .filter((s) => !s.include && (s.body || s.image))
+        .map((s) => s.heading || "an untitled section"),
     };
   }
 
@@ -424,9 +576,20 @@ import FileDrop from "../../components/FileDrop.astro";
 
   // ============== LOADING ONE INTO THE EDITOR ==============
 
+  /** "November 2026" — the edition an issue belongs to. */
+  function monthLabel(value?: string | null): string {
+    const d = value ? new Date(value) : new Date();
+    const when = Number.isNaN(d.getTime()) ? new Date() : d;
+    return when.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }
+
   function loadIntoEditor(issue: Issue | null) {
     editingId = issue?.id ?? null;
-    input("f-label").value = issue?.issue_label ?? "";
+    // Every edition is its month and year, so it fills itself in: this
+    // month for a new issue, its own month for one already written.
+    // Still a plain text box — type over it for anything else.
+    input("f-label").value =
+      issue?.issue_label || monthLabel(issue?.published_at ?? issue?.created_at ?? null);
     input("f-title").value = issue?.title ?? "";
     area("f-intro").value = issue?.intro ?? "";
     area("f-closing").value = issue?.closing ?? "";
@@ -454,8 +617,7 @@ import FileDrop from "../../components/FileDrop.astro";
     const holder = $("sections");
     holder.innerHTML = "";
     const existing = Array.isArray(issue?.sections) ? issue!.sections! : [];
-    if (existing.length === 0) holder.appendChild(sectionRow());
-    else for (const s of existing) holder.appendChild(sectionRow(s));
+    for (const s of buildSections(existing)) holder.appendChild(sectionRow(s));
     renumberSections();
 
     $("editor-heading").textContent = issue ? `Editing: ${issue.title}` : "A new issue";
@@ -526,7 +688,7 @@ import FileDrop from "../../components/FileDrop.astro";
       return;
     }
 
-    const { kept, dropped } = readSections();
+    const { kept, dropped, holding } = readSections();
     const payload = {
       title,
       issue_label: input("f-label").value.trim(),
@@ -560,15 +722,21 @@ import FileDrop from "../../components/FileDrop.astro";
         return;
       }
       const saved = body.issue as Issue;
-      // Named back, with the count, so it is plain that the right
-      // thing was saved and not an empty form.
-      const count = (saved.sections ?? []).length;
+      // Named back, with the counts, so it is plain that the right
+      // thing was saved and not an empty form — and so that anything
+      // held back is held back where she can see it.
+      const stored = (saved.sections ?? []) as Section[];
+      const printing = stored.filter((s) => s.include !== false && (s.body || s.image)).length;
+      const pictures = stored.filter((s) => s.image).length;
       say(
-        `Saved "${saved.title}" — ${count} ${count === 1 ? "section" : "sections"}, ` +
+        `Saved "${saved.title}" — ${printing} ${printing === 1 ? "section goes" : "sections go"} out, ` +
+          `${stored.length} kept on the form, ` +
+          `${pictures ? `${pictures} ${pictures === 1 ? "picture" : "pictures"} attached, ` : "no pictures yet, "}` +
           `${saved.audience === "public" ? "readable by anyone" : "for our parish"}. ` +
           (saved.published ? "It is live on the site." : "Still a draft; publish it below.") +
+          (holding.length ? ` Left out this month: ${holding.join(", ")}.` : "") +
           (dropped.length
-            ? ` Left out ${dropped.length === 1 ? "a heading with nothing under it" : "headings with nothing under them"}: ${dropped.join(", ")}.`
+            ? ` Threw away ${dropped.length === 1 ? "a heading with nothing under it" : "headings with nothing under them"}: ${dropped.join(", ")}.`
             : ""),
       );
       await loadIssues();
