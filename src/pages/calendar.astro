@@ -14,33 +14,27 @@ import SaintDiptych from "../components/SaintDiptych.astro";
        the whole point of the page was off screen until you scrolled. -->
   <section class="mx-auto max-w-6xl px-4 pt-6 pb-0 md:pt-8">
 
-    <p class="mb-4 font-display text-xs uppercase tracking-widest text-text-secondary">Liturgical Calendar</p>
+    <!-- The date and its arrows ride above the book. The page used to
+         announce itself "Liturgical Calendar", which the month below
+         it says perfectly well on its own; the space is better spent
+         on which day you are looking at. -->
+    <div id="cal-header" class="mb-4 flex items-center gap-3">
+      <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">&larr; Prev</button>
+      <h1 id="cal-date" class="flex-1 text-center font-display text-xl text-text-primary md:text-2xl"></h1>
+      <button id="next-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">Next &rarr;</button>
+    </div>
 
-    <!-- The book. Permanently open, and first on the page: the month
-         is in its left panel and the day's saint in its right, so it
-         is the thing somebody came here to use rather than an
-         ornament below the fold.
+    <!-- The book. Permanently open: the month is in its left panel and
+         the day's saint in its right.
 
          The month grid is rendered into [data-month-grid] by the
          script below; the component owns the saint half and listens
          for `calendar-date-change` to keep it in step. -->
-    <div class="mb-8 flex justify-center">
+    <div class="mb-5 flex justify-center">
       <SaintDiptych />
     </div>
 
-    <!-- Date header + navigation, then the fasting banner for the day
-         on show. Both sit under the book now, reading as a caption to
-         it rather than as a header above nothing. -->
     <div class="mx-auto max-w-3xl">
-      <div id="cal-header" class="mb-3 flex items-center gap-3">
-        <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">&larr; Prev</button>
-        <h1 id="cal-date" class="flex-1 text-center font-display text-xl text-text-primary md:text-2xl"></h1>
-        <button id="next-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">Next &rarr;</button>
-      </div>
-      <div class="mb-6 text-center">
-        <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">&#8629; Today</button>
-      </div>
-
       <!-- Filled in by renderFastBanner() from the upstream calendar's
            own fasting line, so the parish and the calendar app never
            disagree. Hidden until the day's data arrives. -->
@@ -48,21 +42,36 @@ import SaintDiptych from "../components/SaintDiptych.astro";
         id="fast-banner"
         hidden
         role="status"
-        class="mb-8 border border-border-soft border-l-4 bg-cream-card px-5 py-4"
+        class="mb-4 border border-border-soft border-l-4 bg-cream-card px-5 py-4"
       >
         <p id="fast-banner-headline" class="font-display text-base font-bold text-text-primary"></p>
         <p id="fast-banner-detail" class="mt-1 text-sm text-text-secondary"></p>
+      </div>
+
+      <!-- Say that there is more. The commemorations, the readings and
+           the troparia are all below the fold and nothing on screen
+           admitted it, so the page looked finished when it wasn't.
+           It is a button, not a label — it scrolls you there. -->
+      <div class="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+        <button
+          id="scroll-to-day"
+          type="button"
+          class="font-display text-sm text-brand-blue-dark underline decoration-sacred-gold decoration-2 underline-offset-4 transition-colors hover:text-brand-blue"
+        >
+          <span id="scroll-to-day-label">Scroll down for this day&rsquo;s readings and commemorations</span> &darr;
+        </button>
+        <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">&#8629; Today</button>
       </div>
     </div>
 
     <div class="mx-auto max-w-3xl">
       <!-- Loading -->
-      <div id="cal-loading" class="py-20 text-center text-text-secondary">
+      <div id="cal-loading" class="py-10 text-center text-text-secondary">
         <p class="font-display text-base tracking-wide">Loading…</p>
       </div>
 
       <!-- Error -->
-      <div id="cal-error" class="hidden py-20 text-center">
+      <div id="cal-error" class="hidden py-10 text-center">
         <p class="text-lg text-text-secondary">Could not load calendar data. Please check your connection and try again.</p>
       </div>
     </div>
@@ -465,6 +474,12 @@ import SaintDiptych from "../components/SaintDiptych.astro";
 
       document.getElementById('cal-date').textContent = formatDate(date);
       syncGridTo(date);
+      const cue = document.getElementById('scroll-to-day-label');
+      if (cue) {
+        cue.textContent =
+          'Scroll down for the readings and commemorations for ' +
+          MONTHS[date.getMonth()] + ' ' + date.getDate();
+      }
 
       // Notify the SaintDiptych so its match re-runs against the day
       // we're displaying. (No-op when the diptych isn't on the page.)
@@ -775,6 +790,18 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       currentDate.setDate(currentDate.getDate() + 1);
       loadDay(currentDate);
     });
+    // The scroll cue. Takes you to the day's own content rather than
+    // only claiming it exists, and names the day so the promise is
+    // specific — "this day's" means nothing if you've navigated away
+    // from today.
+    const scrollBtn = document.getElementById('scroll-to-day');
+    if (scrollBtn) {
+      scrollBtn.addEventListener('click', () => {
+        const target = document.getElementById('cal-content');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     document.getElementById('today-btn').addEventListener('click', () => {
       currentDate = new Date();
       currentDate.setHours(0,0,0,0);
