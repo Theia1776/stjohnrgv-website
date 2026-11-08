@@ -48,102 +48,77 @@ for (const [path, mod] of Object.entries(iconModules)) {
 const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c");
 ---
 
-<div
-  id="saint-diptych"
-  data-state="closed"
-  hidden
-  class="diptych-host mx-auto"
->
-  <!-- ============== CLOSED STATE: BOOK COVER ============== -->
-  <button
-    type="button"
-    data-action="open"
-    aria-label="Open Saint of the Day"
-    class="diptych-closed group relative mx-auto block h-96 w-72 overflow-hidden focus:outline-none"
-    style="background-color: #6B1F1F;"
-  >
-    <!-- Spine shadow on left edge -->
-    <span
-      aria-hidden="true"
-      class="absolute inset-y-0 left-0 w-12"
-      style="background: linear-gradient(to right, #3A0F0F, transparent);"
-    ></span>
+<!--
+  The book stays open. It used to be a closed cover you clicked to
+  flip, which meant the calendar and the day's saint were both behind
+  a gesture nobody was told to make.
 
-    <!-- Double inset gold border -->
-    <span aria-hidden="true" class="pointer-events-none absolute inset-3 border border-sacred-gold/80"></span>
-    <span aria-hidden="true" class="pointer-events-none absolute inset-5 border border-sacred-gold/80"></span>
-
-    <!-- Cross + label, vertically centered with breathing room -->
-    <span class="relative flex h-full w-full flex-col items-center justify-center px-6">
-      <svg
-        viewBox="0 0 100 200"
-        class="h-32 w-auto text-sacred-gold"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="6"
-        stroke-linecap="round"
-        aria-hidden="true"
-      >
-        <line x1="50" y1="20" x2="50" y2="185" />
-        <line x1="38" y1="42" x2="62" y2="42" />
-        <line x1="25" y1="80" x2="75" y2="80" />
-        <line x1="30" y1="135" x2="70" y2="150" />
-      </svg>
-      <span class="mt-12 font-display text-xs uppercase tracking-[0.3em] text-sacred-gold">
-        Saint of the Day
-      </span>
-    </span>
-
-    <!-- Bouncing gold latch on right edge — horizontal bar reading
-         as a book clasp rather than a vertical nub. -->
-    <span aria-hidden="true" class="diptych-latch absolute right-0 top-1/2 h-3 w-8 bg-sacred-gold"></span>
-  </button>
-
-  <!-- ============== OPEN STATE: DIPTYCH ============== -->
-  <div class="diptych-open relative mx-auto w-full max-w-3xl">
+  LEFT PANEL  the month, filled in by calendar.astro's script.
+  RIGHT PANEL the saint for the displayed day — icon, name, feast, life.
+-->
+<div id="saint-diptych" class="diptych-host mx-auto">
+  <div class="diptych-open relative mx-auto w-full max-w-5xl">
     <div
-      class="grid grid-cols-1 overflow-hidden border-2 border-sacred-gold shadow-lg md:grid-cols-[1fr_8px_1fr]"
+      class="grid grid-cols-1 overflow-hidden border-2 border-sacred-gold shadow-lg md:grid-cols-[1.1fr_8px_1fr]"
       style="background-color: #FAF7F0;"
     >
 
-      <!-- LEFT PANEL: icon area with gold frame -->
-      <div class="relative flex items-center justify-center p-4">
-        <div class="relative flex h-64 w-full max-w-[16rem] items-center justify-center border-2 border-sacred-gold p-3 md:h-full md:max-w-none">
-          <div data-icon-area class="flex h-full w-full items-center justify-center"></div>
+      <!-- LEFT PANEL: the month. calendar.astro renders into this. -->
+      <div class="relative p-3 sm:p-4">
+        <div data-month-grid class="h-full">
+          <p class="py-10 text-center font-display text-xs uppercase tracking-widest text-text-secondary">
+            Loading the month&hellip;
+          </p>
         </div>
       </div>
 
       <!-- HINGE — visible on md+ only -->
       <div class="hidden bg-sacred-gold md:block" aria-hidden="true"></div>
 
-      <!-- RIGHT PANEL: text content -->
-      <div class="relative flex flex-col p-6 md:p-8">
-        <!-- Corner flourishes -->
+      <!-- RIGHT PANEL: the saint -->
+      <div class="relative flex flex-col p-5 md:p-7">
         <span aria-hidden="true" class="absolute top-3 left-3 h-3 w-3 border-l border-t border-sacred-gold"></span>
         <span aria-hidden="true" class="absolute top-3 right-3 h-3 w-3 border-r border-t border-sacred-gold"></span>
         <span aria-hidden="true" class="absolute bottom-3 left-3 h-3 w-3 border-l border-b border-sacred-gold"></span>
         <span aria-hidden="true" class="absolute bottom-3 right-3 h-3 w-3 border-r border-b border-sacred-gold"></span>
 
         <p class="font-display text-xs uppercase tracking-widest text-sacred-gold">Saint of the Day</p>
-        <h3 data-saint-name class="mt-2 font-display text-xl text-text-primary md:text-2xl"></h3>
-        <p data-saint-feast class="mt-1 text-sm text-sacred-gold"></p>
-        <hr class="mt-4 h-px w-12 border-0 bg-sacred-gold" />
+
+        <!-- Shown on a day the catalogue has no entry for. The book no
+             longer vanishes on those days, because the month lives in
+             it now and the month is always there. -->
         <p
-          data-saint-bio
+          data-saint-empty
           hidden
-          class="mt-4 italic leading-relaxed text-text-primary/85"
-        ></p>
-        <div class="mt-auto flex items-center justify-between gap-4 pt-4">
+          class="mt-6 italic leading-relaxed text-text-secondary"
+        >No saint from our catalogue is commemorated on this day. The day&rsquo;s
+          full commemorations are below.</p>
+
+        <div data-saint-body class="flex flex-col">
+          <div class="mt-3 flex items-start gap-4">
+            <div
+              data-icon-area
+              class="flex h-24 w-20 shrink-0 items-center justify-center border border-sacred-gold p-1.5 sm:h-28 sm:w-24"
+            ></div>
+            <div class="min-w-0">
+              <h3 data-saint-name class="font-display text-lg leading-snug text-text-primary md:text-xl"></h3>
+              <p data-saint-feast class="mt-1 text-xs text-sacred-gold"></p>
+            </div>
+          </div>
+
+          <hr class="mt-4 h-px w-12 border-0 bg-sacred-gold" />
+          <p
+            data-saint-bio
+            hidden
+            class="mt-3 text-sm italic leading-relaxed text-text-primary/85"
+          ></p>
+        </div>
+
+        <div class="mt-auto pt-5">
           <a
             href="/learn/saints/"
             class="font-display text-sm text-brand-blue-dark no-underline hover:underline"
           >All Saints &rarr;</a>
-          <button
-            type="button"
-            data-action="close"
-            aria-label="Close Saint of the Day"
-            class="font-display text-xs uppercase tracking-widest text-text-secondary hover:text-text-primary"
-          >&times; close</button>
         </div>
       </div>
 
@@ -240,13 +215,20 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
         (s) => Array.isArray(s.feasts) && s.feasts.includes(feastKey),
       );
 
-      // No match — hide the diptych entirely. Re-collapse to closed
-      // state so the next match doesn't open mid-flip.
+      const bodyEl = host.querySelector('[data-saint-body]');
+      const emptyEl = host.querySelector('[data-saint-empty]');
+
+      // No match. The book used to disappear on these days — it only
+      // held the saint, so there was nothing to show. It holds the
+      // month now, and the month is there every day, so the right
+      // panel says so and the left panel carries on.
       if (!saint) {
-        host.dataset.state = 'closed';
-        host.hidden = true;
+        if (bodyEl) bodyEl.hidden = true;
+        if (emptyEl) emptyEl.hidden = false;
         return;
       }
+      if (bodyEl) bodyEl.hidden = false;
+      if (emptyEl) emptyEl.hidden = true;
 
       // Right-panel text fields
       host.querySelector('[data-saint-name]').textContent = saint.name || '';
@@ -287,8 +269,6 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       } else {
         iconArea.innerHTML = renderFallbackIcon();
       }
-
-      host.hidden = false;
     }
 
     // Initial render — today's date.
@@ -303,26 +283,10 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       loadForDate(date);
     });
 
-    // Open / close. Single delegated listener catches the closed-cover
-    // button (data-action="open") and the close button in the right
-    // panel (data-action="close").
-    host.addEventListener('click', (e) => {
-      const trigger = e.target.closest('[data-action]');
-      if (!trigger) return;
-      const action = trigger.dataset.action;
-      if (action === 'open') {
-        host.dataset.state = 'open';
-      } else if (action === 'close') {
-        host.dataset.state = 'closed';
-      }
-    });
-
-    // Esc closes when open.
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && host.dataset.state === 'open') {
-        host.dataset.state = 'closed';
-      }
-    });
+    // There is no open and close any more. The book is the page's main
+    // furniture now — the month lives in it — so flipping it shut
+    // would hide the calendar, and nothing on the page ever told
+    // anyone to click the cover in the first place.
   }
 
   // Run once the document is parsed, not at this point in it.
@@ -343,21 +307,9 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 </script>
 
 <style>
-  /* State swap: closed/open hide each other */
-  #saint-diptych[data-state="closed"] .diptych-open { display: none; }
-  #saint-diptych[data-state="open"]   .diptych-closed { display: none; }
-
-  /* Latch bounce. Combine vertical centering with horizontal nudge
-     directly in the keyframe transform so it overrides Tailwind
-     utility classes cleanly. */
-  @keyframes diptych-latch-bounce {
-    0%, 100% { transform: translate(0,   -50%); }
-    50%      { transform: translate(6px, -50%); }
-  }
-  .diptych-latch {
-    animation: diptych-latch-bounce 1.8s ease-in-out infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .diptych-latch { animation: none; transform: translateY(-50%); }
-  }
+  /* The cover and its bouncing latch are gone — the book no longer
+     opens and closes, so the state swap and the clasp animation they
+     drove went with them. Day cells in the month, which the calendar
+     page renders into the left panel, carry their own classes. */
+  .diptych-day[disabled] { cursor: default; }
 </style>

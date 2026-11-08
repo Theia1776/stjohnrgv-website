@@ -17,30 +17,18 @@
  *   }
  */
 
+import {
+  type Fasting,
+  decodeEntities,
+  stripInline,
+  parseFasting,
+  htcUrl,
+  HTC_HEADERS,
+} from "../../src/lib/htc-fasting.ts";
+
 interface Reading {
   reference: string;
   url: string;
-}
-
-/**
- * The day's fasting discipline, read from the upstream calendar rather
- * than computed here — HTC already accounts for the fixed and movable
- * cycles, so their line is the authority.
- *
- *   kind   "fast" | "fish" | "none" — what the banner leads with.
- *   season the named fast this day belongs to ("Great Lent",
- *          "Dormition (Theotokos) Fast"), or null on an ordinary
- *          Wednesday/Friday that belongs to no season.
- *   rule   the discipline itself ("Strict Fast (Bread, Vegetables,
- *          Fruits)", "Food with Oil", "Fish Allowed"), or null.
- *   raw    the upstream line, tags stripped — kept so the page can
- *          fall back to it if the split ever goes wrong.
- */
-interface Fasting {
-  kind: "fast" | "fish" | "none";
-  season: string | null;
-  rule: string | null;
-  raw: string;
 }
 
 interface Saint {
@@ -63,25 +51,6 @@ const TONE_WORDS: Record<string, number> = {
   first: 1, second: 2, third: 3, fourth: 4,
   fifth: 5, sixth: 6, seventh: 7, eighth: 8,
 };
-
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
-}
-
-// For single-line content (saints, readings refs).
-// Drops every tag, decodes entities, collapses runs of whitespace.
-function stripInline(html: string): string {
-  return decodeEntities(html.replace(/<[^>]+>/g, ""))
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 // For multi-line content (troparia). Converts <br> and </p> to newlines,
 // strips remaining tags, decodes entities, normalizes spacing while
@@ -129,54 +98,6 @@ function unwrapNormaltext(s: string): string {
   return s
     .replace(/^[\s\S]*?<span\s+class="normaltext"[^>]*>/i, "")
     .replace(/<\/span>\s*$/i, "");
-}
-
-/**
- * Read the fasting line out of <span class="headerfast">.
- *
- * Upstream shapes seen across a full year:
- *   (span absent)                                        → no fast today
- *   "Fast. Fish Allowed"                                 → ordinary Wed/Fri, fish
- *   "Fast. By Monastic Charter: Strict Fast (…)"         → ordinary Wed/Fri
- *   "Great Lent. Food with Oil"
- *   "Great Lent. By Monastic Charter - Full abstention from food"
- *   "Dormition (Theotokos) Fast. By Monastic Charter: Strict Fast (…)"
- *   "Nativity (St. Philip's Fast). Food with Oil"
- *
- * Season and rule are separated at the LAST ". " rather than the first:
- * the Nativity Fast's own name contains "St. ", which a first-period
- * split would tear in half.
- */
-function parseFasting(html: string): Fasting {
-  const match = /<span\s+class="headerfast"[^>]*>([\s\S]*?)<\/span>/i.exec(html);
-  const raw = match ? stripInline(match[1]) : "";
-
-  // No span, or an empty one, means no fast is appointed — a fast-free
-  // week, or an ordinary day that isn't a Wednesday or Friday.
-  if (!raw) return { kind: "none", season: null, rule: null, raw: "" };
-
-  let season: string | null = null;
-  let rule: string | null = null;
-
-  const split = raw.lastIndexOf(". ");
-  if (split > 0) {
-    season = raw.slice(0, split).trim();
-    rule = raw.slice(split + 2).trim();
-  } else {
-    season = raw.replace(/\.\s*$/, "").trim();
-  }
-
-  // "By Monastic Charter:" / "By Monastic Charter -" is a preamble, not
-  // part of the discipline.
-  if (rule) {
-    rule = rule.replace(/^By\s+Monastic\s+Charter\s*[:\-–]\s*/i, "").trim() || null;
-  }
-
-  // A bare "Fast" names no season — that's an ordinary Wednesday or
-  // Friday, and the banner says so on its own.
-  if (season && /^fast\.?$/i.test(season)) season = null;
-
-  return { kind: /fish/i.test(raw) ? "fish" : "fast", season, rule, raw };
 }
 
 function parseCalendar(html: string): CalendarData {
@@ -337,21 +258,14 @@ export async function onRequestGet(
   // widget itself loads (loadCalendar2_v2 in their loadCalendar_v2.js):
   // path is /htc/ocalendar/v2calendar.php, params are month/today/year
   // /dt/header/lives/trp/scripture, plus a random sid cache-buster.
-  const sid = Math.floor(Math.random() * 1e9);
-  const upstream =
-    `https://www.holytrinityorthodox.com/htc/ocalendar/v2calendar.php` +
-    `?month=${month}&today=${day}&year=${year}` +
-    `&dt=1&header=1&lives=1&trp=1&scripture=1` +
-    `&sid=${sid}`;
+  // `true` asks for the lives, troparia and scripture as well — the
+  // day view needs all of it. The month grid asks the same endpoint
+  // for the light version.
+  const upstream = htcUrl(year, month, day, true);
 
   let upstreamRes: Response;
   try {
-    upstreamRes = await fetch(upstream, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; StJohnRGV-Calendar)",
-        "Referer": "https://www.holytrinityorthodox.com/htc/orthodox-calendar/",
-      },
-    });
+    upstreamRes = await fetch(upstream, { headers: HTC_HEADERS });
   } catch (_e) {
     return jsonResponse(
       { error: "Failed to reach Holy Trinity calendar." },

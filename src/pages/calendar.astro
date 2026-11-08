@@ -9,20 +9,41 @@ import SaintDiptych from "../components/SaintDiptych.astro";
   title="Orthodox Calendar | Daily Saints & Readings, Rio Grande Valley TX"
   description="Daily Orthodox commemorations, saints, scripture readings, and troparia from St. John of Kronstadt Orthodox Mission, Bayview TX, Rio Grande Valley."
 >
-  <section class="mx-auto max-w-6xl px-4 pt-20 pb-0 md:pt-28">
+  <!-- Tight to the header on purpose. This used to open with pt-28,
+       which pushed the book and the month below the fold on a laptop —
+       the whole point of the page was off screen until you scrolled. -->
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-0 md:pt-8">
 
-    <!-- Header / nav / loading / error stay narrow for readability;
-         only the card grids inside #cal-content expand to the wider
-         max-w-6xl section width. renderContent re-wraps its banner +
-         commemorations blocks in max-w-3xl for the same reason. -->
+    <p class="mb-4 font-display text-xs uppercase tracking-widest text-text-secondary">Liturgical Calendar</p>
+
+    <!-- The book. Permanently open, and first on the page: the month
+         is in its left panel and the day's saint in its right, so it
+         is the thing somebody came here to use rather than an
+         ornament below the fold.
+
+         The month grid is rendered into [data-month-grid] by the
+         script below; the component owns the saint half and listens
+         for `calendar-date-change` to keep it in step. -->
+    <div class="mb-8 flex justify-center">
+      <SaintDiptych />
+    </div>
+
+    <!-- Date header + navigation, then the fasting banner for the day
+         on show. Both sit under the book now, reading as a caption to
+         it rather than as a header above nothing. -->
     <div class="mx-auto max-w-3xl">
-      <p class="mb-4 font-display text-xs uppercase tracking-widest text-text-secondary">Liturgical Calendar</p>
+      <div id="cal-header" class="mb-3 flex items-center gap-3">
+        <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">&larr; Prev</button>
+        <h1 id="cal-date" class="flex-1 text-center font-display text-xl text-text-primary md:text-2xl"></h1>
+        <button id="next-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">Next &rarr;</button>
+      </div>
+      <div class="mb-6 text-center">
+        <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">&#8629; Today</button>
+      </div>
 
-      <!-- Fasting banner for the displayed day. Filled in by
-           renderFastBanner() from the upstream calendar's own fasting
-           line, so the parish and the calendar app never disagree.
-           Hidden until the day's data arrives, and re-rendered on every
-           Prev / Next / Today. -->
+      <!-- Filled in by renderFastBanner() from the upstream calendar's
+           own fasting line, so the parish and the calendar app never
+           disagree. Hidden until the day's data arrives. -->
       <div
         id="fast-banner"
         hidden
@@ -32,25 +53,6 @@ import SaintDiptych from "../components/SaintDiptych.astro";
         <p id="fast-banner-headline" class="font-display text-base font-bold text-text-primary"></p>
         <p id="fast-banner-detail" class="mt-1 text-sm text-text-secondary"></p>
       </div>
-
-      <!-- Date header + navigation -->
-      <div id="cal-header" class="mb-10 flex items-center gap-3">
-        <button id="prev-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">← Prev</button>
-        <h1 id="cal-date" class="flex-1 text-center font-display text-xl text-text-primary md:text-2xl"></h1>
-        <button id="next-day" class="shrink-0 font-display text-sm text-brand-blue transition-colors hover:text-brand-blue-dark">Next →</button>
-      </div>
-      <div class="mb-8 text-center">
-        <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">↩ Today</button>
-      </div>
-    </div>
-
-    <!-- Saint of the Day diptych. Renders only on days that match a
-         saint in src/data/saints/. The component listens for the
-         `calendar-date-change` event below and re-runs its match
-         whenever the user navigates Prev / Next / Today, so the book
-         always reflects the displayed day, not just today. -->
-    <div class="mb-12 flex justify-center">
-      <SaintDiptych />
     </div>
 
     <div class="mx-auto max-w-3xl">
@@ -462,6 +464,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       if (fastBanner) fastBanner.hidden = true;
 
       document.getElementById('cal-date').textContent = formatDate(date);
+      syncGridTo(date);
 
       // Notify the SaintDiptych so its match re-runs against the day
       // we're displaying. (No-op when the diptych isn't on the page.)
@@ -778,7 +781,162 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       loadDay(currentDate);
     });
 
+
+    // ================= THE MONTH GRID =================
+    // Rendered into the book's left panel. Clicking a day loads that
+    // day below — this page shows the whole day on one screen, so
+    // there is nowhere else to send anybody.
+    //
+    // Fasting marks come from /api/calendar-month, one request for the
+    // whole month rather than thirty-one from the browser. The grid
+    // draws immediately without them and colours itself in when they
+    // land, so a slow month never holds up the calendar.
+
+    const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let gridYear = currentDate.getFullYear();
+    let gridMonth = currentDate.getMonth();          // 0-11
+    const monthMarks = new Map();                    // 'YYYY-M' -> {day: mark}
+
+    const sameDay = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+
+    /** How a day is shaded. Mirrors the fasting banner's own wording. */
+    function markClasses(kind) {
+      if (kind === 'fast') return 'bg-liturgical-red/10 text-liturgical-red';
+      if (kind === 'fish') return 'bg-sacred-gold/20 text-brand-tan-dark';
+      return 'text-text-primary';
+    }
+
+    function renderMonthGrid() {
+      const host = document.querySelector('[data-month-grid]');
+      if (!host) return;
+
+      const first = new Date(gridYear, gridMonth, 1);
+      const daysIn = new Date(gridYear, gridMonth + 1, 0).getDate();
+      const lead = first.getDay();
+      const marks = monthMarks.get(gridYear + '-' + (gridMonth + 1)) || {};
+      const today = new Date(); today.setHours(0,0,0,0);
+
+      let cells = '';
+      for (let i = 0; i < lead; i++) cells += '<div></div>';
+
+      for (let d = 1; d <= daysIn; d++) {
+        const date = new Date(gridYear, gridMonth, d);
+        const mark = marks[d];
+        const kind = mark ? mark.kind : null;
+        const isToday = sameDay(date, today);
+        const isShown = sameDay(date, currentDate);
+
+        // What the day is, said in words, for anyone on a screen
+        // reader and for the tooltip.
+        let label = date.toDateString();
+        if (kind === 'fast' || kind === 'fish') {
+          label += ' — ' + (mark.season ? mark.season + '. ' : 'Fast. ') + (mark.rule || '');
+        } else if (kind === 'none') {
+          label += ' — no fast';
+        }
+
+        cells +=
+          '<button type="button" class="diptych-day relative aspect-square w-full border text-sm transition-colors ' +
+            (isShown
+              ? 'border-sacred-gold bg-sacred-gold/25 font-bold '
+              : 'border-transparent hover:border-sacred-gold/60 ') +
+            markClasses(kind) + '" ' +
+          'data-day="' + d + '" ' +
+          'aria-label="' + label.replace(/"/g, '&quot;') + '" ' +
+          'title="' + label.replace(/"/g, '&quot;') + '"' +
+          (isShown ? ' aria-current="date"' : '') + '>' +
+            '<span class="' + (isToday && !isShown ? 'underline decoration-sacred-gold decoration-2 underline-offset-4' : '') + '">' + d + '</span>' +
+          '</button>';
+      }
+
+      host.innerHTML =
+        '<div class="flex items-center justify-between gap-2">' +
+          '<button type="button" data-month-step="-1" aria-label="Previous month" ' +
+            'class="px-2 py-1 font-display text-sm text-brand-blue hover:text-brand-blue-dark">&larr;</button>' +
+          '<p class="font-display text-sm uppercase tracking-widest text-text-primary">' +
+            MONTHS[gridMonth] + ' ' + gridYear +
+          '</p>' +
+          '<button type="button" data-month-step="1" aria-label="Next month" ' +
+            'class="px-2 py-1 font-display text-sm text-brand-blue hover:text-brand-blue-dark">&rarr;</button>' +
+        '</div>' +
+        '<div class="mt-3 grid grid-cols-7 gap-px text-center">' +
+          DOW.map((d) =>
+            '<div class="pb-1 font-display text-[0.6rem] uppercase tracking-wider text-text-secondary">' + d + '</div>'
+          ).join('') +
+          cells +
+        '</div>' +
+        '<div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[0.65rem] text-text-secondary">' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-liturgical-red/30"></span>Fast day</span>' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-sacred-gold/40"></span>Fish allowed</span>' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 border border-border-soft"></span>No fast</span>' +
+        '</div>';
+    }
+
+    /** The month's fasting marks, fetched once and kept. */
+    async function loadMonthMarks(year, month1) {
+      const key = year + '-' + month1;
+      if (monthMarks.has(key)) return;
+      try {
+        const res = await fetch('/api/calendar-month?year=' + year + '&month=' + month1);
+        if (!res.ok) return;
+        const data = await res.json();
+        const byDay = {};
+        for (const d of data.days || []) byDay[d.day] = d;
+        monthMarks.set(key, byDay);
+        // Only repaint if the user is still looking at this month.
+        if (gridYear === year && gridMonth === month1 - 1) renderMonthGrid();
+      } catch (_e) {
+        // A month without its marks still shows the days and still
+        // navigates. Nothing to say to the reader about it.
+      }
+    }
+
+    /**
+     * Follow the day on show. Prev / Next / Today move the date
+     * without touching the grid, and walking off the end of a month
+     * should turn the page rather than leave the highlight behind.
+     */
+    function syncGridTo(date) {
+      if (date.getFullYear() !== gridYear || date.getMonth() !== gridMonth) {
+        showMonth(date.getFullYear(), date.getMonth());
+      } else {
+        renderMonthGrid();
+      }
+    }
+
+    function showMonth(year, month) {
+      gridYear = year;
+      gridMonth = month;
+      renderMonthGrid();
+      loadMonthMarks(year, month + 1);
+    }
+
+    // Clicks inside the grid: a day, or a month arrow.
+    document.addEventListener('click', (e) => {
+      const target = e.target instanceof Element ? e.target : null;
+      if (!target) return;
+
+      const step = target.closest('[data-month-step]');
+      if (step) {
+        const next = new Date(gridYear, gridMonth + Number(step.dataset.monthStep), 1);
+        showMonth(next.getFullYear(), next.getMonth());
+        return;
+      }
+
+      const cell = target.closest('.diptych-day');
+      if (cell && cell.dataset.day) {
+        currentDate = new Date(gridYear, gridMonth, Number(cell.dataset.day));
+        currentDate.setHours(0,0,0,0);
+        loadDay(currentDate);
+        renderMonthGrid();
+      }
+    });
+
     loadDay(currentDate);
+    showMonth(gridYear, gridMonth);
   })();
   </script>
 </Layout>
