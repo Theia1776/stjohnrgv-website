@@ -155,6 +155,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 <script type="application/json" id="diptych-icon-urls" is:inline set:html={saintIconUrlsJson}></script>
 
 <script is:inline>
+(function () {
   /**
    * One fetch of /saints-data.json for the whole page, memoised on
    * window so this component and the calendar's modal share it rather
@@ -338,6 +339,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
   } else {
     initDiptych();
   }
+})();
 </script>
 
 <style>
