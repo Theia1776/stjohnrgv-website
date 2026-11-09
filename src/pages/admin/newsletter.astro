@@ -281,6 +281,12 @@ import FileDrop from "../../components/FileDrop.astro";
       aliases: ["service changes", "services", "service times"],
     },
     { key: "events", heading: "Upcoming Events", hint: "", aliases: ["upcoming", "events"] },
+    {
+      key: "coffee",
+      heading: "Coffee Hour",
+      hint: "fills itself from the sign-ups",
+      aliases: ["coffee hour", "coffee"],
+    },
   ];
 
   const slotOf = (key: string | undefined) => FIXED.find((f) => f.key === key) ?? null;
@@ -365,6 +371,14 @@ import FileDrop from "../../components/FileDrop.astro";
         <span class="s-include-text">In this issue</span>
       </label>
 
+      ${
+        slot && slot.key === "coffee"
+          ? `<div class="mt-2 flex flex-wrap items-center gap-2">
+               <button type="button" class="s-fill-coffee btn btn-secondary text-xs">Fill from the sign-ups</button>
+               <span class="s-fill-status text-xs text-text-secondary" role="status"></span>
+             </div>`
+          : ""
+      }
       <textarea rows="4" placeholder="What this section says."
                 class="s-body mt-2 block w-full border border-border-soft bg-cream-card px-2 py-1.5 text-sm"></textarea>
 
@@ -420,6 +434,7 @@ import FileDrop from "../../components/FileDrop.astro";
     row.querySelector(".s-up")?.addEventListener("click", () => moveSection(row, -1));
     row.querySelector(".s-down")?.addEventListener("click", () => moveSection(row, 1));
     row.querySelector(".s-upload")?.addEventListener("click", () => uploadImage(row));
+    row.querySelector(".s-fill-coffee")?.addEventListener("click", () => fillCoffeeHour(row));
     row.querySelector(".s-include")?.addEventListener("change", () => markIncluded(row));
     markIncluded(row);
     return row;
@@ -493,6 +508,92 @@ import FileDrop from "../../components/FileDrop.astro";
     if (!k) return "";
     if (/^https?:\/\//i.test(k)) return k;
     return `/api/newsletter/image?key=${encodeURIComponent(k)}`;
+  }
+
+
+  /**
+   * Write the coming Sundays into the Coffee Hour section.
+   *
+   * Pulled from the sign-up page rather than retyped, because the two
+   * drifting apart is the whole problem — a newsletter that says Ana
+   * is bringing the pastries when she swapped last week is worse than
+   * one that says nothing.
+   *
+   * Sundays nobody has claimed are listed too. Those are the ones the
+   * section exists to fill.
+   */
+  async function fillCoffeeHour(row: HTMLElement) {
+    const status = row.querySelector(".s-fill-status") as HTMLElement;
+    const body = row.querySelector(".s-body") as HTMLTextAreaElement;
+    const btn = row.querySelector(".s-fill-coffee") as HTMLButtonElement;
+
+    btn.disabled = true;
+    status.className = "s-fill-status text-xs text-text-secondary";
+    status.textContent = "Reading the sign-ups…";
+    try {
+      const res = await fetch("/api/coffee-hour", { credentials: "same-origin", cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        status.textContent = data.error ?? `Couldn't read them (${res.status}).`;
+        status.className = "s-fill-status text-xs text-liturgical-red";
+        return;
+      }
+
+      const signups = (data.signups ?? []) as {
+        sunday_date: string;
+        display_name: string | null;
+        item: string | null;
+      }[];
+
+      // The next four Sundays, whether or not anybody has signed up —
+      // an empty one is the reason to print this at all.
+      const MONTHS = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+      ];
+      const sundays: string[] = [];
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); // today if Sunday, else the next one
+      for (let i = 0; i < 4; i++) {
+        sundays.push(
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+        );
+        d.setDate(d.getDate() + 7);
+      }
+
+      const lines: string[] = [];
+      for (const iso of sundays) {
+        const [y, m, day] = iso.split("-").map(Number);
+        lines.push(`${MONTHS[m - 1]} ${day}`);
+        const mine = signups.filter((s) => s.sunday_date === iso);
+        if (mine.length === 0) {
+          lines.push("Nobody has signed up yet.");
+        } else {
+          for (const s of mine) {
+            const who = (s.display_name || "").trim() || "A parishioner";
+            const what = (s.item || "").trim();
+            lines.push(what ? `${who} — ${what}` : who);
+          }
+        }
+        lines.push("");
+      }
+      lines.push("Sign up at stjohnrgv.org/coffee-hour/");
+
+      body.value = lines.join("\n");
+      const filled = signups.filter((s) => sundays.includes(s.sunday_date)).length;
+      const empty = sundays.filter((iso) => !signups.some((s) => s.sunday_date === iso)).length;
+      status.textContent =
+        `Four Sundays written in — ${filled} ${filled === 1 ? "sign-up" : "sign-ups"}` +
+        (empty ? `, ${empty} with nobody yet.` : ".") +
+        " Edit it however you like, then save the draft.";
+      markIncluded(row);
+    } catch (err) {
+      status.textContent = `Couldn't read them: ${err instanceof Error ? err.message : String(err)}`;
+      status.className = "s-fill-status text-xs text-liturgical-red";
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   /**
