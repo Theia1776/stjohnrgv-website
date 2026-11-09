@@ -11,7 +11,7 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout
   title="Prayer Requests | St. John of Kronstadt Orthodox Mission"
-  description="Send a name to be prayed for at St. John of Kronstadt Orthodox Mission, Bayview TX — for the living, or in memory of those who have fallen asleep."
+  description="Send in names to be prayed for at St. John of Kronstadt Orthodox Mission, Bayview TX — for the living, and for those who have fallen asleep."
 >
   <main class="mx-auto max-w-2xl px-4 py-12 md:px-6">
     <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
@@ -21,40 +21,22 @@ import Layout from "../layouts/Layout.astro";
     <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
 
     <p class="mt-5 leading-relaxed text-text-primary/85">
-      Send us a name and we will pray for them — at the Liturgy, and in the
-      parish newsletter. You may send one for someone living, or in memory of
-      someone who has fallen asleep.
+      Send us the name of someone you would like us to keep in your prayers,
+      and we will pass it on to our parishioners.
     </p>
-
-    <div class="mt-6 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
-      <strong class="text-text-primary">A first name and a last initial is enough.</strong>
-      &ldquo;Ana G.&rdquo; or &ldquo;the Gonzalez family&rdquo;. It is what the Church asks
-      for and all a prayer list needs, and it keeps anyone from being identified
-      by a notice they did not put up themselves.
-    </div>
 
     <form id="prayer-form" class="mt-8 space-y-5">
       <fieldset class="border border-border-soft p-4">
         <legend class="px-1 text-xs uppercase tracking-widest text-text-secondary">
           Who are we praying for?
         </legend>
-        <label class="flex items-start gap-3 cursor-pointer">
-          <input type="radio" name="kind" value="living" checked class="mt-1 h-4 w-4" />
-          <span>
-            <span class="text-sm font-semibold text-text-primary">For the living</span>
-            <span class="mt-0.5 block text-xs text-text-secondary">
-              Someone ill, travelling, expecting, or in need of prayer.
-            </span>
-          </span>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="radio" name="kind" value="living" checked class="h-4 w-4" />
+          <span class="text-sm text-text-primary">For the living</span>
         </label>
-        <label class="mt-3 flex items-start gap-3 cursor-pointer">
-          <input type="radio" name="kind" value="departed" class="mt-1 h-4 w-4" />
-          <span>
-            <span class="text-sm font-semibold text-text-primary">In memory</span>
-            <span class="mt-0.5 block text-xs text-text-secondary">
-              Someone who has fallen asleep in the Lord.
-            </span>
-          </span>
+        <label class="mt-2 flex items-center gap-3 cursor-pointer">
+          <input type="radio" name="kind" value="departed" class="h-4 w-4" />
+          <span class="text-sm text-text-primary">In memory</span>
         </label>
       </fieldset>
 
@@ -71,7 +53,7 @@ import Layout from "../layouts/Layout.astro";
       </label>
 
       <label class="block text-xs uppercase tracking-widest text-text-secondary">
-        Your name <span class="normal-case tracking-normal text-text-secondary">(optional)</span>
+        Your name
         <input
           id="p-by"
           type="text"
@@ -80,20 +62,30 @@ import Layout from "../layouts/Layout.astro";
         />
       </label>
 
-      <label class="block text-xs uppercase tracking-widest text-text-secondary">
-        How to reach you <span class="normal-case tracking-normal text-text-secondary">(optional)</span>
-        <input
-          id="p-contact"
-          type="text"
-          maxlength="120"
-          placeholder="Email or phone, if you would like Fr. Antonios to call"
-          class="mt-1 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
-        />
-      </label>
+      <div class="block text-xs uppercase tracking-widest text-text-secondary">
+        How to reach you
+        <div class="mt-1 flex flex-wrap gap-2">
+          <select
+            id="p-contact-type"
+            aria-label="Email or phone"
+            class="border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+          >
+            <option value="Email">Email</option>
+            <option value="Phone">Phone number</option>
+          </select>
+          <input
+            id="p-contact"
+            type="text"
+            maxlength="120"
+            aria-label="Your email or phone number"
+            class="min-w-0 flex-1 border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+          />
+        </div>
+      </div>
 
       <label class="block text-xs uppercase tracking-widest text-text-secondary">
         Anything Father should know
-        <span class="normal-case tracking-normal text-text-secondary">(optional, not printed)</span>
+        <span class="normal-case tracking-normal text-text-secondary">(optional)</span>
         <textarea
           id="p-note"
           rows="3"
@@ -102,26 +94,21 @@ import Layout from "../layouts/Layout.astro";
         ></textarea>
       </label>
 
-      <div class="flex flex-wrap items-center gap-3 border-t border-border-soft pt-5">
+      <!-- Being prayed for and being printed are two different things
+           to agree to, so they are asked separately. -->
+      <label class="flex items-start gap-3 cursor-pointer border-t border-border-soft pt-5">
+        <input type="checkbox" id="p-newsletter" checked class="mt-1 h-4 w-4" />
+        <span class="text-sm text-text-primary">
+          Include this name in the newsletter for our parishioners
+        </span>
+      </label>
+
+      <div class="flex flex-wrap items-center gap-3 pt-1">
         <button type="submit" id="p-submit" class="btn btn-primary">Send this request</button>
         <span id="p-status" role="status" class="text-sm text-text-secondary"></span>
       </div>
     </form>
 
-    <!-- Say where a name actually ends up. This used to promise the
-         names were "never listed on this website", which was not
-         true: every issue of the newsletter gets a page on the site
-         as well as going out by email, so a name printed in one is on
-         the website by definition. A form that gets this wrong is
-         worse than one that says nothing. -->
-    <p class="mt-8 text-xs leading-relaxed text-text-secondary">
-      Prayer requests come to the parish office. Nothing is listed here as you
-      send it, and the list itself is never public. Names are printed in the
-      parish newsletter, which goes out by email and also gets a page on this
-      website, so a name printed in an issue can be read there. Tell us in the
-      box above if you would rather a name were not printed at all &mdash; it
-      will still be prayed for.
-    </p>
   </main>
 </Layout>
 
@@ -155,7 +142,10 @@ import Layout from "../layouts/Layout.astro";
               ? "departed"
               : "living",
           requested_by: val("p-by"),
-          contact: val("p-contact"),
+          contact: val("p-contact")
+            ? `${(document.getElementById("p-contact-type") as HTMLSelectElement).value}: ${val("p-contact")}`
+            : "",
+          in_newsletter: (document.getElementById("p-newsletter") as HTMLInputElement).checked,
           note: (document.getElementById("p-note") as HTMLTextAreaElement).value.trim(),
         }),
       });

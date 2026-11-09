@@ -17,7 +17,7 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
 }
 
-const FIELDS = "id, kind, name, requested_by, contact, note, status, created_at";
+const FIELDS = "id, kind, name, requested_by, contact, note, status, in_newsletter, created_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

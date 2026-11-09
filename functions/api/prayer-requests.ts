@@ -56,6 +56,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     requested_by: clean(body.requested_by, MAX_NAME) || null,
     contact: clean(body.contact, MAX_NAME) || null,
     note: clean(body.note, MAX_NOTE) || null,
+    // Only an explicit false holds a name out of print. Anything sent
+    // before the box existed was understood as yes.
+    in_newsletter: body.in_newsletter !== false,
   });
 
   if (error) {
@@ -75,7 +78,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       ok: true,
       message:
         `Thank you. ${name} has been added to the ${kind === "departed" ? "memorial" : "prayer"} list ` +
-        `and will be prayed for. It comes to the parish office.`,
+        `and will be prayed for.` +
+        (body.in_newsletter === false ? ` It will not be printed in the newsletter.` : ``),
     },
     201,
   );
