@@ -104,7 +104,11 @@ import Layout from "../../layouts/Layout.astro";
        Nothing is forced. The paper decides where the pages are. */
     @media print {
       header, footer, nav, .no-print { display: none !important; }
-      body { background: #fff !important; }
+      /* html, not just body. The site's cream lives on <html>, and
+         that is what paints the page canvas — which is why a pale
+         block kept printing below the end of the issue. It was never
+         part of the newsletter. */
+      html, body { background: #fff !important; }
       @page { margin: 13mm 11mm 15mm; }
 
       .nl-paper {
