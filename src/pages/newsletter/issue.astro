@@ -549,7 +549,39 @@ import Layout from "../../layouts/Layout.astro";
     const contents = contentsHtml(headings);
     if (contents) opening.push(contents);
 
-    const laid = () => paginate(issue, mastheadHtml(issue), [...opening, ...pieces.map((p) => p.html)]);
+    const all = [...opening, ...pieces.map((p) => p.html)];
+    const host = document.getElementById("issue-sheets") as HTMLElement;
+
+    /**
+     * Lay it out, then lay it out again once the pictures are in.
+     *
+     * A picture with no width or height attribute measures as nothing
+     * until it loads. Everything therefore "fits" on the first pass,
+     * and when the images arrive they push the text into a third
+     * column that the sheet clips — which is what was being cut off
+     * at the right-hand edge.
+     *
+     * The second pass only happens once, and by then the images are
+     * cached, so it is immediate and does not loop.
+     */
+    let settling = false;
+    const laid = () => {
+      paginate(issue, mastheadHtml(issue), all);
+      if (settling) return;
+      const pending = Array.from(host.querySelectorAll("img")).filter((i) => !i.complete);
+      if (pending.length === 0) return;
+      settling = true;
+      let left = pending.length;
+      const arrived = () => {
+        if (--left > 0) return;
+        settling = false;
+        paginate(issue, mastheadHtml(issue), all);
+      };
+      for (const img of pending) {
+        img.addEventListener("load", arrived, { once: true });
+        img.addEventListener("error", arrived, { once: true });
+      }
+    };
     laid();
 
     // The columns change at 640px, so what fitted on a sheet may not
