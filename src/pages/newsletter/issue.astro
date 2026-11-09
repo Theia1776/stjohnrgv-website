@@ -54,16 +54,13 @@ import Layout from "../../layouts/Layout.astro";
     /* A page, in the proportions of one. Safe to fix the height now:
        blocks do not split, so a page either has room for the next one
        or starts a new page — nothing can land across the boundary. */
-    .nl-paper-paged {
-      aspect-ratio: 8.5 / 11;
-      overflow: hidden;
+    .nl-paper {
+      min-height: 11in;
+      display: flex;
+      flex-direction: column;
     }
-    /* A block taller than a whole page cannot be made to fit; that
-       page grows rather than swallowing the words. */
-    .nl-paper-tall { aspect-ratio: auto; overflow: visible; }
-    @media (max-width: 639px) {
-      .nl-paper-paged { aspect-ratio: auto; overflow: visible; }
-    }
+    .nl-paper .nl-inner { flex: 1 1 auto; }
+    @media (max-width: 639px) { .nl-paper { min-height: 0; } }
 
     /* The masthead band, as every one of those templates has. */
     .nl-band {
@@ -375,89 +372,67 @@ import Layout from "../../layouts/Layout.astro";
   }
 
   /**
-   * Pack the blocks onto pages.
+   * Put the blocks on pages. Two to a page, and that is the whole
+   * rule.
    *
-   * This is safe now in a way it never was before. A block cannot
-   * split, so a page either has room for the next one or it does not
-   * — there is no measuring of half a paragraph, no piece landing
-   * across a boundary, nothing to get subtly wrong. Put the block in;
-   * if the page is now taller than a page, take it out and start
-   * another.
+   * Everything before this measured: it put a block in, asked the
+   * browser whether the page had overflowed, and moved the block on
+   * if it had. That cannot work against a grid. A tall block in the
+   * left column makes the page full by height while the right column
+   * is still empty, so the next block is bumped to the following page
+   * and the column beside it stays blank — a small picture on the
+   * left and nothing to its right, which is what kept happening.
    *
-   * On a phone there are no pages. A fixed height on a small screen
-   * is clipping waiting to happen, and nobody holds a phone expecting
-   * paper.
+   * So nothing is measured. Two blocks fill two columns; a block that
+   * spans the width takes a page by itself. The first page carries
+   * the opening beside the contents. Pages grow if what is on them
+   * runs long, because clipping somebody's words to keep a shape is
+   * never the right trade.
    */
-  function packPages(bandHtml: string, footHtml: string, blocks: string[]) {
+  function layPages(bandHtml: string, footHtml: string, opening: string, contents: string, blocks: string[]) {
     const host = document.getElementById("issue-sheets") as HTMLElement;
     host.innerHTML = "";
-    const paged = window.matchMedia("(min-width: 640px)").matches;
 
-    let paper!: HTMLElement;
-    let grid!: HTMLElement;
-    let inner!: HTMLElement;
+    const pages: string[][] = [];
 
-    const startPage = (withBand: boolean) => {
-      paper = document.createElement("article");
-      paper.className = "nl-paper" + (paged ? " nl-paper-paged" : "");
-      paper.innerHTML =
-        (withBand ? bandHtml : "") +
-        `<div class="nl-inner"><div class="nl-grid"></div></div>` +
-        footHtml;
-      host.appendChild(paper);
-      inner = paper.querySelector(".nl-inner") as HTMLElement;
-      grid = paper.querySelector(".nl-grid") as HTMLElement;
-    };
+    // Page one: the opening, and the contents box beside it.
+    const first: string[] = [];
+    if (opening) first.push(opening);
+    if (contents) first.push(contents);
+    if (first.length) pages.push(first);
 
-    // A page is full when its contents are taller than the sheet.
-    const overflows = () => paged && paper.scrollHeight > paper.clientHeight + 2;
-
-    startPage(true);
-
-    for (const html of blocks) {
-      const holder = document.createElement("div");
-      holder.innerHTML = html;
-      const el = holder.firstElementChild as HTMLElement | null;
-      if (!el) continue;
-
-      grid.appendChild(el);
-      if (!overflows()) continue;
-
-      if (grid.childElementCount > 1) {
-        grid.removeChild(el);
-        startPage(false);
-        grid.appendChild(el);
-        if (!overflows()) continue;
+    // Then two to a page, except a full-width block, which takes one
+    // on its own because there is no room beside it.
+    let current: string[] = [];
+    for (const block of blocks) {
+      const wide = block.includes("nl-wide");
+      if (wide) {
+        if (current.length) {
+          pages.push(current);
+          current = [];
+        }
+        pages.push([block]);
+        continue;
       }
-
-      // Taller than a whole page on its own: let that page grow
-      // rather than cut the words off, and close it behind us so the
-      // next block starts clean.
-      paper.classList.add("nl-paper-tall");
-      startPage(false);
+      current.push(block);
+      if (current.length === 2) {
+        pages.push(current);
+        current = [];
+      }
     }
+    if (current.length) pages.push(current);
+    if (!pages.length) pages.push([]);
 
-    // Anything still over its page grows. A page clips what will not
-    // fit, so the failure must be a long page, never lost words.
-    for (const pg of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
-      if (pg.scrollHeight > pg.clientHeight + 2) pg.classList.add("nl-paper-tall");
-    }
-
-    // A page with nothing you can see on it is a blank page.
-    for (const pg of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
-      if (pg.querySelector(".nl-band")) continue;
-      const g = pg.querySelector(".nl-grid") as HTMLElement | null;
-      if (!g) continue;
-      const words = (g.textContent ?? "").trim().length > 0;
-      if (!words && !g.querySelector("img")) pg.remove();
-    }
-
-    const pages = Array.from(host.querySelectorAll(".nl-paper"));
-    pages.forEach((pg, i) => {
-      const n = pg.querySelector(".nl-page");
-      if (n) n.textContent = `${i + 1} / ${pages.length}`;
-    });
-    void inner;
+    host.innerHTML = pages
+      .map(
+        (blocksOnPage, i) =>
+          `<article class="nl-paper">
+            ${i === 0 ? bandHtml : ""}
+            <div class="nl-inner"><div class="nl-grid">${blocksOnPage.join("")}</div></div>
+            ${footHtml.replace("{{n}}", `${i + 1} / ${pages.length}`)}
+          </article>`,
+      )
+      .join("");
   }
 
   function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
@@ -515,7 +490,7 @@ import Layout from "../../layouts/Layout.astro";
 
     const footHtml = `<div class="nl-foot">
         <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
-        <span class="nl-page"></span>
+        <span>{{n}}</span>
       </div>`;
 
     const openingBlock = hero
@@ -528,31 +503,8 @@ import Layout from "../../layouts/Layout.astro";
          </section>`
       : lead;
 
-    const all = [openingBlock, contentsHtml(headings), ...blocks, closing].filter(Boolean);
-
-    const lay = () => packPages(bandHtml, footHtml, all);
-    lay();
-
-    // Again once the pictures are in — a picture with no dimensions
-    // measures as nothing until it loads — and again on resize, since
-    // what fits in two columns does not fit in one.
-    const sheetHost = document.getElementById("issue-sheets") as HTMLElement;
-    const pending = Array.from(sheetHost.querySelectorAll("img")).filter((i) => !i.complete);
-    if (pending.length) {
-      let left = pending.length;
-      const arrived = () => {
-        if (--left === 0) lay();
-      };
-      for (const img of pending) {
-        img.addEventListener("load", arrived, { once: true });
-        img.addEventListener("error", arrived, { once: true });
-      }
-    }
-    let settle = 0;
-    window.addEventListener("resize", () => {
-      window.clearTimeout(settle);
-      settle = window.setTimeout(lay, 250);
-    });
+    if (closing) blocks.push(closing);
+    layPages(bandHtml, footHtml, openingBlock, contentsHtml(headings), blocks);
   }
 
   (async () => {
