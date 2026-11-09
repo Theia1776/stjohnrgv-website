@@ -98,6 +98,7 @@ import Layout from "../../layouts/Layout.astro";
         ${r.status !== "included" ? `<button type="button" class="btn btn-secondary text-xs" data-set="included">Mark included</button>` : ""}
         ${r.status !== "archived" ? `<button type="button" class="btn btn-secondary text-xs" data-set="archived">Archive</button>` : ""}
         ${r.status !== "new" ? `<button type="button" class="btn btn-secondary text-xs" data-set="new">Back to new</button>` : ""}
+        <button type="button" class="btn btn-secondary ml-auto text-xs text-liturgical-red" data-delete="1">Delete</button>
       </div>
     </article>`;
   }
@@ -138,7 +139,35 @@ import Layout from "../../layouts/Layout.astro";
   document.getElementById("copy-departed")?.addEventListener("click", () => copyList("departed"));
 
   $("rows").addEventListener("click", async (event) => {
-    const btn = (event.target as HTMLElement | null)?.closest("[data-set]") as HTMLElement | null;
+    const target = event.target as HTMLElement | null;
+
+    // Deleting. Asked for by name, because it cannot be undone and
+    // because a prayer list is the wrong place to guess.
+    const del = target?.closest("[data-delete]") as HTMLElement | null;
+    if (del) {
+      const article = del.closest("article") as HTMLElement | null;
+      const id = article?.dataset.id;
+      const name = article?.querySelector(".font-display")?.textContent?.trim() ?? "this request";
+      if (!id) return;
+      if (!window.confirm(`Delete the request for ${name}? This removes it for good and can't be undone.`)) return;
+      const res = await fetch(`/api/admin/prayer-requests?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const body = await res.json().catch(() => ({}));
+      const note = $("copy-status");
+      if (!res.ok) {
+        note.textContent = body.error ?? `Couldn't delete it (${res.status}).`;
+        note.className = "mb-4 text-sm text-liturgical-red";
+        return;
+      }
+      note.textContent = `Deleted the request for ${body.name}.`;
+      note.className = "mb-4 text-sm text-text-secondary";
+      await load();
+      return;
+    }
+
+    const btn = target?.closest("[data-set]") as HTMLElement | null;
     if (!btn) return;
     const id = btn.closest("article")?.dataset.id;
     if (!id) return;

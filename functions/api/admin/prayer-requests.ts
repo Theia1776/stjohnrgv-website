@@ -1,8 +1,9 @@
 /**
  * Cloudflare Pages Function: /api/admin/prayer-requests
  *
- *   GET   — every request, newest first, new ones at the top.
- *   PATCH — mark one included or archived.
+ *   GET    — every request, newest first, new ones at the top.
+ *   PATCH  — mark one included or archived.
+ *   DELETE — remove one for good.
  *
  * Admin only. This is the single place these rows can be read; the
  * table has no select policy at all, so nothing else on the site —
@@ -103,4 +104,35 @@ export async function onRequestPatch(context: { request: Request; env: Env }): P
 
   if (error) return gate.wrap!(jsonResponse({ error: error.message }, 500));
   return gate.wrap!(jsonResponse({ request: data }, 200));
+}
+
+/**
+ * Remove a request for good.
+ *
+ * A prayer list is not an archive. Once a name has been prayed for and
+ * printed there is no reason to keep holding a record of who was ill
+ * and what their family told the priest about it — the least sensitive
+ * state for that row is not existing. So this is a real delete, not a
+ * flag, and the page asks before calling it.
+ */
+export async function onRequestDelete(context: { request: Request; env: Env }): Promise<Response> {
+  const gate = await requireAdmin(context);
+  if (gate.error) return gate.error;
+
+  const id = new URL(context.request.url).searchParams.get("id")?.trim() ?? "";
+  if (!id) return gate.wrap!(jsonResponse({ error: "Missing id." }, 400));
+
+  // Read it back first so the page can name what it removed rather
+  // than reporting a bare success.
+  const { data: existing } = await gate
+    .supabase!.from("prayer_requests")
+    .select("name, kind")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) return gate.wrap!(jsonResponse({ error: "No such request." }, 404));
+
+  const { error } = await gate.supabase!.from("prayer_requests").delete().eq("id", id);
+  if (error) return gate.wrap!(jsonResponse({ error: error.message }, 500));
+
+  return gate.wrap!(jsonResponse({ ok: true, name: existing.name, kind: existing.kind }, 200));
 }
