@@ -51,6 +51,20 @@ import Layout from "../../layouts/Layout.astro";
     }
     #issue-sheets > .nl-paper + .nl-paper { margin-top: 2rem; }
 
+    /* A page, in the proportions of one. Safe to fix the height now:
+       blocks do not split, so a page either has room for the next one
+       or starts a new page — nothing can land across the boundary. */
+    .nl-paper-paged {
+      aspect-ratio: 8.5 / 11;
+      overflow: hidden;
+    }
+    /* A block taller than a whole page cannot be made to fit; that
+       page grows rather than swallowing the words. */
+    .nl-paper-tall { aspect-ratio: auto; overflow: visible; }
+    @media (max-width: 639px) {
+      .nl-paper-paged { aspect-ratio: auto; overflow: visible; }
+    }
+
     /* The masthead band, as every one of those templates has. */
     .nl-band {
       background: #1F3A5F;
@@ -65,6 +79,17 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     .nl-inner { padding: 1.75rem 2rem 1.25rem; }
+
+    /* The picture under the masthead is about two inches tall and the
+       opening runs round it, the way a magazine sets a lead. It used
+       to span the page at full height, which took most of a screen
+       before a single word. */
+    /* The picture sits at the head of the opening, at the width of
+       its own column — about two inches tall, rather than spanning
+       the page at full height and taking most of a screen before a
+       single word. The opening keeps a readable measure because it is
+       a column, not the whole page. */
+    .nl-hero { width: 100%; }
     @media (max-width: 639px) {
       .nl-band { padding: 1.25rem 1.25rem 1rem; }
       .nl-inner { padding: 1.25rem 1.25rem 1rem; }
@@ -130,6 +155,8 @@ import Layout from "../../layouts/Layout.astro";
         border: 0 !important;
         box-shadow: none !important;
         margin: 0 !important;
+        aspect-ratio: auto !important;
+        overflow: visible !important;
       }
       #issue-sheets > .nl-paper + .nl-paper { margin-top: 0 !important; }
       .nl-paper + .nl-paper .nl-band { display: none !important; }
@@ -347,6 +374,92 @@ import Layout from "../../layouts/Layout.astro";
     </aside>`;
   }
 
+  /**
+   * Pack the blocks onto pages.
+   *
+   * This is safe now in a way it never was before. A block cannot
+   * split, so a page either has room for the next one or it does not
+   * — there is no measuring of half a paragraph, no piece landing
+   * across a boundary, nothing to get subtly wrong. Put the block in;
+   * if the page is now taller than a page, take it out and start
+   * another.
+   *
+   * On a phone there are no pages. A fixed height on a small screen
+   * is clipping waiting to happen, and nobody holds a phone expecting
+   * paper.
+   */
+  function packPages(bandHtml: string, footHtml: string, blocks: string[]) {
+    const host = document.getElementById("issue-sheets") as HTMLElement;
+    host.innerHTML = "";
+    const paged = window.matchMedia("(min-width: 640px)").matches;
+
+    let paper!: HTMLElement;
+    let grid!: HTMLElement;
+    let inner!: HTMLElement;
+
+    const startPage = (withBand: boolean) => {
+      paper = document.createElement("article");
+      paper.className = "nl-paper" + (paged ? " nl-paper-paged" : "");
+      paper.innerHTML =
+        (withBand ? bandHtml : "") +
+        `<div class="nl-inner"><div class="nl-grid"></div></div>` +
+        footHtml;
+      host.appendChild(paper);
+      inner = paper.querySelector(".nl-inner") as HTMLElement;
+      grid = paper.querySelector(".nl-grid") as HTMLElement;
+    };
+
+    // A page is full when its contents are taller than the sheet.
+    const overflows = () => paged && paper.scrollHeight > paper.clientHeight + 2;
+
+    startPage(true);
+
+    for (const html of blocks) {
+      const holder = document.createElement("div");
+      holder.innerHTML = html;
+      const el = holder.firstElementChild as HTMLElement | null;
+      if (!el) continue;
+
+      grid.appendChild(el);
+      if (!overflows()) continue;
+
+      if (grid.childElementCount > 1) {
+        grid.removeChild(el);
+        startPage(false);
+        grid.appendChild(el);
+        if (!overflows()) continue;
+      }
+
+      // Taller than a whole page on its own: let that page grow
+      // rather than cut the words off, and close it behind us so the
+      // next block starts clean.
+      paper.classList.add("nl-paper-tall");
+      startPage(false);
+    }
+
+    // Anything still over its page grows. A page clips what will not
+    // fit, so the failure must be a long page, never lost words.
+    for (const pg of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
+      if (pg.scrollHeight > pg.clientHeight + 2) pg.classList.add("nl-paper-tall");
+    }
+
+    // A page with nothing you can see on it is a blank page.
+    for (const pg of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
+      if (pg.querySelector(".nl-band")) continue;
+      const g = pg.querySelector(".nl-grid") as HTMLElement | null;
+      if (!g) continue;
+      const words = (g.textContent ?? "").trim().length > 0;
+      if (!words && !g.querySelector("img")) pg.remove();
+    }
+
+    const pages = Array.from(host.querySelectorAll(".nl-paper"));
+    pages.forEach((pg, i) => {
+      const n = pg.querySelector(".nl-page");
+      if (n) n.textContent = `${i + 1} / ${pages.length}`;
+    });
+    void inner;
+  }
+
   function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
     const host = document.getElementById("issue-sheets") as HTMLElement;
 
@@ -390,8 +503,7 @@ import Layout from "../../layouts/Layout.astro";
          </section>`
       : "";
 
-    host.innerHTML = `<article class="nl-paper">
-      <header class="nl-band">
+    const bandHtml = `<header class="nl-band">
         <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em]">
           <span class="nl-edition">${escapeHtml(issue.issue_label ?? "")}</span>
           <span class="nl-edition">${escapeHtml(issueDateLabel(issue.published_at))}</span>
@@ -399,27 +511,48 @@ import Layout from "../../layouts/Layout.astro";
         <h1 class="nl-title mt-1.5 text-center font-display leading-tight">
           St. John of Kronstadt Orthodox Mission
         </h1>
-      </header>
+      </header>`;
 
-      <div class="nl-inner">
-        ${
-          hero
-            ? `<figure class="m-0 mb-5"><img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}" class="block h-auto w-full border border-border-soft" /></figure>`
-            : ""
-        }
-        <div class="nl-grid">
-          ${lead}
-          ${contentsHtml(headings)}
-          ${blocks.join("")}
-          ${closing}
-        </div>
-      </div>
-
-      <div class="nl-foot">
+    const footHtml = `<div class="nl-foot">
         <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
-        <span>stjohnrgv.org</span>
-      </div>
-    </article>`;
+        <span class="nl-page"></span>
+      </div>`;
+
+    const openingBlock = hero
+      ? `<section class="nl-block">
+           <figure class="nl-hero m-0 mb-3">
+             <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
+                  class="block h-auto w-full border border-border-soft" />
+           </figure>
+           ${issue.intro ? `<div class="nl-lead nl-body leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
+         </section>`
+      : lead;
+
+    const all = [openingBlock, contentsHtml(headings), ...blocks, closing].filter(Boolean);
+
+    const lay = () => packPages(bandHtml, footHtml, all);
+    lay();
+
+    // Again once the pictures are in — a picture with no dimensions
+    // measures as nothing until it loads — and again on resize, since
+    // what fits in two columns does not fit in one.
+    const sheetHost = document.getElementById("issue-sheets") as HTMLElement;
+    const pending = Array.from(sheetHost.querySelectorAll("img")).filter((i) => !i.complete);
+    if (pending.length) {
+      let left = pending.length;
+      const arrived = () => {
+        if (--left === 0) lay();
+      };
+      for (const img of pending) {
+        img.addEventListener("load", arrived, { once: true });
+        img.addEventListener("error", arrived, { once: true });
+      }
+    }
+    let settle = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(lay, 250);
+    });
   }
 
   (async () => {

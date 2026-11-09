@@ -328,8 +328,27 @@ import FileDrop from "../../components/FileDrop.astro";
         out.push({ ...s, key: "" });
       }
     }
-    for (const f of FIXED) {
-      if (!used.has(f.key)) out.push({ key: f.key, heading: f.heading, body: "", include: true });
+    // A standing section the issue has not got yet goes where it
+    // belongs in the running order, not on the end. Memorial is fifth
+    // in the roster, so it is inserted after the living list rather
+    // than being dropped at eighth every time the page is reloaded —
+    // which quietly undid the writer's ordering each time.
+    for (let i = 0; i < FIXED.length; i++) {
+      const f = FIXED[i];
+      if (used.has(f.key)) continue;
+
+      // The last slot before this one in the roster that IS present
+      // decides where it lands; its own position follows that.
+      let at = 0;
+      for (let back = i - 1; back >= 0; back--) {
+        const found = out.findIndex((x) => x.key === FIXED[back].key);
+        if (found !== -1) {
+          at = found + 1;
+          break;
+        }
+      }
+      out.splice(at, 0, { key: f.key, heading: f.heading, body: "", include: true });
+      used.add(f.key);
     }
     return out;
   }
