@@ -23,75 +23,110 @@ import Layout from "../../layouts/Layout.astro";
   <meta slot="head" name="robots" content="noindex" />
 
   <style is:global>
-    /* ---------- On screen ---------- */
+    /* ================= THE SHEETS =================
+       The issue is read as pages, not as one column that goes on
+       until it stops. Each sheet is a page of paper on screen: a
+       bounded block with a number at its foot, two columns of text
+       inside it, and the next one below.
+
+       A sheet has a MINIMUM height rather than a fixed one. Real
+       pagination — flowing a paragraph across a page break at exactly
+       the right line — is not something CSS can do reliably, and a
+       fixed height would clip somebody's words. So a sheet is at
+       least a page tall and grows if it must. It reads as paper
+       either way, and nothing is ever cut off. */
+    .nl-sheet {
+      background: var(--color-cream-card, #fff);
+      border: 1px solid var(--color-border-soft, #e0d9c8);
+      box-shadow: 0 2px 18px rgba(44, 62, 80, 0.13);
+      min-height: 1000px;
+      padding: 2.75rem 2.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      /* The sheet is paper in both themes. Without this the text
+         tokens flip in dark mode and the page goes cream on cream,
+         exactly as the calendar's book did. */
+      --color-text-primary: #2C3E50;
+      --color-text-secondary: #5C6B7A;
+      --color-brand-blue-dark: #2A5E84;
+      color: #2C3E50;
+    }
+    @media (max-width: 640px) {
+      .nl-sheet { min-height: 0; padding: 1.5rem 1.25rem 1rem; }
+    }
+
+    /* The columns. Two on a sheet, one on a phone — three is too
+       narrow on a screen whatever the print template does. */
+    .nl-flow { column-count: 2; column-gap: 2rem; column-rule: 1px solid #e7e1d4; }
+    @media (max-width: 640px) { .nl-flow { column-count: 1; } }
+
+    /* Nothing should be orphaned from its own heading, and a picture
+       or a quote box split down the middle looks broken. */
+    .nl-piece { break-inside: avoid; -webkit-column-break-inside: avoid; }
+    .nl-head { break-after: avoid; }
+
+    /* The gold rule that stands before every headline. */
+    .nl-head {
+      border-left: 4px solid var(--color-sacred-gold, #C9A84C);
+      padding-left: 0.85rem;
+    }
 
     /* The opening letter of the lead, as a printed newsletter sets it. */
     .nl-lead::first-letter {
       float: left;
       font-family: var(--font-display, serif);
-      font-size: 3.6rem;
+      font-size: 3.4rem;
       line-height: 0.82;
       padding: 0.1rem 0.5rem 0 0;
-      color: var(--color-brand-tan-dark);
+      color: var(--color-brand-tan-dark, #A88758);
     }
 
-    /* The gold rule that stands before every headline. */
-    .nl-head {
-      border-left: 4px solid var(--color-sacred-gold);
-      padding-left: 0.85rem;
-    }
-
-    .nl-body p { margin-bottom: 1em; }
+    .nl-body p { margin-bottom: 0.9em; }
     .nl-body p:last-child { margin-bottom: 0; }
+
+    /* The foot of every sheet: the parish on the left, the page
+       number on the right, the way the template does it. */
+    .nl-foot {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid #e7e1d4;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8a8577;
+    }
 
     /* ---------- On paper ---------- */
     @media print {
       header, footer, nav, .no-print { display: none !important; }
-
-      body, .nl-sheet {
+      body { background: #fff !important; }
+      @page { margin: 12mm 10mm 14mm; }
+      .nl-sheet {
         background: #fff !important;
         box-shadow: none !important;
-        color: #000 !important;
+        border: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        break-after: page;
       }
-
-      @page {
-        margin: 14mm 12mm 16mm;
-      }
-
-      .nl-sheet { border: 0 !important; padding: 0 !important; max-width: none !important; }
-
-      /* The masthead spans both columns at the top of the first sheet. */
-      .nl-masthead { border-bottom: 2px solid #000; }
+      .nl-sheet:last-child { break-after: auto; }
       .nl-lead::first-letter { color: #000; }
-
-      /* Two columns, the way a newsletter is read on paper. A single
-         measure across a sheet of A4 is far too wide for comfort. */
-      .nl-columns {
-        column-count: 2;
-        column-gap: 10mm;
-        column-rule: 1px solid #ddd;
-      }
-
-      /* A headline must not be the last thing on a page, and a section
-         should not be split across sheets if it can be helped. */
-      .nl-section { break-inside: avoid-page; }
-      .nl-head { break-after: avoid-page; }
-      figure, blockquote { break-inside: avoid; }
-
-      .nl-print-footer { display: block !important; }
       a[href]::after { content: ""; }
       img { max-width: 100% !important; }
     }
   </style>
 
-  <main class="mx-auto max-w-4xl px-4 py-10 md:px-6">
+  <main class="mx-auto max-w-[920px] px-4 py-10 md:px-6">
     <p class="no-print font-display text-xs uppercase tracking-widest text-brand-tan-dark">
       <a href="/newsletter/" class="text-brand-tan-dark no-underline hover:underline">
-        ← All issues
+        &larr; All issues
       </a>
     </p>
 
-    <p id="issue-loading" class="mt-8 text-sm italic text-text-secondary">Loading…</p>
+    <p id="issue-loading" class="mt-8 text-sm italic text-text-secondary">Loading&hellip;</p>
     <div id="issue-error" hidden role="alert" class="mt-8 text-sm"></div>
 
     <p
@@ -103,55 +138,14 @@ import Layout from "../../layouts/Layout.astro";
       Only admins can see this page, and it has not been emailed to anyone.
     </p>
 
-    <article id="issue-sheet" hidden class="nl-sheet mt-6">
-      <!-- Masthead -->
-      <header class="nl-masthead border-b-2 border-sacred-gold pb-5">
-        <div class="flex flex-wrap items-baseline justify-between gap-2">
-          <p id="issue-label" class="font-display text-xs uppercase tracking-[0.2em] text-brand-tan-dark"></p>
-          <p id="issue-date" class="font-display text-xs uppercase tracking-[0.2em] text-brand-tan-dark"></p>
-        </div>
-        <h1
-          id="issue-title"
-          class="mt-3 font-display text-4xl leading-tight text-text-primary md:text-5xl"
-        ></h1>
-        <p class="mt-2 font-display text-[0.7rem] uppercase tracking-[0.3em] text-text-secondary">
-          St. John of Kronstadt Orthodox Mission
-        </p>
-      </header>
-
-      <figure id="issue-hero" hidden class="mt-6 m-0">
-        <img id="issue-hero-img" alt="" class="h-[220px] w-full border border-border-soft object-cover object-center md:h-[260px]" />
-        <figcaption
-          id="issue-hero-caption"
-          class="mt-2 text-xs italic text-text-secondary"
-        ></figcaption>
-      </figure>
-
-      <div id="issue-intro" class="nl-lead nl-body mt-7 text-lg leading-relaxed text-text-primary/90"></div>
-
-      <div id="issue-sections" class="nl-columns"></div>
-
-      <div
-        id="issue-closing"
-        hidden
-        class="nl-body mt-10 border-t-2 border-sacred-gold bg-cream-card p-5 leading-relaxed text-text-primary/85"
-      ></div>
-
-      <!-- Only on paper. A sheet pinned to a noticeboard has to say
-           whose it is and how to find them. -->
-      <div class="nl-print-footer mt-10 hidden border-t border-border-soft pt-4 text-xs text-text-secondary">
-        <p>
-          St. John of Kronstadt Orthodox Mission · 39737 Palm Lane, Bayview, TX 78566 ·
-          (956) 434-6874
-        </p>
-        <p class="mt-1">stjohnrgv.org</p>
-      </div>
-    </article>
+    <!-- The sheets are built in script: how many there are depends on
+         how much was written, so they cannot be laid out here. -->
+    <div id="issue-sheets" class="mt-6 space-y-8"></div>
 
     <div id="issue-actions" hidden class="no-print mt-8 flex flex-wrap items-center gap-3">
       <button type="button" id="print-issue" class="btn btn-secondary">Print this issue</button>
       <span class="text-sm text-text-secondary">
-        Prints as a newsletter — two columns, with the parish's details at the foot.
+        One sheet to a page.
       </span>
     </div>
   </main>
@@ -211,10 +205,6 @@ import Layout from "../../layouts/Layout.astro";
     return `/api/newsletter/image?key=${encodeURIComponent(k)}`;
   }
 
-  function setText(id: string, value: string) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
 
   const slug = new URLSearchParams(location.search).get("slug") ?? "";
   const errorEl = document.getElementById("issue-error") as HTMLDivElement;
@@ -286,6 +276,169 @@ import Layout from "../../layouts/Layout.astro";
     return bare ? body : `<section class="nl-section mt-10 break-inside-avoid">${body}</section>`;
   }
 
+  // ================= THE SHEETS =================
+  //
+  // The issue is read as pages. Sections are packed onto sheets by how
+  // much there is of them rather than one to a page: a sheet holding a
+  // three-line notice and nothing else looks broken, and so does one
+  // with eight sections crammed in.
+  //
+  // The estimate is rough on purpose. Exact pagination — breaking a
+  // paragraph at the right line — is not something CSS does, and
+  // chasing it would mean clipping somebody's words to make the
+  // arithmetic come out. A sheet is at least a page tall and grows if
+  // it has to.
+
+  function issueDateLabel(value: string | null | undefined): string {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  }
+
+  /** Roughly how much of a sheet a piece takes up, 1 being a full one. */
+  function weigh(piece: { body: string; image?: string; quote?: string; heading: string }): number {
+    const chars = (piece.body || "").length;
+    return chars / 2600 + (piece.image ? 0.2 : 0) + (piece.quote ? 0.1 : 0) + 0.08;
+  }
+
+  function sheetHtml(inner: string, page: number, pages: number): string {
+    return `<article class="nl-sheet">
+      ${inner}
+      <div class="nl-foot">
+        <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
+        <span>${page} / ${pages}</span>
+      </div>
+    </article>`;
+  }
+
+  /** The contents box, as the template has it on the first page. */
+  function contentsHtml(headings: string[]): string {
+    if (headings.length < 2) return "";
+    return `<aside class="nl-piece mt-6 border-2 border-sacred-gold bg-[#FBF7EC] p-4">
+      <p class="font-display text-sm uppercase tracking-[0.18em] text-brand-tan-dark">In This Issue</p>
+      <ul class="mt-3 space-y-1.5">
+        ${headings
+          .map(
+            (h) =>
+              `<li class="flex items-baseline gap-2 text-sm">
+                 <span class="text-text-primary">${escapeHtml(h)}</span>
+                 <span aria-hidden="true" class="min-w-[1rem] flex-1 translate-y-[-0.2rem] border-b border-dotted border-[#cdbfa0]"></span>
+               </li>`,
+          )
+          .join("")}
+      </ul>
+      <p class="mt-4 border-t border-[#e0d4b8] pt-3 text-[0.7rem] leading-relaxed text-text-secondary">
+        39737 Palm Lane, Bayview, TX 78566<br />
+        (956) 434-6874<br />
+        stjohnrgv.org
+      </p>
+    </aside>`;
+  }
+
+  function mastheadHtml(issue: Issue): string {
+    const hero = imageSrc(issue.hero_image);
+    return `<header class="nl-masthead border-b-[3px] border-sacred-gold pb-4">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-brand-tan-dark">
+        <span>${escapeHtml(issue.issue_label ?? "")}</span>
+        <span>${escapeHtml(issueDateLabel(issue.published_at))}</span>
+      </div>
+      <h1 class="mt-2 text-center font-display text-4xl leading-tight text-text-primary md:text-5xl">
+        ${escapeHtml(issue.title)}
+      </h1>
+      <p class="mt-1 text-center font-display text-[0.7rem] uppercase tracking-[0.34em] text-text-secondary">
+        St. John of Kronstadt Orthodox Mission
+      </p>
+    </header>
+    ${
+      hero
+        ? `<figure class="m-0 mt-4">
+             <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
+                  class="block h-[200px] w-full border border-border-soft object-cover object-center" />
+           </figure>`
+        : ""
+    }`;
+  }
+
+  function renderSheets(issue: Issue, slots: ReturnType<typeof pairSections>) {
+    // Every piece of the issue, in order, with its weight.
+    type Piece = { html: string; weight: number; heading: string };
+    const pieces: Piece[] = [];
+
+    for (const slot of slots) {
+      if (slot.pair) {
+        const banner = imageSrc(slot.left.image || slot.right.image);
+        pieces.push({
+          heading: slot.left.heading,
+          weight: weigh(slot.left) + weigh(slot.right),
+          html: `<section class="nl-piece mb-7">
+            ${
+              banner
+                ? `<figure class="m-0 mb-3"><img src="${escapeHtml(banner)}" alt="${escapeHtml(slot.left.image_alt ?? "")}"
+                     class="block h-[130px] w-full border border-border-soft object-cover object-center" loading="lazy" /></figure>`
+                : ""
+            }
+            <div class="grid gap-5 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
+              <div>${sectionHtml(slot.left, true, false)}</div>
+              <div class="sm:pl-5">${sectionHtml(slot.right, true, false)}</div>
+            </div>
+          </section>`,
+        });
+      } else {
+        pieces.push({
+          heading: slot.section.heading,
+          weight: weigh(slot.section),
+          html: `<section class="nl-piece mb-7">${sectionHtml(slot.section, true)}</section>`,
+        });
+      }
+    }
+
+    // Sheet one carries the masthead, the opening, and the contents
+    // box, so it has far less room for sections than the rest.
+    const headings = pieces.map((p) => p.heading).filter(Boolean);
+    const first: string[] = [mastheadHtml(issue)];
+    const introWeight = (issue.intro || "").length / 2600;
+    first.push(
+      `<div class="nl-flow mt-5">
+        ${issue.intro ? `<div class="nl-lead nl-body leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
+        ${contentsHtml(headings)}
+      </div>`,
+    );
+
+    // Fill a sheet until the next piece will not fit, then start
+    // another. Sheet one already carries the masthead and the
+    // opening, so it begins with less room than the others.
+    const sheets: string[] = [];
+    let head = first.join("");
+    let onSheet: string[] = [];
+    let room = Math.max(0.15, 0.62 - introWeight);
+
+    const closeSheet = () => {
+      const flow = onSheet.length ? `<div class="nl-flow">${onSheet.join("")}</div>` : "";
+      sheets.push(head + flow);
+      head = "";
+      onSheet = [];
+      room = 1;
+    };
+
+    for (const piece of pieces) {
+      if (piece.weight > room && (head || onSheet.length)) closeSheet();
+      onSheet.push(piece.html);
+      room -= piece.weight;
+    }
+    if (head || onSheet.length) closeSheet();
+    if (sheets.length === 0) sheets.push(first.join(""));
+
+    if (issue.closing) {
+      sheets[sheets.length - 1] +=
+        `<div class="nl-piece mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>`;
+    }
+
+    const host = document.getElementById("issue-sheets") as HTMLElement;
+    host.innerHTML = sheets.map((inner, i) => sheetHtml(inner, i + 1, sheets.length)).join("");
+  }
+
   (async () => {
     if (!slug) {
       showError(
@@ -316,32 +469,6 @@ import Layout from "../../layouts/Layout.astro";
       const issue = body.issue as Issue;
       if (body.draft) (document.getElementById("issue-draft") as HTMLElement).hidden = false;
       document.title = `${issue.title} | Parish Newsletter`;
-      setText("issue-label", issue.issue_label ?? "");
-      setText("issue-title", issue.title);
-      setText(
-        "issue-date",
-        issue.published_at
-          ? new Date(issue.published_at).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : "",
-      );
-
-      const hero = imageSrc(issue.hero_image);
-      if (hero) {
-        (document.getElementById("issue-hero") as HTMLElement).hidden = false;
-        const heroImg = document.getElementById("issue-hero-img") as HTMLImageElement;
-        heroImg.src = hero;
-        heroImg.alt = issue.hero_image_alt ?? "";
-        const cap = document.getElementById("issue-hero-caption") as HTMLElement;
-        cap.textContent = issue.hero_image_alt ?? "";
-        cap.hidden = !issue.hero_image_alt;
-      }
-
-      (document.getElementById("issue-intro") as HTMLElement).innerHTML = paragraphs(issue.intro);
-
       // The permanent sections are stored every month whether or not
       // they are used, so what is printed is only the ones ticked and
       // actually written. A heading with nothing under it would reach
@@ -349,39 +476,11 @@ import Layout from "../../layouts/Layout.astro";
       const sections = (Array.isArray(issue.sections) ? issue.sections : []).filter(
         (s) => s.include !== false && (s.body || s.image),
       );
-      // The two prayer lists sit side by side; everything else runs
-      // the full measure. pairSections() is shared with the email, so
-      // the page and the inbox can't drift on which sections pair.
-      (document.getElementById("issue-sections") as HTMLElement).innerHTML = pairSections(sections)
-        .map((slot) =>
-          slot.pair
-            ? `<section class="nl-section mt-10 break-inside-avoid">
-                 ${
-                   imageSrc(slot.left.image || slot.right.image)
-                     ? `<figure class="m-0 mx-auto mb-5 max-w-[640px]">
-                          <img src="${escapeHtml(imageSrc(slot.left.image || slot.right.image))}"
-                               alt="${escapeHtml(slot.left.image_alt ?? slot.right.image_alt ?? "")}"
-                               class="block h-[150px] w-full border border-border-soft object-cover object-center" loading="lazy" />
-                        </figure>`
-                     : ""
-                 }
-                 <div class="grid gap-6 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
-                   <div>${sectionHtml(slot.left, true, false)}</div>
-                   <div class="sm:pl-6">${sectionHtml(slot.right, true, false)}</div>
-                 </div>
-               </section>`
-            : sectionHtml(slot.section),
-        )
-        .join("");
-
-      if (issue.closing) {
-        const closing = document.getElementById("issue-closing") as HTMLElement;
-        closing.hidden = false;
-        closing.innerHTML = paragraphs(issue.closing);
-      }
+      // pairSections() is shared with the email, so the page and the
+      // inbox cannot drift on which sections sit together.
+      renderSheets(issue, pairSections(sections));
 
       (document.getElementById("issue-loading") as HTMLElement).hidden = true;
-      (document.getElementById("issue-sheet") as HTMLElement).hidden = false;
       (document.getElementById("issue-actions") as HTMLElement).hidden = false;
     } catch (err) {
       showError(
