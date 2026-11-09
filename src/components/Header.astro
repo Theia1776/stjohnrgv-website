@@ -13,7 +13,6 @@
  * it, so the parent is still somewhere you can go.
  */
 const navLinks = [
-  { href: "/learn/saints/", label: "Saints" },
   {
     href: "/calendar/",
     label: "Calendar",
@@ -26,6 +25,7 @@ const navLinks = [
       { href: "/calendar/", label: "Today" },
       { href: "/calendar/#fast-banner", label: "Fasting Today" },
       { href: "/calendar/#saint-diptych", label: "Saint of the Day" },
+      { href: "/learn/saints/", label: "All Saints" },
       { href: "/calendar/#cal-commemorations", label: "Commemorations" },
       { href: "/calendar/#cal-readings", label: "Scripture Readings" },
       { href: "/calendar/#cal-troparia", label: "Troparia & Kontakia" },
@@ -37,6 +37,7 @@ const navLinks = [
     children: [
       { href: "/learn/", label: "Learn More" },
       { href: "/learn/library/", label: "The Library" },
+      { href: "/newsletter/", label: "Parish Newsletter" },
       { href: "/learn/catechumen/", label: "For Catechumens" },
       { href: "/learn/orthodox-history/", label: "Orthodox History" },
       { href: "/learn/st-john-of-kronstadt/", label: "St. John of Kronstadt" },
@@ -59,7 +60,6 @@ const navLinks = [
   { href: "/donate/", label: "Tithe / Donate" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
-  { href: "/newsletter/", label: "Newsletter" },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -166,9 +166,10 @@ function isActive(hrefWithHash: string): boolean {
           aria-expanded="false"
           aria-controls="lang-panel"
           aria-label="Select language"
-          class="flex items-center gap-1 px-2 py-1 text-xs font-display uppercase tracking-widest text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
+          class="flex items-center gap-1.5 px-2 py-1 text-xs font-display text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
         >
-          <span id="lang-current-label">EN</span>
+          <span aria-hidden="true" class="text-sm leading-none">🌐</span>
+          <span id="lang-current-label" class="normal-case tracking-normal">English</span>
           <span aria-hidden="true" class="text-[0.6rem]">▾</span>
         </button>
         <div
@@ -286,7 +287,7 @@ function isActive(hrefWithHash: string): boolean {
   // the canonical host.
   const TRANSLATE_PROXY_HOST = "stjohnrgv-org.translate.goog";
   const ORIGINAL_HOST = "stjohnrgv.org";
-  const LANG_LABEL = { en: "EN", es: "ES", ru: "RU" };
+  const LANG_LABEL = { en: "English", es: "Español", ru: "Русский" };
 
   function detectActiveLang() {
     if (window.location.hostname.endsWith(".translate.goog")) {
