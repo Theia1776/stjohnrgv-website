@@ -143,33 +143,35 @@ const { book, heading, blurb, help } = Astro.props;
 
   const mode = listEl.dataset.book ?? "fasting";
 
-  function card(r: Recipe): string {
-    // The times a cook actually wants before opening anything.
-    const meta = [r.total_time ? `${r.total_time}` : "", r.serves ? `Serves ${r.serves}` : ""]
-      .filter(Boolean)
-      .join(" · ");
-    // The gluten-free shelf mixes both books, so each card has to say
-    // which one it came from; inside a book that label would be noise.
+  /**
+   * One line in the index — the name, and the time it takes.
+   *
+   * This used to be a card five lines deep with the intro and the
+   * cook's name on it, which meant sixty recipes was a quarter-mile of
+   * scrolling and no way to see what the book held. A cookbook index
+   * is a list of names under its shelf, and you open the one that
+   * sounds good. Everything that was on the card is still on the
+   * recipe's own page.
+   */
+  function indexRow(r: Recipe): string {
     const book =
       mode === "gluten-free"
-        ? `<span class="ml-2 border border-border-soft px-1.5 py-0.5 align-middle text-[0.6rem] uppercase tracking-wider text-text-secondary">${
-            r.fasting ? "Fasting" : "Everyday"
-          }</span>`
+        ? `<span class="ml-1.5 text-[0.6rem] uppercase tracking-wider text-text-secondary">${r.fasting ? "fasting" : "everyday"}</span>`
         : "";
-    // And inside a book, the gluten-free ones are worth marking.
     const gf =
       mode !== "gluten-free" && r.gluten_free
-        ? `<span class="ml-2 border border-sacred-gold px-1.5 py-0.5 align-middle text-[0.6rem] uppercase tracking-wider text-brand-tan-dark">GF</span>`
+        ? `<span class="ml-1.5 border border-sacred-gold px-1 text-[0.55rem] uppercase tracking-wider text-brand-tan-dark">GF</span>`
         : "";
-    return `<li class="border border-border-soft bg-cream-card p-5 shadow-sm">
-      ${r.category ? `<p class="mb-1 text-[0.65rem] uppercase tracking-widest text-brand-tan-dark">${escapeHtml(categoryOf(r.category))}</p>` : ""}
-      <h3 class="font-display text-xl">
-        <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
-           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(r.title)}</a>${book}${gf}
-      </h3>
-      ${meta ? `<p class="mt-1 text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(meta)}</p>` : ""}
-      ${r.intro ? `<p class="mt-2 text-sm text-text-primary/85">${escapeHtml(r.intro.slice(0, 160))}${r.intro.length > 160 ? "…" : ""}</p>` : ""}
-      ${r.submitted_by_name ? `<p class="mt-3 text-xs italic text-text-secondary">from ${escapeHtml(r.submitted_by_name)}</p>` : ""}
+    const time = r.total_time
+      ? `<span class="shrink-0 pl-2 text-[0.7rem] tabular-nums text-text-secondary">${escapeHtml(r.total_time)}</span>`
+      : "";
+    return `<li class="break-inside-avoid py-[0.2rem]">
+      <a href="/table/recipe/?slug=${encodeURIComponent(r.slug)}"
+         class="group flex items-baseline gap-1 no-underline">
+        <span class="text-brand-blue-dark group-hover:underline">${escapeHtml(r.title)}</span>${gf}${book}
+        <span aria-hidden="true" class="min-w-[1.5rem] flex-1 translate-y-[-0.2rem] border-b border-dotted border-border-soft"></span>
+        ${time}
+      </a>
     </li>`;
   }
 
@@ -201,11 +203,47 @@ const { book, heading, blurb, help } = Astro.props;
       .filter((g) => byGroup.has(g))
       .map((g) => {
         const rows = byGroup.get(g)!;
-        const label = g || "Not yet filed";
-        return `<section>
-          <h2 class="font-display text-xs uppercase tracking-widest text-text-secondary">${escapeHtml(label)}</h2>
+        // "Not yet filed" was admin language on a page for visitors.
+        // A recipe waiting to be filed is the parish's business, not
+        // the reader's; to them it is simply more of the book.
+        const label = g || "More Recipes";
+
+        // Within a section, the shelves — Vegetables, Pasta & Grains —
+        // in the order the categories are declared, which is the order
+        // a cook expects to find them in.
+        const shelfOrder = (RECIPE_CATEGORIES.find((x) => x.group === g)?.categories ?? []).map(
+          (c) => `${g} — ${c}`,
+        );
+        const byShelf = new Map<string, Recipe[]>();
+        for (const r of rows) {
+          const key = r.category ?? "";
+          if (!byShelf.has(key)) byShelf.set(key, []);
+          byShelf.get(key)!.push(r);
+        }
+        const shelves = [...shelfOrder, ""].filter((v) => byShelf.has(v));
+
+        const body = shelves
+          .map((value) => {
+            const items = byShelf
+              .get(value)!
+              .sort((a, b) => a.title.localeCompare(b.title))
+              .map(indexRow)
+              .join("");
+            // A single unnamed shelf is the whole section; naming it
+            // twice reads as a mistake.
+            const name = value ? categoryOf(value) : "";
+            const heading =
+              name && shelves.length > 1
+                ? `<h3 class="mt-4 font-display text-[0.7rem] uppercase tracking-widest text-brand-tan-dark">${escapeHtml(name)}</h3>`
+                : "";
+            return `${heading}<ul class="mt-1.5 columns-1 gap-x-10 sm:columns-2 lg:columns-3">${items}</ul>`;
+          })
+          .join("");
+
+        return `<section class="mb-8">
+          <h2 class="font-display text-base text-text-primary">${escapeHtml(label)}</h2>
           <div class="mt-1 h-px w-12 bg-liturgical-current"></div>
-          <ul class="mt-4 grid gap-4 sm:grid-cols-2">${rows.map(card).join("")}</ul>
+          ${body}
         </section>`;
       })
       .join("");
