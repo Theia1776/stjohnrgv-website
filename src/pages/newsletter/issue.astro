@@ -120,7 +120,7 @@ import Layout from "../../layouts/Layout.astro";
       </header>
 
       <figure id="issue-hero" hidden class="mt-6 m-0">
-        <img id="issue-hero-img" alt="" class="w-full border border-border-soft" />
+        <img id="issue-hero-img" alt="" class="h-[220px] w-full border border-border-soft object-cover object-center md:h-[260px]" />
         <figcaption
           id="issue-hero-caption"
           class="mt-2 text-xs italic text-text-secondary"
@@ -244,7 +244,7 @@ import Layout from "../../layouts/Layout.astro";
     const figure = img
       ? `<figure class="m-0 mx-auto max-w-[640px]">
            <img src="${escapeHtml(img)}" alt="${escapeHtml(s.image_alt ?? "")}"
-                class="block h-auto w-full border border-border-soft" loading="lazy" />
+                class="block h-[150px] w-full border border-border-soft object-cover object-center" loading="lazy" />
            ${
              s.image_caption
                ? `<figcaption class="mt-1.5 text-center text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
@@ -361,7 +361,7 @@ import Layout from "../../layouts/Layout.astro";
                      ? `<figure class="m-0 mx-auto mb-5 max-w-[640px]">
                           <img src="${escapeHtml(imageSrc(slot.left.image || slot.right.image))}"
                                alt="${escapeHtml(slot.left.image_alt ?? slot.right.image_alt ?? "")}"
-                               class="block h-auto w-full border border-border-soft" loading="lazy" />
+                               class="block h-[150px] w-full border border-border-soft object-cover object-center" loading="lazy" />
                         </figure>`
                      : ""
                  }
