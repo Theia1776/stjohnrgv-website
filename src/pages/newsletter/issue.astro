@@ -78,9 +78,18 @@ import Layout from "../../layouts/Layout.astro";
     .nl-flow { column-count: 2; column-gap: 2rem; column-rule: 1px solid #e7e1d4; }
     @media (max-width: 640px) { .nl-flow { column-count: 1; } }
 
-    /* Nothing should be orphaned from its own heading, and a picture
-       or a quote box split down the middle looks broken. */
-    .nl-piece { break-inside: avoid; -webkit-column-break-inside: avoid; }
+    /* Prose runs between the columns the way a newspaper's does. It
+       used to be held together piece by piece, so a section could not
+       split — which left the right-hand column of the first sheet
+       empty and wasted most of a page.
+
+       What must not be split is anything that is a thing rather than
+       words: a picture, a quote box, the contents. And a heading must
+       not be the last line of a column with its text in the next. */
+    figure, blockquote, .nl-contents, .nl-foot {
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+    }
     .nl-head { break-after: avoid; }
 
     /* The gold rule that stands before every headline. */
@@ -168,7 +177,7 @@ import Layout from "../../layouts/Layout.astro";
          half-empty columns at a break. */
       .nl-flow { column-fill: auto; margin-top: 0 !important; }
 
-      .nl-piece, figure, blockquote { break-inside: avoid; }
+      figure, blockquote, .nl-contents { break-inside: avoid; }
       /* The contents box does not go on paper. It is a way of getting
          about the issue on screen, and because it must not be split
          it was being pushed to the end and printed alone — a page
@@ -395,12 +404,13 @@ import Layout from "../../layouts/Layout.astro";
         <span>${escapeHtml(issue.issue_label ?? "")}</span>
         <span>${escapeHtml(issueDateLabel(issue.published_at))}</span>
       </div>
-      <h1 class="mt-2 text-center font-display text-4xl leading-tight text-text-primary md:text-5xl">
-        ${escapeHtml(issue.title)}
-      </h1>
-      <p class="mt-1 text-center font-display text-[0.7rem] uppercase tracking-[0.34em] text-text-secondary">
+      <!-- The parish is the masthead. The issue's own title is
+           painted into the picture below it and is the first line of
+           the opening besides, so printing it here made three of them
+           one after another. -->
+      <h1 class="mt-2 text-center font-display text-3xl leading-tight text-text-primary md:text-4xl">
         St. John of Kronstadt Orthodox Mission
-      </p>
+      </h1>
     </header>
     ${
       hero
@@ -487,7 +497,7 @@ import Layout from "../../layouts/Layout.astro";
     if ((issue.closing ?? "").trim()) {
       const closing = document.createElement("div");
       closing.className =
-        "nl-piece mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85";
+        "mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85";
       closing.innerHTML = paragraphs(issue.closing);
       flow.appendChild(closing);
       if (overflows()) {
@@ -540,7 +550,7 @@ import Layout from "../../layouts/Layout.astro";
           // share: "Prayer Requests", not "Prayer Requests — For the
           // Living" with no sign of the other half.
           heading: slot.left.heading.split(/\s+[—–-]\s+/)[0],
-          html: `<section class="nl-piece mb-7">
+          html: `<section class="mb-7">
             ${
               banner
                 ? `<figure class="m-0 mb-3"><img src="${escapeHtml(banner)}" alt="${escapeHtml(slot.left.image_alt ?? "")}"
@@ -556,7 +566,7 @@ import Layout from "../../layouts/Layout.astro";
       } else {
         pieces.push({
           heading: slot.section.heading.split(/\s+[—–-]\s+/)[0],
-          html: `<section class="nl-piece mb-7">${sectionHtml(slot.section, true)}</section>`,
+          html: `<section class="mb-7">${sectionHtml(slot.section, true)}</section>`,
         });
       }
     }
@@ -565,7 +575,7 @@ import Layout from "../../layouts/Layout.astro";
     const opening: string[] = [];
     if (issue.intro) {
       opening.push(
-        `<div class="nl-piece nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
+        `<div class="nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
       );
     }
     const contents = contentsHtml(headings);
