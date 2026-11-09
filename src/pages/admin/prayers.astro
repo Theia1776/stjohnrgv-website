@@ -30,6 +30,50 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <div id="app" hidden>
+      <!-- Adding one by hand. Most names do not arrive through the
+           website at all — they come by email, or after Liturgy, or
+           on a scrap of paper — and retyping them into the public form
+           to get them in here would be daft. -->
+      <section class="mb-6 border border-border-soft bg-cream-card p-4">
+        <h2 class="font-display text-lg text-text-primary">Add a name</h2>
+        <p class="mt-0.5 text-xs text-text-secondary">
+          For the ones that reach you by email, by phone, or after Liturgy.
+        </p>
+        <div class="mt-3 flex flex-wrap items-end gap-3">
+          <label class="min-w-[12rem] flex-1 text-xs uppercase tracking-widest text-text-secondary">
+            Name
+            <input
+              id="add-name"
+              type="text"
+              maxlength="120"
+              placeholder="Ana G."
+              class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+            />
+          </label>
+          <label class="text-xs uppercase tracking-widest text-text-secondary">
+            List
+            <select
+              id="add-kind"
+              class="mt-1 block border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+            >
+              <option value="living">For the living</option>
+              <option value="departed">Memorial</option>
+            </select>
+          </label>
+          <label class="min-w-[10rem] flex-1 text-xs uppercase tracking-widest text-text-secondary">
+            Asked by <span class="normal-case tracking-normal">(optional)</span>
+            <input
+              id="add-by"
+              type="text"
+              maxlength="120"
+              class="mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+            />
+          </label>
+          <button type="button" id="add-submit" class="btn btn-primary text-sm">Add</button>
+        </div>
+        <p id="add-status" role="status" class="mt-2 text-sm text-text-secondary"></p>
+      </section>
+
       <div class="mb-6 flex flex-wrap gap-3">
         <p class="border border-border-soft bg-cream-card px-4 py-2 text-sm">
           <strong id="count-living" class="font-display text-lg text-text-primary">0</strong>
@@ -137,6 +181,61 @@ import Layout from "../../layouts/Layout.astro";
 
   document.getElementById("copy-living")?.addEventListener("click", () => copyList("living"));
   document.getElementById("copy-departed")?.addEventListener("click", () => copyList("departed"));
+
+
+  // Adding one by hand. It goes through the same endpoint the public
+  // form uses, so a name typed here and a name sent from the website
+  // land identically — one path in, one set of rules.
+  document.getElementById("add-submit")?.addEventListener("click", async () => {
+    const nameEl = document.getElementById("add-name") as HTMLInputElement;
+    const note = $("add-status");
+    const btn = document.getElementById("add-submit") as HTMLButtonElement;
+    const name = nameEl.value.trim();
+    if (!name) {
+      note.textContent = "Give a name first.";
+      note.className = "mt-2 text-sm text-liturgical-red";
+      nameEl.focus();
+      return;
+    }
+    btn.disabled = true;
+    note.className = "mt-2 text-sm text-text-secondary";
+    note.textContent = "Adding…";
+    try {
+      const kind = (document.getElementById("add-kind") as HTMLSelectElement).value;
+      const by = (document.getElementById("add-by") as HTMLInputElement).value.trim();
+      const res = await fetch("/api/prayer-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, kind, requested_by: by }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        note.textContent = body.error ?? `Couldn't add it (${res.status}).`;
+        note.className = "mt-2 text-sm text-liturgical-red";
+        return;
+      }
+      // Clear the name but keep the list and the asker: several names
+      // usually arrive from the same person at the same time.
+      note.textContent = `Added ${name} to the ${kind === "departed" ? "memorial" : "living"} list.`;
+      nameEl.value = "";
+      nameEl.focus();
+      await load();
+    } catch (err) {
+      note.textContent = `Couldn't add it: ${err instanceof Error ? err.message : String(err)}`;
+      note.className = "mt-2 text-sm text-liturgical-red";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Enter in the name box adds it, so a list of names can be typed
+  // without reaching for the mouse between each one.
+  document.getElementById("add-name")?.addEventListener("keydown", (e) => {
+    if ((e as KeyboardEvent).key === "Enter") {
+      e.preventDefault();
+      (document.getElementById("add-submit") as HTMLButtonElement).click();
+    }
+  });
 
   $("rows").addEventListener("click", async (event) => {
     const target = event.target as HTMLElement | null;
