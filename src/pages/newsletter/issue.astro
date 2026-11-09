@@ -39,7 +39,6 @@ import Layout from "../../layouts/Layout.astro";
       background: var(--color-cream-card, #fff);
       border: 1px solid var(--color-border-soft, #e0d9c8);
       box-shadow: 0 2px 18px rgba(44, 62, 80, 0.13);
-      min-height: 1000px;
       padding: 2.75rem 2.5rem 1.25rem;
       display: flex;
       flex-direction: column;
@@ -51,8 +50,27 @@ import Layout from "../../layouts/Layout.astro";
       --color-brand-blue-dark: #2A5E84;
       color: #2C3E50;
     }
-    @media (max-width: 640px) {
-      .nl-sheet { min-height: 0; padding: 1.5rem 1.25rem 1rem; }
+
+    /* A page, in the proportions of one: 8.5 by 11. The flow inside
+       is given whatever is left after the masthead and the foot, and
+       the paginator fills it by measurement — a piece goes in, and if
+       the sheet overflows it comes out again onto the next one. */
+    .nl-sheet-paged {
+      aspect-ratio: 8.5 / 11;
+      overflow: hidden;
+    }
+    .nl-sheet-paged .nl-flow { flex: 1 1 auto; min-height: 0; }
+
+    /* The escape hatch: a single piece longer than a whole page
+       cannot be made to fit, so that sheet is allowed to grow rather
+       than swallow somebody's words. */
+    .nl-sheet-tall { aspect-ratio: auto; overflow: visible; }
+
+    @media (max-width: 639px) {
+      /* No pages on a phone. Fixed heights on a small screen are
+         clipping waiting to happen, and nobody holds a phone
+         expecting paper. */
+      .nl-sheet { padding: 1.5rem 1.25rem 1rem; aspect-ratio: auto; overflow: visible; }
     }
 
     /* The columns. Two on a sheet, one on a phone — three is too
@@ -99,20 +117,57 @@ import Layout from "../../layouts/Layout.astro";
       color: #8a8577;
     }
 
-    /* ---------- On paper ---------- */
+    /* ---------- On paper ----------
+       The sheets are a reading device for the screen, not page
+       boundaries. Forcing one sheet to one printed page was the
+       mistake: a sheet taller than a page splits anyway, so each
+       break landed mid-sheet and the leftovers became pages of their
+       own — a banner alone, then a blank, then the bottom of
+       something three pages later.
+
+       On paper the sheets dissolve. The issue becomes one continuous
+       two-column newsletter and the paper breaks where paper breaks,
+       with headings kept off the bottom of a page and pictures and
+       quote boxes never split. The page numbers go too: a sheet
+       number means nothing once the pages are not sheets. */
     @media print {
       header, footer, nav, .no-print { display: none !important; }
       body { background: #fff !important; }
-      @page { margin: 12mm 10mm 14mm; }
+      @page { margin: 13mm 11mm 15mm; }
+
       .nl-sheet {
         background: #fff !important;
         box-shadow: none !important;
         border: 0 !important;
         padding: 0 !important;
+        margin: 0 !important;
         min-height: 0 !important;
+        /* One sheet, one printed page. This is safe now in a way it
+           was not before: a sheet holds exactly what fits on a page,
+           measured, so a break at its end lands where the content
+           ends rather than halfway through it. */
         break-after: page;
+        aspect-ratio: auto !important;
+        overflow: visible !important;
+        display: block;
       }
+      #issue-sheets > * + * { margin-top: 0 !important; }
       .nl-sheet:last-child { break-after: auto; }
+
+      /* The sheet number belongs to the screen. */
+      /* The sheet number is right on paper now, because a sheet is
+         a page. */
+      .nl-foot { border-top: 1px solid #ccc; }
+
+      /* Fill each column before starting the next, which is how a
+         newspaper column reads and how it paginates without leaving
+         half-empty columns at a break. */
+      .nl-flow { column-fill: auto; margin-top: 0 !important; }
+
+      .nl-piece, figure, blockquote { break-inside: avoid; }
+      .nl-head { break-after: avoid; }
+      .nl-masthead { break-after: avoid; }
+
       .nl-lead::first-letter { color: #000; }
       a[href]::after { content: ""; }
       img { max-width: 100% !important; }
@@ -297,22 +352,6 @@ import Layout from "../../layouts/Layout.astro";
       : d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
   }
 
-  /** Roughly how much of a sheet a piece takes up, 1 being a full one. */
-  function weigh(piece: { body: string; image?: string; quote?: string; heading: string }): number {
-    const chars = (piece.body || "").length;
-    return chars / 4200 + (piece.image ? 0.18 : 0) + (piece.quote ? 0.1 : 0) + 0.08;
-  }
-
-  function sheetHtml(inner: string, page: number, pages: number): string {
-    return `<article class="nl-sheet">
-      ${inner}
-      <div class="nl-foot">
-        <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
-        <span>${page} / ${pages}</span>
-      </div>
-    </article>`;
-  }
-
   /** The contents box, as the template has it on the first page. */
   function contentsHtml(headings: string[]): string {
     if (headings.length < 2) return "";
@@ -361,17 +400,104 @@ import Layout from "../../layouts/Layout.astro";
     }`;
   }
 
+  /**
+   * Lay the pieces onto sheets that are exactly a page tall.
+   *
+   * Not by estimating how much a piece weighs — that was the first
+   * attempt and it is guesswork, which is why sheets broke early and
+   * the printed version came apart. The browser is asked instead: put
+   * the piece in, and if the sheet now overflows, take it out again
+   * and start another sheet.
+   *
+   * A sheet is a letter page in proportion, and its column flow is a
+   * fixed height. In a multi-column box of fixed height, content that
+   * does not fit spills into a THIRD column rather than growing
+   * downward — so what is measured is the width, not the height.
+   *
+   * On a phone a sheet is one column and is left to grow: pages of
+   * fixed height on a small screen are just clipping waiting to
+   * happen, and a phone has no pages anyway.
+   */
+  function paginate(issue: Issue, headHtml: string, pieces: string[]) {
+    const host = document.getElementById("issue-sheets") as HTMLElement;
+    host.innerHTML = "";
+    const paged = window.matchMedia("(min-width: 640px)").matches;
+
+    const newSheet = (withHead: boolean): HTMLElement => {
+      const sheet = document.createElement("article");
+      sheet.className = "nl-sheet" + (paged ? " nl-sheet-paged" : "");
+      sheet.innerHTML =
+        (withHead ? headHtml : "") +
+        `<div class="nl-flow mt-5"></div>` +
+        `<div class="nl-foot"><span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span><span class="nl-page"></span></div>`;
+      host.appendChild(sheet);
+      return sheet;
+    };
+
+    let sheet = newSheet(true);
+    let flow = sheet.querySelector(".nl-flow") as HTMLElement;
+
+    const overflows = () => paged && flow.scrollWidth > flow.clientWidth + 2;
+
+    for (const html of pieces) {
+      const holder = document.createElement("div");
+      holder.innerHTML = html;
+      const el = holder.firstElementChild as HTMLElement | null;
+      if (!el) continue;
+
+      flow.appendChild(el);
+      if (overflows()) {
+        // It did not fit. Take it back and give it a fresh sheet —
+        // unless the sheet is empty, in which case the piece is
+        // simply bigger than a page and has to be allowed to run on
+        // rather than loop forever.
+        if (flow.childElementCount > 1) {
+          flow.removeChild(el);
+          sheet = newSheet(false);
+          flow = sheet.querySelector(".nl-flow") as HTMLElement;
+          flow.appendChild(el);
+          if (overflows()) sheet.classList.add("nl-sheet-tall");
+        } else {
+          sheet.classList.add("nl-sheet-tall");
+        }
+      }
+    }
+
+    if (issue.closing) {
+      const closing = document.createElement("div");
+      closing.className =
+        "nl-piece mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85";
+      closing.innerHTML = paragraphs(issue.closing);
+      flow.appendChild(closing);
+      if (overflows()) {
+        flow.removeChild(closing);
+        sheet = newSheet(false);
+        flow = sheet.querySelector(".nl-flow") as HTMLElement;
+        flow.appendChild(closing);
+      }
+    }
+
+    // Number them once the count is known.
+    const sheets = Array.from(host.querySelectorAll(".nl-sheet"));
+    sheets.forEach((s, i) => {
+      const n = s.querySelector(".nl-page");
+      if (n) n.textContent = `${i + 1} / ${sheets.length}`;
+    });
+  }
+
   function renderSheets(issue: Issue, slots: ReturnType<typeof pairSections>) {
     // Every piece of the issue, in order, with its weight.
-    type Piece = { html: string; weight: number; heading: string };
+    type Piece = { html: string; heading: string };
     const pieces: Piece[] = [];
 
     for (const slot of slots) {
       if (slot.pair) {
         const banner = imageSrc(slot.left.image || slot.right.image);
         pieces.push({
-          heading: slot.left.heading,
-          weight: weigh(slot.left) + weigh(slot.right),
+          // The pair is one line in the contents, under the name they
+          // share: "Prayer Requests", not "Prayer Requests — For the
+          // Living" with no sign of the other half.
+          heading: slot.left.heading.split(/\s+[—–-]\s+/)[0],
           html: `<section class="nl-piece mb-7">
             ${
               banner
@@ -388,62 +514,31 @@ import Layout from "../../layouts/Layout.astro";
       } else {
         pieces.push({
           heading: slot.section.heading,
-          weight: weigh(slot.section),
           html: `<section class="nl-piece mb-7">${sectionHtml(slot.section, true)}</section>`,
         });
       }
     }
 
-    // The opening and the contents box are pieces like any other, so
-    // sections carry on into whatever column space is left beside
-    // them. They used to sit in a flow of their own, which closed the
-    // columns and left the rest of sheet one empty — a whole page for
-    // an introduction and a list of headings.
     const headings = pieces.map((p) => p.heading).filter(Boolean);
-    const opening: Piece[] = [];
+    const opening: string[] = [];
     if (issue.intro) {
-      opening.push({
-        heading: "",
-        weight: issue.intro.length / 4200,
-        html: `<div class="nl-piece nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
-      });
+      opening.push(
+        `<div class="nl-piece nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
+      );
     }
     const contents = contentsHtml(headings);
-    if (contents) opening.push({ heading: "", weight: 0.16, html: contents });
+    if (contents) opening.push(contents);
 
-    const all = [...opening, ...pieces];
+    const laid = () => paginate(issue, mastheadHtml(issue), [...opening, ...pieces.map((p) => p.html)]);
+    laid();
 
-    // Fill a sheet until the next piece will not fit, then start
-    // another. Sheet one begins with less room because the masthead
-    // and the banner stand above its columns.
-    const sheets: string[] = [];
-    let head = mastheadHtml(issue);
-    let onSheet: string[] = [];
-    let room = 0.72;
-
-    const closeSheet = () => {
-      const flow = onSheet.length ? `<div class="nl-flow mt-5">${onSheet.join("")}</div>` : "";
-      sheets.push(head + flow);
-      head = "";
-      onSheet = [];
-      room = 1;
-    };
-
-    for (const piece of all) {
-      if (piece.weight > room && (head || onSheet.length)) closeSheet();
-      onSheet.push(piece.html);
-      room -= piece.weight;
-    }
-    if (head || onSheet.length) closeSheet();
-    if (sheets.length === 0) sheets.push(mastheadHtml(issue));
-
-    if (issue.closing) {
-      sheets[sheets.length - 1] +=
-        `<div class="nl-piece mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>`;
-    }
-
-    const host = document.getElementById("issue-sheets") as HTMLElement;
-    host.innerHTML = sheets.map((inner, i) => sheetHtml(inner, i + 1, sheets.length)).join("");
+    // The columns change at 640px, so what fitted on a sheet may not
+    // after a resize. Laid out again, once things have settled.
+    let settle = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(laid, 250);
+    });
   }
 
   (async () => {
