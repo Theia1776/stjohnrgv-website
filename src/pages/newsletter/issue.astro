@@ -296,7 +296,7 @@ import Layout from "../../layouts/Layout.astro";
     const figure = img
       ? `<figure class="m-0 mx-auto max-w-[640px]">
            <img src="${escapeHtml(img)}" alt="${escapeHtml(s.image_alt ?? "")}"
-                class="block h-[150px] w-full border border-border-soft object-cover object-center" loading="lazy" />
+                class="block h-auto w-full border border-border-soft" loading="lazy" />
            ${
              s.image_caption
                ? `<figcaption class="mt-1.5 text-center text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
@@ -401,7 +401,7 @@ import Layout from "../../layouts/Layout.astro";
       hero
         ? `<figure class="m-0 mt-4">
              <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
-                  class="block h-[200px] w-full border border-border-soft object-cover object-center" />
+                  class="block h-auto w-full border border-border-soft" />
            </figure>`
         : ""
     }`;
@@ -517,7 +517,7 @@ import Layout from "../../layouts/Layout.astro";
             ${
               banner
                 ? `<figure class="m-0 mb-3"><img src="${escapeHtml(banner)}" alt="${escapeHtml(slot.left.image_alt ?? "")}"
-                     class="block h-[130px] w-full border border-border-soft object-cover object-center" loading="lazy" /></figure>`
+                     class="block h-auto w-full border border-border-soft" loading="lazy" /></figure>`
                 : ""
             }
             <div class="grid gap-5 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
