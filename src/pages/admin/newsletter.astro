@@ -536,9 +536,17 @@ import FileDrop from "../../components/FileDrop.astro";
       const preview = row.querySelector(".s-preview") as HTMLImageElement;
       preview.src = body.url;
       preview.hidden = false;
+      status.textContent = `${file.name} attached (${Math.round(body.bytes / 1024)} KB). Saving…`;
+      // Finish the job. The file is in storage the moment the upload
+      // returns, but the key that points at it only reaches the
+      // database on a save — so an upload followed by a refresh used
+      // to lose the picture while the file sat there orphaned. An
+      // upload now records itself.
+      const ok = await persistAfterUpload();
       status.textContent =
-        `${file.name} attached (${Math.round(body.bytes / 1024)} KB). ` +
-        "Now describe it below, then save the draft.";
+        `${file.name} attached (${Math.round(body.bytes / 1024)} KB)` +
+        (ok ? " and saved." : ". Not saved yet — press Save draft.");
+      if (!ok) status.className = "s-upload-status text-xs text-liturgical-red";
     } catch (err) {
       status.textContent = `Upload failed: ${err instanceof Error ? err.message : String(err)}`;
       status.className = "s-upload-status text-xs text-liturgical-red";
@@ -685,9 +693,12 @@ import FileDrop from "../../components/FileDrop.astro";
       const preview = $("hero-preview") as HTMLImageElement;
       preview.src = body.url;
       preview.hidden = false;
+      status.textContent = `${file.name} attached (${Math.round(body.bytes / 1024)} KB). Saving…`;
+      const ok = await persistAfterUpload();
       status.textContent =
-        `${file.name} attached (${Math.round(body.bytes / 1024)} KB). ` +
-        "Describe it below, then save the draft.";
+        `${file.name} attached (${Math.round(body.bytes / 1024)} KB)` +
+        (ok ? " and saved." : ". Not saved yet — press Save draft.");
+      if (!ok) status.className = "text-xs text-liturgical-red";
     } catch (err) {
       status.textContent = `Upload failed: ${err instanceof Error ? err.message : String(err)}`;
       status.className = "text-xs text-liturgical-red";
@@ -696,14 +707,34 @@ import FileDrop from "../../components/FileDrop.astro";
     }
   });
 
+  /**
+   * Record an upload straight away.
+   *
+   * A picture is only really attached once its key is in the issue, so
+   * the upload saves the draft for you. It needs a title to save under
+   * — a brand new issue with nothing typed in it has nothing to be
+   * saved as — and says so rather than failing quietly.
+   */
+  async function persistAfterUpload(): Promise<boolean> {
+    if (!input("f-title").value.trim()) {
+      say("Give the issue a title and press Save draft — the picture is uploaded but not yet attached to it.", true);
+      return false;
+    }
+    return saveIssue();
+  }
+
   // ============== SAVING ==============
 
-  document.getElementById("save-issue")?.addEventListener("click", async () => {
+  /**
+   * Save the issue. Called by the Save draft button, and again by
+   * each upload the moment its file lands — see uploadImage().
+   */
+  async function saveIssue(): Promise<boolean> {
     const title = input("f-title").value.trim();
     if (!title) {
       say("The issue needs a title.", true);
       input("f-title").focus();
-      return;
+      return false;
     }
 
     const { kept, dropped, holding } = readSections();
@@ -737,7 +768,7 @@ import FileDrop from "../../components/FileDrop.astro";
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         say(body.error ?? `Couldn't save it (${res.status}).`, true);
-        return;
+        return false;
       }
       const saved = body.issue as Issue;
       // Named back, with the counts, so it is plain that the right
@@ -759,11 +790,17 @@ import FileDrop from "../../components/FileDrop.astro";
       );
       await loadIssues();
       loadIntoEditor(issues.find((i) => i.id === saved.id) ?? saved);
+      return true;
     } catch (err) {
       say(`Couldn't save it: ${err instanceof Error ? err.message : String(err)}`, true);
+      return false;
     } finally {
       btn.disabled = false;
     }
+  }
+
+  document.getElementById("save-issue")?.addEventListener("click", () => {
+    void saveIssue();
   });
 
   // ============== THE LIST ==============
@@ -974,7 +1011,16 @@ import FileDrop from "../../components/FileDrop.astro";
   (async () => {
     try {
       await loadIssues();
-      if (!editingId) loadIntoEditor(null);
+      // Open the draft being worked on, not a blank form. A refresh
+      // used to land on "A new issue" with every box empty, which
+      // reads exactly like the work having been lost — the draft was
+      // sitting in the list below the whole time, waiting to be
+      // opened. The newest unpublished issue is the one in hand.
+      if (!editingId) {
+        const draft = issues.find((i) => !i.published) ?? null;
+        loadIntoEditor(draft);
+        if (draft) say(`Opened your draft "${draft.title}". Anything saved is here.`);
+      }
     } catch (err) {
       $("loading").hidden = true;
       const el = $("error-msg");
