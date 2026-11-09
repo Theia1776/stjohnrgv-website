@@ -1,0 +1,172 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// Sending a name in to be prayed for.
+//
+// Open to anyone, signed in or not — the newsletter links here, and a
+// person reading it on their phone is not going to make an account
+// first. Nothing on this page ever shows a request back: the list is
+// read in the parish office and nowhere else.
+---
+
+<Layout
+  title="Prayer Requests | St. John of Kronstadt Orthodox Mission"
+  description="Send a name to be prayed for at St. John of Kronstadt Orthodox Mission, Bayview TX — for the living, or in memory of those who have fallen asleep."
+>
+  <main class="mx-auto max-w-2xl px-4 py-12 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      St. John of Kronstadt Orthodox Mission
+    </p>
+    <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">Prayer Requests</h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+
+    <p class="mt-5 leading-relaxed text-text-primary/85">
+      Send us a name and we will pray for them — at the Liturgy, and in the
+      parish newsletter. You may send one for someone living, or in memory of
+      someone who has fallen asleep.
+    </p>
+
+    <div class="mt-6 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
+      <strong class="text-text-primary">A first name and a last initial is enough.</strong>
+      &ldquo;Ana G.&rdquo; or &ldquo;the Gonzalez family&rdquo;. It is what the Church asks
+      for and all a prayer list needs, and it keeps anyone from being identified
+      by a notice they did not put up themselves.
+    </div>
+
+    <form id="prayer-form" class="mt-8 space-y-5">
+      <fieldset class="border border-border-soft p-4">
+        <legend class="px-1 text-xs uppercase tracking-widest text-text-secondary">
+          Who are we praying for?
+        </legend>
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="radio" name="kind" value="living" checked class="mt-1 h-4 w-4" />
+          <span>
+            <span class="text-sm font-semibold text-text-primary">For the living</span>
+            <span class="mt-0.5 block text-xs text-text-secondary">
+              Someone ill, travelling, expecting, or in need of prayer.
+            </span>
+          </span>
+        </label>
+        <label class="mt-3 flex items-start gap-3 cursor-pointer">
+          <input type="radio" name="kind" value="departed" class="mt-1 h-4 w-4" />
+          <span>
+            <span class="text-sm font-semibold text-text-primary">In memory</span>
+            <span class="mt-0.5 block text-xs text-text-secondary">
+              Someone who has fallen asleep in the Lord.
+            </span>
+          </span>
+        </label>
+      </fieldset>
+
+      <label class="block text-xs uppercase tracking-widest text-text-secondary">
+        Name <span aria-hidden="true" class="text-brand-tan-dark">*</span>
+        <input
+          id="p-name"
+          type="text"
+          required
+          maxlength="120"
+          placeholder="Ana G."
+          class="mt-1 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+        />
+      </label>
+
+      <label class="block text-xs uppercase tracking-widest text-text-secondary">
+        Your name <span class="normal-case tracking-normal text-text-secondary">(optional)</span>
+        <input
+          id="p-by"
+          type="text"
+          maxlength="120"
+          class="mt-1 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+        />
+      </label>
+
+      <label class="block text-xs uppercase tracking-widest text-text-secondary">
+        How to reach you <span class="normal-case tracking-normal text-text-secondary">(optional)</span>
+        <input
+          id="p-contact"
+          type="text"
+          maxlength="120"
+          placeholder="Email or phone, if you would like Fr. Antonios to call"
+          class="mt-1 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+        />
+      </label>
+
+      <label class="block text-xs uppercase tracking-widest text-text-secondary">
+        Anything Father should know
+        <span class="normal-case tracking-normal text-text-secondary">(optional, not printed)</span>
+        <textarea
+          id="p-note"
+          rows="3"
+          maxlength="1000"
+          class="mt-1 block w-full border border-border-soft bg-cream-bg px-3 py-2 text-base normal-case tracking-normal text-text-primary"
+        ></textarea>
+      </label>
+
+      <div class="flex flex-wrap items-center gap-3 border-t border-border-soft pt-5">
+        <button type="submit" id="p-submit" class="btn btn-primary">Send this request</button>
+        <span id="p-status" role="status" class="text-sm text-text-secondary"></span>
+      </div>
+    </form>
+
+    <p class="mt-8 text-xs leading-relaxed text-text-secondary">
+      Prayer requests go to the parish office. They are never listed on this
+      website. Names appear in the parish newsletter, which goes by email to
+      people with a parish account &mdash; tell us in the box above if you would
+      rather a name were not printed at all, and it will still be prayed for.
+    </p>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById("prayer-form") as HTMLFormElement;
+  const status = document.getElementById("p-status") as HTMLElement;
+  const submit = document.getElementById("p-submit") as HTMLButtonElement;
+  const val = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim();
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = val("p-name");
+    if (!name) {
+      status.textContent = "Please give a name.";
+      status.className = "text-sm text-liturgical-red";
+      return;
+    }
+
+    submit.disabled = true;
+    status.className = "text-sm text-text-secondary";
+    status.textContent = "Sending…";
+    try {
+      const res = await fetch("/api/prayer-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          kind:
+            (document.querySelector('input[name="kind"]:checked') as HTMLInputElement)?.value ===
+            "departed"
+              ? "departed"
+              : "living",
+          requested_by: val("p-by"),
+          contact: val("p-contact"),
+          note: (document.getElementById("p-note") as HTMLTextAreaElement).value.trim(),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        status.textContent = body.error ?? `Couldn't send it (${res.status}).`;
+        status.className = "text-sm text-liturgical-red";
+        return;
+      }
+      // Say what happened and to which list, then clear the form so a
+      // second name can be sent without the first still sitting there.
+      status.textContent = body.message ?? "Thank you — it has been sent.";
+      status.className = "text-sm text-brand-blue-dark";
+      form.reset();
+    } catch (err) {
+      status.textContent = `Couldn't send it: ${err instanceof Error ? err.message : String(err)}`;
+      status.className = "text-sm text-liturgical-red";
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>
