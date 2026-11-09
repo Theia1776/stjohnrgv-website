@@ -165,22 +165,47 @@ function isActive(hrefWithHash: string): boolean {
           aria-haspopup="menu"
           aria-expanded="false"
           aria-controls="lang-panel"
-          aria-label="Select language"
+          aria-label="Change language"
+          title="Change language · Cambiar idioma · Сменить язык"
           class="flex items-center gap-1.5 px-2 py-1 text-xs font-display text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
         >
-          <span aria-hidden="true" class="text-sm leading-none">🌐</span>
-          <span id="lang-current-label" class="normal-case tracking-normal">English</span>
+          <!-- A globe with two speech bubbles coming off it. Drawn
+               rather than set in type, because "EN" and a flag are
+               both guesses a visitor has to make: a flag is a country
+               and not a language, and an abbreviation is a code. Two
+               bubbles in two scripts is the one picture everybody
+               already reads as "change the language". -->
+          <svg
+            viewBox="0 0 48 44"
+            class="h-5 w-5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="23" cy="20" r="15" />
+            <path d="M8 20h30M23 5c4 4.5 6 9.5 6 15s-2 10.5-6 15c-4-4.5-6-9.5-6-15s2-10.5 6-15Z" />
+            <path d="M31 4h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-4 4v-4a3 3 0 0 1-2-3V7a3 3 0 0 1 3-3Z"
+                  fill="var(--color-cream-bg, #FAF7F0)" />
+            <path d="M36.5 14.5 39 7.5l2.5 7M37.4 12.4h3.2" stroke-width="1.6" />
+            <path d="M5 26h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-1l-4 4v-4H5a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3Z"
+                  fill="var(--color-cream-bg, #FAF7F0)" />
+            <path d="M6.5 32.5h7M10 30v1M7.5 37c2-1.2 3.4-2.8 4-4.5M11 34.5c.8 1.2 1.8 2 3 2.5"
+                  stroke-width="1.6" />
+          </svg>
           <span aria-hidden="true" class="text-[0.6rem]">▾</span>
         </button>
         <div
           id="lang-panel"
           role="menu"
           aria-labelledby="lang-trigger"
-          class="hidden absolute right-0 top-full mt-2 min-w-36 border border-border-soft bg-cream-card shadow-md py-1 z-50"
+          class="hidden absolute right-0 top-full mt-2 min-w-40 border border-border-soft bg-cream-card shadow-md py-1 z-50"
         >
-          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
-          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
-          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
+          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Hi</span><span class="block text-xs text-text-secondary">English</span></button>
+          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Hola</span><span class="block text-xs text-text-secondary">Español</span></button>
+          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Привет</span><span class="block text-xs text-text-secondary">Русский</span></button>
         </div>
       </div>
 
