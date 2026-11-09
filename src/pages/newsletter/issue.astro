@@ -158,6 +158,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { pairSections } from "../../lib/newsletter";
+
   type Section = {
     key?: string;
     heading: string;
@@ -232,7 +234,7 @@ import Layout from "../../layouts/Layout.astro";
    * looking like a wall. A section with no photograph simply runs the
    * full measure.
    */
-  function sectionHtml(s: Section): string {
+  function sectionHtml(s: Section, bare = false): string {
     const img = imageSrc(s.image);
     // The whole picture, every time. This used to be forced into a
     // 3:1 letterbox with object-cover, which threw away half of a
@@ -271,16 +273,17 @@ import Layout from "../../layouts/Layout.astro";
     // side-by-side layout, so this is the one arrangement where the
     // page and the inbox look the same. And a wide, short image reads
     // as a section marker, which is what it is being asked to do.
-    return `<section class="nl-section mt-10 break-inside-avoid">
-      ${figure}
+    // `bare` drops the wrapper so a paired section can supply its
+    // own — otherwise the pair's margin and each half's would stack.
+    const body = `${figure}
       ${
         s.heading
           ? `<h2 class="nl-head mt-4 font-display text-2xl text-text-primary">${escapeHtml(s.heading)}</h2>`
           : ""
       }
       <div class="mt-4">${prose}</div>
-      ${quote}
-    </section>`;
+      ${quote}`;
+    return bare ? body : `<section class="nl-section mt-10 break-inside-avoid">${body}</section>`;
   }
 
   (async () => {
@@ -346,8 +349,20 @@ import Layout from "../../layouts/Layout.astro";
       const sections = (Array.isArray(issue.sections) ? issue.sections : []).filter(
         (s) => s.include !== false && (s.body || s.image),
       );
-      (document.getElementById("issue-sections") as HTMLElement).innerHTML = sections
-        .map((sec) => sectionHtml(sec))
+      // The two prayer lists sit side by side; everything else runs
+      // the full measure. pairSections() is shared with the email, so
+      // the page and the inbox can't drift on which sections pair.
+      (document.getElementById("issue-sections") as HTMLElement).innerHTML = pairSections(sections)
+        .map((slot) =>
+          slot.pair
+            ? `<section class="nl-section mt-10 break-inside-avoid">
+                 <div class="grid gap-6 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
+                   <div>${sectionHtml(slot.left, true)}</div>
+                   <div class="sm:pl-6">${sectionHtml(slot.right, true)}</div>
+                 </div>
+               </section>`
+            : sectionHtml(slot.section),
+        )
         .join("");
 
       if (issue.closing) {

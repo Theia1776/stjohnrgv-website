@@ -166,6 +166,57 @@ export function readSections(value: unknown): NewsletterSection[] {
   return cleanSections(value).filter((s) => s.include !== false && (s.body || s.image));
 }
 
+/**
+ * The two prayer lists ride side by side.
+ *
+ * The parish is asked for names "for the living or a memorial", and
+ * the two lists answer each other — a reader wants them in one view,
+ * not one under the other with a photograph in between. They are
+ * paired by key rather than by position, so moving either one in the
+ * admin form can't separate them.
+ *
+ * If only one of the pair survives the issue — the month had no
+ * memorials, or the box was unticked — it runs the full width like
+ * any other section. Pairing is a layout for two lists, not a frame
+ * that has to be filled.
+ */
+export type SectionSlot =
+  | { pair: false; section: NewsletterSection }
+  | { pair: true; left: NewsletterSection; right: NewsletterSection };
+
+const PAIR_LEFT = "prayer";
+const PAIR_RIGHT = "memorial";
+
+export function pairSections(sections: NewsletterSection[]): SectionSlot[] {
+  const out: SectionSlot[] = [];
+  const used = new Set<number>();
+
+  sections.forEach((section, i) => {
+    if (used.has(i)) return;
+
+    if (section.key === PAIR_LEFT || section.key === PAIR_RIGHT) {
+      const wantKey = section.key === PAIR_LEFT ? PAIR_RIGHT : PAIR_LEFT;
+      const j = sections.findIndex((s, k) => k !== i && !used.has(k) && s.key === wantKey);
+      if (j !== -1) {
+        used.add(i);
+        used.add(j);
+        // The living list reads first whichever order they were
+        // arranged in: "for the living, and for the departed" is the
+        // order the Church says them in.
+        const left = section.key === PAIR_LEFT ? section : sections[j];
+        const right = section.key === PAIR_LEFT ? sections[j] : section;
+        out.push({ pair: true, left, right });
+        return;
+      }
+    }
+
+    used.add(i);
+    out.push({ pair: false, section });
+  });
+
+  return out;
+}
+
 /** Blank lines part paragraphs; single newlines are line breaks. */
 function paragraphs(text: string): string {
   return String(text ?? "")
@@ -235,8 +286,7 @@ export function issueToHtml(issue: NewsletterIssue): string {
   // width and no float — mail clients ignore most layout, and a
   // photograph stacked above its text is the one arrangement that
   // survives everywhere.
-  const sections = readSections(issue.sections)
-    .map((s) => {
+  const sectionHtml = (s: NewsletterSection, heads = 17) => {
       const src = imageUrl(s.image, true);
       const figure = src
         ? `<img src="${escapeHtml(src)}" alt="${escapeHtml(s.image_alt ?? "")}" width="556" style="display:block;width:100%;max-width:556px;height:auto;border:1px solid #e0d9c8;margin:0 0 .5em;">` +
@@ -251,10 +301,31 @@ export function issueToHtml(issue: NewsletterIssue): string {
            </td></tr></table>`
         : "";
       const heading = s.heading
-        ? `<h2 style="margin:1.75em 0 .5em;font-size:17px;line-height:1.3;color:#1f3a5f;">${escapeHtml(s.heading)}</h2>`
+        ? `<h2 style="margin:1.75em 0 .5em;font-size:${heads}px;line-height:1.3;color:#1f3a5f;">${escapeHtml(s.heading)}</h2>`
         : "";
       return heading + figure + paragraphs(s.body) + quote;
-    })
+  };
+
+  // Two columns, built as a table. Floats and flex are thrown away by
+  // Outlook; a table with two cells is the one arrangement every mail
+  // client still honours. The cells are left at 50% and not stacked on
+  // narrow screens on purpose — these hold names, which are short, and
+  // the media query that would stack them is stripped by Gmail anyway.
+  const sections = pairSections(readSections(issue.sections))
+    .map((slot) =>
+      slot.pair
+        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:1.5em 0;">
+             <tr>
+               <td width="50%" valign="top" style="padding-right:10px;border-right:1px solid #e0d9c8;">
+                 ${sectionHtml(slot.left, 15)}
+               </td>
+               <td width="50%" valign="top" style="padding-left:10px;">
+                 ${sectionHtml(slot.right, 15)}
+               </td>
+             </tr>
+           </table>`
+        : sectionHtml(slot.section),
+    )
     .join("");
 
   const hero = imageUrl(issue.hero_image, true)
