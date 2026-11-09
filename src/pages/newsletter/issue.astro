@@ -36,7 +36,7 @@ import Layout from "../../layouts/Layout.astro";
        least a page tall and grows if it must. It reads as paper
        either way, and nothing is ever cut off. */
     .nl-sheet {
-      background: var(--color-cream-card, #fff);
+      background: #FFFFFF;
       border: 1px solid var(--color-border-soft, #e0d9c8);
       box-shadow: 0 2px 18px rgba(44, 62, 80, 0.13);
       padding: 2.75rem 2.5rem 1.25rem;
@@ -169,6 +169,11 @@ import Layout from "../../layouts/Layout.astro";
       .nl-flow { column-fill: auto; margin-top: 0 !important; }
 
       .nl-piece, figure, blockquote { break-inside: avoid; }
+      /* The contents box does not go on paper. It is a way of getting
+         about the issue on screen, and because it must not be split
+         it was being pushed to the end and printed alone — a page
+         with one beige block on it and nothing else. */
+      .nl-contents { display: none !important; }
       .nl-head { break-after: avoid; }
       .nl-masthead { break-after: avoid; }
       /* The banner must not be left alone at the top of page one with
@@ -362,7 +367,7 @@ import Layout from "../../layouts/Layout.astro";
   /** The contents box, as the template has it on the first page. */
   function contentsHtml(headings: string[]): string {
     if (headings.length < 2) return "";
-    return `<aside class="nl-piece mt-6 border-2 border-sacred-gold bg-[#FBF7EC] p-4">
+    return `<aside class="nl-contents nl-piece mt-6 border-2 border-sacred-gold bg-[#FBF7EC] p-4">
       <p class="font-display text-sm uppercase tracking-[0.18em] text-brand-tan-dark">In This Issue</p>
       <ul class="mt-3 space-y-1.5">
         ${headings
