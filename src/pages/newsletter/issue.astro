@@ -43,8 +43,26 @@ import Layout from "../../layouts/Layout.astro";
       --color-brand-blue-dark: #2A5E84;
       color: #2C3E50;
     }
+    /* A page in the proportions of one, on screen. The column flow
+       takes whatever is left under the masthead, and the paginator
+       fills it by measurement. */
+    .nl-paper-paged {
+      aspect-ratio: 8.5 / 11;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .nl-paper-paged .nl-flow { flex: 1 1 auto; min-height: 0; }
+    /* A piece longer than a page cannot be made to fit; that sheet
+       grows rather than swallowing the words. */
+    .nl-paper-tall { aspect-ratio: auto; overflow: visible; }
+
+    #issue-sheets > .nl-paper + .nl-paper { margin-top: 2rem; }
+
     @media (max-width: 639px) {
-      .nl-paper { padding: 1.5rem 1.25rem 1rem; }
+      /* No pages on a phone. A fixed height on a small screen is
+         clipping waiting to happen. */
+      .nl-paper { padding: 1.5rem 1.25rem 1rem; aspect-ratio: auto; overflow: visible; }
     }
 
     /* The parish on one line, whatever the width. */
@@ -103,7 +121,11 @@ import Layout from "../../layouts/Layout.astro";
     /* ---------- On paper ----------
        Nothing is forced. The paper decides where the pages are. */
     @media print {
-      header, footer, nav, .no-print { display: none !important; }
+      /* The site's furniture goes, but not the newsletter's own
+         masthead — which is a <header> too, and was being hidden with
+         the rest, so every PDF began with the picture and no parish
+         name above it. */
+      header:not(.nl-masthead), footer, nav, .no-print { display: none !important; }
       /* html, not just body. The site's cream lives on <html>, and
          that is what paints the page canvas — which is why a pale
          block kept printing below the end of the issue. It was never
@@ -111,12 +133,25 @@ import Layout from "../../layouts/Layout.astro";
       html, body { background: #fff !important; }
       @page { margin: 13mm 11mm 15mm; }
 
+      /* The sheets dissolve. They were measured against the screen,
+         and the print engine relays everything for paper at a
+         different width — so they are not its pages and must not
+         pretend to be. The paper breaks the issue itself. */
       .nl-paper {
         border: 0 !important;
         box-shadow: none !important;
         padding: 0 !important;
         margin: 0 !important;
+        aspect-ratio: auto !important;
+        overflow: visible !important;
+        display: block !important;
+        break-after: auto;
+        break-inside: auto;
       }
+      #issue-sheets > .nl-paper + .nl-paper { margin-top: 0 !important; }
+      /* Only the first sheet carries a masthead; the rest print
+         straight on from the one before. */
+      .nl-paper + .nl-paper .nl-masthead { display: none !important; }
       /* A list of what is in the issue is for finding your way about
          a screen. On paper it is a coloured block taking up a column
          for nothing. */
@@ -329,6 +364,90 @@ import Layout from "../../layouts/Layout.astro";
     </aside>`;
   }
 
+  /**
+   * Lay the issue onto sheets of paper, for the screen.
+   *
+   * The browser is asked whether a piece fits rather than told: put it
+   * in, and if the sheet overflows, take it out again and start
+   * another. A sheet is a letter page in proportion, and its column
+   * flow has a fixed height — in a multi-column box of fixed height
+   * the overflow spills sideways into a third column, so what is
+   * measured is the width.
+   *
+   * This is for the screen alone. On paper the sheets dissolve and
+   * the print engine breaks the issue where paper breaks, because it
+   * relays everything at a different width and the sheets measured
+   * here were never its pages. Trying to make one serve both is what
+   * produced blank pages, orphaned banners and columns running off
+   * the edge.
+   */
+  function paginate(issue: Issue, headHtml: string, pieces: string[], footHtml: string) {
+    const host = document.getElementById("issue-sheets") as HTMLElement;
+    host.innerHTML = "";
+    const paged = window.matchMedia("(min-width: 640px)").matches;
+
+    let sheet!: HTMLElement;
+    let flow!: HTMLElement;
+
+    const start = (withHead: boolean) => {
+      sheet = document.createElement("article");
+      sheet.className = "nl-paper" + (paged ? " nl-paper-paged" : "");
+      sheet.innerHTML = (withHead ? headHtml : "") + `<div class="nl-flow"></div>` + footHtml;
+      host.appendChild(sheet);
+      flow = sheet.querySelector(".nl-flow") as HTMLElement;
+    };
+
+    const overflows = () => paged && flow.scrollWidth > flow.clientWidth + 2;
+
+    start(true);
+
+    for (const html of pieces) {
+      const holder = document.createElement("div");
+      holder.innerHTML = html;
+      const el = holder.firstElementChild as HTMLElement | null;
+      if (!el) continue;
+
+      flow.appendChild(el);
+      if (!overflows()) continue;
+
+      if (flow.childElementCount > 1) {
+        flow.removeChild(el);
+        start(false);
+        flow.appendChild(el);
+        if (!overflows()) continue;
+      }
+
+      // Longer than a whole page on its own: let that sheet grow
+      // rather than cut the words off — and close it behind us, or
+      // everything after would pile onto the one sheet that can no
+      // longer overflow.
+      sheet.classList.add("nl-paper-tall");
+      start(false);
+    }
+
+    // Anything still overflowing grows. A sheet clips what does not
+    // fit, so the failure must be a long page, never lost words.
+    for (const s of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
+      const f = s.querySelector(".nl-flow") as HTMLElement | null;
+      if (f && f.scrollWidth > f.clientWidth + 2) s.classList.add("nl-paper-tall");
+    }
+
+    // A sheet with nothing you can see on it is a blank page.
+    for (const s of Array.from(host.querySelectorAll<HTMLElement>(".nl-paper"))) {
+      if (s.querySelector(".nl-masthead")) continue;
+      const f = s.querySelector(".nl-flow") as HTMLElement | null;
+      if (!f) continue;
+      const words = (f.textContent ?? "").trim().length > 0;
+      if (!words && !f.querySelector("img")) s.remove();
+    }
+
+    const sheets = Array.from(host.querySelectorAll(".nl-paper"));
+    sheets.forEach((s, i) => {
+      const n = s.querySelector(".nl-page");
+      if (n) n.textContent = `${i + 1} / ${sheets.length}`;
+    });
+  }
+
   function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
     const host = document.getElementById("issue-sheets") as HTMLElement;
 
@@ -370,12 +489,8 @@ import Layout from "../../layouts/Layout.astro";
                 class="block h-auto w-full border border-border-soft" />
          </figure>`
       : "";
-    const closingHtml = (issue.closing ?? "").trim()
-      ? `<div class="nl-keep mt-2 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>`
-      : "";
 
-    host.innerHTML = `<article class="nl-paper">
-      <header class="nl-masthead border-b-[3px] border-sacred-gold pb-4">
+    const headHtml = `<header class="nl-masthead border-b-[3px] border-sacred-gold pb-4">
         <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-brand-tan-dark">
           <span>${escapeHtml(issue.issue_label ?? "")}</span>
           <span>${escapeHtml(issueDateLabel(issue.published_at))}</span>
@@ -383,19 +498,53 @@ import Layout from "../../layouts/Layout.astro";
         <h1 class="nl-title mt-2 text-center font-display leading-tight text-text-primary">
           St. John of Kronstadt Orthodox Mission
         </h1>
-      </header>
-      ${heroHtml}
-      <div class="nl-flow mt-6">
-        ${issue.intro ? `<div class="nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
-        ${contentsHtml(headings)}
-        ${body.join("")}
-        ${closingHtml}
-      </div>
-      <div class="nl-foot">
+      </header>${heroHtml}`;
+
+    const footHtml = `<div class="nl-foot">
         <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
-        <span>stjohnrgv.org</span>
-      </div>
-    </article>`;
+        <span class="nl-page"></span>
+      </div>`;
+
+    const opening: string[] = [];
+    if (issue.intro) {
+      opening.push(`<div class="nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`);
+    }
+    const contents = contentsHtml(headings);
+    if (contents) opening.push(contents);
+    if ((issue.closing ?? "").trim()) {
+      body.push(`<div class="nl-keep mt-2 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>`);
+    }
+
+    const all = [...opening, ...body];
+    const lay = () => paginate(issue, headHtml, all, footHtml);
+    lay();
+
+    // Again once the pictures are in: a picture with no dimensions on
+    // it measures as nothing until it loads, so the first pass thinks
+    // everything fits. And again on resize, since what fits in two
+    // columns does not fit in one.
+    const sheetHost = document.getElementById("issue-sheets") as HTMLElement;
+    let settling = false;
+    const pending = Array.from(sheetHost.querySelectorAll("img")).filter((i) => !i.complete);
+    if (pending.length) {
+      settling = true;
+      let left = pending.length;
+      const arrived = () => {
+        if (--left > 0) return;
+        settling = false;
+        lay();
+      };
+      for (const img of pending) {
+        img.addEventListener("load", arrived, { once: true });
+        img.addEventListener("error", arrived, { once: true });
+      }
+    }
+    let settle = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(lay, 250);
+    });
+    void settling;
   }
 
   (async () => {
