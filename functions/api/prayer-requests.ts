@@ -75,7 +75,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       ok: true,
       message:
         `Thank you. ${name} has been added to the ${kind === "departed" ? "memorial" : "prayer"} list ` +
-        `and will be prayed for. It goes to the parish office, not onto the website.`,
+        `and will be prayed for. It comes to the parish office.`,
     },
     201,
   );
