@@ -35,19 +35,6 @@ import SaintDiptych from "../components/SaintDiptych.astro";
     </div>
 
     <div class="mx-auto max-w-3xl">
-      <!-- Filled in by renderFastBanner() from the upstream calendar's
-           own fasting line, so the parish and the calendar app never
-           disagree. Hidden until the day's data arrives. -->
-      <div
-        id="fast-banner"
-        hidden
-        role="status"
-        class="mb-4 border border-border-soft border-l-4 bg-cream-card px-5 py-4"
-      >
-        <p id="fast-banner-headline" class="font-display text-base font-bold text-text-primary"></p>
-        <p id="fast-banner-detail" class="mt-1 text-sm text-text-secondary"></p>
-      </div>
-
       <!-- Say that there is more. The commemorations, the readings and
            the troparia are all below the fold and nothing on screen
            admitted it, so the page looked finished when it wasn't.
@@ -63,6 +50,19 @@ import SaintDiptych from "../components/SaintDiptych.astro";
         <button id="today-btn" class="font-display text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-brand-blue">&#8629; Today</button>
       </div>
     </div>
+
+      <!-- Filled in by renderFastBanner() from the upstream calendar's
+           own fasting line, so the parish and the calendar app never
+           disagree. Hidden until the day's data arrives. -->
+      <div
+        id="fast-banner"
+        hidden
+        role="status"
+        class="mb-4 border border-border-soft border-l-4 bg-cream-card px-5 py-4"
+      >
+        <p id="fast-banner-headline" class="font-display text-base font-bold text-text-primary"></p>
+        <p id="fast-banner-detail" class="mt-1 text-sm text-text-secondary"></p>
+      </div>
 
     <div class="mx-auto max-w-3xl">
       <!-- Loading -->
@@ -334,6 +334,14 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       // shape we didn't anticipate: say nothing rather than guess wrong
       // about a fast.
       if (!fasting || !fasting.kind || !FAST_STYLES[fasting.kind]) {
+        banner.hidden = true;
+        return;
+      }
+
+      // Nothing to say on a day with no fast. The month grid marks the
+      // fast days plainly enough, and "No Fast Today" on every ordinary
+      // day was a box of nothing between the book and the readings.
+      if (fasting.kind === 'none') {
         banner.hidden = true;
         return;
       }
@@ -843,9 +851,12 @@ import SaintDiptych from "../components/SaintDiptych.astro";
 
     /** How a day is shaded. Mirrors the fasting banner's own wording. */
     function markClasses(kind) {
-      if (kind === 'fast') return 'bg-liturgical-red/10 text-liturgical-red';
-      if (kind === 'fish') return 'bg-sacred-gold/20 text-brand-tan-dark';
-      return 'text-text-primary';
+      // /10 and /20 tints on a cream panel are barely a shade — the
+      // grid read as blank. These are strong enough to tell apart at a
+      // glance, and the day number stays dark on all three.
+      if (kind === 'fast') return 'bg-liturgical-red/35';
+      if (kind === 'fish') return 'bg-sacred-gold/50';
+      return 'bg-white';
     }
 
     function renderMonthGrid() {
@@ -878,10 +889,8 @@ import SaintDiptych from "../components/SaintDiptych.astro";
         }
 
         cells +=
-          '<button type="button" class="diptych-day relative aspect-square w-full border text-sm transition-colors ' +
-            (isShown
-              ? 'border-sacred-gold bg-sacred-gold/25 font-bold '
-              : 'border-transparent hover:border-sacred-gold/60 ') +
+          '<button type="button" class="diptych-day relative aspect-square w-full border border-[#2C3E50]/45 text-sm text-[#2C3E50] transition-shadow hover:ring-2 hover:ring-inset hover:ring-sacred-gold ' +
+            (isShown ? 'ring-2 ring-inset ring-sacred-gold font-bold ' : '') +
             markClasses(kind) + '" ' +
           'data-day="' + d + '" ' +
           'aria-label="' + label.replace(/"/g, '&quot;') + '" ' +
@@ -901,9 +910,9 @@ import SaintDiptych from "../components/SaintDiptych.astro";
           '<button type="button" data-month-step="1" aria-label="Next month" ' +
             'class="px-2 py-1 font-display text-sm text-brand-blue hover:text-brand-blue-dark">&rarr;</button>' +
         '</div>' +
-        '<div class="mt-3 grid grid-cols-7 gap-px text-center">' +
+        '<div class="mt-3 grid grid-cols-7 gap-0 border border-[#2C3E50]/45 bg-white text-center">' +
           DOW.map((d) =>
-            '<div class="pb-1 font-display text-[0.6rem] uppercase tracking-wider text-text-secondary">' + d + '</div>'
+            '<div class="border-b border-[#2C3E50]/45 py-1 font-display text-[0.6rem] uppercase tracking-wider text-[#5C6B7A]">' + d + '</div>'
           ).join('') +
           cells +
         '</div>' +

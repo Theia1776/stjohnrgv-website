@@ -98,6 +98,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
           <div class="mt-3 flex items-start gap-4">
             <div
               data-icon-area
+              hidden
               class="flex h-24 w-20 shrink-0 items-center justify-center border border-sacred-gold p-1.5 sm:h-28 sm:w-24"
             ></div>
             <div class="min-w-0">
@@ -193,21 +194,6 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       return MONTHS[julian.getMonth()] + ' ' + julian.getDate();
     }
 
-    function renderFallbackIcon() {
-      return (
-        '<div class="flex h-full w-full flex-col items-center justify-center text-center">' +
-          '<svg viewBox="0 0 100 200" class="h-3/4 max-h-44 w-auto text-sacred-gold" ' +
-            'fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" aria-hidden="true">' +
-            '<line x1="50" y1="20" x2="50" y2="185" />' +
-            '<line x1="38" y1="42" x2="62" y2="42" />' +
-            '<line x1="25" y1="80" x2="75" y2="80" />' +
-            '<line x1="30" y1="135" x2="70" y2="150" />' +
-          '</svg>' +
-          '<p class="mt-3 font-display text-[10px] uppercase tracking-widest text-text-secondary">Icon Pending</p>' +
-        '</div>'
-      );
-    }
-
     function loadForDate(gregorian) {
       const feastKey = feastKeyForGregorian(gregorian);
 
@@ -255,10 +241,10 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
         bioEl.hidden = true;
       }
 
-      // Left-panel icon: if the saint's iconSlug matches a file in
-      // src/assets/images/ (mapped to its processed URL at build time),
-      // render the image; otherwise fall through to the gold-cross
-      // "ICON PENDING" placeholder.
+      // An icon if there is one, and nothing at all if there is not.
+      // The panel used to hold a gold cross labelled "ICON PENDING",
+      // which is a promise rather than a picture; without it the
+      // saint's name simply takes the full width.
       const iconArea = host.querySelector('[data-icon-area]');
       const iconUrl = saint.iconSlug ? ICON_URLS[saint.iconSlug] : null;
       if (iconUrl) {
@@ -266,8 +252,10 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
           .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         iconArea.innerHTML =
           '<img src="' + iconUrl + '" alt="Icon of ' + safeAlt + '" class="h-full w-full object-contain" />';
+        iconArea.hidden = false;
       } else {
-        iconArea.innerHTML = renderFallbackIcon();
+        iconArea.innerHTML = '';
+        iconArea.hidden = true;
       }
     }
 
@@ -307,6 +295,21 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
 </script>
 
 <style>
+  /* The book is a cream page in both themes — its background is set
+     in the markup and does not follow the theme. The text colours
+     did follow it, so in dark mode the whole book went cream on
+     cream and every word vanished: the saint's name, his life, the
+     month, and every day number that was not a fast.
+
+     Pinning the light values here scopes the fix to the book and
+     leaves the rest of the page to the theme. */
+  .diptych-host {
+    --color-text-primary: #2C3E50;
+    --color-text-secondary: #5C6B7A;
+    --color-cream-card: #FFFFFF;
+    --color-brand-blue-dark: #2A5E84;
+  }
+
   /* The cover and its bouncing latch are gone — the book no longer
      opens and closes, so the state swap and the clasp animation they
      drove went with them. Day cells in the month, which the calendar
