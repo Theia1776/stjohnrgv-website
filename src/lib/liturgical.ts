@@ -444,7 +444,7 @@ export function getLiturgicalSeason(input: Date): LiturgicalSeason {
       return buildSeason("lent-weekday");
     }
 
-    return buildSeason("ordinary");
+    return buildSeason("ordinary", weekAfterPentecost(date, pentecost) ?? undefined);
   } catch (err) {
     console.warn("[liturgical] Unexpected error, falling back to ordinary:", err);
     return buildSeason("ordinary");
@@ -464,12 +464,57 @@ export function getSeasonByKey(key: SeasonKey): LiturgicalSeason {
 // Internal — build a full LiturgicalSeason from a key
 // ============================================================================
 
-function buildSeason(key: SeasonKey): LiturgicalSeason {
+
+/**
+ * "Twenty-third Sunday after Pentecost", and the weekdays that follow it.
+ *
+ * The stretch outside the fasts and festal seasons has no single name in
+ * Orthodox use — the Church counts it from Pentecost, and that count is
+ * what the calendar, the tone cycle and the readings all run on. So the
+ * banner says the week rather than borrowing a name from elsewhere.
+ *
+ * Week 1 is the week beginning with the Sunday of All Saints, the Sunday
+ * after Pentecost. A date before Pentecost in its own year belongs to the
+ * previous year's count, which is left to the caller — this is only
+ * reached for ordinary time, which always falls after it.
+ */
+const ORDINALS = [
+  "First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth",
+  "Ninth", "Tenth", "Eleventh", "Twelfth", "Thirteenth", "Fourteenth",
+  "Fifteenth", "Sixteenth", "Seventeenth", "Eighteenth", "Nineteenth",
+  "Twentieth", "Twenty-first", "Twenty-second", "Twenty-third",
+  "Twenty-fourth", "Twenty-fifth", "Twenty-sixth", "Twenty-seventh",
+  "Twenty-eighth", "Twenty-ninth", "Thirtieth", "Thirty-first",
+  "Thirty-second", "Thirty-third", "Thirty-fourth", "Thirty-fifth",
+  "Thirty-sixth", "Thirty-seventh",
+];
+
+function weekAfterPentecost(date: Date, pentecost: Date): string | null {
+  const DAY = 24 * 60 * 60 * 1000;
+  const days = Math.floor((toLocalDateOnly(date).getTime() - toLocalDateOnly(pentecost).getTime()) / DAY);
+  if (days < 0) return null;
+  // Pentecost itself is day 0; the Sunday a week later opens week 1.
+  const week = Math.floor(days / 7);
+  if (week < 1) return null;
+
+  // A Sunday is the Nth Sunday; the weekdays that follow it belong to
+  // the N+1th week, which is how the Church counts and how Holy
+  // Trinity's calendar — the one this site already takes its readings
+  // from — prints it. Checked against theirs across a spread of dates:
+  // 4 Oct is the 18th Sunday and 7 Oct the 19th week.
+  const sunday = date.getDay() === 0;
+  const n = sunday ? week : week + 1;
+  const name = ORDINALS[n - 1];
+  if (!name) return null;
+  return sunday ? `${name} Sunday after Pentecost` : `${name} Week after Pentecost`;
+}
+
+function buildSeason(key: SeasonKey, labelOverride?: string): LiturgicalSeason {
   const tpl = SEASONS[key];
   const v = VESTMENT[tpl.vestment];
   return {
     seasonKey: key,
-    label: tpl.label,
+    label: labelOverride ?? tpl.label,
     color: VESTMENT_VAR[tpl.vestment],
     colorHex: v.hex,
     textColor: v.textVar,
