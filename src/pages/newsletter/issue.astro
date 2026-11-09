@@ -702,6 +702,19 @@ import Layout from "../../layouts/Layout.astro";
   let hiddenForPrint: HTMLElement[] = [];
   function sweepForPrint() {
     hiddenForPrint = [];
+
+    // The contents box goes first, and by hand rather than by
+    // stylesheet. It is the only coloured block in the issue, so when
+    // a pale rectangle turns up alone on the last page it is always
+    // this — and a rule that ought to hide it is worth less than
+    // taking it out of the page.
+    for (const box of Array.from(document.querySelectorAll<HTMLElement>(".nl-contents"))) {
+      box.style.display = "none";
+      hiddenForPrint.push(box);
+    }
+
+    // Then any sheet left with nothing you can see — including one
+    // emptied by taking the box out of it.
     for (const sheet of Array.from(document.querySelectorAll<HTMLElement>(".nl-sheet"))) {
       const words = (sheet.textContent ?? "").replace(/\s+/g, "").length > 0;
       const pictures = sheet.querySelector("img") !== null;
