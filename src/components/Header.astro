@@ -14,7 +14,23 @@
  */
 const navLinks = [
   { href: "/learn/saints/", label: "Saints" },
-  { href: "/calendar/", label: "Calendar" },
+  {
+    href: "/calendar/",
+    label: "Calendar",
+    // These jump to parts of the one calendar page rather than to
+    // separate pages — the whole day is on that page on purpose, and
+    // splitting it would be a step backwards. The page scrolls to
+    // them itself once the day has loaded, because the browser looks
+    // for the anchor long before the data arrives.
+    children: [
+      { href: "/calendar/", label: "Today" },
+      { href: "/calendar/#fast-banner", label: "Fasting Today" },
+      { href: "/calendar/#saint-diptych", label: "Saint of the Day" },
+      { href: "/calendar/#cal-commemorations", label: "Commemorations" },
+      { href: "/calendar/#cal-readings", label: "Scripture Readings" },
+      { href: "/calendar/#cal-troparia", label: "Troparia & Kontakia" },
+    ],
+  },
   {
     href: "/learn/",
     label: "Learn More",
@@ -49,7 +65,11 @@ const navLinks = [
 const currentPath = Astro.url.pathname;
 
 /** True when this nav link should be marked as the current page. */
-function isActive(href: string): boolean {
+function isActive(hrefWithHash: string): boolean {
+  // Strip the fragment first: /calendar/#cal-readings is the calendar
+  // page, and without this every item in its menu would read as the
+  // page you are on.
+  const href = hrefWithHash.split("#")[0];
   // Exact match first; otherwise treat the link as a section root and
   // mark active when the current path starts with it (e.g. /about/foo).
   if (currentPath === href) return true;

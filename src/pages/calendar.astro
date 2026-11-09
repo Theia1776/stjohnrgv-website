@@ -155,6 +155,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
     let currentSaints = [];
     let currentReadings = [];
     let currentTroparia = [];
+    let hashHandled = false;
 
     // In-memory caches of fetched bodies, keyed by upstream url. Backed
     // by localStorage so reload + day-back-and-forth stays snappy.
@@ -399,7 +400,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
             >Show all (${currentSaints.length})</button>`
           : '';
         sections.push(`
-          <div class="mx-auto w-full max-w-3xl" data-saints-block>
+          <div class="mx-auto w-full max-w-3xl" id="cal-commemorations" data-saints-block>
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Commemorations</h2>
             <ul class="space-y-2">${itemsHtml}</ul>
             ${toggleHtml}
@@ -412,7 +413,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       if (currentReadings.length > 0) {
         const readingItems = currentReadings.map((r, i) => renderReadingCard(r, i)).join('');
         sections.push(`
-          <div>
+          <div id="cal-readings">
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Scripture Readings</h2>
             <div class="flex flex-wrap justify-center gap-6">${readingItems}</div>
           </div>
@@ -424,7 +425,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       if (currentTroparia.length > 0) {
         const tropItems = currentTroparia.map((e, i) => renderTroparionCard(e, i)).join('');
         sections.push(`
-          <div>
+          <div id="cal-troparia">
             <h2 class="mb-4 border-b border-brand-tan pb-2 font-display text-lg text-text-primary">Troparia &amp; Kontakia</h2>
             <div class="flex flex-wrap justify-center gap-6">${tropItems}</div>
           </div>
@@ -432,6 +433,17 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       }
 
       document.getElementById('cal-content').innerHTML = sections.join('');
+
+      // A link from the menu points at a section that does not exist
+      // until the day has loaded. The browser gives up looking long
+      // before then, so the jump is made here instead, once.
+      if (location.hash && !hashHandled) {
+        const target = document.querySelector(location.hash);
+        if (target) {
+          hashHandled = true;
+          requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        }
+      }
     }
 
     // After renderContent: lazily fetch each reading's verses to fill in
