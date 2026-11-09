@@ -142,22 +142,26 @@ import Layout from "../../layouts/Layout.astro";
         padding: 0 !important;
         margin: 0 !important;
         min-height: 0 !important;
-        /* One sheet, one printed page. This is safe now in a way it
-           was not before: a sheet holds exactly what fits on a page,
-           measured, so a break at its end lands where the content
-           ends rather than halfway through it. */
-        break-after: page;
+        /* No forced breaks. The sheets are measured against the
+           SCREEN — its width, its fonts — and the print engine
+           reflows all of it for paper, so a sheet is not a page once
+           it gets there. Breaking after each one therefore cut into
+           the middle of things and left the debris behind: a banner
+           alone, a blank, the foot of one sheet pages later.
+
+           On paper the sheets dissolve into one continuous
+           newsletter and the paper breaks where paper breaks. */
+        break-after: auto;
+        break-inside: auto;
         aspect-ratio: auto !important;
         overflow: visible !important;
         display: block;
       }
       #issue-sheets > * + * { margin-top: 0 !important; }
-      .nl-sheet:last-child { break-after: auto; }
 
       /* The sheet number belongs to the screen. */
-      /* The sheet number is right on paper now, because a sheet is
-         a page. */
-      .nl-foot { border-top: 1px solid #ccc; }
+      /* A sheet number means nothing once the sheets are not pages. */
+      .nl-foot { display: none !important; }
 
       /* Fill each column before starting the next, which is how a
          newspaper column reads and how it paginates without leaving
@@ -167,6 +171,9 @@ import Layout from "../../layouts/Layout.astro";
       .nl-piece, figure, blockquote { break-inside: avoid; }
       .nl-head { break-after: avoid; }
       .nl-masthead { break-after: avoid; }
+      /* The banner must not be left alone at the top of page one with
+         its words on page two. */
+      .nl-masthead + figure { break-after: avoid; break-before: avoid; }
 
       .nl-lead::first-letter { color: #000; }
       a[href]::after { content: ""; }
@@ -477,6 +484,14 @@ import Layout from "../../layouts/Layout.astro";
       }
     }
 
+    // A sheet with nothing in its flow is a blank page, on screen
+    // and in the PDF. It happens when the last piece to be moved
+    // along was also the last piece there was.
+    for (const empty of Array.from(host.querySelectorAll(".nl-sheet"))) {
+      const f = empty.querySelector(".nl-flow");
+      if (f && f.childElementCount === 0 && !empty.querySelector(".nl-masthead")) empty.remove();
+    }
+
     // Number them once the count is known.
     const sheets = Array.from(host.querySelectorAll(".nl-sheet"));
     sheets.forEach((s, i) => {
@@ -513,7 +528,7 @@ import Layout from "../../layouts/Layout.astro";
         });
       } else {
         pieces.push({
-          heading: slot.section.heading,
+          heading: slot.section.heading.split(/\s+[—–-]\s+/)[0],
           html: `<section class="nl-piece mb-7">${sectionHtml(slot.section, true)}</section>`,
         });
       }
