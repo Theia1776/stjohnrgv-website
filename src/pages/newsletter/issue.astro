@@ -234,8 +234,8 @@ import Layout from "../../layouts/Layout.astro";
    * looking like a wall. A section with no photograph simply runs the
    * full measure.
    */
-  function sectionHtml(s: Section, bare = false): string {
-    const img = imageSrc(s.image);
+  function sectionHtml(s: Section, bare = false, withFigure = true): string {
+    const img = withFigure ? imageSrc(s.image) : "";
     // The whole picture, every time. This used to be forced into a
     // 3:1 letterbox with object-cover, which threw away half of a
     // painting somebody had commissioned and composed — the subject
@@ -356,9 +356,18 @@ import Layout from "../../layouts/Layout.astro";
         .map((slot) =>
           slot.pair
             ? `<section class="nl-section mt-10 break-inside-avoid">
+                 ${
+                   imageSrc(slot.left.image || slot.right.image)
+                     ? `<figure class="m-0 mx-auto mb-5 max-w-[640px]">
+                          <img src="${escapeHtml(imageSrc(slot.left.image || slot.right.image))}"
+                               alt="${escapeHtml(slot.left.image_alt ?? slot.right.image_alt ?? "")}"
+                               class="block h-auto w-full border border-border-soft" loading="lazy" />
+                        </figure>`
+                     : ""
+                 }
                  <div class="grid gap-6 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
-                   <div>${sectionHtml(slot.left, true)}</div>
-                   <div class="sm:pl-6">${sectionHtml(slot.right, true)}</div>
+                   <div>${sectionHtml(slot.left, true, false)}</div>
+                   <div class="sm:pl-6">${sectionHtml(slot.right, true, false)}</div>
                  </div>
                </section>`
             : sectionHtml(slot.section),

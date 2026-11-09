@@ -286,8 +286,8 @@ export function issueToHtml(issue: NewsletterIssue): string {
   // width and no float — mail clients ignore most layout, and a
   // photograph stacked above its text is the one arrangement that
   // survives everywhere.
-  const sectionHtml = (s: NewsletterSection, heads = 17) => {
-      const src = imageUrl(s.image, true);
+  const sectionHtml = (s: NewsletterSection, heads = 17, withFigure = true) => {
+      const src = withFigure ? imageUrl(s.image, true) : "";
       const figure = src
         ? `<img src="${escapeHtml(src)}" alt="${escapeHtml(s.image_alt ?? "")}" width="556" style="display:block;width:100%;max-width:556px;height:auto;border:1px solid #e0d9c8;margin:0 0 .5em;">` +
           (s.image_caption
@@ -314,13 +314,20 @@ export function issueToHtml(issue: NewsletterIssue): string {
   const sections = pairSections(readSections(issue.sections))
     .map((slot) =>
       slot.pair
-        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:1.5em 0;">
+        ? // One picture over the pair, not one squeezed into each
+          // column. The left section's image is the pair's banner;
+          // two half-width photographs side by side read as a pair of
+          // thumbnails rather than as a section.
+          (imageUrl(slot.left.image || slot.right.image, true)
+            ? `<img src="${escapeHtml(imageUrl(slot.left.image || slot.right.image, true))}" alt="${escapeHtml(slot.left.image_alt ?? slot.right.image_alt ?? "")}" width="556" style="display:block;width:100%;max-width:556px;height:auto;border:1px solid #e0d9c8;margin:1.5em 0 .5em;">`
+            : ``) +
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:.5em 0 1.5em;">
              <tr>
                <td width="50%" valign="top" style="padding-right:10px;border-right:1px solid #e0d9c8;">
-                 ${sectionHtml(slot.left, 15)}
+                 ${sectionHtml(slot.left, 15, false)}
                </td>
                <td width="50%" valign="top" style="padding-left:10px;">
-                 ${sectionHtml(slot.right, 15)}
+                 ${sectionHtml(slot.right, 15, false)}
                </td>
              </tr>
            </table>`
