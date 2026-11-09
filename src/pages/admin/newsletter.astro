@@ -99,7 +99,7 @@ import FileDrop from "../../components/FileDrop.astro";
         <div class="mt-5">
           <p class="text-xs uppercase tracking-widest text-text-secondary">Sections</p>
           <p class="mt-1 text-xs leading-relaxed text-text-secondary">
-            The six standing sections are always here. Untick one and it stays
+            The standing sections are always here. Untick one and it stays
             saved but doesn't go out, so a quiet month costs you nothing you
             wrote. Add your own below them for anything else.
           </p>
@@ -255,7 +255,25 @@ import FileDrop from "../../components/FileDrop.astro";
       hint: "news from the website",
       aliases: ["website news", "from the website", "news from the website"],
     },
-    { key: "prayer", heading: "Prayer Requests", hint: "", aliases: ["prayer list", "prayers"] },
+    // Two slots, not one. The parish is asked for names "for the
+    // living or a memorial", and a single list would make the writer
+    // mark each name herself every month.
+    //
+    // The living slot keeps the key "prayer" on purpose: anything
+    // already written under the old single "Prayer Requests" heading
+    // lands here with its text intact rather than being orphaned.
+    {
+      key: "prayer",
+      heading: "Prayer Requests — For the Living",
+      hint: "",
+      aliases: ["prayer requests", "prayer list", "prayers", "for the living"],
+    },
+    {
+      key: "memorial",
+      heading: "Prayer Requests — Memorial",
+      hint: "for those who have departed",
+      aliases: ["memorial", "memorials", "memorial prayer requests", "for the departed"],
+    },
     {
       key: "services",
       heading: "Service Schedule",
