@@ -23,82 +23,58 @@ import Layout from "../../layouts/Layout.astro";
   <meta slot="head" name="robots" content="noindex" />
 
   <style is:global>
-    /* ================= THE SHEETS =================
-       The issue is read as pages, not as one column that goes on
-       until it stops. Each sheet is a page of paper on screen: a
-       bounded block with a number at its foot, two columns of text
-       inside it, and the next one below.
-
-       A sheet has a MINIMUM height rather than a fixed one. Real
-       pagination — flowing a paragraph across a page break at exactly
-       the right line — is not something CSS can do reliably, and a
-       fixed height would clip somebody's words. So a sheet is at
-       least a page tall and grows if it must. It reads as paper
-       either way, and nothing is ever cut off. */
-    .nl-sheet {
+    /* ================= THE NEWSLETTER =================
+       One sheet of paper that goes on as long as the issue does.
+       There are no pages here: the browser breaks it, by scrolling on
+       a screen and by turning the page on paper, and both of those it
+       does well. Everything that used to measure and cut it into
+       pages is gone — that machinery could not agree with the print
+       engine about where a page ends, and every attempt to make it
+       agree broke something else. */
+    .nl-paper {
       background: #FFFFFF;
       border: 1px solid var(--color-border-soft, #e0d9c8);
       box-shadow: 0 2px 18px rgba(44, 62, 80, 0.13);
-      padding: 2.75rem 2.5rem 1.25rem;
-      display: flex;
-      flex-direction: column;
-      /* The sheet is paper in both themes. Without this the text
-         tokens flip in dark mode and the page goes cream on cream,
-         exactly as the calendar's book did. */
+      padding: 2.75rem 2.5rem 1.5rem;
+      /* Paper in both themes. The text tokens flip with the theme and
+         this surface does not, so they are pinned here. */
       --color-text-primary: #2C3E50;
       --color-text-secondary: #5C6B7A;
       --color-brand-blue-dark: #2A5E84;
       color: #2C3E50;
     }
-
-    /* A page, in the proportions of one: 8.5 by 11. The flow inside
-       is given whatever is left after the masthead and the foot, and
-       the paginator fills it by measurement — a piece goes in, and if
-       the sheet overflows it comes out again onto the next one. */
-    .nl-sheet-paged {
-      aspect-ratio: 8.5 / 11;
-      overflow: hidden;
-    }
-    .nl-sheet-paged .nl-flow { flex: 1 1 auto; min-height: 0; }
-
-    /* The escape hatch: a single piece longer than a whole page
-       cannot be made to fit, so that sheet is allowed to grow rather
-       than swallow somebody's words. */
-    .nl-sheet-tall { aspect-ratio: auto; overflow: visible; }
-
     @media (max-width: 639px) {
-      /* No pages on a phone. Fixed heights on a small screen are
-         clipping waiting to happen, and nobody holds a phone
-         expecting paper. */
-      .nl-sheet { padding: 1.5rem 1.25rem 1rem; aspect-ratio: auto; overflow: visible; }
+      .nl-paper { padding: 1.5rem 1.25rem 1rem; }
     }
 
-    /* The columns. Two on a sheet, one on a phone — three is too
-       narrow on a screen whatever the print template does. */
+    /* The parish on one line, whatever the width. */
+    .nl-title {
+      font-size: clamp(1.1rem, 3.4vw, 2rem);
+      white-space: nowrap;
+    }
+
+    /* Three inches of picture under the masthead, not half a page.
+       Held by width so the whole painting is there — the title is
+       inside it and cropping would take the title off. */
+    .nl-hero { max-width: 26rem; }
+
+    /* Two columns, one on a phone. */
     .nl-flow { column-count: 2; column-gap: 2rem; column-rule: 1px solid #e7e1d4; }
-    @media (max-width: 640px) { .nl-flow { column-count: 1; } }
+    @media (max-width: 639px) { .nl-flow { column-count: 1; } }
 
-    /* Prose runs between the columns the way a newspaper's does. It
-       used to be held together piece by piece, so a section could not
-       split — which left the right-hand column of the first sheet
-       empty and wasted most of a page.
-
-       What must not be split is anything that is a thing rather than
-       words: a picture, a quote box, the contents. And a heading must
-       not be the last line of a column with its text in the next. */
-    figure, blockquote, .nl-contents, .nl-foot {
+    /* What must not be split: a picture with its headline, a quote
+       box, the contents. Prose is free to run between columns, which
+       is what fills the measure instead of leaving one empty. */
+    .nl-keep, figure, blockquote, .nl-contents {
       break-inside: avoid;
       -webkit-column-break-inside: avoid;
     }
-    .nl-head { break-after: avoid; }
-
-    /* The gold rule that stands before every headline. */
     .nl-head {
+      break-after: avoid;
       border-left: 4px solid var(--color-sacred-gold, #C9A84C);
       padding-left: 0.85rem;
     }
 
-    /* The opening letter of the lead, as a printed newsletter sets it. */
     .nl-lead::first-letter {
       float: left;
       font-family: var(--font-display, serif);
@@ -111,10 +87,8 @@ import Layout from "../../layouts/Layout.astro";
     .nl-body p { margin-bottom: 0.9em; }
     .nl-body p:last-child { margin-bottom: 0; }
 
-    /* The foot of every sheet: the parish on the left, the page
-       number on the right, the way the template does it. */
     .nl-foot {
-      margin-top: auto;
+      margin-top: 1.5rem;
       padding-top: 1rem;
       border-top: 1px solid #e7e1d4;
       display: flex;
@@ -127,68 +101,25 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     /* ---------- On paper ----------
-       The sheets are a reading device for the screen, not page
-       boundaries. Forcing one sheet to one printed page was the
-       mistake: a sheet taller than a page splits anyway, so each
-       break landed mid-sheet and the leftovers became pages of their
-       own — a banner alone, then a blank, then the bottom of
-       something three pages later.
-
-       On paper the sheets dissolve. The issue becomes one continuous
-       two-column newsletter and the paper breaks where paper breaks,
-       with headings kept off the bottom of a page and pictures and
-       quote boxes never split. The page numbers go too: a sheet
-       number means nothing once the pages are not sheets. */
+       Nothing is forced. The paper decides where the pages are. */
     @media print {
       header, footer, nav, .no-print { display: none !important; }
       body { background: #fff !important; }
       @page { margin: 13mm 11mm 15mm; }
 
-      .nl-sheet {
-        background: #fff !important;
-        box-shadow: none !important;
+      .nl-paper {
         border: 0 !important;
+        box-shadow: none !important;
         padding: 0 !important;
         margin: 0 !important;
-        min-height: 0 !important;
-        /* No forced breaks. The sheets are measured against the
-           SCREEN — its width, its fonts — and the print engine
-           reflows all of it for paper, so a sheet is not a page once
-           it gets there. Breaking after each one therefore cut into
-           the middle of things and left the debris behind: a banner
-           alone, a blank, the foot of one sheet pages later.
-
-           On paper the sheets dissolve into one continuous
-           newsletter and the paper breaks where paper breaks. */
-        break-after: auto;
-        break-inside: auto;
-        aspect-ratio: auto !important;
-        overflow: visible !important;
-        display: block;
       }
-      #issue-sheets > * + * { margin-top: 0 !important; }
-
-      /* The sheet number belongs to the screen. */
-      /* A sheet number means nothing once the sheets are not pages. */
-      .nl-foot { display: none !important; }
-
-      /* Fill each column before starting the next, which is how a
-         newspaper column reads and how it paginates without leaving
-         half-empty columns at a break. */
-      .nl-flow { column-fill: auto; margin-top: 0 !important; }
-
-      figure, blockquote, .nl-contents { break-inside: avoid; }
-      /* The contents box does not go on paper. It is a way of getting
-         about the issue on screen, and because it must not be split
-         it was being pushed to the end and printed alone — a page
-         with one beige block on it and nothing else. */
+      /* A list of what is in the issue is for finding your way about
+         a screen. On paper it is a coloured block taking up a column
+         for nothing. */
       .nl-contents { display: none !important; }
-      .nl-head { break-after: avoid; }
+      .nl-foot { display: none !important; }
       .nl-masthead { break-after: avoid; }
-      /* The banner must not be left alone at the top of page one with
-         its words on page two. */
-      .nl-masthead + figure { break-after: avoid; break-before: avoid; }
-
+      .nl-hero { max-width: 20rem; }
       .nl-lead::first-letter { color: #000; }
       a[href]::after { content: ""; }
       img { max-width: 100% !important; }
@@ -216,7 +147,7 @@ import Layout from "../../layouts/Layout.astro";
 
     <!-- The sheets are built in script: how many there are depends on
          how much was written, so they cannot be laid out here. -->
-    <div id="issue-sheets" class="mt-6 space-y-8"></div>
+    <div id="issue-sheets" class="mt-6"></div>
 
     <div id="issue-actions" hidden class="no-print mt-8 flex flex-wrap items-center gap-3">
       <button type="button" id="download-pdf" class="btn btn-secondary">Download as PDF</button>
@@ -294,33 +225,69 @@ import Layout from "../../layouts/Layout.astro";
     errorEl.hidden = false;
   }
 
+  // ================= THE ISSUE =================
+  //
+  // One newsletter, laid in columns, that the browser breaks wherever
+  // it needs to — on screen by scrolling, on paper by turning the
+  // page.
+  //
+  // What was here before paginated by hand: it measured sheets, moved
+  // pieces between them, swept empty ones away before printing. All of
+  // that fought the print engine, which relays the whole document for
+  // paper with a different width and different fonts, so the sheets
+  // were never the pages. Every fix moved the breakage somewhere else.
+  // There is no pagination left to go wrong.
+
+  function issueDateLabel(value: string | null | undefined): string {
+    if (!value) return "";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  }
+
+  /** The name a section is printed under. */
+  function sectionTitle(s: Section): string {
+    // "Prayer Requests — For the Living" standing on its own is just
+    // Prayer Requests. The halves only need telling apart when both
+    // are there, side by side, and then the column headings do it.
+    if (s.key === "prayer" || s.key === "memorial") {
+      return (s.heading || "").split(/\s+[—–-]\s+/)[0];
+    }
+    return s.heading || "";
+  }
+
+  function figureHtml(src: string, alt: string, caption?: string): string {
+    if (!src) return "";
+    return `<figure class="m-0 mb-3">
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}"
+           class="block h-auto w-full border border-border-soft" loading="lazy" />
+      ${
+        caption
+          ? `<figcaption class="mt-1.5 text-xs italic text-text-secondary">${escapeHtml(caption)}</figcaption>`
+          : ""
+      }
+    </figure>`;
+  }
+
   /**
-   * One section. The photograph alternates side by side with the text
-   * and swaps sides down the page, which is what stops a long issue
-   * looking like a wall. A section with no photograph simply runs the
-   * full measure.
+   * One section.
+   *
+   * The picture and the headline are one block that cannot be split,
+   * so a photograph can never end up in a different column from the
+   * title it belongs to — which is what went wrong when the sections
+   * were allowed to break anywhere. The prose below them runs between
+   * columns freely, which is what fills a page.
    */
-  function sectionHtml(s: Section, bare = false, withFigure = true): string {
-    const img = withFigure ? imageSrc(s.image) : "";
-    // The whole picture, every time. This used to be forced into a
-    // 3:1 letterbox with object-cover, which threw away half of a
-    // painting somebody had commissioned and composed — the subject
-    // along with it. It is capped in width instead, so a tall-ish
-    // picture is small rather than cut.
-    const figure = img
-      ? `<figure class="m-0 mx-auto max-w-[640px]">
-           <img src="${escapeHtml(img)}" alt="${escapeHtml(s.image_alt ?? "")}"
-                class="block h-auto w-full border border-border-soft" loading="lazy" />
-           ${
-             s.image_caption
-               ? `<figcaption class="mt-1.5 text-center text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
-               : ""
-           }
-         </figure>`
-      : "";
+  function sectionHtml(s: Section, titleOverride?: string): string {
+    const title = titleOverride ?? sectionTitle(s);
+    const head = `<div class="nl-keep">
+      ${figureHtml(imageSrc(s.image), s.image_alt ?? "", s.image_caption)}
+      ${title ? `<h2 class="nl-head font-display text-2xl text-text-primary">${escapeHtml(title)}</h2>` : ""}
+    </div>`;
 
     const quote = s.quote
-      ? `<blockquote class="mt-5 border-y border-border-soft py-4 text-center">
+      ? `<blockquote class="nl-keep my-5 border-y border-border-soft py-4 text-center">
            <p class="font-display text-lg italic leading-relaxed text-text-primary/90">
              &ldquo;${escapeHtml(s.quote)}&rdquo;
            </p>
@@ -332,63 +299,24 @@ import Layout from "../../layouts/Layout.astro";
          </blockquote>`
       : "";
 
-    const prose = `<div class="nl-body leading-relaxed text-text-primary/85">${paragraphs(s.body)}</div>`;
-
-    // A banner across the top of the section, above its headline —
-    // not a photograph beside the text. Two reasons. Email strips
-    // side-by-side layout, so this is the one arrangement where the
-    // page and the inbox look the same. And a wide, short image reads
-    // as a section marker, which is what it is being asked to do.
-    // `bare` drops the wrapper so a paired section can supply its
-    // own — otherwise the pair's margin and each half's would stack.
-    const body = `${figure}
-      ${
-        s.heading
-          ? `<h2 class="nl-head mt-4 font-display text-2xl text-text-primary">${escapeHtml(s.heading)}</h2>`
-          : ""
-      }
-      <div class="mt-4">${prose}</div>
-      ${quote}`;
-    return bare ? body : `<section class="nl-section mt-10 break-inside-avoid">${body}</section>`;
+    return `<section class="mb-8">
+      ${head}
+      <div class="nl-body mt-3 leading-relaxed text-text-primary/85">${paragraphs(s.body)}</div>
+      ${quote}
+    </section>`;
   }
 
-  // ================= THE SHEETS =================
-  //
-  // The issue is read as pages. Sections are packed onto sheets by how
-  // much there is of them rather than one to a page: a sheet holding a
-  // three-line notice and nothing else looks broken, and so does one
-  // with eight sections crammed in.
-  //
-  // The estimate is rough on purpose. Exact pagination — breaking a
-  // paragraph at the right line — is not something CSS does, and
-  // chasing it would mean clipping somebody's words to make the
-  // arithmetic come out. A sheet is at least a page tall and grows if
-  // it has to.
-
-  function issueDateLabel(value: string | null | undefined): string {
-    if (!value) return "";
-    const d = new Date(value);
-    return Number.isNaN(d.getTime())
-      ? ""
-      : d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
-  }
-
-  /** The contents box, as the template has it on the first page. */
   function contentsHtml(headings: string[]): string {
     if (headings.length < 2) return "";
-    return `<aside class="nl-contents nl-piece mt-6 border-2 border-sacred-gold bg-[#FBF7EC] p-4">
+    const rows = headings
+      .map(
+        (h) =>
+          `<li class="flex items-baseline gap-2 text-sm"><span class="text-text-primary">${escapeHtml(h)}</span><span aria-hidden="true" class="min-w-[1rem] flex-1 translate-y-[-0.2rem] border-b border-dotted border-[#cdbfa0]"></span></li>`,
+      )
+      .join("");
+    return `<aside class="nl-contents nl-keep mb-7 border-2 border-sacred-gold bg-[#FBF7EC] p-4">
       <p class="font-display text-sm uppercase tracking-[0.18em] text-brand-tan-dark">In This Issue</p>
-      <ul class="mt-3 space-y-1.5">
-        ${headings
-          .map(
-            (h) =>
-              `<li class="flex items-baseline gap-2 text-sm">
-                 <span class="text-text-primary">${escapeHtml(h)}</span>
-                 <span aria-hidden="true" class="min-w-[1rem] flex-1 translate-y-[-0.2rem] border-b border-dotted border-[#cdbfa0]"></span>
-               </li>`,
-          )
-          .join("")}
-      </ul>
+      <ul class="mt-3 space-y-1.5">${rows}</ul>
       <p class="mt-4 border-t border-[#e0d4b8] pt-3 text-[0.7rem] leading-relaxed text-text-secondary">
         39737 Palm Lane, Bayview, TX 78566<br />
         (956) 434-6874<br />
@@ -397,232 +325,73 @@ import Layout from "../../layouts/Layout.astro";
     </aside>`;
   }
 
-  function mastheadHtml(issue: Issue): string {
-    const hero = imageSrc(issue.hero_image);
-    return `<header class="nl-masthead border-b-[3px] border-sacred-gold pb-4">
-      <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-brand-tan-dark">
-        <span>${escapeHtml(issue.issue_label ?? "")}</span>
-        <span>${escapeHtml(issueDateLabel(issue.published_at))}</span>
-      </div>
-      <!-- The parish is the masthead. The issue's own title is
-           painted into the picture below it and is the first line of
-           the opening besides, so printing it here made three of them
-           one after another. -->
-      <h1 class="mt-2 text-center font-display text-3xl leading-tight text-text-primary md:text-4xl">
-        St. John of Kronstadt Orthodox Mission
-      </h1>
-    </header>
-    ${
-      hero
-        ? `<figure class="m-0 mt-4">
-             <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
-                  class="block h-auto w-full border border-border-soft" />
-           </figure>`
-        : ""
-    }`;
-  }
-
-  /**
-   * Lay the pieces onto sheets that are exactly a page tall.
-   *
-   * Not by estimating how much a piece weighs — that was the first
-   * attempt and it is guesswork, which is why sheets broke early and
-   * the printed version came apart. The browser is asked instead: put
-   * the piece in, and if the sheet now overflows, take it out again
-   * and start another sheet.
-   *
-   * A sheet is a letter page in proportion, and its column flow is a
-   * fixed height. In a multi-column box of fixed height, content that
-   * does not fit spills into a THIRD column rather than growing
-   * downward — so what is measured is the width, not the height.
-   *
-   * On a phone a sheet is one column and is left to grow: pages of
-   * fixed height on a small screen are just clipping waiting to
-   * happen, and a phone has no pages anyway.
-   */
-  function paginate(issue: Issue, headHtml: string, pieces: string[]) {
+  function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
     const host = document.getElementById("issue-sheets") as HTMLElement;
-    host.innerHTML = "";
-    const paged = window.matchMedia("(min-width: 640px)").matches;
 
-    const newSheet = (withHead: boolean): HTMLElement => {
-      const sheet = document.createElement("article");
-      sheet.className = "nl-sheet" + (paged ? " nl-sheet-paged" : "");
-      sheet.innerHTML =
-        (withHead ? headHtml : "") +
-        `<div class="nl-flow mt-5"></div>` +
-        `<div class="nl-foot"><span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span><span class="nl-page"></span></div>`;
-      host.appendChild(sheet);
-      return sheet;
-    };
-
-    let sheet = newSheet(true);
-    let flow = sheet.querySelector(".nl-flow") as HTMLElement;
-
-    const overflows = () => paged && flow.scrollWidth > flow.clientWidth + 2;
-
-    const start = () => {
-      sheet = newSheet(false);
-      flow = sheet.querySelector(".nl-flow") as HTMLElement;
-    };
-
-    for (const html of pieces) {
-      const holder = document.createElement("div");
-      holder.innerHTML = html;
-      const el = holder.firstElementChild as HTMLElement | null;
-      if (!el) continue;
-
-      flow.appendChild(el);
-      if (!overflows()) continue;
-
-      // It did not fit. Take it back and give it a fresh sheet.
-      if (flow.childElementCount > 1) {
-        flow.removeChild(el);
-        start();
-        flow.appendChild(el);
-        if (!overflows()) continue;
-      }
-
-      // Still does not fit on a sheet of its own: the piece is simply
-      // longer than a page, so that sheet is allowed to grow rather
-      // than swallow the words.
-      //
-      // And then it is CLOSED. A grown sheet can never overflow
-      // again, so leaving it open meant every piece after it piled
-      // on and the whole issue came out as one enormous page.
-      sheet.classList.add("nl-sheet-tall");
-      start();
-    }
-
-    if ((issue.closing ?? "").trim()) {
-      const closing = document.createElement("div");
-      closing.className =
-        "mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85";
-      closing.innerHTML = paragraphs(issue.closing);
-      flow.appendChild(closing);
-      if (overflows()) {
-        flow.removeChild(closing);
-        sheet = newSheet(false);
-        flow = sheet.querySelector(".nl-flow") as HTMLElement;
-        flow.appendChild(closing);
-      }
-    }
-
-    // Last check. If anything still overflows its sheet, let that
-    // sheet grow. A sheet clips what does not fit, so the failure
-    // here has to be a page that runs long — never a paragraph that
-    // quietly disappears off the right-hand edge.
-    for (const s of Array.from(host.querySelectorAll<HTMLElement>(".nl-sheet"))) {
-      const f = s.querySelector(".nl-flow") as HTMLElement | null;
-      if (f && f.scrollWidth > f.clientWidth + 2) s.classList.add("nl-sheet-tall");
-    }
-
-    // A sheet with nothing in its flow is a blank page, on screen
-    // and in the PDF. It happens when the last piece to be moved
-    // along was also the last piece there was.
-    for (const empty of Array.from(host.querySelectorAll(".nl-sheet"))) {
-      if (empty.querySelector(".nl-masthead")) continue;
-      const f = empty.querySelector(".nl-flow");
-      if (!f) continue;
-      const words = (f.textContent ?? "").trim().length > 0;
-      const pictures = f.querySelector("img") !== null;
-      if (!words && !pictures) empty.remove();
-    }
-
-    // Number them once the count is known.
-    const sheets = Array.from(host.querySelectorAll(".nl-sheet"));
-    sheets.forEach((s, i) => {
-      const n = s.querySelector(".nl-page");
-      if (n) n.textContent = `${i + 1} / ${sheets.length}`;
-    });
-  }
-
-  function renderSheets(issue: Issue, slots: ReturnType<typeof pairSections>) {
-    // Every piece of the issue, in order, with its weight.
-    type Piece = { html: string; heading: string };
-    const pieces: Piece[] = [];
+    const headings: string[] = [];
+    const body: string[] = [];
 
     for (const slot of slots) {
       if (slot.pair) {
+        const title = sectionTitle(slot.left);
+        headings.push(title);
         const banner = imageSrc(slot.left.image || slot.right.image);
-        pieces.push({
-          // The pair is one line in the contents, under the name they
-          // share: "Prayer Requests", not "Prayer Requests — For the
-          // Living" with no sign of the other half.
-          heading: slot.left.heading.split(/\s+[—–-]\s+/)[0],
-          html: `<section class="mb-7">
-            ${
-              banner
-                ? `<figure class="m-0 mb-3"><img src="${escapeHtml(banner)}" alt="${escapeHtml(slot.left.image_alt ?? "")}"
-                     class="block h-auto w-full border border-border-soft" loading="lazy" /></figure>`
-                : ""
-            }
-            <div class="grid gap-5 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
-              <div>${sectionHtml(slot.left, true, false)}</div>
-              <div class="sm:pl-5">${sectionHtml(slot.right, true, false)}</div>
+        body.push(`<section class="mb-8">
+          <div class="nl-keep">
+            ${figureHtml(banner, slot.left.image_alt ?? slot.right.image_alt ?? "")}
+            <h2 class="nl-head font-display text-2xl text-text-primary">${escapeHtml(title)}</h2>
+          </div>
+          <div class="mt-3 grid gap-5 sm:grid-cols-2 sm:divide-x sm:divide-border-soft">
+            <div class="nl-body leading-relaxed text-text-primary/85">
+              <p class="mb-1 font-display text-xs uppercase tracking-widest text-brand-tan-dark">For the Living</p>
+              ${paragraphs(slot.left.body)}
             </div>
-          </section>`,
-        });
+            <div class="nl-body leading-relaxed text-text-primary/85 sm:pl-5">
+              <p class="mb-1 font-display text-xs uppercase tracking-widest text-brand-tan-dark">In Memory</p>
+              ${paragraphs(slot.right.body)}
+            </div>
+          </div>
+        </section>`);
       } else {
-        pieces.push({
-          heading: slot.section.heading.split(/\s+[—–-]\s+/)[0],
-          html: `<section class="mb-7">${sectionHtml(slot.section, true)}</section>`,
-        });
+        const title = sectionTitle(slot.section);
+        if (title) headings.push(title);
+        body.push(sectionHtml(slot.section, title));
       }
     }
 
-    const headings = pieces.map((p) => p.heading).filter(Boolean);
-    const opening: string[] = [];
-    if (issue.intro) {
-      opening.push(
-        `<div class="nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
-      );
-    }
-    const contents = contentsHtml(headings);
-    if (contents) opening.push(contents);
+    const hero = imageSrc(issue.hero_image);
+    const heroHtml = hero
+      ? `<figure class="nl-hero m-0 mx-auto mt-5">
+           <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
+                class="block h-auto w-full border border-border-soft" />
+         </figure>`
+      : "";
+    const closingHtml = (issue.closing ?? "").trim()
+      ? `<div class="nl-keep mt-2 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>`
+      : "";
 
-    const all = [...opening, ...pieces.map((p) => p.html)];
-    const host = document.getElementById("issue-sheets") as HTMLElement;
-
-    /**
-     * Lay it out, then lay it out again once the pictures are in.
-     *
-     * A picture with no width or height attribute measures as nothing
-     * until it loads. Everything therefore "fits" on the first pass,
-     * and when the images arrive they push the text into a third
-     * column that the sheet clips — which is what was being cut off
-     * at the right-hand edge.
-     *
-     * The second pass only happens once, and by then the images are
-     * cached, so it is immediate and does not loop.
-     */
-    let settling = false;
-    const laid = () => {
-      paginate(issue, mastheadHtml(issue), all);
-      if (settling) return;
-      const pending = Array.from(host.querySelectorAll("img")).filter((i) => !i.complete);
-      if (pending.length === 0) return;
-      settling = true;
-      let left = pending.length;
-      const arrived = () => {
-        if (--left > 0) return;
-        settling = false;
-        paginate(issue, mastheadHtml(issue), all);
-      };
-      for (const img of pending) {
-        img.addEventListener("load", arrived, { once: true });
-        img.addEventListener("error", arrived, { once: true });
-      }
-    };
-    laid();
-
-    // The columns change at 640px, so what fitted on a sheet may not
-    // after a resize. Laid out again, once things have settled.
-    let settle = 0;
-    window.addEventListener("resize", () => {
-      window.clearTimeout(settle);
-      settle = window.setTimeout(laid, 250);
-    });
+    host.innerHTML = `<article class="nl-paper">
+      <header class="nl-masthead border-b-[3px] border-sacred-gold pb-4">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-brand-tan-dark">
+          <span>${escapeHtml(issue.issue_label ?? "")}</span>
+          <span>${escapeHtml(issueDateLabel(issue.published_at))}</span>
+        </div>
+        <h1 class="nl-title mt-2 text-center font-display leading-tight text-text-primary">
+          St. John of Kronstadt Orthodox Mission
+        </h1>
+      </header>
+      ${heroHtml}
+      <div class="nl-flow mt-6">
+        ${issue.intro ? `<div class="nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
+        ${contentsHtml(headings)}
+        ${body.join("")}
+        ${closingHtml}
+      </div>
+      <div class="nl-foot">
+        <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
+        <span>stjohnrgv.org</span>
+      </div>
+    </article>`;
   }
 
   (async () => {
@@ -664,7 +433,7 @@ import Layout from "../../layouts/Layout.astro";
       );
       // pairSections() is shared with the email, so the page and the
       // inbox cannot drift on which sections sit together.
-      renderSheets(issue, pairSections(sections));
+      renderIssue(issue, pairSections(sections));
 
       (document.getElementById("issue-loading") as HTMLElement).hidden = true;
       (document.getElementById("issue-actions") as HTMLElement).hidden = false;
@@ -688,52 +457,5 @@ import Layout from "../../layouts/Layout.astro";
    * file than anything a JavaScript library would draw. The hint says
    * so plainly rather than letting the dialog be a surprise.
    */
-  /**
-   * Sweep the sheets immediately before printing, and put them back
-   * after.
-   *
-   * Laying out at load time is not enough: the print engine reflows
-   * everything for paper, and a sheet that held something on screen
-   * can end up holding nothing you can see on the page — which is
-   * where the blank sheets and the pale block at the end came from.
-   * Rather than hunt each one down, anything with no words and no
-   * pictures in it is taken out at the moment of printing.
-   */
-  let hiddenForPrint: HTMLElement[] = [];
-  function sweepForPrint() {
-    hiddenForPrint = [];
-
-    // The contents box goes first, and by hand rather than by
-    // stylesheet. It is the only coloured block in the issue, so when
-    // a pale rectangle turns up alone on the last page it is always
-    // this — and a rule that ought to hide it is worth less than
-    // taking it out of the page.
-    for (const box of Array.from(document.querySelectorAll<HTMLElement>(".nl-contents"))) {
-      box.style.display = "none";
-      hiddenForPrint.push(box);
-    }
-
-    // Then any sheet left with nothing you can see — including one
-    // emptied by taking the box out of it.
-    for (const sheet of Array.from(document.querySelectorAll<HTMLElement>(".nl-sheet"))) {
-      const words = (sheet.textContent ?? "").replace(/\s+/g, "").length > 0;
-      const pictures = sheet.querySelector("img") !== null;
-      if (!words && !pictures) {
-        sheet.style.display = "none";
-        hiddenForPrint.push(sheet);
-      }
-    }
-  }
-  function restoreAfterPrint() {
-    for (const el of hiddenForPrint) el.style.removeProperty("display");
-    hiddenForPrint = [];
-  }
-  window.addEventListener("beforeprint", sweepForPrint);
-  window.addEventListener("afterprint", restoreAfterPrint);
-
-  document.getElementById("download-pdf")?.addEventListener("click", () => {
-    sweepForPrint();
-    window.print();
-    restoreAfterPrint();
-  });
+  document.getElementById("download-pdf")?.addEventListener("click", () => window.print());
 </script>
