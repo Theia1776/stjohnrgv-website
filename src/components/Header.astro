@@ -1,17 +1,49 @@
 ---
-// Ordered by what somebody actually comes here for. The calendar is
-// the thing people check daily; "Recipes" is now "Fasting", because
-// what the table is for this season is keeping the fast, and that is
-// the word a visitor is scanning for.
+/**
+ * The menu.
+ *
+ * Two of these open. Not for tidiness — the site had fifteen real
+ * pages and the menu showed eight, so the Library, the catechumen
+ * guide, the history, both saints' lives and the gluten-free section
+ * could not be reached from the top of any page. A flat row cannot
+ * hold them, and a label like "Learn More / Library" promises two
+ * places and goes to one.
+ *
+ * `children` makes a link a menu; its own href is the first item in
+ * it, so the parent is still somewhere you can go.
+ */
 const navLinks = [
-  { href: "/calendar/", label: "Calendar" },
-  { href: "/learn/", label: "Learn More" },
-  { href: "/table/", label: "Fasting" },
-  { href: "/donate/", label: "Tithe / Donate" },
   { href: "/learn/saints/", label: "Saints" },
-  { href: "/newsletter/", label: "Newsletter" },
+  { href: "/calendar/", label: "Calendar" },
+  {
+    href: "/learn/",
+    label: "Learn More",
+    children: [
+      { href: "/learn/", label: "Learn More" },
+      { href: "/learn/library/", label: "The Library" },
+      { href: "/learn/catechumen/", label: "For Catechumens" },
+      { href: "/learn/orthodox-history/", label: "Orthodox History" },
+      { href: "/learn/st-john-of-kronstadt/", label: "St. John of Kronstadt" },
+      { href: "/learn/st-john-chrysostom/", label: "St. John Chrysostom" },
+    ],
+  },
+  {
+    href: "/table/",
+    label: "Fasting",
+    children: [
+      { href: "/table/", label: "An Orthodox Table" },
+      { href: "/table/keeping-the-fast/", label: "Keeping the Fast" },
+      { href: "/table/eating-for-the-fast/", label: "Eating for the Fast" },
+      { href: "/table/fasting/", label: "Fasting Recipes" },
+      { href: "/table/everyday/", label: "Everyday Recipes" },
+      { href: "/table/gluten-free/", label: "Gluten-Free" },
+      { href: "/table/share/", label: "Share a Recipe" },
+    ],
+  },
+  { href: "/donate/", label: "Tithe / Donate" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
+  { href: "/newsletter/", label: "Newsletter" },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -40,9 +72,50 @@ function isActive(href: string): boolean {
     </a>
 
     <div class="flex items-center gap-3">
-      <nav class="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
+      <nav class="hidden lg:flex items-center gap-5 text-sm" aria-label="Primary">
         {navLinks.map((link) => {
           const active = isActive(link.href);
+          if (link.children) {
+            // A menu is open when the page you are on is inside it, so
+            // the top row still shows where you are.
+            const inside = link.children.some((c) => isActive(c.href));
+            return (
+              <div class="nav-menu relative">
+                <button
+                  type="button"
+                  class:list={[
+                    "nav-menu-trigger flex items-center gap-1 py-1 border-b-2 whitespace-nowrap transition-colors",
+                    inside
+                      ? "text-text-primary border-liturgical-current"
+                      : "text-text-primary/80 border-transparent hover:text-brand-blue-dark",
+                  ]}
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                >
+                  {link.label}
+                  <span aria-hidden="true" class="text-[0.6rem] leading-none">&#9660;</span>
+                </button>
+                <div
+                  class="nav-menu-panel absolute left-0 top-full z-50 mt-1 hidden min-w-[14rem] border border-border-soft bg-cream-card py-1 shadow-lg"
+                  role="menu"
+                >
+                  {link.children.map((child) => (
+                    <a
+                      href={child.href}
+                      role="menuitem"
+                      aria-current={isActive(child.href) ? "page" : undefined}
+                      class:list={[
+                        "block px-4 py-2 text-sm no-underline hover:bg-brand-blue-pale",
+                        isActive(child.href) ? "text-brand-blue-dark font-semibold" : "text-text-primary",
+                      ]}
+                    >
+                      {child.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          }
           return (
             <a
               href={link.href}
@@ -107,7 +180,7 @@ function isActive(href: string): boolean {
       <button
         type="button"
         id="mobile-menu-toggle"
-        class="md:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
+        class="lg:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
         aria-controls="mobile-menu"
         aria-expanded="false"
         aria-label="Open menu"
@@ -117,10 +190,36 @@ function isActive(href: string): boolean {
     </div>
   </div>
 
-  <div id="mobile-menu" class="hidden border-t border-border-soft bg-cream-bg md:hidden" aria-label="Mobile">
+  <div id="mobile-menu" class="hidden border-t border-border-soft bg-cream-bg lg:hidden" aria-label="Mobile">
     <nav class="mx-auto flex max-w-6xl flex-col px-4 py-4">
       {navLinks.map((link) => {
         const active = isActive(link.href);
+        // No hover on a phone, and a tap that only opens a submenu is
+        // a tap that feels broken. The children are simply listed,
+        // indented, under their heading.
+        if (link.children) {
+          return (
+            <div class="border-b border-border-soft py-2">
+              <p class="py-1 font-display text-xs uppercase tracking-widest text-text-secondary">
+                {link.label}
+              </p>
+              {link.children.map((child) => (
+                <a
+                  href={child.href}
+                  aria-current={isActive(child.href) ? "page" : undefined}
+                  class:list={[
+                    "block py-2 pl-3 no-underline transition-colors",
+                    isActive(child.href)
+                      ? "border-l-2 border-l-liturgical-current text-text-primary"
+                      : "text-text-primary hover:text-brand-blue-dark",
+                  ]}
+                >
+                  {child.label}
+                </a>
+              ))}
+            </div>
+          );
+        }
         return (
           <a
             href={link.href}
@@ -428,6 +527,50 @@ function isActive(href: string): boolean {
         localStorage.setItem('theme', 'dark');
       }
       updateIcon();
+    });
+  })();
+
+  // ---- Primary nav menus ----
+  // Click to open, hover to open, Escape and an outside click to
+  // close. Hover alone is not enough: it does nothing on a touch
+  // screen and nothing for a keyboard, and the parent link is still
+  // reachable as the first item inside.
+  (() => {
+    const menus = Array.from(document.querySelectorAll(".nav-menu"));
+    if (!menus.length) return;
+
+    function setOpen(menu, open) {
+      const trigger = menu.querySelector(".nav-menu-trigger");
+      const panel = menu.querySelector(".nav-menu-panel");
+      if (!trigger || !panel) return;
+      panel.classList.toggle("hidden", !open);
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    const closeAll = (except) => {
+      for (const m of menus) if (m !== except) setOpen(m, false);
+    };
+
+    for (const menu of menus) {
+      const trigger = menu.querySelector(".nav-menu-trigger");
+      trigger?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = trigger.getAttribute("aria-expanded") === "true";
+        closeAll(menu);
+        setOpen(menu, !open);
+      });
+      // Tabbing out of the last item closes it behind you.
+      menu.addEventListener("focusout", (e) => {
+        if (!menu.contains(e.relatedTarget)) setOpen(menu, false);
+      });
+    }
+
+    document.addEventListener("click", () => closeAll(null));
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const open = menus.find((m) => m.querySelector(".nav-menu-trigger")?.getAttribute("aria-expanded") === "true");
+      if (!open) return;
+      setOpen(open, false);
+      open.querySelector(".nav-menu-trigger")?.focus();
     });
   })();
 </script>
