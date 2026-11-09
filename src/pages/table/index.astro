@@ -19,6 +19,132 @@ import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
     </p>
     <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">An Orthodox Table</h1>
     <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+    <!-- The three books, first on the page.
+         They used to sit below the patron's life and the fasting
+         panel, so a cook who came for a recipe scrolled past a
+         column of reading to reach them. The reading is still here,
+         underneath, for anyone who wants it.
+
+         Gluten-free is a book of its own now, on the same row as the
+         other two. It was labelled "across both books", which is true
+         of how it is built and not how anybody looks for it.
+
+         The old "Book One · open to all" and "Book Two · parish
+         accounts" labels are gone. They told a visitor with no
+         account that there was a shelf they could not reach, which is
+         not something to advertise on the front of the page. -->
+    <div class="mt-8 grid gap-5 md:grid-cols-3">
+      <a
+        href="/table/fasting/"
+        class="group block border border-border-soft bg-cream-card p-6 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+      >
+        <h2 class="font-display text-xl text-text-primary group-hover:text-brand-blue-dark">
+          Fasting Recipes
+        </h2>
+        <div class="mt-3 h-px w-12 bg-liturgical-current"></div>
+        <p class="mt-3 text-sm text-text-primary/85 leading-relaxed">
+          No meat, dairy or eggs. What we cook on Wednesdays and Fridays,
+          through the Nativity Fast and Great Lent, and the other fasts of
+          the year.
+        </p>
+        <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+          Open the fasting book &rarr;
+        </p>
+      </a>
+
+      <a
+        href="/table/everyday/"
+        class="group block border border-border-soft bg-cream-card p-6 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+      >
+        <h2 class="font-display text-xl text-text-primary group-hover:text-brand-blue-dark">
+          Everyday Recipes
+        </h2>
+        <div class="mt-3 h-px w-12 bg-liturgical-current"></div>
+        <p class="mt-3 text-sm text-text-primary/85 leading-relaxed">
+          Feast days, Pascha, coffee hour, and anything else our people
+          want to pass along &mdash; the families' own.
+        </p>
+        <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+          Open the everyday book &rarr;
+        </p>
+      </a>
+
+      <a
+        href="/table/gluten-free/"
+        class="group block border border-border-soft bg-cream-card p-6 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
+      >
+        <h2 class="font-display text-xl text-text-primary group-hover:text-brand-blue-dark">
+          Gluten-Free Recipes
+        </h2>
+        <div class="mt-3 h-px w-12 bg-liturgical-current"></div>
+        <p class="mt-3 text-sm text-text-primary/85 leading-relaxed">
+          Made without wheat, barley or rye. Celiac disease doesn't take
+          fast days off, and nobody should have to read four hundred
+          recipes to find the ones they can eat.
+        </p>
+        <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
+          Open the gluten-free book &rarr;
+        </p>
+      </a>
+    </div>
+
+
+
+    <!-- One box across both books. A cook knows what is in the fridge,
+         not which shelf the dish is on, so searching comes before
+         choosing a book. Signed out it reaches the fasting book only —
+         the same rule the books themselves keep. -->
+    <div class="mt-8">
+      <label for="table-search" class="sr-only">Search every recipe</label>
+      <input
+        id="table-search"
+        type="search"
+        placeholder="Search every recipe — a name, or something you already have…"
+        class="block w-full border border-border-soft bg-cream-card px-4 py-3 focus:outline-none focus:ring-2"
+      />
+      <p id="table-search-note" class="mt-2 text-sm text-text-secondary" role="status"></p>
+      <ul id="table-search-results" class="mt-4 space-y-3"></ul>
+    </div>
+
+    <!-- Second on the page, after the patron. A link at the foot of a
+         grey box got walked straight past, so this is its own panel
+         with a button rather than a sentence that happens to be
+         underlined — and it sits before the search and the books,
+         because a person new to fasting needs the direction before
+         they need three hundred recipes. -->
+    <section class="mt-8 max-w-2xl border-2 border-sacred-gold bg-cream-card p-6">
+      <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+        New to fasting? Start here
+      </p>
+      <h2 class="mt-2 font-display text-2xl text-text-primary">Keeping the Fast</h2>
+      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
+      <p class="mt-4 leading-relaxed text-text-primary/85">
+        Two pages to get you started. <strong>Keeping the Fast</strong> covers
+        what the fast asks of you, where the protein comes from, and who to talk
+        to if you can't keep it. <strong>Eating for the Fast</strong>
+        covers the cooking — what to keep in the house, how to shop, how to plan
+        your meals, and the one or two things worth learning early. It's not
+        something you should have to figure out alone from a list of recipes.
+      </p>
+      <p class="mt-5 flex flex-wrap gap-3">
+        <a href="/table/keeping-the-fast/" class="btn btn-primary">
+          Read Keeping the Fast first
+        </a>
+        <a href="/table/eating-for-the-fast/" class="btn btn-secondary">
+          Eating for the Fast
+        </a>
+      </p>
+      <p class="mt-3 text-sm text-text-secondary">
+        The first answers what the fast asks of you. The second answers what to
+        actually cook.
+      </p>
+      <p class="mt-5 border-t border-border-soft pt-4 text-sm leading-relaxed text-text-secondary">
+        The rule for any <em>given day</em> is on the
+        <a href="/calendar/" class="font-semibold text-brand-blue-dark">parish calendar</a> —
+        whether the day is a fast, and whether fish, wine or oil are allowed.
+        When in doubt, ask Fr. Antonios rather than a website.
+      </p>
+    </section>
     <!-- The icon floats so the text runs round it rather than sitting
          in a rigid column beside it. Floated and not a grid on
          purpose: the opening line, the paragraph about the fast and
@@ -103,133 +229,6 @@ import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
            however long the text above it runs. -->
       <div class="clear-both"></div>
     </div>
-
-    <!-- Second on the page, after the patron. A link at the foot of a
-         grey box got walked straight past, so this is its own panel
-         with a button rather than a sentence that happens to be
-         underlined — and it sits before the search and the books,
-         because a person new to fasting needs the direction before
-         they need three hundred recipes. -->
-    <section class="mt-8 max-w-2xl border-2 border-sacred-gold bg-cream-card p-6">
-      <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
-        New to fasting? Start here
-      </p>
-      <h2 class="mt-2 font-display text-2xl text-text-primary">Keeping the Fast</h2>
-      <div class="mt-3 h-px w-16 bg-liturgical-current"></div>
-      <p class="mt-4 leading-relaxed text-text-primary/85">
-        Two pages to get you started. <strong>Keeping the Fast</strong> covers
-        what the fast asks of you, where the protein comes from, and who to talk
-        to if you can't keep it. <strong>Eating for the Fast</strong>
-        covers the cooking — what to keep in the house, how to shop, how to plan
-        your meals, and the one or two things worth learning early. It's not
-        something you should have to figure out alone from a list of recipes.
-      </p>
-      <p class="mt-5 flex flex-wrap gap-3">
-        <a href="/table/keeping-the-fast/" class="btn btn-primary">
-          Read Keeping the Fast first
-        </a>
-        <a href="/table/eating-for-the-fast/" class="btn btn-secondary">
-          Eating for the Fast
-        </a>
-      </p>
-      <p class="mt-3 text-sm text-text-secondary">
-        The first answers what the fast asks of you. The second answers what to
-        actually cook.
-      </p>
-      <p class="mt-5 border-t border-border-soft pt-4 text-sm leading-relaxed text-text-secondary">
-        The rule for any <em>given day</em> is on the
-        <a href="/calendar/" class="font-semibold text-brand-blue-dark">parish calendar</a> —
-        whether the day is a fast, and whether fish, wine or oil are allowed.
-        When in doubt, ask Fr. Antonios rather than a website.
-      </p>
-    </section>
-
-    <!-- One box across both books. A cook knows what is in the fridge,
-         not which shelf the dish is on, so searching comes before
-         choosing a book. Signed out it reaches the fasting book only —
-         the same rule the books themselves keep. -->
-    <div class="mt-8">
-      <label for="table-search" class="sr-only">Search every recipe</label>
-      <input
-        id="table-search"
-        type="search"
-        placeholder="Search every recipe — a name, or something you already have…"
-        class="block w-full border border-border-soft bg-cream-card px-4 py-3 focus:outline-none focus:ring-2"
-      />
-      <p id="table-search-note" class="mt-2 text-sm text-text-secondary" role="status"></p>
-      <ul id="table-search-results" class="mt-4 space-y-3"></ul>
-    </div>
-
-    <!-- Two entry points on one row, as asked. They fall to one column on
-         a phone rather than squeezing to half-width each. -->
-    <div class="mt-10 grid gap-6 md:grid-cols-2">
-      <a
-        href="/table/fasting/"
-        class="group block border border-border-soft bg-cream-card p-7 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
-      >
-        <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
-          Book One · open to all
-        </span>
-        <h2 class="mt-2 font-display text-2xl text-text-primary group-hover:text-brand-blue-dark">
-          Fasting Recipes
-        </h2>
-        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
-        <p class="mt-4 text-sm text-text-primary/85 leading-relaxed">
-          No meat, dairy or eggs. What we cook on Wednesdays and Fridays,
-          through the Nativity Fast and Great Lent, and the other fasts of
-          the year.
-        </p>
-        <p class="mt-5 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
-          Open the fasting book →
-        </p>
-      </a>
-
-      <a
-        href="/table/everyday/"
-        class="group block border border-border-soft bg-cream-card p-7 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
-      >
-        <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
-          Book Two · parish accounts
-        </span>
-        <h2 class="mt-2 font-display text-2xl text-text-primary group-hover:text-brand-blue-dark">
-          Everyday Recipes
-        </h2>
-        <div class="mt-4 h-px w-16 bg-liturgical-current"></div>
-        <p class="mt-4 text-sm text-text-primary/85 leading-relaxed">
-          Feast days, Pascha, coffee hour, and anything else our people
-          want to pass along. These are the families' own, kept among the
-          parish — a sign-in opens them.
-        </p>
-        <p class="mt-5 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
-          Open the everyday book →
-        </p>
-      </a>
-    </div>
-
-    <!-- Across the row rather than on it. Gluten-free isn't a third
-         book — a gluten-free dish sits in whichever book it belongs to
-         and is marked — so it reads as a way through both, which is
-         what it is. -->
-    <a
-      href="/table/gluten-free/"
-      class="group mt-6 block border border-border-soft bg-cream-card p-6 no-underline shadow-sm transition-colors hover:border-brand-blue-dark"
-    >
-      <span class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
-        Across both books
-      </span>
-      <h2 class="mt-2 font-display text-xl text-text-primary group-hover:text-brand-blue-dark">
-        Gluten-Free Recipes
-      </h2>
-      <p class="mt-3 max-w-2xl text-sm text-text-primary/85 leading-relaxed">
-        Everything from either book made without wheat, barley or rye.
-        Celiac disease doesn't take fast days off, and nobody should have
-        to read four hundred recipes to find the ones they can eat.
-      </p>
-      <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
-        See the gluten-free recipes →
-      </p>
-    </a>
-
     <!-- The parish's older collection, which lives in the library
          rather than here. Linked so a cook looking for fasting food
          finds it, instead of it sitting unread behind a catalogue. -->
@@ -254,9 +253,10 @@ import euphrosynos from "../../assets/images/st-euphrosynos-the-cook.jpg";
     <section class="mt-12 border-t border-border-soft pt-8">
       <h2 class="font-display text-xl text-text-primary">Share one of yours</h2>
       <p class="mt-3 max-w-2xl text-text-primary/85 leading-relaxed">
-        Catechumens and members can add recipes to either book. Fill in the
-        form and it comes to the parish office; once it's been looked over
-        it goes up with your name on it.
+        Catechumens and members can submit recipes. The form asks which
+        book it belongs in and whether it is gluten-free. It comes to the
+        parish office, and once it has been looked over it goes up with
+        your name on it.
       </p>
       <p class="mt-5">
         <a href="/table/share/" class="btn btn-primary">Share a recipe</a>
