@@ -67,3 +67,14 @@ create policy "prayer requests are open to send"
 -- And nobody reads them through the API key. No select, update or
 -- delete policy exists, so RLS denies all three to anon and to signed
 -- in members alike. The admin routes use the service role.
+
+-- Grants. Every other table here does this and this one did not, which
+-- is why the first request hit "permission denied": RLS says who may do
+-- what, but a role still needs the grant underneath it.
+--
+-- Only service_role, and that is the whole point. anon and
+-- authenticated get nothing at all — not even select — so the
+-- privacy of this table does not rest on a policy being written
+-- correctly. The public form posts through the admin key in
+-- functions/api/prayer-requests.ts, not through the browser's.
+grant all on table public.prayer_requests to service_role;
