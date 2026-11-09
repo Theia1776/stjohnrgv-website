@@ -392,13 +392,18 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       if (currentSaints.length > 0) {
         const itemsHtml = currentSaints.map((s, i) => {
           const overflow = i >= 5;
-          const cls = `text-lg leading-snug text-text-primary${overflow ? ' hidden' : ''}`;
+          // The row is a flex, with the bullet held at the start and
+          // the name taking the rest. A button is inline-block, so a
+          // long one could not wrap — "Righteous Mother Olga of
+          // Kwethluk..." dropped to its own line and left the bullet
+          // sitting alone above it.
+          const cls = `flex gap-2 text-lg leading-snug text-text-primary${overflow ? ' hidden' : ''}`;
           const attr = overflow ? ' data-saint-overflow' : '';
           const name = escapeHtml(s.name || '');
           const inner = s.url
-            ? `<button type="button" data-saint-index="${i}" class="text-left text-brand-blue-dark hover:underline">${name}</button>`
-            : name;
-          return `<li class="${cls}"${attr}>• ${inner}</li>`;
+            ? `<button type="button" data-saint-index="${i}" class="min-w-0 flex-1 text-left text-brand-blue-dark hover:underline">${name}</button>`
+            : `<span class="min-w-0 flex-1">${name}</span>`;
+          return `<li class="${cls}"${attr}><span aria-hidden="true" class="shrink-0">•</span>${inner}</li>`;
         }).join('');
         const toggleHtml = currentSaints.length > 5
           ? `<button
