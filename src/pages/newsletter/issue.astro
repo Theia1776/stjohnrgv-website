@@ -451,6 +451,11 @@ import Layout from "../../layouts/Layout.astro";
 
     const overflows = () => paged && flow.scrollWidth > flow.clientWidth + 2;
 
+    const start = () => {
+      sheet = newSheet(false);
+      flow = sheet.querySelector(".nl-flow") as HTMLElement;
+    };
+
     for (const html of pieces) {
       const holder = document.createElement("div");
       holder.innerHTML = html;
@@ -458,21 +463,25 @@ import Layout from "../../layouts/Layout.astro";
       if (!el) continue;
 
       flow.appendChild(el);
-      if (overflows()) {
-        // It did not fit. Take it back and give it a fresh sheet —
-        // unless the sheet is empty, in which case the piece is
-        // simply bigger than a page and has to be allowed to run on
-        // rather than loop forever.
-        if (flow.childElementCount > 1) {
-          flow.removeChild(el);
-          sheet = newSheet(false);
-          flow = sheet.querySelector(".nl-flow") as HTMLElement;
-          flow.appendChild(el);
-          if (overflows()) sheet.classList.add("nl-sheet-tall");
-        } else {
-          sheet.classList.add("nl-sheet-tall");
-        }
+      if (!overflows()) continue;
+
+      // It did not fit. Take it back and give it a fresh sheet.
+      if (flow.childElementCount > 1) {
+        flow.removeChild(el);
+        start();
+        flow.appendChild(el);
+        if (!overflows()) continue;
       }
+
+      // Still does not fit on a sheet of its own: the piece is simply
+      // longer than a page, so that sheet is allowed to grow rather
+      // than swallow the words.
+      //
+      // And then it is CLOSED. A grown sheet can never overflow
+      // again, so leaving it open meant every piece after it piled
+      // on and the whole issue came out as one enormous page.
+      sheet.classList.add("nl-sheet-tall");
+      start();
     }
 
     if (issue.closing) {
@@ -487,6 +496,15 @@ import Layout from "../../layouts/Layout.astro";
         flow = sheet.querySelector(".nl-flow") as HTMLElement;
         flow.appendChild(closing);
       }
+    }
+
+    // Last check. If anything still overflows its sheet, let that
+    // sheet grow. A sheet clips what does not fit, so the failure
+    // here has to be a page that runs long — never a paragraph that
+    // quietly disappears off the right-hand edge.
+    for (const s of Array.from(host.querySelectorAll<HTMLElement>(".nl-sheet"))) {
+      const f = s.querySelector(".nl-flow") as HTMLElement | null;
+      if (f && f.scrollWidth > f.clientWidth + 2) s.classList.add("nl-sheet-tall");
     }
 
     // A sheet with nothing in its flow is a blank page, on screen
