@@ -484,7 +484,7 @@ import Layout from "../../layouts/Layout.astro";
       start();
     }
 
-    if (issue.closing) {
+    if ((issue.closing ?? "").trim()) {
       const closing = document.createElement("div");
       closing.className =
         "nl-piece mt-4 border-t-2 border-sacred-gold pt-4 nl-body leading-relaxed text-text-primary/85";
@@ -511,8 +511,12 @@ import Layout from "../../layouts/Layout.astro";
     // and in the PDF. It happens when the last piece to be moved
     // along was also the last piece there was.
     for (const empty of Array.from(host.querySelectorAll(".nl-sheet"))) {
+      if (empty.querySelector(".nl-masthead")) continue;
       const f = empty.querySelector(".nl-flow");
-      if (f && f.childElementCount === 0 && !empty.querySelector(".nl-masthead")) empty.remove();
+      if (!f) continue;
+      const words = (f.textContent ?? "").trim().length > 0;
+      const pictures = f.querySelector("img") !== null;
+      if (!words && !pictures) empty.remove();
     }
 
     // Number them once the count is known.
