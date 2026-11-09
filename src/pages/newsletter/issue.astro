@@ -143,9 +143,9 @@ import Layout from "../../layouts/Layout.astro";
     <div id="issue-sheets" class="mt-6 space-y-8"></div>
 
     <div id="issue-actions" hidden class="no-print mt-8 flex flex-wrap items-center gap-3">
-      <button type="button" id="print-issue" class="btn btn-secondary">Print this issue</button>
-      <span class="text-sm text-text-secondary">
-        One sheet to a page.
+      <button type="button" id="download-pdf" class="btn btn-secondary">Download as PDF</button>
+      <span id="pdf-hint" class="text-sm text-text-secondary">
+        One sheet to a page. Choose <strong>Save as PDF</strong> when the dialog opens.
       </span>
     </div>
   </main>
@@ -300,7 +300,7 @@ import Layout from "../../layouts/Layout.astro";
   /** Roughly how much of a sheet a piece takes up, 1 being a full one. */
   function weigh(piece: { body: string; image?: string; quote?: string; heading: string }): number {
     const chars = (piece.body || "").length;
-    return chars / 2600 + (piece.image ? 0.2 : 0) + (piece.quote ? 0.1 : 0) + 0.08;
+    return chars / 4200 + (piece.image ? 0.18 : 0) + (piece.quote ? 0.1 : 0) + 0.08;
   }
 
   function sheetHtml(inner: string, page: number, pages: number): string {
@@ -394,41 +394,48 @@ import Layout from "../../layouts/Layout.astro";
       }
     }
 
-    // Sheet one carries the masthead, the opening, and the contents
-    // box, so it has far less room for sections than the rest.
+    // The opening and the contents box are pieces like any other, so
+    // sections carry on into whatever column space is left beside
+    // them. They used to sit in a flow of their own, which closed the
+    // columns and left the rest of sheet one empty — a whole page for
+    // an introduction and a list of headings.
     const headings = pieces.map((p) => p.heading).filter(Boolean);
-    const first: string[] = [mastheadHtml(issue)];
-    const introWeight = (issue.intro || "").length / 2600;
-    first.push(
-      `<div class="nl-flow mt-5">
-        ${issue.intro ? `<div class="nl-lead nl-body leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
-        ${contentsHtml(headings)}
-      </div>`,
-    );
+    const opening: Piece[] = [];
+    if (issue.intro) {
+      opening.push({
+        heading: "",
+        weight: issue.intro.length / 4200,
+        html: `<div class="nl-piece nl-lead nl-body mb-6 leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>`,
+      });
+    }
+    const contents = contentsHtml(headings);
+    if (contents) opening.push({ heading: "", weight: 0.16, html: contents });
+
+    const all = [...opening, ...pieces];
 
     // Fill a sheet until the next piece will not fit, then start
-    // another. Sheet one already carries the masthead and the
-    // opening, so it begins with less room than the others.
+    // another. Sheet one begins with less room because the masthead
+    // and the banner stand above its columns.
     const sheets: string[] = [];
-    let head = first.join("");
+    let head = mastheadHtml(issue);
     let onSheet: string[] = [];
-    let room = Math.max(0.15, 0.62 - introWeight);
+    let room = 0.72;
 
     const closeSheet = () => {
-      const flow = onSheet.length ? `<div class="nl-flow">${onSheet.join("")}</div>` : "";
+      const flow = onSheet.length ? `<div class="nl-flow mt-5">${onSheet.join("")}</div>` : "";
       sheets.push(head + flow);
       head = "";
       onSheet = [];
       room = 1;
     };
 
-    for (const piece of pieces) {
+    for (const piece of all) {
       if (piece.weight > room && (head || onSheet.length)) closeSheet();
       onSheet.push(piece.html);
       room -= piece.weight;
     }
     if (head || onSheet.length) closeSheet();
-    if (sheets.length === 0) sheets.push(first.join(""));
+    if (sheets.length === 0) sheets.push(mastheadHtml(issue));
 
     if (issue.closing) {
       sheets[sheets.length - 1] +=
@@ -491,5 +498,16 @@ import Layout from "../../layouts/Layout.astro";
     }
   })();
 
-  document.getElementById("print-issue")?.addEventListener("click", () => window.print());
+  /**
+   * Hand over a PDF.
+   *
+   * Nobody is going to print this on paper, so the button says what
+   * people actually want. There is no server here that can render a
+   * PDF — that needs a headless browser the site does not have — so
+   * this opens the browser's own print dialog, where "Save as PDF" is
+   * the default destination on a desktop and produces a far better
+   * file than anything a JavaScript library would draw. The hint says
+   * so plainly rather than letting the dialog be a surprise.
+   */
+  document.getElementById("download-pdf")?.addEventListener("click", () => window.print());
 </script>
