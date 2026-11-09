@@ -169,31 +169,24 @@ function isActive(hrefWithHash: string): boolean {
           title="Change language · Cambiar idioma · Сменить язык"
           class="flex items-center gap-1.5 px-2 py-1 text-xs font-display text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
         >
-          <!-- A globe with two speech bubbles coming off it. Drawn
-               rather than set in type, because "EN" and a flag are
-               both guesses a visitor has to make: a flag is a country
-               and not a language, and an abbreviation is a code. Two
-               bubbles in two scripts is the one picture everybody
-               already reads as "change the language". -->
+          <!-- Somebody speaking. The globe-and-scripts version was
+               too fiddly to read at twenty pixels; a head and a speech
+               bubble is legible at any size and is what the control
+               does. -->
           <svg
-            viewBox="0 0 48 44"
+            viewBox="0 0 24 24"
             class="h-5 w-5 shrink-0"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.7"
             stroke-linecap="round"
             stroke-linejoin="round"
             aria-hidden="true"
           >
-            <circle cx="23" cy="20" r="15" />
-            <path d="M8 20h30M23 5c4 4.5 6 9.5 6 15s-2 10.5-6 15c-4-4.5-6-9.5-6-15s2-10.5 6-15Z" />
-            <path d="M31 4h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-6l-4 4v-4a3 3 0 0 1-2-3V7a3 3 0 0 1 3-3Z"
-                  fill="var(--color-cream-bg, #FAF7F0)" />
-            <path d="M36.5 14.5 39 7.5l2.5 7M37.4 12.4h3.2" stroke-width="1.6" />
-            <path d="M5 26h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-1l-4 4v-4H5a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3Z"
-                  fill="var(--color-cream-bg, #FAF7F0)" />
-            <path d="M6.5 32.5h7M10 30v1M7.5 37c2-1.2 3.4-2.8 4-4.5M11 34.5c.8 1.2 1.8 2 3 2.5"
-                  stroke-width="1.6" />
+            <circle cx="8" cy="7" r="3.4" />
+            <path d="M2.2 20.5c0-3.3 2.6-5.8 5.8-5.8s5.8 2.5 5.8 5.8" />
+            <path d="M15.2 3h6.1A1.7 1.7 0 0 1 23 4.7v4.6a1.7 1.7 0 0 1-1.7 1.7h-2.6l-2.8 2.4v-2.4h-.7A1.7 1.7 0 0 1 13.5 9.3V4.7A1.7 1.7 0 0 1 15.2 3Z" />
+            <path d="M16.3 6h4.4M16.3 8.3h2.6" stroke-width="1.4" />
           </svg>
           <span aria-hidden="true" class="text-[0.6rem]">▾</span>
         </button>
@@ -203,9 +196,9 @@ function isActive(hrefWithHash: string): boolean {
           aria-labelledby="lang-trigger"
           class="hidden absolute right-0 top-full mt-2 min-w-40 border border-border-soft bg-cream-card shadow-md py-1 z-50"
         >
-          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Hi</span><span class="block text-xs text-text-secondary">English</span></button>
-          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Привет</span><span class="block text-xs text-text-secondary">Русский</span></button>
-          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left hover:bg-brand-blue-pale"><span class="block font-display text-base leading-tight text-text-primary">Hola</span><span class="block text-xs text-text-secondary">Español</span></button>
+          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
+          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
+          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
         </div>
       </div>
 
