@@ -688,5 +688,39 @@ import Layout from "../../layouts/Layout.astro";
    * file than anything a JavaScript library would draw. The hint says
    * so plainly rather than letting the dialog be a surprise.
    */
-  document.getElementById("download-pdf")?.addEventListener("click", () => window.print());
+  /**
+   * Sweep the sheets immediately before printing, and put them back
+   * after.
+   *
+   * Laying out at load time is not enough: the print engine reflows
+   * everything for paper, and a sheet that held something on screen
+   * can end up holding nothing you can see on the page — which is
+   * where the blank sheets and the pale block at the end came from.
+   * Rather than hunt each one down, anything with no words and no
+   * pictures in it is taken out at the moment of printing.
+   */
+  let hiddenForPrint: HTMLElement[] = [];
+  function sweepForPrint() {
+    hiddenForPrint = [];
+    for (const sheet of Array.from(document.querySelectorAll<HTMLElement>(".nl-sheet"))) {
+      const words = (sheet.textContent ?? "").replace(/\s+/g, "").length > 0;
+      const pictures = sheet.querySelector("img") !== null;
+      if (!words && !pictures) {
+        sheet.style.display = "none";
+        hiddenForPrint.push(sheet);
+      }
+    }
+  }
+  function restoreAfterPrint() {
+    for (const el of hiddenForPrint) el.style.removeProperty("display");
+    hiddenForPrint = [];
+  }
+  window.addEventListener("beforeprint", sweepForPrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
+
+  document.getElementById("download-pdf")?.addEventListener("click", () => {
+    sweepForPrint();
+    window.print();
+    restoreAfterPrint();
+  });
 </script>
