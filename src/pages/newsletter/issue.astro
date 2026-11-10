@@ -24,144 +24,135 @@ import Layout from "../../layouts/Layout.astro";
 
   <style is:global>
     /* ================= THE NEWSLETTER =================
-       A grid of blocks, not a river of text.
-
-       Every newsletter the parish has shown me works this way: each
-       story sits in its own bounded region, pictures beside the
-       headline they belong to, lists in tinted boxes. None of them
-       flows a paragraph from the foot of one column into the top of
-       the next.
-
-       This page used to. That one choice caused nearly all of its
-       trouble — text stranded in a column, photographs separated from
-       their headings, words running off the edge, pages breaking
-       mid-sentence. A block cannot do any of those things: it cannot
-       split, so it cannot strand, orphan or overflow. */
+       Built against the page the parish laid out herself, which is
+       the only specification that has actually worked: a band across
+       the top, the picture full width and about two inches tall, the
+       opening in a navy box on the left with the contents boxed
+       beside it, and all of it on a sheet of letter paper. */
 
     .nl-paper {
+      width: 100%;
+      max-width: 8.5in;
+      min-height: 11in;
+      margin-inline: auto;
       background: #FFFFFF;
       border: 1px solid var(--color-border-soft, #e0d9c8);
       box-shadow: 0 2px 18px rgba(44, 62, 80, 0.13);
-      /* Paper in both themes; the text tokens follow the theme and
+      display: flex;
+      flex-direction: column;
+      /* Paper in both themes: the text tokens follow the theme and
          this surface does not. */
       --color-text-primary: #2C3E50;
       --color-text-secondary: #5C6B7A;
-      --color-brand-blue-dark: #2A5E84;
       color: #2C3E50;
     }
     #issue-sheets > .nl-paper + .nl-paper { margin-top: 2rem; }
+    @media (max-width: 900px) { .nl-paper { min-height: 0; } }
 
-    /* A page, in the proportions of one. Safe to fix the height now:
-       blocks do not split, so a page either has room for the next one
-       or starts a new page — nothing can land across the boundary. */
-    .nl-paper {
-      min-height: 11in;
-      display: flex;
-      flex-direction: column;
-    }
-    .nl-paper .nl-inner { flex: 1 1 auto; }
-    @media (max-width: 639px) { .nl-paper { min-height: 0; } }
-
-    /* The masthead band, as every one of those templates has. */
+    /* The band. */
     .nl-band {
       background: #1F3A5F;
-      color: #FAF7F0;
-      padding: 1.5rem 2rem 1.25rem;
+      color: #FFFFFF;
+      padding: 1.1rem 1.4rem 0.8rem;
+      position: relative;
     }
-    .nl-band .nl-edition { color: #C9A84C; }
-    .nl-title {
-      font-size: clamp(1.15rem, 3.2vw, 2rem);
+    .nl-band h1 {
+      font-size: clamp(1.3rem, 3.6vw, 2.1rem);
+      line-height: 1.05;
       white-space: nowrap;
-      color: #FAF7F0;
+    }
+    .nl-band .nl-where { font-size: 0.8rem; color: #CBD9E8; }
+    .nl-band .nl-when {
+      position: absolute;
+      right: 1.4rem;
+      bottom: 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #E8C877;
     }
 
-    .nl-inner { padding: 1.75rem 2rem 1.25rem; }
-
-    /* The picture under the masthead is about two inches tall and the
-       opening runs round it, the way a magazine sets a lead. It used
-       to span the page at full height, which took most of a screen
-       before a single word. */
-    /* The picture sits at the head of the opening, at the width of
-       its own column — about two inches tall, rather than spanning
-       the page at full height and taking most of a screen before a
-       single word. The opening keeps a readable measure because it is
-       a column, not the whole page. */
-    .nl-hero { width: 100%; }
-    @media (max-width: 639px) {
-      .nl-band { padding: 1.25rem 1.25rem 1rem; }
-      .nl-inner { padding: 1.25rem 1.25rem 1rem; }
+    /* The picture: the whole width, about two inches tall. Cropped on
+       purpose — a two-inch band from a 3:2 painting has to be. */
+    .nl-hero {
+      display: block;
+      width: 100%;
+      height: 2in;
+      object-fit: cover;
+      object-position: center;
     }
+    @media (max-width: 640px) { .nl-hero { height: 1.4in; } }
 
-    /* The grid. Two columns of blocks on a screen, one on a phone.
-       A block may take the full width when it has a lot to say. */
-    .nl-grid {
+    .nl-inner { flex: 1 1 auto; padding: 0.85rem 1.4rem 1rem; }
+
+    /* The lead row: the opening wide on the left, the contents
+       narrower on the right, as the parish set it. */
+    .nl-lead-row {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+      gap: 0.85rem;
       align-items: start;
     }
-    @media (max-width: 639px) { .nl-grid { grid-template-columns: minmax(0, 1fr); } }
-    .nl-wide { grid-column: 1 / -1; }
+    .nl-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+      align-items: start;
+      margin-top: 0.85rem;
+    }
+    @media (max-width: 640px) {
+      .nl-lead-row, .nl-row { grid-template-columns: minmax(0, 1fr); }
+    }
 
-    /* A block. Bounded, never split. */
+    /* A navy panel, for the lead and for any section set in colour. */
+    .nl-panel {
+      background: #1F3A5F;
+      color: #F2F6FA;
+      padding: 0.9rem 1rem;
+    }
+    .nl-panel h2 { color: #FFFFFF; }
+
+    /* A bordered white box, for the contents and for lists. */
+    .nl-box {
+      border: 2px solid #1F3A5F;
+      padding: 0.9rem 1rem;
+    }
+    .nl-box h2 { color: #1F3A5F; }
+
     .nl-block { break-inside: avoid; }
-    .nl-boxed {
-      background: #FBF7EC;
-      border-left: 4px solid var(--color-sacred-gold, #C9A84C);
-      padding: 1rem 1.1rem;
-    }
-    .nl-head {
-      border-left: 4px solid var(--color-sacred-gold, #C9A84C);
-      padding-left: 0.85rem;
-      break-after: avoid;
-    }
+    .nl-head { break-after: avoid; }
 
-    .nl-lead::first-letter {
-      float: left;
-      font-family: var(--font-display, serif);
-      font-size: 3.2rem;
-      line-height: 0.82;
-      padding: 0.1rem 0.5rem 0 0;
-      color: var(--color-brand-tan-dark, #A88758);
-    }
-
-    .nl-body p { margin-bottom: 0.85em; }
+    /* Newsletter type is small — that is how a page of words fits on
+       a page. */
+    .nl-body { font-size: 0.76rem; line-height: 1.45; }
+    .nl-body p { margin-bottom: 0.7em; }
     .nl-body p:last-child { margin-bottom: 0; }
 
     .nl-foot {
-      background: #1F3A5F;
-      color: #D8CBA8;
-      padding: 0.7rem 2rem;
+      padding: 0.5rem 1.4rem;
+      border-top: 2px solid #1F3A5F;
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
+      color: #5C6B7A;
     }
 
-    /* ---------- On paper ----------
-       Blocks do not split, so the paper breaks between them on its
-       own. Nothing is forced and nothing needs measuring. */
+    /* ---------- On paper ---------- */
     @media print {
       header:not(.nl-band), footer, nav, .no-print { display: none !important; }
       html, body { background: #fff !important; }
-      @page { margin: 12mm 10mm 14mm; }
-
+      @page { size: letter; margin: 0; }
       .nl-paper {
+        width: 8.5in !important;
+        max-width: none !important;
         border: 0 !important;
         box-shadow: none !important;
         margin: 0 !important;
-        aspect-ratio: auto !important;
-        overflow: visible !important;
+        break-after: page;
       }
-      #issue-sheets > .nl-paper + .nl-paper { margin-top: 0 !important; }
-      .nl-paper + .nl-paper .nl-band { display: none !important; }
-      .nl-inner { padding: 0 !important; }
-      .nl-contents { display: none !important; }
-      .nl-foot { display: none !important; }
-      .nl-band { break-after: avoid; }
-      .nl-lead::first-letter { color: #000; }
+      .nl-paper:last-child { break-after: auto; }
       a[href]::after { content: ""; }
       img { max-width: 100% !important; }
     }
@@ -284,155 +275,65 @@ import Layout from "../../layouts/Layout.astro";
     const d = new Date(value);
     return Number.isNaN(d.getTime())
       ? ""
-      : d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "short" });
   }
 
   /** The name a section is printed under. */
   function sectionTitle(s: Section): string {
-    // "Prayer Requests — For the Living" standing alone is just
-    // Prayer Requests. The halves need telling apart only when both
-    // are there, and then the two columns do it.
     if (s.key === "prayer" || s.key === "memorial") {
       return (s.heading || "").split(/\s+[—–-]\s+/)[0];
     }
     return s.heading || "";
   }
 
-  /**
-   * Is this section a list rather than prose?
-   *
-   * Service times, coffee hour, upcoming events, a list of names —
-   * every newsletter sets those in a tinted box rather than running
-   * them as paragraphs, because that is how a reader finds them
-   * again.
-   */
+  /** A list — service times, a rota, names — rather than prose. */
   function isList(s: Section): boolean {
     const lines = (s.body || "").split("\n").filter((l) => l.trim());
     if (lines.length < 2) return false;
-    const short = lines.filter((l) => l.trim().length < 80).length;
-    return short / lines.length > 0.7;
+    return lines.filter((l) => l.trim().length < 80).length / lines.length > 0.7;
   }
 
-  function imageHtml(s: Section): string {
+  function figure(s: Section): string {
     const src = imageSrc(s.image);
     if (!src) return "";
-    return `<figure class="m-0 mb-3">
+    return `<figure class="m-0 mb-2">
       <img src="${escapeHtml(src)}" alt="${escapeHtml(s.image_alt ?? "")}"
-           class="block h-auto w-full border border-border-soft" loading="lazy" />
-      ${
-        s.image_caption
-          ? `<figcaption class="mt-1.5 text-xs italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>`
-          : ""
-      }
+           class="block h-auto w-full" loading="lazy" />
+      ${s.image_caption ? `<figcaption class="mt-1 text-[0.6rem] italic text-text-secondary">${escapeHtml(s.image_caption)}</figcaption>` : ""}
     </figure>`;
   }
 
-  function quoteHtml(s: Section): string {
-    if (!s.quote) return "";
-    return `<blockquote class="mt-4 border-y border-border-soft py-3 text-center">
-      <p class="font-display text-base italic leading-relaxed text-text-primary/90">&ldquo;${escapeHtml(s.quote)}&rdquo;</p>
-      ${
-        s.quote_by
-          ? `<cite class="mt-1.5 block text-[0.65rem] uppercase not-italic tracking-widest text-brand-tan-dark">${escapeHtml(s.quote_by)}</cite>`
-          : ""
-      }
-    </blockquote>`;
-  }
-
-  /** One block. Self-contained: picture, headline, words. */
+  /** One section, as a box or a panel. */
   function blockHtml(s: Section): string {
     const title = sectionTitle(s);
-    // Never full width. A measure that runs the whole page is hard
-    // to read and none of the templates sets prose that way — a long
-    // section simply makes a tall block in its column.
     const boxed = isList(s);
-    return `<section class="nl-block">
-      ${imageHtml(s)}
-      ${title ? `<h2 class="nl-head font-display text-xl text-text-primary md:text-2xl">${escapeHtml(title)}</h2>` : ""}
-      <div class="nl-body mt-3 leading-relaxed text-text-primary/85 ${boxed ? "nl-boxed" : ""}">${paragraphs(s.body)}</div>
-      ${quoteHtml(s)}
+    return `<section class="nl-block ${boxed ? "nl-box" : ""}">
+      ${figure(s)}
+      ${title ? `<h2 class="nl-head font-display text-base leading-tight ${boxed ? "" : "text-text-primary"}">${escapeHtml(title)}</h2>` : ""}
+      <div class="nl-body mt-1.5">${paragraphs(s.body)}</div>
+      ${
+        s.quote
+          ? `<blockquote class="mt-2 border-y border-border-soft py-2 text-center">
+               <p class="font-display text-sm italic leading-snug">&ldquo;${escapeHtml(s.quote)}&rdquo;</p>
+               ${s.quote_by ? `<cite class="mt-1 block text-[0.55rem] uppercase not-italic tracking-widest text-brand-tan-dark">${escapeHtml(s.quote_by)}</cite>` : ""}
+             </blockquote>`
+          : ""
+      }
     </section>`;
   }
 
   function contentsHtml(headings: string[]): string {
-    if (headings.length < 2) return "";
+    if (!headings.length) return "";
     const rows = headings
-      .map(
-        (h) =>
-          `<li class="flex items-baseline gap-2 text-sm"><span>${escapeHtml(h)}</span><span aria-hidden="true" class="min-w-[1rem] flex-1 translate-y-[-0.2rem] border-b border-dotted border-[#cdbfa0]"></span></li>`,
-      )
+      .map((h) => `<li class="border-b border-[#D6E0EA] py-1.5">${escapeHtml(h)}</li>`)
       .join("");
-    return `<aside class="nl-block nl-contents nl-boxed">
-      <p class="font-display text-sm uppercase tracking-[0.18em] text-brand-tan-dark">In This Issue</p>
-      <ul class="mt-2.5 space-y-1.5 text-text-primary">${rows}</ul>
-      <p class="mt-3 border-t border-[#e0d4b8] pt-2.5 text-[0.7rem] leading-relaxed text-text-secondary">
+    return `<aside class="nl-block nl-box">
+      <h2 class="font-display text-lg leading-tight">Inside This Issue:</h2>
+      <ul class="nl-body mt-2 list-none">${rows}</ul>
+      <p class="mt-2 text-[0.6rem] leading-relaxed text-text-secondary">
         39737 Palm Lane, Bayview, TX 78566<br />(956) 434-6874<br />stjohnrgv.org
       </p>
     </aside>`;
-  }
-
-  /**
-   * Put the blocks on pages. Two to a page, and that is the whole
-   * rule.
-   *
-   * Everything before this measured: it put a block in, asked the
-   * browser whether the page had overflowed, and moved the block on
-   * if it had. That cannot work against a grid. A tall block in the
-   * left column makes the page full by height while the right column
-   * is still empty, so the next block is bumped to the following page
-   * and the column beside it stays blank — a small picture on the
-   * left and nothing to its right, which is what kept happening.
-   *
-   * So nothing is measured. Two blocks fill two columns; a block that
-   * spans the width takes a page by itself. The first page carries
-   * the opening beside the contents. Pages grow if what is on them
-   * runs long, because clipping somebody's words to keep a shape is
-   * never the right trade.
-   */
-  function layPages(bandHtml: string, footHtml: string, opening: string, contents: string, blocks: string[]) {
-    const host = document.getElementById("issue-sheets") as HTMLElement;
-    host.innerHTML = "";
-
-    const pages: string[][] = [];
-
-    // Page one: the opening, and the contents box beside it.
-    const first: string[] = [];
-    if (opening) first.push(opening);
-    if (contents) first.push(contents);
-    if (first.length) pages.push(first);
-
-    // Then two to a page, except a full-width block, which takes one
-    // on its own because there is no room beside it.
-    let current: string[] = [];
-    for (const block of blocks) {
-      const wide = block.includes("nl-wide");
-      if (wide) {
-        if (current.length) {
-          pages.push(current);
-          current = [];
-        }
-        pages.push([block]);
-        continue;
-      }
-      current.push(block);
-      if (current.length === 2) {
-        pages.push(current);
-        current = [];
-      }
-    }
-    if (current.length) pages.push(current);
-    if (!pages.length) pages.push([]);
-
-    host.innerHTML = pages
-      .map(
-        (blocksOnPage, i) =>
-          `<article class="nl-paper">
-            ${i === 0 ? bandHtml : ""}
-            <div class="nl-inner"><div class="nl-grid">${blocksOnPage.join("")}</div></div>
-            ${footHtml.replace("{{n}}", `${i + 1} / ${pages.length}`)}
-          </article>`,
-      )
-      .join("");
   }
 
   function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
@@ -445,16 +346,15 @@ import Layout from "../../layouts/Layout.astro";
       if (slot.pair) {
         const title = sectionTitle(slot.left);
         headings.push(title);
-        blocks.push(`<section class="nl-block nl-wide">
-          ${imageHtml(slot.left.image ? slot.left : slot.right)}
-          <h2 class="nl-head font-display text-xl text-text-primary md:text-2xl">${escapeHtml(title)}</h2>
-          <div class="mt-3 grid gap-4 sm:grid-cols-2">
-            <div class="nl-boxed nl-body leading-relaxed text-text-primary/85">
-              <p class="mb-1.5 font-display text-xs uppercase tracking-widest text-brand-tan-dark">For the Living</p>
+        blocks.push(`<section class="nl-block nl-box" style="grid-column:1/-1">
+          <h2 class="nl-head font-display text-base leading-tight">${escapeHtml(title)}</h2>
+          <div class="mt-2 grid gap-3 sm:grid-cols-2">
+            <div class="nl-body">
+              <p class="mb-1 font-display text-[0.6rem] uppercase tracking-widest text-brand-tan-dark">For the Living</p>
               ${paragraphs(slot.left.body)}
             </div>
-            <div class="nl-boxed nl-body leading-relaxed text-text-primary/85">
-              <p class="mb-1.5 font-display text-xs uppercase tracking-widest text-brand-tan-dark">In Memory</p>
+            <div class="nl-body">
+              <p class="mb-1 font-display text-[0.6rem] uppercase tracking-widest text-brand-tan-dark">In Memory</p>
               ${paragraphs(slot.right.body)}
             </div>
           </div>
@@ -467,44 +367,55 @@ import Layout from "../../layouts/Layout.astro";
     }
 
     const hero = imageSrc(issue.hero_image);
-    const lead = issue.intro
-      ? `<section class="nl-block">
-           <div class="nl-lead nl-body leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>
-         </section>`
-      : "";
-    const closing = (issue.closing ?? "").trim()
-      ? `<section class="nl-block nl-wide border-t-2 border-sacred-gold pt-4">
-           <div class="nl-body leading-relaxed text-text-primary/85">${paragraphs(issue.closing)}</div>
-         </section>`
-      : "";
+    const band = `<header class="nl-band">
+        <h1 class="font-display">St. John of Kronstadt</h1>
+        <p class="nl-where">Orthodox Mission, Bayview, Texas</p>
+        <span class="nl-when">${escapeHtml(issue.issue_label || issueDateLabel(issue.published_at))}</span>
+      </header>
+      ${hero ? `<img class="nl-hero" src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}" />` : ""}`;
 
-    const bandHtml = `<header class="nl-band">
-        <div class="flex flex-wrap items-baseline justify-between gap-2 text-[0.7rem] uppercase tracking-[0.2em]">
-          <span class="nl-edition">${escapeHtml(issue.issue_label ?? "")}</span>
-          <span class="nl-edition">${escapeHtml(issueDateLabel(issue.published_at))}</span>
-        </div>
-        <h1 class="nl-title mt-1.5 text-center font-display leading-tight">
-          St. John of Kronstadt Orthodox Mission
-        </h1>
-      </header>`;
-
-    const footHtml = `<div class="nl-foot">
+    const foot = (n: string) => `<div class="nl-foot">
         <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
-        <span>{{n}}</span>
+        <span>${n}</span>
       </div>`;
 
-    const openingBlock = hero
-      ? `<section class="nl-block">
-           <figure class="nl-hero m-0 mb-3">
-             <img src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}"
-                  class="block h-auto w-full border border-border-soft" />
-           </figure>
-           ${issue.intro ? `<div class="nl-lead nl-body leading-relaxed text-text-primary/90">${paragraphs(issue.intro)}</div>` : ""}
-         </section>`
-      : lead;
+    // The opening in a navy panel, the contents boxed beside it —
+    // the arrangement the parish laid out by hand.
+    const leadRow = `<div class="nl-lead-row">
+      <section class="nl-block nl-panel">
+        <h2 class="font-display text-lg leading-tight">${escapeHtml(issue.title)}</h2>
+        <div class="nl-body mt-2">${paragraphs(issue.intro)}</div>
+      </section>
+      ${contentsHtml(headings)}
+    </div>`;
 
-    if (closing) blocks.push(closing);
-    layPages(bandHtml, footHtml, openingBlock, contentsHtml(headings), blocks);
+    // Two to a row, two rows to a page after the first — no
+    // measuring, so nothing can drift.
+    const pages: string[] = [];
+    let page: string[] = [];
+    const rows: string[] = [];
+    for (let i = 0; i < blocks.length; i += 2) {
+      rows.push(`<div class="nl-row">${blocks.slice(i, i + 2).join("")}</div>`);
+    }
+    if ((issue.closing ?? "").trim()) {
+      rows.push(`<div class="nl-row"><section class="nl-block" style="grid-column:1/-1"><div class="nl-body border-t-2 border-[#1F3A5F] pt-2">${paragraphs(issue.closing)}</div></section></div>`);
+    }
+
+    // Page one carries the band, the picture, the opening and the
+    // contents — and nothing else, which is how the parish laid it
+    // out. Putting a row of sections on it as well made the sheet
+    // fifteen inches long.
+    pages.push(`${band}<div class="nl-inner">${leadRow}</div>`);
+    // One row of two sections to a page after that. Two rows ran a
+    // sheet to fourteen inches; a page is eleven.
+    while (rows.length) {
+      page = rows.splice(0, 1);
+      pages.push(`<div class="nl-inner">${page.join("")}</div>`);
+    }
+
+    host.innerHTML = pages
+      .map((inner, i) => `<article class="nl-paper">${inner}${foot(`${i + 1} / ${pages.length}`)}</article>`)
+      .join("");
   }
 
   (async () => {

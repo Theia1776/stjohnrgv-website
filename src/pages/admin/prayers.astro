@@ -103,6 +103,7 @@ import Layout from "../../layouts/Layout.astro";
     contact: string | null;
     note: string | null;
     status: "new" | "included" | "archived";
+    in_newsletter?: boolean;
     created_at: string;
   };
 
@@ -131,6 +132,7 @@ import Layout from "../../layouts/Layout.astro";
           <p class="mt-0.5 text-xs uppercase tracking-widest text-brand-tan-dark">
             ${r.kind === "departed" ? "Memorial" : "For the living"} · ${escapeHtml(when(r.created_at))}
           </p>
+          ${r.in_newsletter === false ? `<p class="mt-1 text-xs font-semibold text-liturgical-red">Asked not to be printed</p>` : ""}
           ${r.requested_by ? `<p class="mt-1 text-sm text-text-secondary">asked by ${escapeHtml(r.requested_by)}${r.contact ? ` · ${escapeHtml(r.contact)}` : ""}</p>` : ""}
           ${r.note ? `<p class="mt-2 border-l-2 border-border-soft pl-3 text-sm italic text-text-primary/85">${escapeHtml(r.note)}</p>` : ""}
         </div>
@@ -163,7 +165,9 @@ import Layout from "../../layouts/Layout.astro";
    * Copying them by hand off a list of cards is how a name gets missed.
    */
   async function copyList(kind: "living" | "departed") {
-    const names = requests.filter((r) => r.kind === kind && r.status === "new").map((r) => r.name);
+    const names = requests
+      .filter((r) => r.kind === kind && r.status === "new" && r.in_newsletter !== false)
+      .map((r) => r.name);
     const text = names.join(", ");
     const note = $("copy-status");
     if (!names.length) {
