@@ -34,6 +34,17 @@ export interface SendEmailParams {
   bcc?: string[];
   /** Where replies should land — the sending admin, not the no-reply From. */
   replyTo?: string;
+  /**
+   * Files to attach. Resend will fetch a `path` itself, which is how
+   * the newsletter PDF travels: the file stays in R2 and the Function
+   * never has to hold twenty megabytes in memory to send it.
+   *
+   * Size is the thing that bites. Mail is encoded for transport, which
+   * inflates a file by about a third, and most servers — Gmail among
+   * them — refuse a message over 25 MB. The upload route caps the file
+   * at 20 MB and the admin screen warns long before that.
+   */
+  attachments?: { filename: string; path?: string; content?: string }[];
 }
 
 export interface SendEmailResult {
@@ -45,7 +56,7 @@ export interface SendEmailResult {
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-  const { apiKey, from, to, subject, text, html, bcc, replyTo } = params;
+  const { apiKey, from, to, subject, text, html, bcc, replyTo, attachments } = params;
   try {
     const res = await fetch(RESEND_ENDPOINT, {
       method: "POST",
@@ -61,6 +72,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
         ...(html ? { html } : {}),
         ...(bcc && bcc.length ? { bcc } : {}),
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(attachments && attachments.length ? { attachments } : {}),
       }),
     });
 

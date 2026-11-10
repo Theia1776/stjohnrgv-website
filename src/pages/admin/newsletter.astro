@@ -90,6 +90,32 @@ import FileDrop from "../../components/FileDrop.astro";
           />
         </fieldset>
 
+        <!-- The newsletter itself, as a PDF, attached to the email.
+             The parish lays the issue out in a design tool; this is
+             how that file reaches people. -->
+        <fieldset class="mt-4 border border-border-soft p-3">
+          <legend class="px-1 text-xs uppercase tracking-widest text-text-secondary">
+            PDF attached to the email
+          </legend>
+          <div class="flex flex-wrap items-center gap-2">
+            <input id="pdf-file" type="file" accept="application/pdf,.pdf" class="text-xs" />
+            <button type="button" id="pdf-upload" class="btn btn-secondary text-xs">Attach</button>
+            <span id="pdf-status" class="text-xs text-text-secondary" role="status"></span>
+          </div>
+          <p id="pdf-current" class="mt-2 text-xs text-text-primary" hidden></p>
+          <button type="button" id="pdf-remove" class="mt-1 text-xs text-liturgical-red underline" hidden>
+            Remove the attachment
+          </button>
+          <input id="f-pdf-key" type="hidden" />
+          <input id="f-pdf-name" type="hidden" />
+          <input id="f-pdf-bytes" type="hidden" />
+          <p class="mt-2 text-[0.7rem] leading-relaxed text-text-secondary">
+            Everyone on the roster gets this file attached to the newsletter email.
+            Keep it under about 10&nbsp;MB — mail servers refuse large attachments,
+            and the people most likely to be refused are the ones reading on a phone.
+          </p>
+        </fieldset>
+
         <label class="mt-4 block text-xs uppercase tracking-widest text-text-secondary">
           Opening
           <textarea id="f-intro" rows="3" placeholder="A line or two to begin with."
@@ -182,6 +208,9 @@ import FileDrop from "../../components/FileDrop.astro";
     closing: string | null;
     hero_image: string | null;
     hero_image_alt: string | null;
+    attachment_key: string | null;
+    attachment_name: string | null;
+    attachment_bytes: number | null;
     audience: string;
     published: boolean;
     published_at: string | null;
@@ -756,6 +785,16 @@ import FileDrop from "../../components/FileDrop.astro";
       status.className = "text-xs text-text-secondary";
       (($("hero-file") as HTMLInputElement)).value = "";
     }
+    input("f-pdf-key").value = issue?.attachment_key ?? "";
+    input("f-pdf-name").value = issue?.attachment_name ?? "";
+    input("f-pdf-bytes").value = issue?.attachment_bytes ? String(issue.attachment_bytes) : "";
+    (($("pdf-file") as HTMLInputElement)).value = "";
+    {
+      const status = $("pdf-status");
+      status.className = "text-xs text-text-secondary";
+      status.textContent = "";
+    }
+    showAttachment();
 
     const audience = issue?.audience === "public" ? "public" : "parish";
     (document.querySelector(`input[name="audience"][value="${audience}"]`) as HTMLInputElement).checked = true;
@@ -827,6 +866,99 @@ import FileDrop from "../../components/FileDrop.astro";
     }
   });
 
+  /** How big the file is, in the words a person would use. */
+  function sizeLabel(bytes: number): string {
+    return bytes >= 1048576
+      ? `${(bytes / 1048576).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+
+  /** Show, or stop showing, the PDF currently attached to this issue. */
+  function showAttachment() {
+    const key = input("f-pdf-key").value.trim();
+    const name = input("f-pdf-name").value.trim();
+    const bytes = Number(input("f-pdf-bytes").value) || 0;
+    const line = $("pdf-current");
+    const remove = $("pdf-remove");
+    if (!key) {
+      line.hidden = true;
+      remove.hidden = true;
+      return;
+    }
+    const href = `/api/newsletter/file?key=${encodeURIComponent(key)}&name=${encodeURIComponent(name || "newsletter.pdf")}`;
+    line.innerHTML =
+      `Attached: <a class="font-semibold text-brand-blue-dark underline" href="${href}" target="_blank" rel="noopener">` +
+      `${escapeHtml(name || "newsletter.pdf")}</a>` +
+      (bytes ? ` · ${sizeLabel(bytes)}` : "");
+    line.hidden = false;
+    remove.hidden = false;
+  }
+
+  document.getElementById("pdf-upload")?.addEventListener("click", async () => {
+    const fileEl = $("pdf-file") as HTMLInputElement;
+    const status = $("pdf-status");
+    const btn = $("pdf-upload") as HTMLButtonElement;
+    const file = fileEl.files?.[0];
+    if (!file) {
+      status.textContent = "Choose a PDF first.";
+      status.className = "text-xs text-liturgical-red";
+      return;
+    }
+    btn.disabled = true;
+    status.className = "text-xs text-text-secondary";
+    status.textContent = `Uploading ${file.name} (${sizeLabel(file.size)})…`;
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("slug", input("f-title").value.trim() || "issue");
+      const res = await fetch("/api/admin/newsletter/attachment", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        status.textContent = body.error ?? `Upload failed (${res.status}).`;
+        status.className = "text-xs text-liturgical-red";
+        return;
+      }
+      input("f-pdf-key").value = body.key;
+      input("f-pdf-name").value = body.name;
+      input("f-pdf-bytes").value = String(body.bytes);
+      showAttachment();
+      status.textContent = "Uploaded. Saving…";
+      const ok = await persistAfterUpload();
+      status.textContent = ok
+        ? `${body.name} will go out attached to this issue.`
+        : "Uploaded, but not saved yet — press Save draft.";
+      if (!ok) status.className = "text-xs text-liturgical-red";
+      // A 10 MB file is fine for most inboxes; past that, say so
+      // rather than letting it fail quietly at the far end.
+      if (ok && file.size > 10 * 1048576) {
+        status.textContent += ` It is ${sizeLabel(file.size)} — large enough that some mail servers may refuse it.`;
+        status.className = "text-xs text-liturgical-red";
+      }
+    } catch (err) {
+      status.textContent = `Upload failed: ${err instanceof Error ? err.message : String(err)}`;
+      status.className = "text-xs text-liturgical-red";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("pdf-remove")?.addEventListener("click", async () => {
+    input("f-pdf-key").value = "";
+    input("f-pdf-name").value = "";
+    input("f-pdf-bytes").value = "";
+    (($("pdf-file") as HTMLInputElement)).value = "";
+    showAttachment();
+    const status = $("pdf-status");
+    status.className = "text-xs text-text-secondary";
+    status.textContent = "Removed. Saving…";
+    const ok = await persistAfterUpload();
+    status.textContent = ok ? "No file attached to this issue." : "Removed — press Save draft.";
+  });
+
   /**
    * Record an upload straight away.
    *
@@ -865,6 +997,9 @@ import FileDrop from "../../components/FileDrop.astro";
       closing: area("f-closing").value.trim(),
       hero_image: input("f-hero").value.trim(),
       hero_image_alt: input("f-hero-alt").value.trim(),
+      attachment_key: input("f-pdf-key").value.trim(),
+      attachment_name: input("f-pdf-name").value.trim(),
+      attachment_bytes: Number(input("f-pdf-bytes").value) || null,
       sections: kept,
       audience:
         (document.querySelector('input[name="audience"]:checked') as HTMLInputElement)?.value === "public"

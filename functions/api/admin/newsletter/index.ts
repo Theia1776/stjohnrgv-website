@@ -22,7 +22,8 @@ interface Env {
 const FIELDS =
   "id, slug, title, issue_label, intro, sections, closing, audience, published, " +
   "published_at, sent_at, sent_count, sent_attempted, send_error, written_by_name, " +
-  "hero_image, hero_image_alt, created_at, updated_at";
+  "hero_image, hero_image_alt, attachment_key, attachment_name, attachment_bytes, " +
+  "created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -122,6 +123,14 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         hero_image: typeof body.hero_image === "string" ? body.hero_image.trim() || null : null,
         hero_image_alt:
           typeof body.hero_image_alt === "string" ? body.hero_image_alt.trim() || null : null,
+        // The PDF that goes out attached to the email, if there is one.
+        attachment_key:
+          typeof body.attachment_key === "string" ? body.attachment_key.trim() || null : null,
+        attachment_name:
+          typeof body.attachment_name === "string" ? body.attachment_name.trim() || null : null,
+        attachment_bytes: Number.isFinite(Number(body.attachment_bytes))
+          ? Math.round(Number(body.attachment_bytes)) || null
+          : null,
         // The careful default. An issue is parish-only until somebody
         // decides otherwise about that particular issue.
         audience: body.audience === "public" ? "public" : "parish",

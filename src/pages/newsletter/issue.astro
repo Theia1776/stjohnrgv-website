@@ -57,6 +57,9 @@ import Layout from "../../layouts/Layout.astro";
       position: relative;
     }
     .nl-band h1 {
+      /* White, and said out loud: the site's heading colour is navy,
+         which on a navy band is a title nobody can read. */
+      color: #FFFFFF;
       font-size: clamp(1.3rem, 3.6vw, 2.1rem);
       line-height: 1.05;
       white-space: nowrap;
@@ -103,6 +106,14 @@ import Layout from "../../layouts/Layout.astro";
       .nl-lead-row, .nl-row { grid-template-columns: minmax(0, 1fr); }
     }
 
+    /* Every section is ruled off, so one piece never bleeds into the
+       one beside it. Declared before .nl-panel and .nl-box so those
+       two keep their heavier treatment. */
+    .nl-block {
+      border: 1px solid #1F3A5F;
+      padding: 0.8rem 0.9rem;
+    }
+
     /* A navy panel, for the lead and for any section set in colour. */
     .nl-panel {
       background: #1F3A5F;
@@ -120,6 +131,27 @@ import Layout from "../../layouts/Layout.astro";
 
     .nl-block { break-inside: avoid; }
     .nl-head { break-after: avoid; }
+
+    /* Jumped to from the contents. The offset keeps the heading clear
+       of the site header, which sits over the top of the page. */
+    .nl-block[id] { scroll-margin-top: 5.5rem; }
+
+    /* The contents, as links. They read as a list, not as a row of
+       blue underlines. */
+    .nl-toc a {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+    }
+    .nl-toc a:hover { color: #1F3A5F; text-decoration: underline; }
+
+    /* Back to the contents, from the foot of any sheet. */
+    .nl-top {
+      color: #5C6B7A;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .nl-top:hover { color: #1F3A5F; text-decoration: underline; }
 
     /* Newsletter type is small — that is how a page of words fits on
        a page. */
@@ -303,11 +335,20 @@ import Layout from "../../layouts/Layout.astro";
     </figure>`;
   }
 
+  /** The anchor a section is reached by from the contents. */
+  function anchorId(s: Section, i: number): string {
+    const base = (s.key || sectionTitle(s) || `part-${i}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return `nl-${base || `part-${i}`}`;
+  }
+
   /** One section, as a box or a panel. */
-  function blockHtml(s: Section): string {
+  function blockHtml(s: Section, id: string): string {
     const title = sectionTitle(s);
     const boxed = isList(s);
-    return `<section class="nl-block ${boxed ? "nl-box" : ""}">
+    return `<section id="${id}" class="nl-block ${boxed ? "nl-box" : ""}">
       ${figure(s)}
       ${title ? `<h2 class="nl-head font-display text-base leading-tight ${boxed ? "" : "text-text-primary"}">${escapeHtml(title)}</h2>` : ""}
       <div class="nl-body mt-1.5">${paragraphs(s.body)}</div>
@@ -322,12 +363,15 @@ import Layout from "../../layouts/Layout.astro";
     </section>`;
   }
 
-  function contentsHtml(headings: string[]): string {
-    if (!headings.length) return "";
-    const rows = headings
-      .map((h) => `<li class="border-b border-[#D6E0EA] py-1.5">${escapeHtml(h)}</li>`)
+  function contentsHtml(entries: { title: string; id: string }[]): string {
+    if (!entries.length) return "";
+    const rows = entries
+      .map(
+        (e) =>
+          `<li class="border-b border-[#D6E0EA] py-1.5"><a href="#${e.id}">${escapeHtml(e.title)}</a></li>`,
+      )
       .join("");
-    return `<aside class="nl-block nl-box">
+    return `<aside id="nl-contents" class="nl-block nl-box nl-toc">
       <h2 class="font-display text-lg leading-tight">Inside This Issue:</h2>
       <ul class="nl-body mt-2 list-none">${rows}</ul>
       <p class="mt-2 text-[0.6rem] leading-relaxed text-text-secondary">
@@ -339,14 +383,15 @@ import Layout from "../../layouts/Layout.astro";
   function renderIssue(issue: Issue, slots: ReturnType<typeof pairSections>) {
     const host = document.getElementById("issue-sheets") as HTMLElement;
 
-    const headings: string[] = [];
-    const blocks: string[] = [];
+    const headings: { title: string; id: string }[] = [];
+    const blocks: { key: string; html: string }[] = [];
 
-    for (const slot of slots) {
+    slots.forEach((slot, i) => {
       if (slot.pair) {
         const title = sectionTitle(slot.left);
-        headings.push(title);
-        blocks.push(`<section class="nl-block nl-box" style="grid-column:1/-1">
+        const id = anchorId(slot.left, i);
+        headings.push({ title, id });
+        blocks.push({ key: slot.left.key ?? "", html: `<section id="${id}" class="nl-block nl-box" style="grid-column:1/-1">
           <h2 class="nl-head font-display text-base leading-tight">${escapeHtml(title)}</h2>
           <div class="mt-2 grid gap-3 sm:grid-cols-2">
             <div class="nl-body">
@@ -358,13 +403,14 @@ import Layout from "../../layouts/Layout.astro";
               ${paragraphs(slot.right.body)}
             </div>
           </div>
-        </section>`);
+        </section>` });
       } else {
         const title = sectionTitle(slot.section);
-        if (title) headings.push(title);
-        blocks.push(blockHtml(slot.section));
+        const id = anchorId(slot.section, i);
+        if (title) headings.push({ title, id });
+        blocks.push({ key: slot.section.key ?? "", html: blockHtml(slot.section, id) });
       }
-    }
+    });
 
     const hero = imageSrc(issue.hero_image);
     const band = `<header class="nl-band">
@@ -374,8 +420,12 @@ import Layout from "../../layouts/Layout.astro";
       </header>
       ${hero ? `<img class="nl-hero" src="${escapeHtml(hero)}" alt="${escapeHtml(issue.hero_image_alt ?? "")}" />` : ""}`;
 
-    const foot = (n: string) => `<div class="nl-foot">
+    // Every sheet after the first offers the way back to the contents,
+    // so a reader hops between the list and the piece they wanted
+    // instead of scrolling the whole newsletter.
+    const foot = (n: string, top: boolean) => `<div class="nl-foot">
         <span>St. John of Kronstadt &middot; Orthodox Mission &middot; RGV</span>
+        ${top ? `<a class="nl-top no-print" href="#nl-contents">&uarr; Inside This Issue</a>` : ""}
         <span>${n}</span>
       </div>`;
 
@@ -389,16 +439,38 @@ import Layout from "../../layouts/Layout.astro";
       ${contentsHtml(headings)}
     </div>`;
 
-    // Two to a row, two rows to a page after the first — no
-    // measuring, so nothing can drift.
+    // What is on at the parish belongs together on one sheet: the
+    // times, who is pouring the coffee, and what is coming up. Nobody
+    // should have to turn a page to find out whether there is coffee.
+    const TOGETHER = ["services", "coffee", "events"];
+
+    const row = (inner: string) => `<div class="nl-row">${inner}</div>`;
+
+    // Two to a page, in the order the sections are written — except
+    // the group above, which takes a sheet of its own.
     const pages: string[] = [];
-    let page: string[] = [];
     const rows: string[] = [];
-    for (let i = 0; i < blocks.length; i += 2) {
-      rows.push(`<div class="nl-row">${blocks.slice(i, i + 2).join("")}</div>`);
+    const grouped = blocks.filter((b) => TOGETHER.includes(b.key));
+    const rest = blocks.filter((b) => !TOGETHER.includes(b.key));
+
+    for (let i = 0; i < rest.length; i += 2) {
+      rows.push(row(rest.slice(i, i + 2).map((b) => b.html).join("")));
+    }
+    if (grouped.length) {
+      // Two side by side, and the third across the width beneath them.
+      const top = grouped.slice(0, 2).map((b) => b.html).join("");
+      const under = grouped
+        .slice(2)
+        .map((b) => b.html.replace('class="nl-block', 'style="grid-column:1/-1" class="nl-block'))
+        .join("");
+      rows.push(row(top) + (under ? row(under) : ""));
     }
     if ((issue.closing ?? "").trim()) {
-      rows.push(`<div class="nl-row"><section class="nl-block" style="grid-column:1/-1"><div class="nl-body border-t-2 border-[#1F3A5F] pt-2">${paragraphs(issue.closing)}</div></section></div>`);
+      rows.push(
+        row(
+          `<section class="nl-block" style="grid-column:1/-1"><div class="nl-body">${paragraphs(issue.closing)}</div></section>`,
+        ),
+      );
     }
 
     // Page one carries the band, the picture, the opening and the
@@ -409,12 +481,14 @@ import Layout from "../../layouts/Layout.astro";
     // One row of two sections to a page after that. Two rows ran a
     // sheet to fourteen inches; a page is eleven.
     while (rows.length) {
-      page = rows.splice(0, 1);
-      pages.push(`<div class="nl-inner">${page.join("")}</div>`);
+      pages.push(`<div class="nl-inner">${rows.splice(0, 1).join("")}</div>`);
     }
 
     host.innerHTML = pages
-      .map((inner, i) => `<article class="nl-paper">${inner}${foot(`${i + 1} / ${pages.length}`)}</article>`)
+      .map(
+        (inner, i) =>
+          `<article class="nl-paper">${inner}${foot(`${i + 1} / ${pages.length}`, i > 0)}</article>`,
+      )
       .join("");
   }
 

@@ -24,7 +24,8 @@ interface Env {
 const FIELDS =
   "id, slug, title, issue_label, intro, sections, closing, audience, published, " +
   "published_at, sent_at, sent_count, sent_attempted, send_error, written_by_name, " +
-  "hero_image, hero_image_alt, created_at, updated_at";
+  "hero_image, hero_image_alt, attachment_key, attachment_name, attachment_bytes, " +
+  "created_at, updated_at";
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -86,11 +87,16 @@ export async function onRequestPatch(context: PagesContext): Promise<Response> {
       updates.issue_label =
         typeof body.issue_label === "string" ? body.issue_label.trim().slice(0, 100) || null : null;
     }
-    // The photograph under the masthead, stored as an R2 key.
-    for (const field of ["hero_image", "hero_image_alt"] as const) {
+    // The photograph under the masthead, and the PDF that goes out
+    // attached to the email. Both stored as R2 keys.
+    for (const field of ["hero_image", "hero_image_alt", "attachment_key", "attachment_name"] as const) {
       if (field in body) {
         updates[field] = typeof body[field] === "string" ? (body[field] as string).trim() || null : null;
       }
+    }
+    if ("attachment_bytes" in body) {
+      const n = Number(body.attachment_bytes);
+      updates.attachment_bytes = Number.isFinite(n) && n > 0 ? Math.round(n) : null;
     }
     for (const field of ["intro", "closing"] as const) {
       if (field in body) {

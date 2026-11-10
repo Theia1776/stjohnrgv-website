@@ -118,7 +118,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const { data: issue, error: loadError } = await supabase
       .from("newsletters")
-      .select("id, slug, title, issue_label, intro, sections, closing, published, published_at, sent_at, sent_count, hero_image, hero_image_alt")
+      .select("id, slug, title, issue_label, intro, sections, closing, published, published_at, sent_at, sent_count, hero_image, hero_image_alt, attachment_key, attachment_name, attachment_bytes")
       .eq("id", id)
       .single();
     if (loadError) return wrap(jsonResponse({ error: loadError.message }, 500));
@@ -167,6 +167,22 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const text = issueToText(issue);
     const html = issueToHtml(issue);
 
+    // The PDF, if this issue has one. Resend fetches the URL itself,
+    // so the file never passes through this Function — which is the
+    // only way a twenty-megabyte attachment is sendable from here at
+    // all. The URL is built from the request's own origin so it works
+    // the same on a preview deployment as on the live site.
+    const attachments = issue.attachment_key
+      ? [
+          {
+            filename: issue.attachment_name || "Newsletter.pdf",
+            path:
+              `${new URL(context.request.url).origin}/api/newsletter/file` +
+              `?key=${encodeURIComponent(issue.attachment_key)}`,
+          },
+        ]
+      : undefined;
+
     const failures: string[] = [];
     let delivered = 0;
 
@@ -183,6 +199,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         subject,
         text,
         html,
+        attachments,
       });
       if (result.ok) delivered += batch.length;
       else failures.push(result.error ?? "unknown error");
