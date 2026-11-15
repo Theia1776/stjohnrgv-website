@@ -44,6 +44,14 @@ import { SUPABASE_URL } from "../../../src/lib/supabase";
 import { sendEmail } from "../../../src/lib/email";
 import { createClient } from "@supabase/supabase-js";
 
+interface R2ObjectBody {
+  arrayBuffer(): Promise<ArrayBuffer>;
+  size: number;
+}
+interface R2Bucket {
+  get(key: string): Promise<R2ObjectBody | null>;
+}
+
 interface Env {
   SUPABASE_SERVICE_ROLE_KEY: string;
   RESEND_API_KEY?: string;
@@ -51,6 +59,45 @@ interface Env {
    *  Cloudflare dashboard to change an address without a code push. */
   PARISH_OFFICE_EMAIL?: string;
   PRIEST_EMAIL?: string;
+  /** Where an uploaded attachment is stored. Read here and sent as
+   *  bytes — see buildAttachment below for why. */
+  LIBRARY_BUCKET?: R2Bucket;
+}
+
+/**
+ * An attachment, read out of R2 and base64'd into the payload.
+ *
+ * Resend will also take a `path` and fetch the file itself, which is
+ * tempting because the bytes never pass through this Function. Don't.
+ * That fetch happens *after* the API call has already returned 200, so
+ * if it fails — a challenge page, a redirect, anything — the message
+ * is dropped and nothing here ever learns of it. The send is recorded
+ * as a success and no one receives it.
+ *
+ * Reading the object ourselves costs memory and gives a real failure,
+ * before anything is sent, that the admin can read on the page.
+ */
+async function buildAttachment(
+  bucket: R2Bucket | undefined,
+  key: string,
+  filename: string,
+): Promise<{ attachment?: { filename: string; content: string }; error?: string }> {
+  if (!bucket) return { error: "Storage isn't configured (LIBRARY_BUCKET)." };
+  if (!key.startsWith("newsletter/") || key.includes("..")) {
+    return { error: "That attachment key isn't one this can read." };
+  }
+
+  const object = await bucket.get(key);
+  if (!object) return { error: "The attached file is no longer in storage. Attach it again." };
+
+  const buf = new Uint8Array(await object.arrayBuffer());
+  // btoa over one huge string blows the stack, so chunk it.
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    binary += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+  }
+  return { attachment: { filename, content: btoa(binary) } };
 }
 
 /**
@@ -326,26 +373,20 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const html = bodyToHtml(body);
 
-    // A file attached to this message, if one was uploaded. Resend
-    // fetches the URL itself, so the file never passes through this
-    // Function — which is the only way a several-megabyte PDF is
-    // sendable from here at all. The URL is built from the request's
-    // own origin so it works the same on a preview deployment as on
-    // the live site.
+    // A file attached to this message, if one was uploaded. Read out of
+    // R2 here and carried as bytes, so a storage problem fails loudly
+    // now instead of silently dropping the message later.
     const attachmentKey =
       typeof payload.attachment_key === "string" ? payload.attachment_key.trim() : "";
-    const attachments = attachmentKey
-      ? [
-          {
-            filename:
-              (typeof payload.attachment_name === "string" ? payload.attachment_name.trim() : "") ||
-              "Attachment.pdf",
-            path:
-              `${new URL(context.request.url).origin}/api/newsletter/file` +
-              `?key=${encodeURIComponent(attachmentKey)}`,
-          },
-        ]
-      : undefined;
+    let attachments: { filename: string; content: string }[] | undefined;
+    if (attachmentKey) {
+      const filename =
+        (typeof payload.attachment_name === "string" ? payload.attachment_name.trim() : "") ||
+        "Attachment.pdf";
+      const built = await buildAttachment(context.env.LIBRARY_BUCKET, attachmentKey, filename);
+      if (built.error) return wrap(jsonResponse({ error: built.error }, 502));
+      attachments = [built.attachment!];
+    }
 
     const failures: string[] = [];
     let delivered = 0;
