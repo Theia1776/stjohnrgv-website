@@ -4,12 +4,10 @@
  * Serves the PDF attached to a newsletter issue, out of the same R2
  * bucket the library uses, under the `newsletter/` prefix.
  *
- * **Signed-in parishioners only.** It used to be public, because the
- * mail service fetched this URL to attach the file and sends no
- * cookies. It no longer does: /api/admin/email reads the object out of
- * R2 itself and carries the bytes, so nothing outside the parish needs
- * to reach this route. A newsletter is written for the parish, and a
- * key that leaks should not hand it to the whole internet.
+ * **Public on purpose, and only under that prefix.** The newsletter is
+ * how the parish introduces itself, and a parishioner reading it on a
+ * phone should not meet a sign-in form first. Nothing belongs in the
+ * PDF that would not be handed to a stranger at the door.
  *
  * It is a sibling of image.ts rather than a widening of it. That route
  * refuses to serve anything that is not an image, which is a property
@@ -17,11 +15,7 @@
  * a PDF. Between them, nothing else under the prefix can be fetched at
  * all, and the 690 library books outside the prefix stay unreachable.
  *
- * Anyone with an account may read it. That is the same bar registration
- * sets everywhere else on the site, and the newsletter is sent to every
- * one of them anyway.
  */
-import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 
 interface R2ObjectBody {
   body: ReadableStream | null;
@@ -40,17 +34,6 @@ interface Env {
 const PREFIX = "newsletter/";
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  const session = await verifySession(context.request);
-  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
-  if (!session.user) {
-    return wrap(
-      new Response("Sign in to read the parish newsletter.", {
-        status: 401,
-        headers: { "Cache-Control": "no-store" },
-      }),
-    );
-  }
-
   const url = new URL(context.request.url);
   const key = url.searchParams.get("key") ?? "";
 
@@ -88,9 +71,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
       "Content-Length": String(object.size),
       "Content-Disposition": `inline; filename="${name}"`,
       ETag: object.httpEtag,
-      // `private`: the response is now behind a sign-in, so it belongs
-      // in the reader's own browser cache and in no shared one.
-      "Cache-Control": "private, max-age=31536000, immutable",
+      "Cache-Control": "public, max-age=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
     },
   });

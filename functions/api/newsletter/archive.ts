@@ -8,10 +8,9 @@
  * them there so the mailer can read them — so the archive is a listing
  * of that prefix rather than a second place to keep the same file.
  *
- * Signed in only, same bar as the file route it links to. A newsletter
- * carries our people's names and is kept among us.
+ * Public, same as the file route it links to. Nobody should have to
+ * make an account to read the parish newsletter.
  */
-import { verifySession, withSessionCookies } from "../../../src/lib/session.ts";
 
 interface R2Object {
   key: string;
@@ -64,13 +63,8 @@ function titleFor(object: R2Object): string {
 }
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
-  const session = await verifySession(context.request);
-  const wrap = (resp: Response) => withSessionCookies(resp, session.refreshedCookies);
-
-  if (!session.user) return wrap(jsonResponse({ error: "Unauthorized" }, 401));
-
   const bucket = context.env.LIBRARY_BUCKET;
-  if (!bucket) return wrap(jsonResponse({ error: "Storage isn't configured." }, 500));
+  if (!bucket) return jsonResponse({ error: "Storage isn't configured." }, 500);
 
   try {
     const issues: { key: string; title: string; bytes: number; uploaded: string }[] = [];
@@ -97,10 +91,8 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     } while (cursor);
 
     issues.sort((a, b) => b.uploaded.localeCompare(a.uploaded));
-    return wrap(jsonResponse({ issues }, 200));
+    return jsonResponse({ issues }, 200);
   } catch (err) {
-    return wrap(
-      jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500),
-    );
+    return jsonResponse({ error: err instanceof Error ? err.message : "Internal error" }, 500);
   }
 }
