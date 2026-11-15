@@ -42,12 +42,21 @@ interface Env {
 }
 
 /**
- * Twenty megabytes. Not a target — a ceiling. Gmail refuses anything
- * over 25 MB once it has been encoded for transport, which inflates a
- * file by about a third, so a 20 MB PDF is already at the edge of what
- * will arrive. The admin screen says so before it gets here.
+ * Eight megabytes, and it is a refusal rather than a warning.
+ *
+ * It was twenty, on the reasoning that Gmail's limit is twenty-five.
+ * That was wrong in the way that costs a whole evening: encoding
+ * inflates a file by about a third, so twenty megabytes arrives as
+ * twenty-seven and is refused — and it is refused *after* the mail
+ * service has accepted the message and reported success. The send is
+ * recorded as delivered and nobody receives anything.
+ *
+ * Eight megabytes leaves about eleven on the wire, under every limit
+ * worth naming: Gmail 25, Outlook 20, and the ten-megabyte mailboxes a
+ * fair number of people still have. A newsletter that is bigger than
+ * this needs to be exported smaller, not sent hopefully.
  */
-const MAX_BYTES = 20 * 1024 * 1024;
+const MAX_BYTES = 8 * 1024 * 1024;
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -120,9 +129,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         jsonResponse(
           {
             error:
-              `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is 20 MB, and ` +
-              "most mail servers refuse anything over about 25 MB once it has been encoded. " +
-              "Export it again at a smaller size, or send it as a link instead.",
+              `That file is ${(file.size / 1048576).toFixed(1)} MB — too big to email. ` +
+              "The limit here is 8 MB, because encoding adds about a third on the way " +
+              "out and mailboxes start refusing around 10. A file over the limit does " +
+              "not bounce: it is accepted, reported as sent, and quietly never arrives. " +
+              "Export it smaller and attach it again.",
           },
           413,
         ),

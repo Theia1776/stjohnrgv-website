@@ -51,6 +51,16 @@ export interface SendEmailResult {
   ok: boolean;
   /** Present on failure — a short reason for the server log. */
   error?: string;
+  /**
+   * Resend's id for the message, when it accepted one.
+   *
+   * Worth keeping, because `ok` means only that Resend took the
+   * message — not that anyone received it. Delivery happens afterwards
+   * and can fail silently for reasons nothing here can see: a mailbox
+   * that refuses the size, a bounce, a block. The id is what turns
+   * "it says it sent" into an answer, in Resend's own log.
+   */
+  id?: string;
 }
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -82,7 +92,8 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       const detail = await res.text().catch(() => "");
       return { ok: false, error: `Resend ${res.status}: ${detail || res.statusText}` };
     }
-    return { ok: true };
+    const body = (await res.json().catch(() => ({}))) as { id?: string };
+    return { ok: true, id: body.id };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

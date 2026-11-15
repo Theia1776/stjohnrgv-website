@@ -389,6 +389,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     const failures: string[] = [];
+    // Resend's ids for the messages it accepted. `ok` means accepted,
+    // not received: delivery happens afterwards and can fail where
+    // nothing here can see it. These ids are what makes that
+    // answerable in Resend's own log instead of a shrug.
+    const messageIds: string[] = [];
     let delivered = 0;
 
     if (chosen.length === 1) {
@@ -404,8 +409,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         html,
         attachments,
       });
-      if (result.ok) delivered = 1;
-      else failures.push(result.error ?? "unknown error");
+      if (result.ok) {
+        delivered = 1;
+        if (result.id) messageIds.push(result.id);
+      } else failures.push(result.error ?? "unknown error");
     } else {
       // Several or everyone: TO the parish office, everyone else BCC, in
       // batches of 49 so no message exceeds Resend's 50-address cap.
@@ -426,8 +433,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
           html,
           attachments,
         });
-        if (result.ok) delivered += batch.length;
-        else failures.push(result.error ?? "unknown error");
+        if (result.ok) {
+          delivered += batch.length;
+          if (result.id) messageIds.push(result.id);
+        } else failures.push(result.error ?? "unknown error");
 
         if (i + BCC_BATCH_SIZE < addresses.length) {
           await new Promise((resolve) => setTimeout(resolve, BATCH_GAP_MS));
@@ -469,6 +478,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
           error: errorText,
           audience,
           sent_as: senderKey,
+          message_ids: messageIds,
           log_error: logError?.message ?? null,
         },
         200,

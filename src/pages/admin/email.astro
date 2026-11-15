@@ -506,14 +506,16 @@ import Layout from "../../layouts/Layout.astro";
       status.textContent = "Choose a PDF first.";
       return;
     }
-    // Transport encoding inflates a file by about a third, and most
-    // mail servers stop at 25 MB, so say so here rather than after a
-    // send that silently bounced.
-    if (file.size > 10 * 1048576) {
-      status.textContent = `That's ${sizeLabel(file.size)} — large enough that some mailboxes will refuse it. Uploading anyway.`;
-    } else {
-      status.textContent = "Uploading…";
+    // Refused here, not warned about. A file over the limit is accepted
+    // by the mail service, recorded as sent, and never delivered — so
+    // "uploading anyway" was an invitation to a silent failure.
+    if (file.size > 8 * 1048576) {
+      status.textContent =
+        `That's ${sizeLabel(file.size)} — too big to email. Over about 8 MB a message is ` +
+        "accepted, reported as sent, and never arrives. Export the PDF smaller and try again.";
+      return;
     }
+    status.textContent = "Uploading…";
     const form = new FormData();
     form.append("file", file);
     form.append("slug", "email");
@@ -613,7 +615,13 @@ import Layout from "../../layouts/Layout.astro";
         return;
       }
 
-      let message = `Sent to ${data.delivered} of ${data.attempted}.`;
+      // "Accepted", not "sent" — the mail service taking a message is
+      // not the same as anyone receiving it, and saying "sent" is what
+      // made a silent failure look like a success.
+      let message = `Accepted for ${data.delivered} of ${data.attempted}.`;
+      if (data.message_ids?.length) {
+        message += ` Resend id ${data.message_ids.join(", ")} — look it up there if it doesn't arrive.`;
+      }
       if (data.error) message += ` Some didn't go through: ${data.error}`;
       // The mail went out but the record of it didn't — worth saying so
       // rather than leaving "Recently Sent" mysteriously empty.
