@@ -227,6 +227,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
+
   type Member = { id: string; name: string; email: string; role: string | null };
   type Sender = { key: string; label: string; address: string };
   type SentRecord = {
@@ -587,7 +589,12 @@ import Layout from "../../layouts/Layout.astro";
     const asWhom = senders.find((s) => s.key === senderKey)?.label ?? "the parish office";
     const attName = (document.getElementById("att-name") as HTMLInputElement).value;
     const withFile = attName ? `, with ${attName} attached` : "";
-    if (!window.confirm(`Send "${subject}" to ${who}, as ${asWhom}${withFile}? This can't be undone.`)) return;
+    const goAhead = await confirmAction({
+      message: `Send "${subject}" to ${who}, as ${asWhom}${withFile}?\n\nThis can't be undone.`,
+      confirmLabel: count === 1 ? "Send it" : `Send to ${count}`,
+      cancelLabel: "Not yet",
+    });
+    if (!goAhead) return;
 
     btn.disabled = true;
     setSendStatus("Sending…");
