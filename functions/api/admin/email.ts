@@ -325,6 +325,28 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     const html = bodyToHtml(body);
+
+    // A file attached to this message, if one was uploaded. Resend
+    // fetches the URL itself, so the file never passes through this
+    // Function — which is the only way a several-megabyte PDF is
+    // sendable from here at all. The URL is built from the request's
+    // own origin so it works the same on a preview deployment as on
+    // the live site.
+    const attachmentKey =
+      typeof payload.attachment_key === "string" ? payload.attachment_key.trim() : "";
+    const attachments = attachmentKey
+      ? [
+          {
+            filename:
+              (typeof payload.attachment_name === "string" ? payload.attachment_name.trim() : "") ||
+              "Attachment.pdf",
+            path:
+              `${new URL(context.request.url).origin}/api/newsletter/file` +
+              `?key=${encodeURIComponent(attachmentKey)}`,
+          },
+        ]
+      : undefined;
+
     const failures: string[] = [];
     let delivered = 0;
 
@@ -339,6 +361,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         subject,
         text: body,
         html,
+        attachments,
       });
       if (result.ok) delivered = 1;
       else failures.push(result.error ?? "unknown error");
@@ -360,6 +383,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
           subject,
           text: body,
           html,
+          attachments,
         });
         if (result.ok) delivered += batch.length;
         else failures.push(result.error ?? "unknown error");

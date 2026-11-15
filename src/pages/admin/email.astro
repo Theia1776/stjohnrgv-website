@@ -153,6 +153,28 @@ import Layout from "../../layouts/Layout.astro";
             </p>
           </div>
 
+          <div class="mt-4 border border-border-soft p-3">
+            <span class="block text-sm font-semibold mb-1">Attach a PDF</span>
+            <p class="text-xs text-text-secondary mb-2">
+              Optional. The file is stored once and fetched by the mail server, so a
+              large newsletter doesn't have to travel through this page.
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                id="att-file"
+                type="file"
+                accept="application/pdf,.pdf"
+                class="text-sm"
+              />
+              <button id="att-upload" type="button" class="btn btn-secondary text-sm">Attach</button>
+              <button id="att-remove" type="button" class="btn btn-secondary text-sm hidden">Remove</button>
+            </div>
+            <p id="att-status" class="mt-2 text-xs text-text-secondary"></p>
+            <p id="att-current" class="mt-1 text-xs font-semibold hidden"></p>
+            <input id="att-key" type="hidden" />
+            <input id="att-name" type="hidden" />
+          </div>
+
           <p class="mt-4 text-xs text-text-secondary">
             Replies will go to <span id="reply-to" class="font-mono"></span>.
           </p>
@@ -398,6 +420,73 @@ import Layout from "../../layouts/Layout.astro";
     renderPeople();
   });
 
+  // ---------- attachment ----------
+  function sizeLabel(bytes: number): string {
+    return bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+  }
+
+  function showAttachment(name: string, bytes: number) {
+    const current = document.getElementById("att-current") as HTMLParagraphElement;
+    const remove = document.getElementById("att-remove") as HTMLButtonElement;
+    if (name) {
+      current.textContent = `Attached: ${name}${bytes ? ` (${sizeLabel(bytes)})` : ""}`;
+      current.classList.remove("hidden");
+      remove.classList.remove("hidden");
+    } else {
+      current.textContent = "";
+      current.classList.add("hidden");
+      remove.classList.add("hidden");
+    }
+  }
+
+  document.getElementById("att-upload")?.addEventListener("click", async () => {
+    const input = document.getElementById("att-file") as HTMLInputElement;
+    const status = document.getElementById("att-status") as HTMLParagraphElement;
+    const file = input.files?.[0];
+    if (!file) {
+      status.textContent = "Choose a PDF first.";
+      return;
+    }
+    // Transport encoding inflates a file by about a third, and most
+    // mail servers stop at 25 MB, so say so here rather than after a
+    // send that silently bounced.
+    if (file.size > 10 * 1048576) {
+      status.textContent = `That's ${sizeLabel(file.size)} — large enough that some mailboxes will refuse it. Uploading anyway.`;
+    } else {
+      status.textContent = "Uploading…";
+    }
+    const form = new FormData();
+    form.append("file", file);
+    form.append("slug", "email");
+    try {
+      const res = await fetch("/api/admin/newsletter/attachment", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        body: form,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        status.textContent = `Failed: ${data.error ?? res.status}`;
+        return;
+      }
+      (document.getElementById("att-key") as HTMLInputElement).value = data.key;
+      (document.getElementById("att-name") as HTMLInputElement).value = data.name;
+      showAttachment(data.name, data.bytes);
+      status.textContent = "Attached. It will go out with this message.";
+    } catch (err) {
+      status.textContent = `Failed: ${err instanceof Error ? err.message : "upload error"}`;
+    }
+  });
+
+  document.getElementById("att-remove")?.addEventListener("click", () => {
+    (document.getElementById("att-key") as HTMLInputElement).value = "";
+    (document.getElementById("att-name") as HTMLInputElement).value = "";
+    (document.getElementById("att-file") as HTMLInputElement).value = "";
+    (document.getElementById("att-status") as HTMLParagraphElement).textContent = "";
+    showAttachment("", 0);
+  });
+
   document.getElementById("send-form")?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const btn = document.getElementById("send-btn") as HTMLButtonElement;
@@ -434,7 +523,9 @@ import Layout from "../../layouts/Layout.astro";
           ? typedList.join(", ")
           : `${count} ${count === 1 ? "person" : "people"}`;
     const asWhom = senders.find((s) => s.key === senderKey)?.label ?? "the parish office";
-    if (!window.confirm(`Send "${subject}" to ${who}, as ${asWhom}? This can't be undone.`)) return;
+    const attName = (document.getElementById("att-name") as HTMLInputElement).value;
+    const withFile = attName ? `, with ${attName} attached` : "";
+    if (!window.confirm(`Send "${subject}" to ${who}, as ${asWhom}${withFile}? This can't be undone.`)) return;
 
     btn.disabled = true;
     setSendStatus("Sending…");
@@ -445,7 +536,16 @@ import Layout from "../../layouts/Layout.astro";
         credentials: "same-origin",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body, audience, ids, addresses, sender: senderKey }),
+        body: JSON.stringify({
+          subject,
+          body,
+          audience,
+          ids,
+          addresses,
+          sender: senderKey,
+          attachment_key: (document.getElementById("att-key") as HTMLInputElement).value || null,
+          attachment_name: (document.getElementById("att-name") as HTMLInputElement).value || null,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -463,6 +563,7 @@ import Layout from "../../layouts/Layout.astro";
       if (!data.error) {
         (document.getElementById("subject") as HTMLInputElement).value = "";
         (document.getElementById("body") as HTMLTextAreaElement).value = "";
+        (document.getElementById("att-remove") as HTMLButtonElement).click();
         selected.clear();
         renderPeople();
       }
