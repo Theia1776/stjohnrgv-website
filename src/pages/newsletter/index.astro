@@ -1,9 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 
-// The back issues. Loaded at runtime so a newly published issue
-// appears without a rebuild — the same pattern as the library, the
-// lessons and the recipes.
+// The newsletter is laid out in a design tool and sent as a PDF. Every
+// issue that goes out is stored, and this is where it can be read
+// again. The list is loaded at runtime so a new issue appears the
+// moment it is emailed, with no rebuild — the same pattern as the
+// library, the lessons and the recipes.
 ---
 
 <Layout
@@ -23,72 +25,45 @@ import Layout from "../../layouts/Layout.astro";
       to be read again.
     </p>
 
-    <!--
-      The issues as they were actually sent. The parish lays each one
-      out in a design tool and emails the PDF, so this is the archive
-      people are looking for; the written issues below it are the older
-      way of doing the same thing.
-    -->
     <section class="mt-10" aria-labelledby="pdf-heading">
-      <h2 id="pdf-heading" class="font-display text-2xl text-text-primary">Download an issue</h2>
+      <h2 id="pdf-heading" class="font-display text-2xl text-text-primary">Past issues</h2>
       <p class="mt-2 text-sm text-text-secondary">
         Every issue as it was emailed. Tap one to read it in your browser or save it.
       </p>
 
-      <p id="pdf-loading" class="mt-5 text-sm italic text-text-secondary">Loading…</p>
+      <p id="pdf-loading" class="mt-5 text-sm italic text-text-secondary">Loading&hellip;</p>
       <p id="pdf-error" hidden role="alert" class="mt-5 text-sm text-liturgical-red"></p>
+
       <p id="pdf-empty" hidden class="mt-5 text-sm italic text-text-secondary">
         No issues here yet. The first one will appear as soon as it goes out.
       </p>
-      <p id="pdf-signin" hidden class="mt-5 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
-        <a href="/login/?next=/newsletter/" class="font-semibold text-brand-blue-dark">Sign in</a>
-        to read the newsletter, or
-        <a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.
-      </p>
+
+      <!--
+        Signed out is the ordinary case for a visitor, not an error. Say
+        why the list is withheld rather than letting it read as though
+        the parish has no newsletter.
+      -->
+      <div id="pdf-signin" hidden class="mt-5 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
+        <p>
+          <strong class="text-text-primary">The newsletter is for the parish.</strong>
+          An issue carries our people's names — who is ill, who is traveling,
+          whose child was baptized — so it is kept among us rather than put on
+          the open internet.
+        </p>
+        <p class="mt-3">
+          <a href="/login/?next=/newsletter/" class="font-semibold text-brand-blue-dark">Sign in</a>
+          to read the issues, or
+          <a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.
+        </p>
+      </div>
 
       <ul id="pdf-list" class="mt-5 space-y-3"></ul>
     </section>
-
-    <p id="news-loading" class="mt-10 text-sm italic text-text-secondary">Loading the back issues…</p>
-    <p id="news-error" hidden role="alert" class="mt-10 text-sm text-liturgical-red"></p>
-
-    <div id="news-signin" hidden class="mt-10 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
-      <p>
-        <strong class="text-text-primary">Most issues are for the parish.</strong>
-        A newsletter carries our people's names — who is ill, who is traveling,
-        whose child was baptized — so it is kept among us rather than put on the
-        open internet.
-      </p>
-      <p class="mt-3">
-        <a href="/login/?next=/newsletter/" class="font-semibold text-brand-blue-dark">Sign in</a>
-        to read them, or
-        <a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.
-      </p>
-    </div>
-
-    <p id="news-empty" hidden class="mt-10 text-sm italic text-text-secondary">
-      No issues yet. The first one will appear here.
-    </p>
-
-    <ul id="news-list" class="mt-10 space-y-6"></ul>
   </main>
 </Layout>
 
 <script>
-  type Issue = {
-    slug: string;
-    title: string;
-    issue_label: string | null;
-    intro: string | null;
-    audience: string;
-    published_at: string | null;
-  };
-
-  const listEl = document.getElementById("news-list") as HTMLUListElement;
-  const loadingEl = document.getElementById("news-loading") as HTMLParagraphElement;
-  const errorEl = document.getElementById("news-error") as HTMLParagraphElement;
-  const emptyEl = document.getElementById("news-empty") as HTMLParagraphElement;
-  const signinEl = document.getElementById("news-signin") as HTMLDivElement;
+  type Issue = { key: string; title: string; bytes: number; uploaded: string };
 
   function escapeHtml(value: unknown): string {
     return String(value ?? "")
@@ -107,62 +82,11 @@ import Layout from "../../layouts/Layout.astro";
       : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   }
 
-  function card(issue: Issue): string {
-    const date = when(issue.published_at);
-    const above = [issue.issue_label, date].filter(Boolean).map(escapeHtml).join(" · ");
-    return `<li class="border border-border-soft bg-cream-card p-6 shadow-sm">
-      ${above ? `<p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">${above}</p>` : ""}
-      <h2 class="mt-2 font-display text-2xl">
-        <a href="/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}"
-           class="text-brand-blue-dark no-underline hover:underline">${escapeHtml(issue.title)}</a>
-      </h2>
-      ${issue.intro ? `<p class="mt-3 text-text-primary/85 leading-relaxed">${escapeHtml(issue.intro.slice(0, 220))}${issue.intro.length > 220 ? "…" : ""}</p>` : ""}
-      <p class="mt-4 font-display text-sm uppercase tracking-widest text-brand-blue-dark">
-        <a href="/newsletter/issue/?slug=${encodeURIComponent(issue.slug)}" class="no-underline hover:underline">Read this issue →</a>
-      </p>
-    </li>`;
-  }
-
-  (async () => {
-    try {
-      const res = await fetch("/api/newsletter", { credentials: "same-origin" });
-      loadingEl.hidden = true;
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        errorEl.textContent = `Could not load the newsletter: ${body.error ?? res.status}`;
-        errorEl.hidden = false;
-        return;
-      }
-      const data = await res.json();
-      const issues = (data.issues ?? []) as Issue[];
-
-      if (issues.length === 0) {
-        // Signed out, an empty list usually means the parish issues
-        // were withheld rather than that nothing was ever written. Say
-        // which, instead of letting it read as "this parish has no
-        // newsletter".
-        if (!data.viewer_signed_in) signinEl.hidden = false;
-        else emptyEl.hidden = false;
-        return;
-      }
-
-      listEl.innerHTML = issues.map(card).join("");
-      if (!data.viewer_signed_in) signinEl.hidden = false;
-    } catch (err) {
-      loadingEl.hidden = true;
-      errorEl.textContent = `Could not load the newsletter: ${err instanceof Error ? err.message : String(err)}`;
-      errorEl.hidden = false;
-    }
-  })();
-
-  // ---------- the PDFs, as emailed ----------
-  type Pdf = { key: string; title: string; bytes: number; uploaded: string };
-
   function fileSize(bytes: number): string {
     return bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
   }
 
-  function pdfRow(issue: Pdf): string {
+  function row(issue: Issue): string {
     const href = `/api/newsletter/file?key=${encodeURIComponent(issue.key)}&name=${encodeURIComponent(
       `${issue.title}.pdf`,
     )}`;
@@ -181,12 +105,13 @@ import Layout from "../../layouts/Layout.astro";
     const loading = document.getElementById("pdf-loading") as HTMLParagraphElement;
     const error = document.getElementById("pdf-error") as HTMLParagraphElement;
     const empty = document.getElementById("pdf-empty") as HTMLParagraphElement;
-    const signin = document.getElementById("pdf-signin") as HTMLParagraphElement;
+    const signin = document.getElementById("pdf-signin") as HTMLDivElement;
     const list = document.getElementById("pdf-list") as HTMLUListElement;
+
     try {
       const res = await fetch("/api/newsletter/archive", { credentials: "same-origin" });
       loading.hidden = true;
-      // Signed out is the ordinary case for a visitor, not an error.
+
       if (res.status === 401) {
         signin.hidden = false;
         return;
@@ -197,13 +122,14 @@ import Layout from "../../layouts/Layout.astro";
         error.hidden = false;
         return;
       }
+
       const data = await res.json();
-      const issues = (data.issues ?? []) as Pdf[];
+      const issues = (data.issues ?? []) as Issue[];
       if (issues.length === 0) {
         empty.hidden = false;
         return;
       }
-      list.innerHTML = issues.map(pdfRow).join("");
+      list.innerHTML = issues.map(row).join("");
     } catch (err) {
       loading.hidden = true;
       error.textContent = `Could not load the issues: ${err instanceof Error ? err.message : String(err)}`;
