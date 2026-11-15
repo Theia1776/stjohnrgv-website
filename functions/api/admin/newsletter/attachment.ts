@@ -29,7 +29,10 @@ interface R2Bucket {
   put(
     key: string,
     value: ArrayBuffer,
-    options?: { httpMetadata?: { contentType?: string } },
+    options?: {
+      httpMetadata?: { contentType?: string };
+      customMetadata?: Record<string, string>;
+    },
   ): Promise<unknown>;
 }
 
@@ -147,7 +150,13 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const tail = crypto.randomUUID().slice(0, 6);
     const key = `newsletter/${slug}/${stem}-${tail}.pdf`;
 
-    await bucket.put(key, buffer, { httpMetadata: { contentType: "application/pdf" } });
+    // The name the uploader gave it, kept alongside the file so the
+    // archive can show a title a person recognises rather than the
+    // storage-safe stem.
+    await bucket.put(key, buffer, {
+      httpMetadata: { contentType: "application/pdf" },
+      customMetadata: { filename: safeFilename(file.name) },
+    });
 
     return wrap(
       jsonResponse({ key, name: safeFilename(file.name), bytes: file.size }, 201),

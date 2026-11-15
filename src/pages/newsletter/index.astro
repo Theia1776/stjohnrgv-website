@@ -23,6 +23,32 @@ import Layout from "../../layouts/Layout.astro";
       to be read again.
     </p>
 
+    <!--
+      The issues as they were actually sent. The parish lays each one
+      out in a design tool and emails the PDF, so this is the archive
+      people are looking for; the written issues below it are the older
+      way of doing the same thing.
+    -->
+    <section class="mt-10" aria-labelledby="pdf-heading">
+      <h2 id="pdf-heading" class="font-display text-2xl text-text-primary">Download an issue</h2>
+      <p class="mt-2 text-sm text-text-secondary">
+        Every issue as it was emailed. Tap one to read it in your browser or save it.
+      </p>
+
+      <p id="pdf-loading" class="mt-5 text-sm italic text-text-secondary">Loading…</p>
+      <p id="pdf-error" hidden role="alert" class="mt-5 text-sm text-liturgical-red"></p>
+      <p id="pdf-empty" hidden class="mt-5 text-sm italic text-text-secondary">
+        No issues here yet. The first one will appear as soon as it goes out.
+      </p>
+      <p id="pdf-signin" hidden class="mt-5 border-l-2 border-sacred-gold bg-cream-card p-5 text-sm leading-relaxed">
+        <a href="/login/?next=/newsletter/" class="font-semibold text-brand-blue-dark">Sign in</a>
+        to read the newsletter, or
+        <a href="/register" class="font-semibold text-brand-blue-dark">create an account</a>.
+      </p>
+
+      <ul id="pdf-list" class="mt-5 space-y-3"></ul>
+    </section>
+
     <p id="news-loading" class="mt-10 text-sm italic text-text-secondary">Loading the back issues…</p>
     <p id="news-error" hidden role="alert" class="mt-10 text-sm text-liturgical-red"></p>
 
@@ -126,6 +152,62 @@ import Layout from "../../layouts/Layout.astro";
       loadingEl.hidden = true;
       errorEl.textContent = `Could not load the newsletter: ${err instanceof Error ? err.message : String(err)}`;
       errorEl.hidden = false;
+    }
+  })();
+
+  // ---------- the PDFs, as emailed ----------
+  type Pdf = { key: string; title: string; bytes: number; uploaded: string };
+
+  function fileSize(bytes: number): string {
+    return bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
+  }
+
+  function pdfRow(issue: Pdf): string {
+    const href = `/api/newsletter/file?key=${encodeURIComponent(issue.key)}&name=${encodeURIComponent(
+      `${issue.title}.pdf`,
+    )}`;
+    const date = when(issue.uploaded);
+    return `<li class="border border-border-soft bg-cream-card p-4 shadow-sm">
+      <a href="${href}" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+        ${escapeHtml(issue.title)}
+      </a>
+      <p class="mt-1 text-xs text-text-secondary">
+        PDF &middot; ${fileSize(issue.bytes)}${date ? ` &middot; ${escapeHtml(date)}` : ""}
+      </p>
+    </li>`;
+  }
+
+  (async () => {
+    const loading = document.getElementById("pdf-loading") as HTMLParagraphElement;
+    const error = document.getElementById("pdf-error") as HTMLParagraphElement;
+    const empty = document.getElementById("pdf-empty") as HTMLParagraphElement;
+    const signin = document.getElementById("pdf-signin") as HTMLParagraphElement;
+    const list = document.getElementById("pdf-list") as HTMLUListElement;
+    try {
+      const res = await fetch("/api/newsletter/archive", { credentials: "same-origin" });
+      loading.hidden = true;
+      // Signed out is the ordinary case for a visitor, not an error.
+      if (res.status === 401) {
+        signin.hidden = false;
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        error.textContent = `Could not load the issues: ${body.error ?? res.status}`;
+        error.hidden = false;
+        return;
+      }
+      const data = await res.json();
+      const issues = (data.issues ?? []) as Pdf[];
+      if (issues.length === 0) {
+        empty.hidden = false;
+        return;
+      }
+      list.innerHTML = issues.map(pdfRow).join("");
+    } catch (err) {
+      loading.hidden = true;
+      error.textContent = `Could not load the issues: ${err instanceof Error ? err.message : String(err)}`;
+      error.hidden = false;
     }
   })();
 </script>
