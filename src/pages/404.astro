@@ -1,0 +1,75 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// The page served for any address that isn't here.
+//
+// Without this file there was nothing to serve, so a wrong address
+// quietly returned the homepage — with a success code. A dead link
+// looked like a working one: a visitor landed somewhere they didn't
+// ask for with no idea anything had gone wrong, and search engines
+// were told the homepage lived at a hundred addresses at once.
+//
+// Astro builds this to 404.html, which Cloudflare Pages serves with a
+// real 404 status for anything it cannot find.
+---
+
+<Layout
+  title="Page Not Found | St. John of Kronstadt Orthodox Mission"
+  description="That page isn't here. Find the services, the calendar, or write to the parish."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <main class="mx-auto max-w-2xl px-4 py-20 md:px-6">
+    <p class="font-display text-xs uppercase tracking-widest text-brand-tan-dark">
+      St. John of Kronstadt Orthodox Mission
+    </p>
+    <h1 class="mt-2 font-display text-4xl text-text-primary md:text-5xl">
+      That page isn&rsquo;t here
+    </h1>
+    <div class="mt-5 h-px w-24 bg-liturgical-current"></div>
+
+    <p class="mt-6 text-text-primary/85 leading-relaxed">
+      The address may have changed, or something may have been typed
+      slightly differently. Nothing is wrong on your end.
+    </p>
+
+    <p class="mt-4 text-text-primary/85 leading-relaxed">
+      Here is where most people are headed:
+    </p>
+
+    <ul class="mt-6 space-y-3">
+      <li>
+        <a href="/" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+          The parish home page
+        </a>
+      </li>
+      <li>
+        <a href="/calendar/" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+          Calendar and services
+        </a>
+      </li>
+      <li>
+        <a href="/table/keeping-the-fast/" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+          Keeping the fast
+        </a>
+      </li>
+      <li>
+        <a href="/newsletter/" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+          Parish newsletter
+        </a>
+      </li>
+      <li>
+        <a href="/contact/" class="font-display text-lg text-brand-blue-dark no-underline hover:underline">
+          Write to the parish
+        </a>
+      </li>
+    </ul>
+
+    <p class="mt-8 text-sm text-text-secondary leading-relaxed">
+      If you followed a link from somewhere on this site and landed
+      here, please
+      <a href="/contact/" class="font-semibold text-brand-blue-dark">tell us</a>
+      so it can be mended.
+    </p>
+  </main>
+</Layout>
