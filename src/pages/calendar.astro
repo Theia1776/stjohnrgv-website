@@ -902,15 +902,6 @@ import SaintDiptych from "../components/SaintDiptych.astro";
           'title="' + label.replace(/"/g, '&quot;') + '"' +
           (isShown ? ' aria-current="date"' : '') + '>' +
             '<span class="' + (isToday && !isShown ? 'underline decoration-sacred-gold decoration-2 underline-offset-4' : '') + '">' + d + '</span>' +
-            // A fish day said in a word, not only in a colour. Gold
-            // against red is a guess on a dim phone screen, is no
-            // distinction at all to a colourblind reader, and the
-            // tooltip that explained it never opens on a touch screen.
-            // It sits along the bottom edge so the day numbers stay
-            // where they are, lined up across the row.
-            (kind === 'fish'
-              ? '<span class="pointer-events-none absolute inset-x-0 bottom-0.5 text-[0.5rem] font-semibold uppercase leading-none tracking-wide text-brand-blue-dark">Fish</span>'
-              : '') +
           '</button>';
       }
 
@@ -931,11 +922,8 @@ import SaintDiptych from "../components/SaintDiptych.astro";
           cells +
         '</div>' +
         '<div class="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[0.65rem] text-text-secondary">' +
-          // The swatches are the shades the squares actually use. They
-          // had drifted lighter than the grid, so the key was telling
-          // you about colours that weren't on the page.
-          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-liturgical-red/35"></span>Fast day</span>' +
-          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-sacred-gold/50"></span>Marked <strong class="font-semibold uppercase tracking-wide text-brand-blue-dark">Fish</strong> &mdash; fish allowed</span>' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-liturgical-red/30"></span>Fast day</span>' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-sacred-gold/40"></span>Fish allowed</span>' +
           '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 border border-border-soft"></span>No fast</span>' +
         '</div>';
     }
