@@ -39,6 +39,11 @@ const STYLE_ID = "parish-confirm-style";
 
 const STYLE = `
 dialog.parish-confirm {
+  /* A modal <dialog> is centred by the browser's own margin:auto, and
+     Tailwind's reset sets every margin to 0 — so this opened pinned in
+     the top-left corner of the window, reading like something that had
+     gone wrong rather than a question. */
+  margin: auto;
   border: 1px solid var(--color-border-soft, #d8d0c0);
   background: var(--color-cream-card, #fdfaf4);
   color: var(--color-text-primary, #2b2b2b);
