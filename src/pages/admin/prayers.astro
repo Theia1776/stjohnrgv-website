@@ -95,6 +95,7 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
   type Req = {
     id: string;
     kind: "living" | "departed";
@@ -252,7 +253,13 @@ import Layout from "../../layouts/Layout.astro";
       const id = article?.dataset.id;
       const name = article?.querySelector(".font-display")?.textContent?.trim() ?? "this request";
       if (!id) return;
-      if (!window.confirm(`Delete the request for ${name}? This removes it for good and can't be undone.`)) return;
+      const goAhead = await confirmAction({
+        message: `Delete the request for ${name}? This removes it for good and can't be undone.`,
+        confirmLabel: "Delete the request",
+        cancelLabel: "Keep it",
+        danger: true,
+      });
+      if (!goAhead) return;
       const res = await fetch(`/api/admin/prayer-requests?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
         credentials: "same-origin",

@@ -195,6 +195,7 @@ import Layout from "../../layouts/Layout.astro";
 </style>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
   type Contact = {
     id: string;
     role: string | null;
@@ -496,9 +497,13 @@ import Layout from "../../layouts/Layout.astro";
 
     if (rejectBtn) {
       const name = rejectBtn.dataset.name || "this registration";
-      if (!window.confirm(`Reject ${name}? This deletes the account so the email can sign up again later. This can't be undone from here.`)) {
-        return;
-      }
+      const goAhead = await confirmAction({
+        message: `Reject ${name}? This deletes the account so the email can sign up again later. This can't be undone from here.`,
+        confirmLabel: "Reject",
+        cancelLabel: "Leave it",
+        danger: true,
+      });
+      if (!goAhead) return;
     }
 
     btn.disabled = true;
@@ -539,13 +544,16 @@ import Layout from "../../layouts/Layout.astro";
     if (!id) return;
     const name = btn.dataset.name || "this member";
 
-    if (!window.confirm(
-      `Remove ${name}?\n\nThis permanently deletes their account, profile, ` +
-      `directory listing, and any coffee-hour signups. They will no longer ` +
-      `be able to sign in. This cannot be undone.`,
-    )) {
-      return;
-    }
+    const goAhead = await confirmAction({
+      message:
+        `Remove ${name}?\n\nThis permanently deletes their account, profile, ` +
+        `directory listing, and any coffee-hour signups. They will no longer ` +
+        `be able to sign in. This cannot be undone.`,
+      confirmLabel: "Remove them",
+      cancelLabel: "Keep them",
+      danger: true,
+    });
+    if (!goAhead) return;
 
     btn.disabled = true;
     const ok = await removeContact(id);

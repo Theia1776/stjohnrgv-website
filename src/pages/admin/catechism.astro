@@ -278,6 +278,7 @@ import FileDrop from "../../components/FileDrop.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
   import { extractText } from "../../lib/pdf-text";
 
   type Lesson = {
@@ -490,7 +491,13 @@ import FileDrop from "../../components/FileDrop.astro";
 
     if (deleteBtn) {
       const title = deleteBtn.dataset.title || "this lesson";
-      if (!window.confirm(`Delete "${title}"? It will disappear from members' accounts and the PDF will be removed.`)) return;
+      const goAhead = await confirmAction({
+        message: `Delete "${title}"? It will disappear from members' accounts and the PDF will be removed.`,
+        confirmLabel: "Delete the lesson",
+        cancelLabel: "Keep it",
+        danger: true,
+      });
+      if (!goAhead) return;
       deleteBtn.disabled = true;
       const res = await fetch(`/api/admin/catechism/${encodeURIComponent(id)}`, {
         method: "DELETE",
@@ -680,9 +687,11 @@ import FileDrop from "../../components/FileDrop.astro";
     const queue = lessonsNeedingText();
     if (queue.length === 0) return;
     if (
-      !window.confirm(
-        `Read the text out of ${queue.length} ${queue.length === 1 ? "lesson" : "lessons"}? Keep this tab open while it runs.`,
-      )
+      !(await confirmAction({
+        message: `Read the text out of ${queue.length} ${queue.length === 1 ? "lesson" : "lessons"}? Keep this tab open while it runs.`,
+        confirmLabel: "Start reading",
+        cancelLabel: "Not now",
+      }))
     ) {
       return;
     }

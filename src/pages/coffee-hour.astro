@@ -27,6 +27,7 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../lib/confirm";
   // ---------------------------------------------------------------------------
   // Types & state
   // ---------------------------------------------------------------------------
@@ -457,7 +458,13 @@ import Layout from "../layouts/Layout.astro";
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Remove this signup?")) return;
+    const goAhead = await confirmAction({
+      message: "Remove this signup?",
+      confirmLabel: "Remove it",
+      cancelLabel: "Keep it",
+      danger: true,
+    });
+    if (!goAhead) return;
     hideError();
     const res = await fetch("/api/coffee-hour", {
       method: "DELETE",

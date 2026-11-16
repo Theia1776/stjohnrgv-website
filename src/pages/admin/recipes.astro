@@ -108,6 +108,7 @@ import FileDrop from "../../components/FileDrop.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
   import { RECIPE_CATEGORIES, categoryOf, categoryValue } from "../../lib/recipe-categories";
   import { glutenWarnings } from "../../lib/recipe-gluten";
 
@@ -456,15 +457,17 @@ import FileDrop from "../../components/FileDrop.astro";
           if (warnings.length) {
             const shown = warnings.slice(0, 6).map((w) => `  • ${w.line}  (${w.word})`);
             if (warnings.length > 6) shown.push(`  …and ${warnings.length - 6} more`);
-            const ok = window.confirm(
-              [
+            const ok = await confirmAction({
+              message: [
                 "These ingredients look like they contain gluten:",
                 "",
                 ...shown,
                 "",
                 `Mark "${recipe.title}" gluten-free anyway?`,
               ].join("\u000a"),
-            );
+              confirmLabel: "Mark it gluten-free",
+              cancelLabel: "Leave it alone",
+            });
             if (!ok) return;
           }
         }
@@ -472,7 +475,13 @@ import FileDrop from "../../components/FileDrop.astro";
         break;
       }
       case "delete": {
-        if (!window.confirm(`Delete "${recipe.title}"? This can't be undone.`)) return;
+        const goAhead = await confirmAction({
+          message: `Delete "${recipe.title}"? This can't be undone.`,
+          confirmLabel: "Delete the recipe",
+          cancelLabel: "Keep it",
+          danger: true,
+        });
+        if (!goAhead) return;
         if (statusEl) statusEl.textContent = "Deleting…";
         const res = await fetch(`/api/admin/recipes/${encodeURIComponent(id)}`, {
           method: "DELETE",
@@ -523,7 +532,15 @@ import FileDrop from "../../components/FileDrop.astro";
       setImportStatus("No recipes in that file.", true);
       return;
     }
-    if (!window.confirm(`Import ${rows.length} recipes as drafts? Nothing will be posted.`)) return;
+    if (
+      !(await confirmAction({
+        message: `Import ${rows.length} recipes as drafts? Nothing will be posted.`,
+        confirmLabel: "Import as drafts",
+        cancelLabel: "Not now",
+      }))
+    ) {
+      return;
+    }
 
     const btn = document.getElementById("import-btn") as HTMLButtonElement;
     btn.disabled = true;
@@ -642,8 +659,8 @@ import FileDrop from "../../components/FileDrop.astro";
     const unfiled = waiting.filter((r) => !r.category).length;
 
     if (
-      !window.confirm(
-        [
+      !(await confirmAction({
+        message: [
           waiting.length === 1
             ? "Post the one waiting recipe?"
             : `Post all ${waiting.length} waiting recipes?`,
@@ -654,7 +671,9 @@ import FileDrop from "../../components/FileDrop.astro";
             ? ["", `${unfiled} ${unfiled === 1 ? "has" : "have"} no category yet, and will show under "Not yet filed".`]
             : []),
         ].join("\n"),
-      )
+        confirmLabel: waiting.length === 1 ? "Post it" : `Post all ${waiting.length}`,
+        cancelLabel: "Not yet",
+      }))
     ) {
       return;
     }

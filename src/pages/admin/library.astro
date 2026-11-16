@@ -379,6 +379,7 @@ import FileDrop from "../../components/FileDrop.astro";
 </Layout>
 
 <script>
+  import { confirmAction } from "../../lib/confirm";
   import { extractText, getPdfjs } from "../../lib/pdf-text";
 
   type Book = {
@@ -1027,7 +1028,15 @@ import FileDrop from "../../components/FileDrop.astro";
     const btn = document.getElementById("backfill-btn") as HTMLButtonElement;
     const queue = booksNeedingText();
     if (queue.length === 0) return;
-    if (!window.confirm(`Read the text out of ${queue.length} book${queue.length === 1 ? "" : "s"}? Keep this tab open while it runs.`)) return;
+    if (
+      !(await confirmAction({
+        message: `Read the text out of ${queue.length} book${queue.length === 1 ? "" : "s"}? Keep this tab open while it runs.`,
+        confirmLabel: "Start reading",
+        cancelLabel: "Not now",
+      }))
+    ) {
+      return;
+    }
 
     btn.disabled = true;
     let done = 0;
@@ -1165,7 +1174,15 @@ import FileDrop from "../../components/FileDrop.astro";
   document.getElementById("r2-btn")?.addEventListener("click", async () => {
     const btn = document.getElementById("r2-btn") as HTMLButtonElement;
     if (books.length === 0) return;
-    if (!window.confirm(`Copy ${books.length} book(s) to Cloudflare storage? Keep this tab open while it runs.`)) return;
+    if (
+      !(await confirmAction({
+        message: `Copy ${books.length} book(s) to Cloudflare storage? Keep this tab open while it runs.`,
+        confirmLabel: "Start copying",
+        cancelLabel: "Not now",
+      }))
+    ) {
+      return;
+    }
 
     btn.disabled = true;
     let copied = 0;
@@ -1392,12 +1409,15 @@ import FileDrop from "../../components/FileDrop.astro";
     const mb = chars / 1_000_000;
     const skipped = shown.length - withText.length;
     if (
-      !window.confirm(
-        `Put the full text of ${withText.length} book${withText.length === 1 ? "" : "s"} ` +
+      !(await confirmAction({
+        message:
+          `Put the full text of ${withText.length} book${withText.length === 1 ? "" : "s"} ` +
           `into one file, about ${mb < 1 ? "under 1" : Math.round(mb)} MB?` +
           (skipped > 0 ? `\n\n${skipped} showing are scans and will be left out.` : "") +
           `\n\nSearch first to narrow it down if that's more than you want.`,
-      )
+        confirmLabel: "Build the file",
+        cancelLabel: "Not yet",
+      }))
     ) {
       return;
     }
@@ -1555,7 +1575,13 @@ import FileDrop from "../../components/FileDrop.astro";
     }
 
     if (action === "delete") {
-      if (!window.confirm(`Delete "${title}" from the library? The PDF will also be removed from storage.`)) return;
+      const goAhead = await confirmAction({
+        message: `Delete "${title}" from the library? The PDF will also be removed from storage.`,
+        confirmLabel: "Delete the book",
+        cancelLabel: "Keep it",
+        danger: true,
+      });
+      if (!goAhead) return;
       select.disabled = true;
       const res = await fetch(`/api/admin/library/${encodeURIComponent(id)}`, {
         method: "DELETE",
@@ -1790,13 +1816,17 @@ import FileDrop from "../../components/FileDrop.astro";
   document.getElementById("dupes-remove")?.addEventListener("click", async () => {
     if (duplicateKeys.length === 0) return;
     if (
-      !window.confirm(
-        `Remove ${duplicateKeys.length} duplicate ${duplicateKeys.length === 1 ? "copy" : "copies"}?
+      !(await confirmAction({
+        message:
+          `Remove ${duplicateKeys.length} duplicate ${duplicateKeys.length === 1 ? "copy" : "copies"}?
 
 ` +
           `Each one is byte-for-byte identical to a copy that stays. The file and its ` +
           `catalogue entry both go, and this can't be undone.`,
-      )
+        confirmLabel: "Remove the duplicates",
+        cancelLabel: "Leave them",
+        danger: true,
+      }))
     ) {
       return;
     }
