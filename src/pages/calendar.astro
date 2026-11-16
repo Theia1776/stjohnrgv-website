@@ -917,7 +917,11 @@ import SaintDiptych from "../components/SaintDiptych.astro";
               ? '<svg aria-hidden="true" viewBox="0 0 24 12" fill="none" stroke="currentColor" ' +
                 'stroke-width="1.8" stroke-linecap="round" ' +
                 'class="pointer-events-none absolute inset-x-0 bottom-0.5 mx-auto h-2.5 w-4 text-brand-blue-dark">' +
-                  '<path d="M2 10C6 2 18 1 22 6"/><path d="M2 2C6 10 18 11 22 6"/>' +
+                  // Drawn nose-right, then mirrored: the ichthys is
+                  // almost always shown facing left.
+                  '<g transform="translate(24,0) scale(-1,1)">' +
+                    '<path d="M2 10C6 2 18 1 22 6"/><path d="M2 2C6 10 18 11 22 6"/>' +
+                  '</g>' +
                 '</svg>'
               : '') +
           '</button>';
