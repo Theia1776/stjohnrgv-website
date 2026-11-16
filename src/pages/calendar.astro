@@ -902,6 +902,24 @@ import SaintDiptych from "../components/SaintDiptych.astro";
           'title="' + label.replace(/"/g, '&quot;') + '"' +
           (isShown ? ' aria-current="date"' : '') + '>' +
             '<span class="' + (isToday && !isShown ? 'underline decoration-sacred-gold decoration-2 underline-offset-4' : '') + '">' + d + '</span>' +
+            // An ichthys on a fish day. The gold tint alone is a guess
+            // on a dim phone screen and no distinction at all to a
+            // colourblind reader, and the tooltip that spelled it out
+            // never opens on a touch screen — which is where most
+            // people read this. The key below the grid names it.
+            //
+            // It sits along the bottom edge, so the day numbers stay
+            // where they are and keep their line across the row. It is
+            // aria-hidden because the button's own label already ends
+            // in "Fish Allowed" — a screen reader should not hear it
+            // twice.
+            (kind === 'fish'
+              ? '<svg aria-hidden="true" viewBox="0 0 24 12" fill="none" stroke="currentColor" ' +
+                'stroke-width="1.8" stroke-linecap="round" ' +
+                'class="pointer-events-none absolute inset-x-0 bottom-0.5 mx-auto h-2.5 w-4 text-brand-blue-dark">' +
+                  '<path d="M2 10C6 2 18 1 22 6"/><path d="M2 2C6 10 18 11 22 6"/>' +
+                '</svg>'
+              : '') +
           '</button>';
       }
 
