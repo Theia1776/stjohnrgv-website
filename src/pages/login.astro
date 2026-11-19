@@ -223,6 +223,11 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <script>
+    import { attachPhoneFormatting } from "../lib/phone";
+
+    // The sign-up phone box fills itself in as (956) 434-6874.
+    attachPhoneFormatting(document.getElementById("register-phone") as HTMLInputElement | null);
+
     // ============================================================
     // TABS
     // ============================================================

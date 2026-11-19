@@ -196,6 +196,7 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   import { confirmAction } from "../../lib/confirm";
+  import { formatPhone, attachPhoneFormattingAll } from "../../lib/phone";
   type Contact = {
     id: string;
     role: string | null;
@@ -366,10 +367,10 @@ import Layout from "../../layouts/Layout.astro";
           .filter(Boolean)
           .join(", ");
         const e1 = c.emergency_name
-          ? `${c.emergency_name}${c.emergency_relationship ? ` (${c.emergency_relationship})` : ""}${c.emergency_phone ? ` ${c.emergency_phone}` : ""}`
+          ? `${c.emergency_name}${c.emergency_relationship ? ` (${c.emergency_relationship})` : ""}${c.emergency_phone ? ` ${formatPhone(c.emergency_phone)}` : ""}`
           : "";
         const e2 = c.emergency_name_2
-          ? `${c.emergency_name_2}${c.emergency_relationship_2 ? ` (${c.emergency_relationship_2})` : ""}${c.emergency_phone_2 ? ` ${c.emergency_phone_2}` : ""}`
+          ? `${c.emergency_name_2}${c.emergency_relationship_2 ? ` (${c.emergency_relationship_2})` : ""}${c.emergency_phone_2 ? ` ${formatPhone(c.emergency_phone_2)}` : ""}`
           : "";
 
         const displayName = `${c.last_name ?? ""}, ${c.first_name ?? ""}`.trim().replace(/^,\s*$/, "") || c.email || "this member";
@@ -388,7 +389,7 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2">${escapeHtml(c.last_name ?? "")}, ${escapeHtml(c.first_name ?? "")}${c.is_master_admin ? ' <span title="Master admin">★</span>' : ""}</td>
           <td class="p-2">${escapeHtml(c.email)}</td>
           <td class="p-2">${escapeHtml(roleLabel)}</td>
-          <td class="p-2">${escapeHtml(c.phone ?? "—")}</td>
+          <td class="p-2">${escapeHtml(formatPhone(c.phone) || "—")}</td>
           <td class="p-2 text-xs">${escapeHtml(fullAddress || "—")}</td>
           <td class="p-2 text-xs">${escapeHtml(e1 || "—")}</td>
           <td class="p-2 text-xs">${escapeHtml(e2 || "—")}</td>
@@ -573,6 +574,9 @@ import Layout from "../../layouts/Layout.astro";
   });
 
   // ---- Edit member modal -------------------------------------------------
+  // The three phone boxes in the modal format themselves as you type.
+  attachPhoneFormattingAll();
+
   // Text fields whose <input id="edit-<key>"> maps 1:1 to a Contact key.
   const EDIT_TEXT_FIELDS = [
     "first_name", "last_name", "email", "phone",
@@ -585,7 +589,10 @@ import Layout from "../../layouts/Layout.astro";
     (document.getElementById("edit-id") as HTMLInputElement).value = c.id;
     for (const key of EDIT_TEXT_FIELDS) {
       const input = document.getElementById(`edit-${key}`) as HTMLInputElement | null;
-      if (input) input.value = (c as Record<string, unknown>)[key] as string ?? "";
+      if (!input) continue;
+      const value = ((c as Record<string, unknown>)[key] as string) ?? "";
+      // Phone fields come back in house format: (956) 434-6874.
+      input.value = key.includes("phone") ? formatPhone(value) : value;
     }
     // Role dropdown. The Admin option is master-only; the whole control
     // locks when you're editing yourself, or when a non-master tries to
@@ -715,7 +722,7 @@ import Layout from "../../layouts/Layout.astro";
           .join(", ");
         return `<div class="directory-entry mb-4 break-inside-avoid">
           <div class="font-semibold text-text-primary">${escapeHtml(e.last_name ?? "")}, ${escapeHtml(e.first_name ?? "")}</div>
-          ${e.phone ? `<div class="text-sm text-text-secondary">${escapeHtml(e.phone)}</div>` : ""}
+          ${e.phone ? `<div class="text-sm text-text-secondary">${escapeHtml(formatPhone(e.phone))}</div>` : ""}
           ${e.email ? `<div class="text-sm text-text-secondary">${escapeHtml(e.email)}</div>` : ""}
           ${address ? `<div class="text-sm text-text-secondary">${escapeHtml(address)}</div>` : ""}
         </div>`;
@@ -792,10 +799,10 @@ import Layout from "../../layouts/Layout.astro";
     ];
     const escapeCsv = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = allContacts.map((c) => [
-      c.last_name, c.first_name, c.email, c.phone,
+      c.last_name, c.first_name, c.email, formatPhone(c.phone),
       c.address_line1, c.address_line2, c.city, c.state, c.zip,
-      c.emergency_name, c.emergency_relationship, c.emergency_phone,
-      c.emergency_name_2, c.emergency_relationship_2, c.emergency_phone_2,
+      c.emergency_name, c.emergency_relationship, formatPhone(c.emergency_phone),
+      c.emergency_name_2, c.emergency_relationship_2, formatPhone(c.emergency_phone_2),
       c.opt_in_directory ? "Yes" : "No",
     ].map(escapeCsv));
     const csv = [headers.map(escapeCsv), ...rows].map((r) => r.join(",")).join("\n");

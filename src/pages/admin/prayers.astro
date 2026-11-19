@@ -96,6 +96,18 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   import { confirmAction } from "../../lib/confirm";
+  import { formatPhone } from "../../lib/phone";
+
+  /**
+   * A request's contact reads "Phone: 9564346874" or "Email: …".
+   * Older rows were saved before the form tidied phone numbers up, so
+   * the phone ones get put into house format on the way to the screen.
+   */
+  function showContact(contact: string): string {
+    const m = contact.match(/^\s*Phone\s*:\s*(.+)$/i);
+    return m ? `Phone: ${formatPhone(m[1])}` : contact;
+  }
+
   type Req = {
     id: string;
     kind: "living" | "departed";
@@ -134,7 +146,7 @@ import Layout from "../../layouts/Layout.astro";
             ${r.kind === "departed" ? "Memorial" : "For the living"} · ${escapeHtml(when(r.created_at))}
           </p>
           ${r.in_newsletter === false ? `<p class="mt-1 text-xs font-semibold text-liturgical-red">Asked not to be printed</p>` : ""}
-          ${r.requested_by ? `<p class="mt-1 text-sm text-text-secondary">asked by ${escapeHtml(r.requested_by)}${r.contact ? ` · ${escapeHtml(r.contact)}` : ""}</p>` : ""}
+          ${r.requested_by ? `<p class="mt-1 text-sm text-text-secondary">asked by ${escapeHtml(r.requested_by)}${r.contact ? ` · ${escapeHtml(showContact(r.contact))}` : ""}</p>` : ""}
           ${r.note ? `<p class="mt-2 border-l-2 border-border-soft pl-3 text-sm italic text-text-primary/85">${escapeHtml(r.note)}</p>` : ""}
         </div>
         <span class="whitespace-nowrap border px-2 py-0.5 text-[0.65rem] uppercase tracking-wider ${

@@ -47,6 +47,8 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { formatPhone, telHref } from "../lib/phone";
+
   // ---------------------------------------------------------------------------
   // Types & state
   // ---------------------------------------------------------------------------
@@ -146,7 +148,7 @@ import Layout from "../layouts/Layout.astro";
       rows.push(`
         <div class="flex items-baseline gap-2 text-sm">
           <span class="text-text-secondary w-16 shrink-0">Phone</span>
-          <a href="tel:${escapeHtml(e.phone)}" class="text-brand-blue-dark hover:underline">${escapeHtml(e.phone)}</a>
+          <a href="tel:${escapeHtml(telHref(e.phone))}" class="text-brand-blue-dark hover:underline">${escapeHtml(formatPhone(e.phone))}</a>
         </div>
       `);
     }

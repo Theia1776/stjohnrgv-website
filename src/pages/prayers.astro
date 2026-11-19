@@ -113,6 +113,8 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { formatPhone } from "../lib/phone";
+
   const form = document.getElementById("prayer-form") as HTMLFormElement;
   const status = document.getElementById("p-status") as HTMLElement;
   const submit = document.getElementById("p-submit") as HTMLButtonElement;
@@ -143,7 +145,11 @@ import Layout from "../layouts/Layout.astro";
               : "living",
           requested_by: val("p-by"),
           contact: val("p-contact")
-            ? `${(document.getElementById("p-contact-type") as HTMLSelectElement).value}: ${val("p-contact")}`
+            ? `${(document.getElementById("p-contact-type") as HTMLSelectElement).value}: ${
+                (document.getElementById("p-contact-type") as HTMLSelectElement).value === "Phone"
+                  ? formatPhone(val("p-contact"))
+                  : val("p-contact")
+              }`
             : "",
           in_newsletter: (document.getElementById("p-newsletter") as HTMLInputElement).checked,
           note: (document.getElementById("p-note") as HTMLTextAreaElement).value.trim(),

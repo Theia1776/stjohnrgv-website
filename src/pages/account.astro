@@ -573,6 +573,12 @@ import Layout from "../layouts/Layout.astro";
 </style>
 
 <script>
+  import { formatPhone, attachPhoneFormattingAll } from "../lib/phone";
+
+  // Every phone field on this page reads back as (956) 434-6874, both
+  // while it's being typed and when it's loaded from the profile.
+  attachPhoneFormattingAll();
+
   function setInputValue(id: string, value: unknown) {
     const el = document.getElementById(id) as HTMLInputElement | null;
     if (el) el.value = typeof value === "string" ? value : "";
@@ -630,7 +636,7 @@ import Layout from "../layouts/Layout.astro";
     setInputValue("last_name", profile.last_name);
     setInputValue("email", profile.email);
     setInputValue("public_email", profile.public_email);
-    setInputValue("phone", profile.phone);
+    setInputValue("phone", formatPhone(profile.phone as string | null));
 
     setInputValue("address_line1", profile.address_line1);
     setInputValue("address_line2", profile.address_line2);
@@ -640,10 +646,10 @@ import Layout from "../layouts/Layout.astro";
 
     setInputValue("emergency_name", profile.emergency_name);
     setInputValue("emergency_relationship", profile.emergency_relationship);
-    setInputValue("emergency_phone", profile.emergency_phone);
+    setInputValue("emergency_phone", formatPhone(profile.emergency_phone as string | null));
     setInputValue("emergency_name_2", profile.emergency_name_2);
     setInputValue("emergency_relationship_2", profile.emergency_relationship_2);
-    setInputValue("emergency_phone_2", profile.emergency_phone_2);
+    setInputValue("emergency_phone_2", formatPhone(profile.emergency_phone_2 as string | null));
 
     setChecked("opt_in_communications", profile.opt_in_communications);
     setChecked("opt_in_directory", profile.opt_in_directory);
