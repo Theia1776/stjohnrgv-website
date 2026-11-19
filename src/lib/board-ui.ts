@@ -279,6 +279,7 @@ export function attachFormatBar(field: HTMLTextAreaElement): void {
   if (field.dataset.formatBar === "1") return;
   field.dataset.formatBar = "1";
   attachMentions(field);
+  attachDraft(field);
 
   const bar = document.createElement("div");
   bar.className = "bb-format";
@@ -780,7 +781,8 @@ function mountBoardNav(): void {
     `<a class="bb-btn" href="/board/new/"${here("/board/new/")}>New posts</a>` +
     `<a class="bb-btn" href="/board/search/"${here("/board/search/")}>Search</a>` +
     `<a class="bb-btn" href="/board/profile/?id=me"${here("/board/profile/")}>My profile</a>` +
-    `<a class="bb-btn" href="/directory/">Directory</a>`;
+    `<a class="bb-btn" href="/directory/">Directory</a>` +
+    `<a class="bb-btn" href="#" id="text-size-link">Larger text</a>`;
 
   const crumb = main.querySelector(".bb-crumb");
   if (crumb && crumb.parentNode) crumb.parentNode.insertBefore(nav, crumb);
@@ -805,4 +807,127 @@ if (typeof document !== "undefined") {
   } else {
     mountBoardNav();
   }
+}
+
+
+/* ---------------------------------------------------------------
+   Saved drafts
+   ---------------------------------------------------------------
+   Whatever someone types in a post box is kept in their browser as they
+   type, and put back if they come back to the same page: a phone that
+   locked, a wrong tap, a tab that closed. It's cleared when they send it.
+   Nothing goes to the server until they press the button.
+   --------------------------------------------------------------- */
+const DRAFT_DAYS = 14;
+
+function draftKey(field: HTMLTextAreaElement): string | null {
+  // Only the main boxes, which have an id. The little edit boxes under a
+  // post don't, and would all share one draft.
+  if (!field.id) return null;
+  return `board-draft:${window.location.pathname}${window.location.search}#${field.id}`;
+}
+
+export function attachDraft(field: HTMLTextAreaElement): void {
+  const key = draftKey(field);
+  if (!key || field.dataset.draft === "1") return;
+  field.dataset.draft = "1";
+
+  const save = () => {
+    try {
+      if (field.value.trim()) {
+        localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: field.value }));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // Private mode or a full disk: no draft, nothing else lost.
+    }
+  };
+
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw && !field.value.trim()) {
+      const d = JSON.parse(raw) as { t: number; v: string };
+      if (Date.now() - d.t < DRAFT_DAYS * 24 * 60 * 60 * 1000 && d.v) {
+        field.value = d.v;
+        const note = document.createElement("p");
+        note.className = "bb-draft-note";
+        note.innerHTML = `Your draft was saved and is back. <button type="button" class="underline">Throw it away</button>`;
+        note.querySelector("button")?.addEventListener("click", () => {
+          field.value = "";
+          save();
+          note.remove();
+        });
+        field.insertAdjacentElement("beforebegin", note);
+      } else {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // An unreadable draft is just no draft.
+  }
+
+  let timer: number | undefined;
+  field.addEventListener("input", () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(save, 400);
+  });
+  // Sending clears it. If the send fails the words are still in the box,
+  // so they're put back a few seconds later.
+  field.form?.addEventListener("submit", () => {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // nothing to clear
+    }
+    window.setTimeout(() => {
+      if (field.value.trim()) save();
+    }, 4000);
+  });
+}
+
+/* ---------------------------------------------------------------
+   Larger text
+   ---------------------------------------------------------------
+   One button that makes everything bigger, remembered between visits,
+   for the people who'd rather not squint.
+   --------------------------------------------------------------- */
+const LARGE_KEY = "board-large-text";
+
+function largeTextOn(): boolean {
+  try {
+    return localStorage.getItem(LARGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function applyLargeText(): void {
+  document.documentElement.classList.toggle("bb-large", largeTextOn());
+}
+
+function wireTextSize(button: HTMLElement): void {
+  const label = () => (largeTextOn() ? "Normal text size" : "Larger text");
+  button.textContent = label();
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    try {
+      localStorage.setItem(LARGE_KEY, largeTextOn() ? "0" : "1");
+    } catch {
+      // can't remember it, but it still works for this page
+      document.documentElement.classList.toggle("bb-large");
+    }
+    applyLargeText();
+    button.textContent = label();
+  });
+}
+
+if (typeof document !== "undefined" && window.location.pathname.startsWith("/board/")) {
+  applyLargeText();
+  const wireLink = () => {
+    const link = document.getElementById("text-size-link");
+    if (link) wireTextSize(link);
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireLink);
+  else wireLink();
 }

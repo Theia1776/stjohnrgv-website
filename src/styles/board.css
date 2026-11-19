@@ -1140,3 +1140,14 @@ mark {
     white-space: normal;
   }
 }
+
+/* "Larger text": everything on the page scales with the root size. */
+html.bb-large {
+  font-size: 125%;
+}
+.bb-draft-note {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}

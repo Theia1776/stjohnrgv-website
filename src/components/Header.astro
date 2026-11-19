@@ -454,6 +454,24 @@ function isActive(hrefWithHash: string): boolean {
     });
   }
 
+  async function showBoardBadge() {
+    try {
+      const res = await fetch("/api/board/counts", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) return;
+      const c = await res.json();
+      const n = (c.messages || 0) + (c.mentions || 0);
+      if (n < 1) return;
+      const badge = (extra) =>
+        `<span class="board-badge ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-liturgical-red px-1 text-[0.7rem] font-semibold text-white ${extra || ""}" title="${n} new on the parish board">${n}</span>`;
+      const trigger = document.querySelector("#user-menu-trigger > span");
+      if (trigger) trigger.insertAdjacentHTML("afterend", badge());
+      document.querySelectorAll('#user-menu-panel a[href="/board/"]').forEach((a) => a.insertAdjacentHTML("beforeend", badge()));
+      document.querySelectorAll('#mobile-auth-nav a[href="/board/"]').forEach((a) => a.insertAdjacentHTML("beforeend", badge()));
+    } catch (_e) {
+      // No number is better than a broken menu.
+    }
+  }
+
   async function updateAuthNav() {
     const authNav = document.getElementById("auth-nav");
     const mobileAuthNav = document.getElementById("mobile-auth-nav");
@@ -544,6 +562,11 @@ function isActive(hrefWithHash: string): boolean {
             Sign Out
           </button>
         `;
+
+        // A small number on the menu when something is waiting on the board
+        // (new messages and mentions). There's no email, so this is how
+        // someone finds out without opening the board.
+        showBoardBadge();
         attachSignOutHandlers();
         attachUserMenuToggle();
         return;
