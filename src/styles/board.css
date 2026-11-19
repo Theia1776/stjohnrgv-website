@@ -812,6 +812,11 @@
     width: auto;
     white-space: normal;
   }
+  /* The Author / Message header would sit as a stray column beside
+     the stacked posts, so a table of posts drops it on a phone. */
+  .bb-table:has(.bb-post-row) thead {
+    display: none;
+  }
   .bb-post-row,
   .bb-post-row td {
     display: block;
@@ -835,6 +840,10 @@
   }
   .bb-author-meta {
     display: none;
+  }
+  .bb-author-msg {
+    display: inline;
+    margin: 0;
   }
 }
 
