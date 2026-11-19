@@ -141,33 +141,30 @@ const liturgicalRootStyle =
     </script>
 
     <script>
-      // Show / Hide on every password box. Typing a password blind on a
-      // phone keyboard is how people get locked out, so each one gets a
-      // button that lets them see what they typed. Done here once rather
-      // than on each page, so a password box added later gets it too.
-      document.querySelectorAll<HTMLInputElement>('input[type="password"]').forEach((input) => {
-        const wrap = document.createElement("div");
-        wrap.className = "relative";
-        input.parentNode?.insertBefore(wrap, input);
-        wrap.appendChild(input);
-        input.classList.add("pr-16");
+      // "Show password" under every password box. Typing a password
+      // blind on a phone keyboard is how people get locked out. It sits
+      // below the box on the left, as a checkbox, where people expect
+      // it. Done here once rather than on each page, so a password box
+      // added later gets it too.
+      document.querySelectorAll<HTMLInputElement>('input[type="password"]').forEach((input, i) => {
+        const id = `show-password-${i}`;
+        const row = document.createElement("label");
+        row.htmlFor = id;
+        row.className = "mt-2 flex w-fit cursor-pointer items-center gap-2 text-sm text-text-secondary";
 
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = "Show";
-        btn.setAttribute("aria-label", "Show password");
-        btn.setAttribute("aria-pressed", "false");
-        btn.className =
-          "absolute inset-y-0 right-0 px-3 text-sm font-semibold text-brand-blue-dark hover:text-brand-blue";
-        btn.addEventListener("click", () => {
-          const showing = input.type === "text";
-          input.type = showing ? "password" : "text";
-          btn.textContent = showing ? "Show" : "Hide";
-          btn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
-          btn.setAttribute("aria-pressed", showing ? "false" : "true");
-          input.focus();
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.id = id;
+        box.className = "h-4 w-4";
+        box.addEventListener("change", () => {
+          input.type = box.checked ? "text" : "password";
         });
-        wrap.appendChild(btn);
+
+        row.append(box, "Show password");
+        // A password box wrapped in its own <label> (the saints admin)
+        // can't hold a second label, so the row goes after that label.
+        const outer = input.closest("label");
+        (outer ?? input).after(row);
       });
     </script>
 
