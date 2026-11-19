@@ -575,6 +575,8 @@ import "../../styles/board.css";
   const modPick = document.getElementById("moderator-pick") as HTMLSelectElement;
   const modStatus = document.getElementById("moderator-status") as HTMLElement;
 
+  const here = "/board/";
+
   // ---- today's feast, and who has a special day ----
   async function renderToday(list: Array<{ name: string; what: string; when: string }>) {
     const box = document.getElementById("today") as HTMLElement;
