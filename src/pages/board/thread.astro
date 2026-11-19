@@ -248,7 +248,8 @@ import "../../styles/board.css";
   let reportTarget = "";
   let pollData: {
     id: string; multiple: boolean; question?: string | null; closed: boolean; voters: number; mine: string[];
-    options: Array<{ id: string; label: string; votes: number }>;
+    options: Array<{ id: string; label: string; votes: number; voters?: string[] }>;
+    showVoters?: boolean;
   } | null = null;
   let pollChanging = false;
   let suspendTarget: { id: string; name: string } | null = null;
@@ -390,7 +391,7 @@ import "../../styles/board.css";
     }
     const p = pollData;
     const voted = p.mine.length > 0;
-    let html = `<strong>Poll: ${escapeHtml(p.question || question)}</strong>`;
+    let html = `<strong>${p.showVoters ? "RSVP" : "Poll"}: ${escapeHtml(p.question || question)}</strong>`;
     if (!p.closed && (!voted || pollChanging)) {
       html += `<form id="poll-form" class="mt-2 space-y-1">` +
         p.options
@@ -406,7 +407,7 @@ import "../../styles/board.css";
         p.options
           .map((o) => {
             const pct = p.voters ? Math.round((o.votes / p.voters) * 100) : 0;
-            return `<div><div class="flex justify-between text-sm"><span>${escapeHtml(o.label)}${p.mine.includes(o.id) ? " ✓" : ""}</span><span>${o.votes} (${pct}%)</span></div><div class="bb-poll-bar"><i style="width:${Math.round((o.votes / top) * 100)}%"></i></div></div>`;
+            return `<div><div class="flex justify-between text-sm"><span>${escapeHtml(o.label)}${p.mine.includes(o.id) ? " ✓" : ""}</span><span>${o.votes} (${pct}%)</span></div><div class="bb-poll-bar"><i style="width:${Math.round((o.votes / top) * 100)}%"></i></div>${p.showVoters && o.voters?.length ? `<div class="text-xs text-text-secondary mt-0.5">${o.voters.map((n) => escapeHtml(n)).join(", ")}</div>` : ""}</div>`;
           })
           .join("") +
         `</div><p class="text-xs text-text-secondary mt-2">${p.voters} ${p.voters === 1 ? "person" : "people"} voted${p.closed ? " · This poll is closed." : ""}</p>`;

@@ -73,6 +73,9 @@ import "../../styles/board.css";
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
         <div class="border border-border-soft p-3">
+          <label class="flex items-center gap-2 text-sm font-semibold mb-2">
+            <input id="rsvp-on" type="checkbox" class="h-4 w-4" /> Ask people to RSVP (Yes, Maybe, No, with names shown)
+          </label>
           <label class="flex items-center gap-2 text-sm font-semibold">
             <input id="poll-on" type="checkbox" class="h-4 w-4" /> Add a poll to this topic
           </label>
@@ -437,7 +440,17 @@ import "../../styles/board.css";
   }
   addPollOption();
   addPollOption();
-  pollOn.addEventListener("change", () => pollFields.classList.toggle("hidden", !pollOn.checked));
+  const rsvpOn = document.getElementById("rsvp-on") as HTMLInputElement;
+  pollOn.addEventListener("change", () => {
+    if (pollOn.checked) rsvpOn.checked = false;
+    pollFields.classList.toggle("hidden", !pollOn.checked);
+  });
+  rsvpOn.addEventListener("change", () => {
+    if (rsvpOn.checked) {
+      pollOn.checked = false;
+      pollFields.classList.add("hidden");
+    }
+  });
   (document.getElementById("poll-more") as HTMLButtonElement).addEventListener("click", addPollOption);
 
   startForm.addEventListener("submit", async (event) => {
@@ -475,7 +488,9 @@ import "../../styles/board.css";
           title,
           body: text,
           photoIds: newPhotos.ids(),
-          poll: pollOn.checked
+          poll: rsvpOn.checked
+            ? { question: "Will you be there?", options: ["Yes, I'll be there", "Maybe", "No, I can't make it"], multiple: false, showVoters: true }
+            : pollOn.checked
             ? {
                 options: [...pollOptions.querySelectorAll("input")].map((i) => (i as HTMLInputElement).value),
                 multiple: (document.getElementById("poll-multiple") as HTMLInputElement).checked,

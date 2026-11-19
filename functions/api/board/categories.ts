@@ -16,6 +16,7 @@ import {
   slugify,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 import { postIdsInThreads, purgePhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_NAME = 80;
@@ -134,6 +135,9 @@ export async function onRequestPatch(
 
     const { error } = await supabase.from("board_categories").update(updates).eq("slug", slug);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    if (typeof updates.hidden === "boolean") {
+      await logAction(supabase, viewer.id, updates.hidden ? "Hid a room" : "Showed a room", slug);
+    }
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
@@ -209,6 +213,7 @@ export async function onRequestDelete(
 
     const { error } = await supabase.from("board_categories").delete().eq("id", category.id);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    await logAction(supabase, viewer.id, "Deleted a room", String(category.id));
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {

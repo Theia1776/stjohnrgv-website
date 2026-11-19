@@ -192,7 +192,7 @@ export async function onRequestPost(
     if (!text) return wrap(jsonResponse({ error: "Please write something to start it off." }, 400));
 
     // An optional poll: 2 to 8 choices.
-    let poll: { options: string[]; multiple: boolean; question: string } | null = null;
+    let poll: { options: string[]; multiple: boolean; question: string; showVoters: boolean } | null = null;
     if (body.poll && typeof body.poll === "object") {
       const raw = body.poll as { options?: unknown; multiple?: unknown; question?: unknown };
       const question = typeof raw.question === "string" ? raw.question.trim() : "";
@@ -209,7 +209,7 @@ export async function onRequestPost(
       if (options.some((o) => o.length > 100)) {
         return wrap(jsonResponse({ error: "Keep each choice to 100 characters or fewer." }, 400));
       }
-      poll = { options, multiple: raw.multiple === true, question };
+      poll = { options, multiple: raw.multiple === true, question, showVoters: (raw as { showVoters?: unknown }).showVoters === true };
     }
     if (text.length > MAX_BODY) {
       return wrap(jsonResponse({ error: `Posts top out at ${MAX_BODY} characters.` }, 400));
@@ -249,7 +249,7 @@ export async function onRequestPost(
     if (poll) {
       const { data: made, error: pollError } = await supabase
         .from("board_polls")
-        .insert({ thread_id: thread.id, multiple: poll.multiple, question: poll.question })
+        .insert({ thread_id: thread.id, multiple: poll.multiple, question: poll.question, show_voters: poll.showVoters })
         .select("id")
         .single();
       if (!pollError && made) {

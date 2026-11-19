@@ -16,6 +16,7 @@ import {
   type BoardEnv,
   suspensionBlock,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 import { recordMentions } from "../../../src/lib/board-mentions.ts";
 import { attachPhotos, purgePhotos } from "../../../src/lib/board-photos.ts";
 
@@ -164,6 +165,9 @@ export async function onRequestDelete(
 
     const { error: deleteError } = await supabase.from("board_posts").delete().eq("id", id);
     if (deleteError) return wrap(jsonResponse({ error: deleteError.message }, 500));
+    if (post.author_id !== viewer.id) {
+      await logAction(supabase, viewer.id, "Deleted someone's post", `post ${id}`, post.author_id as string | null);
+    }
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {

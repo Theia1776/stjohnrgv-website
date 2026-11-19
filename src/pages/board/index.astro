@@ -149,6 +149,16 @@ import "../../styles/board.css";
 
       <section id="mod-tools" class="hidden mt-10">
         <details class="mb-6">
+          <summary class="cursor-pointer font-semibold text-lg">Moderator log</summary>
+          <table class="bb-table mt-2">
+            <thead>
+              <tr><th>Who</th><th>Did</th><th class="bb-last">When</th></tr>
+            </thead>
+            <tbody id="modlog-list"></tbody>
+          </table>
+        </details>
+
+        <details class="mb-6">
           <summary class="cursor-pointer font-semibold text-lg">
             Board members (<span id="member-count">0</span>)
           </summary>
@@ -465,6 +475,7 @@ import "../../styles/board.css";
       renderAdminList(categories);
       loadModerators();
       loadMembers();
+      loadModLog();
     }
 
     adminList.onclick = async (event) => {
@@ -695,6 +706,26 @@ import "../../styles/board.css";
     await load();
   });
   loadDates();
+
+  // ---- what moderators have done (admins) ----
+  async function loadModLog() {
+    const res = await boardFetch("/api/board/modlog", {}, here);
+    if (!res || !res.ok) return;
+    const log: Array<{ who: string; action: string; to: string; detail: string; at: string }> =
+      (await res.json()).log ?? [];
+    (document.getElementById("modlog-list") as HTMLElement).innerHTML = log.length
+      ? log
+          .map(
+            (l) => `
+        <tr>
+          <td>${escapeHtml(l.who)}</td>
+          <td>${escapeHtml(l.action)}${l.to ? ` — ${escapeHtml(l.to)}` : ""}${l.detail ? `<span class="bb-desc">${escapeHtml(l.detail)}</span>` : ""}</td>
+          <td class="bb-last">${escapeHtml(new Date(l.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</td>
+        </tr>`,
+          )
+          .join("")
+      : '<tr><td colspan="3" class="text-text-secondary">Nothing yet.</td></tr>';
+  }
 
   // ---- the roll of board members (admins) ----
   async function loadMembers() {

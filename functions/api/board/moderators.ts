@@ -18,6 +18,7 @@ import {
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -104,6 +105,7 @@ export async function onRequestPost(
       .from("board_moderators")
       .upsert({ user_id: userId, added_by: viewer.id }, { onConflict: "user_id" });
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    await logAction(supabase, viewer.id, "Made a moderator", "", userId);
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
@@ -127,6 +129,7 @@ export async function onRequestDelete(
 
     const { error } = await supabase.from("board_moderators").delete().eq("user_id", userId);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    await logAction(supabase, viewer.id, "Removed a moderator", "", userId);
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {

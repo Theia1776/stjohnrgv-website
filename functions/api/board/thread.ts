@@ -21,6 +21,7 @@ import {
   type BoardEnv,
   suspensionBlock,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 import { mentionLabels, recordMentions } from "../../../src/lib/board-mentions.ts";
 import {
   attachPhotos,
@@ -262,7 +263,7 @@ export async function onRequestGet(
     let poll: unknown = null;
     const { data: pollRow } = await supabase
       .from("board_polls")
-      .select("id, multiple, question")
+      .select("id, multiple, question, show_voters")
       .eq("thread_id", id)
       .maybeSingle();
     if (pollRow) {
@@ -283,14 +284,30 @@ export async function onRequestGet(
         voters.add(v.user_id as string);
         if (v.user_id === viewer.id) mine.push(v.option_id as string);
       }
+      const voterNames = new Map<string, string[]>();
+      if (pollRow.show_voters) {
+        const { namesOf } = await import("../../../src/lib/board-messages.ts");
+        const who = await namesOf(supabase, [...voters]);
+        for (const v of votes ?? []) {
+          const list = voterNames.get(v.option_id as string) ?? [];
+          list.push(who.get(v.user_id as string) ?? "A parishioner");
+          voterNames.set(v.option_id as string, list);
+        }
+      }
       poll = {
+        showVoters: !!pollRow.show_voters,
         id: pollRow.id,
         multiple: pollRow.multiple,
         question: pollRow.question ?? null,
         closed: !!thread.locked,
         voters: voters.size,
         mine,
-        options: (options ?? []).map((o) => ({ id: o.id, label: o.label, votes: tally.get(o.id as string) ?? 0 })),
+        options: (options ?? []).map((o) => ({
+          id: o.id,
+          label: o.label,
+          votes: tally.get(o.id as string) ?? 0,
+          voters: (voterNames.get(o.id as string) ?? []).sort(),
+        })),
       };
     }
 
@@ -474,7 +491,7 @@ export async function onRequestPatch(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, author_id, board_categories ( hidden, audience )")
+      .select("id, title, author_id, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
@@ -532,6 +549,21 @@ export async function onRequestPatch(
       .eq("id", id);
     if (updateError) return wrap(jsonResponse({ error: updateError.message }, 500));
 
+    if (viewer.isModerator) {
+      const kinds = Object.keys(updates).filter((k) => !k.startsWith("close_requested"));
+      if (kinds.length) {
+        await logAction(
+          supabase,
+          viewer.id,
+          "Changed a topic",
+          `"${(thread as { title?: string }).title ?? ""}": ${kinds
+            .map((k) => (k === "category_id" ? "moved" : k))
+            .map((k) => (typeof updates[k] === "boolean" ? `${k} ${updates[k] ? "on" : "off"}` : k))
+            .join(", ")}`,
+        );
+      }
+    }
+
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
     return wrap(
@@ -553,7 +585,7 @@ export async function onRequestDelete(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, author_id, post_count, board_categories ( hidden, audience )")
+      .select("id, title, author_id, post_count, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
@@ -582,6 +614,9 @@ export async function onRequestDelete(
 
     // Posts and read marks go with it — both cascade on the thread.
     const { error: deleteError } = await supabase.from("board_threads").delete().eq("id", id);
+    if (!deleteError && viewer.isModerator) {
+      await logAction(supabase, viewer.id, "Deleted a topic", `"${(thread as { title?: string }).title ?? ""}"`);
+    }
     if (deleteError) return wrap(jsonResponse({ error: deleteError.message }, 500));
 
     return wrap(jsonResponse({ ok: true }, 200));

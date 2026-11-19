@@ -16,6 +16,7 @@ import {
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 import { UUID, namesOf, privilegedIds } from "../../../src/lib/board-messages.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -90,6 +91,13 @@ export async function onRequestPost(
       { onConflict: "user_id" },
     );
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    await logAction(
+      supabase,
+      viewer.id,
+      "Suspended a member",
+      `${days === 0 ? "until lifted" : `${days} day${days === 1 ? "" : "s"}`}${reason ? `. Reason: ${reason}` : ""}`,
+      userId,
+    );
     return wrap(jsonResponse({ ok: true, until }, 200));
   } catch (err) {
     return wrap(
@@ -111,6 +119,7 @@ export async function onRequestDelete(
     if (!UUID.test(userId)) return wrap(jsonResponse({ error: "Who?" }, 400));
     const { error } = await supabase.from("board_suspensions").delete().eq("user_id", userId);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    await logAction(supabase, viewer.id, "Lifted a suspension", "", userId);
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
     return wrap(

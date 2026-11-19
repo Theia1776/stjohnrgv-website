@@ -12,6 +12,7 @@ import {
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { logAction } from "../../../src/lib/board-modlog.ts";
 
 export async function onRequestPost(
   context: { request: Request; env: BoardEnv },
@@ -43,6 +44,7 @@ export async function onRequestPost(
     const { error } = await supabase.from("board_posts").update({ reported_hidden: false }).eq("id", postId);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
     await supabase.from("board_post_reports").delete().eq("post_id", postId);
+    await logAction(supabase, viewer.id, "Restored a reported post", `post ${postId}`);
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
     return wrap(

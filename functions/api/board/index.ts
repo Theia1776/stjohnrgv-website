@@ -71,22 +71,30 @@ export async function onRequestGet(
     // Who wrote the newest post in each category, for the Last Post
     // column. One pass over the posts, newest last, so the final write
     // per category wins.
-    const { data: recent } = await supabase
-      .from("board_posts")
-      .select("thread_id, author_id, created_at")
-      .order("created_at", { ascending: true });
-
+    // Only the newest topic in each room is looked at, not every post on the
+    // board, so this stays quick however much gets written. The post total
+    // comes from the counts each topic already keeps.
     const categoryOfThread = new Map<string, string>();
+    const newestThread = new Map<string, ThreadRow>();
+    let totalPosts = 0;
     for (const t of (threads ?? []) as ThreadRow[]) {
       categoryOfThread.set(t.id, t.category_id);
+      totalPosts += t.post_count ?? 0;
+      const seen = newestThread.get(t.category_id);
+      if (!seen || t.last_post_at > seen.last_post_at) newestThread.set(t.category_id, t);
     }
     const lastPostAuthorId = new Map<string, string | null>();
-    let totalPosts = 0;
-    for (const post of recent ?? []) {
-      const categoryId = categoryOfThread.get(post.thread_id as string);
-      if (!categoryId) continue; // a room this person can't see
-      totalPosts += 1;
-      lastPostAuthorId.set(categoryId, (post.author_id as string | null) ?? null);
+    const newestIds = [...newestThread.values()].map((t) => t.id);
+    if (newestIds.length) {
+      const { data: recent } = await supabase
+        .from("board_posts")
+        .select("thread_id, author_id, created_at")
+        .in("thread_id", newestIds)
+        .order("created_at", { ascending: true });
+      for (const post of recent ?? []) {
+        const categoryId = categoryOfThread.get(post.thread_id as string);
+        if (categoryId) lastPostAuthorId.set(categoryId, (post.author_id as string | null) ?? null);
+      }
     }
 
     const authorIds = [...new Set([...lastPostAuthorId.values()].filter(Boolean))] as string[];
