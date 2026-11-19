@@ -25,29 +25,36 @@ export function welcomeEmail(firstName: string, link: string, days: number) {
     `With love in Christ,\n` +
     `St. John of Kronstadt Orthodox Mission`;
 
+  // Site palette (src/styles/global.css, "Coastal Light"): cream page,
+  // white card, slate text, Mediterranean blue button, sandstone kicker,
+  // gold rule. Cinzel for headings and Crimson Pro for body where the
+  // mail app has them; Times and Georgia stand in where it doesn't.
+  const HEAD = "font-family:Cinzel,'Times New Roman',Times,serif";
+  const BODY = "font-family:'Crimson Pro',Georgia,'Times New Roman',serif";
   const html =
-    `<div style="background:#f6f1e7;padding:24px 12px">` +
-    `<div style="font-family:Georgia,'Times New Roman',serif;color:#2b2b2b;` +
-    `line-height:1.65;font-size:18px;max-width:520px;margin:0 auto;` +
-    `background:#ffffff;border:1px solid #e4dccb;padding:32px 28px">` +
-    `<p style="margin:0 0 6px;font-size:13px;letter-spacing:2px;` +
-    `text-transform:uppercase;color:#8a6d2f">St. John of Kronstadt Orthodox Mission</p>` +
-    `<p style="margin:0 0 20px;font-size:24px;color:#1a2f5e">Your account is ready</p>` +
+    `<div style="background:#FAF7F0;padding:28px 12px">` +
+    `<div style="${BODY};color:#2C3E50;line-height:1.65;font-size:19px;max-width:540px;` +
+    `margin:0 auto;background:#FFFFFF;border:1px solid #E5DFD3;border-top:4px solid #C9A84C;padding:34px 30px">` +
+    `<p style="${HEAD};margin:0;font-size:20px;font-weight:600;letter-spacing:1px;color:#2C3E50">ST. JOHN OF KRONSTADT</p>` +
+    `<p style="${HEAD};margin:2px 0 0;font-size:12px;letter-spacing:3px;color:#A88758">ORTHODOX MISSION</p>` +
+    `<div style="height:1px;width:96px;background:#C9A84C;margin:18px 0 24px"></div>` +
+    `<p style="${HEAD};margin:0 0 18px;font-size:26px;font-weight:600;color:#2C3E50">Your account is ready</p>` +
     `<p style="margin:0 0 16px">Dear ${escapeHtml(name)},</p>` +
     `<p style="margin:0 0 16px">We have set up an account for you on the parish ` +
     `website. It is all ready. The only thing left is for you to choose a password.</p>` +
-    `<p style="margin:0 0 24px">Press the button, type a password you will remember, ` +
+    `<p style="margin:0 0 28px">Press the button, type a password you will remember, ` +
     `and you will land right in your account. There is nothing else to fill out.</p>` +
-    `<p style="margin:0 0 28px;text-align:center">` +
-    `<a href="${link}" style="display:inline-block;background:#1a2f5e;color:#ffffff;` +
-    `text-decoration:none;font-size:20px;font-weight:bold;padding:16px 32px;` +
-    `border-radius:4px">Choose my password</a></p>` +
-    `<p style="margin:0 0 16px;font-size:15px;color:#555">The button works for ${days} days. ` +
+    `<p style="margin:0 0 30px;text-align:center">` +
+    `<a href="${link}" style="${HEAD};display:inline-block;background:#3B7BA8;color:#FFFFFF;` +
+    `text-decoration:none;font-size:19px;font-weight:700;letter-spacing:.5px;padding:17px 34px;` +
+    `border:1px solid #3B7BA8">Choose my password</a></p>` +
+    `<p style="margin:0 0 16px;font-size:16px;color:#5C6B7A">The button works for ${days} days. ` +
     `If it stops working, or anything looks wrong, just reply to this email or call ` +
     `the parish office and we will sort it out with you.</p>` +
-    `<p style="margin:0 0 24px;font-size:15px;color:#555">If the button does not ` +
+    `<p style="margin:0 0 26px;font-size:16px;color:#5C6B7A">If the button does not ` +
     `work, copy this address into your browser:<br>` +
-    `<span style="word-break:break-all;color:#1a2f5e">${escapeHtml(link)}</span></p>` +
+    `<span style="word-break:break-all;color:#2A5E84">${escapeHtml(link)}</span></p>` +
+    `<div style="height:1px;background:#E5DFD3;margin:0 0 18px"></div>` +
     `<p style="margin:0">With love in Christ,<br>St. John of Kronstadt Orthodox Mission</p>` +
     `</div></div>`;
 
