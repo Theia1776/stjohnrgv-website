@@ -109,17 +109,19 @@ import "../../styles/board.css";
           </div>
           <div class="bb-panel-links" id="dates">
             <strong>My special days</strong>
-            <p class="bb-sig-count">Optional. Shown to people on the board, with no year.</p>
+            <p class="bb-sig-count">Optional. Shown to people on the board, with no year. Give the day on the wall calendar, or tick "Old Style."</p>
             <a href="#" id="dates-edit">Add my name day, baptism day or birthday</a>
             <form id="dates-form" class="bb-sig-form hidden">
               <fieldset class="mb-2">
                 <legend class="text-xs font-semibold">Name day</legend>
                 <input id="nd-saint" type="text" maxlength="60" placeholder="Saint (for example, Philothei)" aria-label="Saint for your name day" class="bb-suspend-select mb-1" />
                 <span class="flex gap-1"><select id="nd-month" aria-label="Name day month" class="bb-suspend-select"></select><select id="nd-day" aria-label="Name day" class="bb-suspend-select"></select></span>
+                <label class="mt-1 flex items-center gap-1 text-xs"><input id="nd-os" type="checkbox" /> This is the Old Style date</label>
               </fieldset>
               <fieldset class="mb-2">
                 <legend class="text-xs font-semibold">Baptism day</legend>
                 <span class="flex gap-1"><select id="bp-month" aria-label="Baptism month" class="bb-suspend-select"></select><select id="bp-day" aria-label="Baptism day" class="bb-suspend-select"></select></span>
+                <label class="mt-1 flex items-center gap-1 text-xs"><input id="bp-os" type="checkbox" /> This is the Old Style date</label>
               </fieldset>
               <fieldset class="mb-2">
                 <legend class="text-xs font-semibold">Birthday</legend>
@@ -604,7 +606,17 @@ import "../../styles/board.css";
   const setVal = (id: string, v: string | number | undefined) => {
     (document.getElementById(id) as HTMLInputElement).value = v === undefined ? "" : String(v);
   };
-  const dayOf = (m: string, d: string) => (val(m) && val(d) ? { month: Number(val(m)), day: Number(val(d)) } : null);
+  // The board shows the day on the wall calendar. A date given Old Style
+  // is moved thirteen days on before it's saved.
+  const dayOf = (m: string, d: string, oldStyle = false) => {
+    if (!val(m) || !val(d)) return null;
+    const month = Number(val(m));
+    const day = Number(val(d));
+    if (!oldStyle) return { month, day };
+    const moved = new Date(Date.UTC(2024, month - 1, day + 13));
+    return { month: moved.getUTCMonth() + 1, day: moved.getUTCDate() };
+  };
+  const checked = (id: string) => (document.getElementById(id) as HTMLInputElement).checked;
 
   async function loadDates() {
     const res = await boardFetch("/api/board/dates", {}, here);
@@ -622,7 +634,7 @@ import "../../styles/board.css";
   datesForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     datesStatus.textContent = "Saving…";
-    const nd = dayOf("nd-month", "nd-day");
+    const nd = dayOf("nd-month", "nd-day", checked("nd-os"));
     const res = await boardFetch(
       "/api/board/dates",
       {
@@ -630,7 +642,7 @@ import "../../styles/board.css";
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nameDay: nd ? { ...nd, saint: val("nd-saint") } : null,
-          baptism: dayOf("bp-month", "bp-day"),
+          baptism: dayOf("bp-month", "bp-day", checked("bp-os")),
           birthday: dayOf("bd-month", "bd-day"),
         }),
       },
