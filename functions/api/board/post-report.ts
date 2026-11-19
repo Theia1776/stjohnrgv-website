@@ -26,8 +26,10 @@ export async function onRequestPost(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    const body = (await context.request.json().catch(() => ({}))) as { postId?: unknown };
+    const body = (await context.request.json().catch(() => ({}))) as { postId?: unknown; reason?: unknown };
     const postId = typeof body.postId === "string" ? body.postId.trim() : "";
+    const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
+    if (!reason) return wrap(jsonResponse({ error: "Please say why you're reporting it." }, 400));
     if (!postId) return wrap(jsonResponse({ error: "Which post?" }, 400));
 
     const { data: post } = await supabase
@@ -81,7 +83,7 @@ export async function onRequestPost(
           await supabase.from("board_posts").insert({
             thread_id: noteId,
             author_id: null,
-            body: `${viewer.displayName} also reported this post.`,
+            body: `${viewer.displayName} also reported this post.\n\nReason: ${reason}`,
           });
         } else {
           const names = await namesOf(supabase, post.author_id ? [post.author_id as string] : []);
@@ -105,7 +107,7 @@ export async function onRequestPost(
               body:
                 `${viewer.displayName} reported a post by ${author} in "${thread.title}"` +
                 `${thread.board_categories ? ` (${thread.board_categories.name})` : ""}.\n\n` +
-                `${link}\n\nThe post is hidden from the board until a moderator restores it: open the topic and press "Restore this post."\n\nWhat it said:\n${post.body}`,
+                `${link}\n\nWhat it said:\n${post.body}\n\nReason: ${reason}`,
             });
           }
         }
@@ -116,7 +118,7 @@ export async function onRequestPost(
 
     const { error } = await supabase
       .from("board_post_reports")
-      .insert({ post_id: postId, reporter_id: viewer.id, note_thread_id: noteId });
+      .insert({ post_id: postId, reporter_id: viewer.id, note_thread_id: noteId, reason });
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
 
     // Off the board for everyone but moderators until one restores it.

@@ -76,6 +76,21 @@ import "../../styles/board.css";
         </div>
       </form>
 
+      <dialog id="report-dialog" class="bb-help-dialog" aria-labelledby="report-title">
+        <form id="report-form" method="dialog">
+          <h2 id="report-title">Report this post?</h2>
+          <label class="block">
+            <span class="bb-help-label">Reason</span>
+            <textarea id="report-reason" rows="4" maxlength="500" spellcheck="true" autocapitalize="sentences"></textarea>
+          </label>
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Report</button>
+            <button type="button" class="bb-btn report-close">Cancel</button>
+            <span id="report-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
+
       <dialog id="history-dialog" class="bb-help-dialog" aria-labelledby="history-title">
         <h2 id="history-title">Earlier versions</h2>
         <div id="history-body" class="text-sm"></div>
@@ -229,6 +244,7 @@ import "../../styles/board.css";
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
   let jumpedToPost = false;
+  let reportTarget = "";
   let pollData: {
     id: string; multiple: boolean; question?: string | null; closed: boolean; voters: number; mine: string[];
     options: Array<{ id: string; label: string; votes: number }>;
@@ -433,7 +449,7 @@ import "../../styles/board.css";
           canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
           !underReview ? '<button type="button" class="bb-btn post-share" title="Copy a link to this post, to send to someone on the board">Share</button>' : "",
           // On every post, own included: a small red hand in the corner.
-          !underReview ? '<button type="button" class="bb-btn bb-report-icon post-report" title="Report this post" aria-label="Report this post"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="9" width="12" height="11" rx="4"/><rect x="6" y="3" width="2.6" height="9" rx="1.3"/><rect x="9.6" y="1.5" width="2.6" height="10" rx="1.3"/><rect x="13.2" y="2.5" width="2.6" height="9.5" rx="1.3"/><rect x="16.6" y="5" width="2.4" height="8" rx="1.2"/><path d="M6 13 L2.5 10.5 a1.4 1.4 0 0 0 -2 2 L5 18z"/></svg></button>' : "",
+          !underReview ? '<button type="button" class="bb-btn bb-report-icon post-report" title="Report this post" aria-label="Report this post"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="9" width="12" height="11" rx="4"/><rect x="6" y="3" width="2.6" height="9" rx="1.3"/><rect x="9.6" y="1.5" width="2.6" height="10" rx="1.3"/><rect x="13.2" y="2.5" width="2.6" height="9.5" rx="1.3"/><rect x="16.6" y="5" width="2.4" height="8" rx="1.2"/><path d="M6 13 L2.5 10.5 a1.4 1.4 0 0 0 -2 2 L5 18z"/></svg></button>' : "",
         ]
           .filter(Boolean)
           .join(" ");
@@ -650,31 +666,11 @@ import "../../styles/board.css";
 
       // --- report a post ---
       if (button.classList.contains("post-report")) {
-        const goAhead = await confirmAction({
-          message:
-            "Report this post? It's hidden from the board right away, and the moderators get a note with " +
-            "a link to it and what it said. It comes back if they find nothing wrong.",
-          confirmLabel: "Yes, report it",
-          cancelLabel: "No",
-          danger: true,
-        });
-        if (!goAhead) return;
-        const res = await boardFetch(
-          "/api/board/post-report",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ postId: id }),
-          },
-          here,
-        );
-        if (!res) return;
-        if (!res.ok) {
-          showError((await errorDetail(res)) || `Couldn't send that (${res.status}).`);
-          return;
-        }
-        // It's off the board now; draw it that way.
-        await load();
+        reportTarget = id;
+        (document.getElementById("report-reason") as HTMLTextAreaElement).value = "";
+        (document.getElementById("report-status") as HTMLElement).textContent = "";
+        (document.getElementById("report-dialog") as HTMLDialogElement).showModal();
+        (document.getElementById("report-reason") as HTMLTextAreaElement).focus();
         return;
       }
 
@@ -904,6 +900,37 @@ import "../../styles/board.css";
   document.querySelectorAll(".history-close").forEach((b) =>
     b.addEventListener("click", () => (document.getElementById("history-dialog") as HTMLDialogElement).close()),
   );
+
+  // ---- report a post: a reason, and that's all ----
+  document.querySelectorAll(".report-close").forEach((b) =>
+    b.addEventListener("click", () => (document.getElementById("report-dialog") as HTMLDialogElement).close()),
+  );
+  (document.getElementById("report-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("report-status") as HTMLElement;
+    const reason = (document.getElementById("report-reason") as HTMLTextAreaElement).value.trim();
+    if (!reason) {
+      status.textContent = "Please say why.";
+      return;
+    }
+    status.textContent = "Sending…";
+    const res = await boardFetch(
+      "/api/board/post-report",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: reportTarget, reason }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
+      return;
+    }
+    (document.getElementById("report-dialog") as HTMLDialogElement).close();
+    await load();
+  });
 
   // ---- suspend: how long, and why ----
   document.querySelectorAll(".suspend-close").forEach((b) =>

@@ -20,3 +20,6 @@ alter table public.board_posts add column if not exists reported_hidden boolean 
 update public.board_categories
    set description = 'For moderators and admins. Help requests and reported posts land here.'
  where slug = 'moderation';
+
+-- And the reason a post was reported (added the same day).
+alter table public.board_post_reports add column if not exists reason text;

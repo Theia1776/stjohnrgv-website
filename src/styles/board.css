@@ -1060,13 +1060,17 @@ mark {
   cursor: pointer;
 }
 
-/* The small red hand that reports a post. */
+/* The small red hand that reports a post. Same box as Help, Quote,
+   Edit and Share: the icon is sized to the text beside it. */
 .bb-report-icon {
-  padding: 0.2rem 0.4rem;
   color: #B3261E;
   border-color: #B3261E;
-  line-height: 0;
-  vertical-align: middle;
+}
+.bb-report-icon svg {
+  display: inline-block;
+  width: auto;
+  height: 1.05em;
+  vertical-align: -0.15em;
 }
 .bb-report-icon:hover {
   background: #B3261E;
