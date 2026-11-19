@@ -53,6 +53,8 @@ export interface BoardViewer {
   isAdmin: boolean;
   /** An admin, or a member the admin has made a moderator. */
   isModerator: boolean;
+  /** Set while a moderator has stopped this person posting. */
+  suspension: { until: string | null; reason: string | null } | null;
 }
 
 export interface BoardGate {
@@ -107,6 +109,15 @@ export async function requireBoardAccess(
     .eq("user_id", session.user.id)
     .maybeSingle();
   const isModerator = !!modRow;
+  const { data: suspensionRow } = await supabase
+    .from("board_suspensions")
+    .select("until, reason")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  const suspension =
+    suspensionRow && (!suspensionRow.until || new Date(suspensionRow.until as string).getTime() > Date.now())
+      ? { until: (suspensionRow.until as string | null) ?? null, reason: (suspensionRow.reason as string | null) ?? null }
+      : null;
   if (!BOARD_ROLES.has(role)) {
     return { error: wrap(jsonResponse({ error: INQUIRER_MESSAGE }, 403)), wrap };
   }
@@ -150,8 +161,40 @@ export async function requireBoardAccess(
       role,
       isAdmin: role === "admin",
       isModerator: role === "admin" || isModerator,
+      suspension: role === "admin" || isModerator ? null : suspension,
     },
   };
+}
+
+/**
+ * If this person is suspended, the response to send instead of doing
+ * what they asked. Every route that writes calls it. Reading is never
+ * blocked.
+ */
+export function suspensionBlock(
+  viewer: { suspension: { until: string | null; reason: string | null } | null },
+  wrap: (resp: Response) => Response,
+): Response | null {
+  if (!viewer.suspension) return null;
+  const until = viewer.suspension.until
+    ? ` until ${new Date(viewer.suspension.until).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "America/Chicago",
+      })}`
+    : " until a moderator lifts it";
+  const why = viewer.suspension.reason ? ` Reason given: ${viewer.suspension.reason}` : "";
+  return wrap(
+    jsonResponse(
+      {
+        error:
+          `You're suspended from posting${until}. You can still read the board.${why} ` +
+          `If you have a question, please speak with a moderator or Father.`,
+      },
+      403,
+    ),
+  );
 }
 
 /**

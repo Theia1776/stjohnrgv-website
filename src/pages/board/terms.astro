@@ -131,9 +131,91 @@ import { TERMS_VERSION } from "../../lib/board-terms";
       </section>
     </div>
 
+    <div id="end-of-terms"></div>
+
+    <section id="agree-panel" class="hidden mt-12 border border-border-soft bg-cream-card p-5">
+      <h2 class="font-display text-2xl text-text-primary">Agree to the Terms</h2>
+      <p id="agree-hint" class="mt-2 text-sm text-text-secondary">
+        You've read to the end. Tick the box, then press the button to enter the board.
+      </p>
+      <label class="mt-4 flex items-start gap-3 text-base">
+        <input id="agree-check" type="checkbox" class="mt-1 h-5 w-5" />
+        <span>I have read the Terms of Use and I agree to them.</span>
+      </label>
+      <p class="mt-4">
+        <button
+          id="agree-btn"
+          type="button"
+          disabled
+          class="bg-text-primary px-5 py-2 text-sm font-semibold uppercase tracking-wider text-cream-bg disabled:opacity-40"
+        >
+          Agree and enter the board
+        </button>
+        <span id="agree-status" class="ml-3 text-sm" role="status"></span>
+      </p>
+    </section>
+
     <p class="mt-12 text-sm text-text-secondary">
       Questions? Call <a href="tel:+19564346874">(956) 434-6874</a> or use the
       <a href="/contact/">contact form</a>. See also our <a href="/privacy/">Privacy Policy</a>.
     </p>
   </main>
 </Layout>
+
+<script>
+  const panel = document.getElementById("agree-panel") as HTMLElement;
+  const check = document.getElementById("agree-check") as HTMLInputElement;
+  const button = document.getElementById("agree-btn") as HTMLButtonElement;
+  const status = document.getElementById("agree-status") as HTMLElement;
+  const end = document.getElementById("end-of-terms") as HTMLElement;
+
+  async function start() {
+    let state: { agreed: boolean; version: string };
+    try {
+      const res = await fetch("/api/board/agree", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) return; // not signed in, or not on the board: just reading
+      state = await res.json();
+    } catch {
+      return;
+    }
+    if (state.agreed) return;
+
+    panel.classList.remove("hidden");
+    // The box only works once they have scrolled to the end of the terms.
+    check.disabled = true;
+    const hint = document.getElementById("agree-hint") as HTMLElement;
+    hint.textContent = "Please read the Terms above to the end. Then you can tick the box and agree.";
+    const unlock = () => {
+      check.disabled = false;
+      hint.textContent = "You've read to the end. Tick the box, then press the button to enter the board.";
+    };
+    new IntersectionObserver((entries, obs) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        unlock();
+        obs.disconnect();
+      }
+    }).observe(end);
+
+    check.addEventListener("change", () => {
+      button.disabled = !check.checked;
+    });
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      status.textContent = "Saving…";
+      const res = await fetch("/api/board/agree", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version: state.version }),
+      });
+      if (!res.ok) {
+        button.disabled = false;
+        status.textContent = "Couldn't save that. Please try again.";
+        return;
+      }
+      const next = new URLSearchParams(window.location.search).get("next") ?? "";
+      window.location.assign(next.startsWith("/board/") ? next : "/board/");
+    });
+  }
+  start();
+</script>

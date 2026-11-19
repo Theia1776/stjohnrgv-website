@@ -601,7 +601,7 @@ function showTermsDialog(version: string): void {
   dialog.className = "bb-help-dialog";
   dialog.innerHTML = `
     <h2>Welcome to the parish board</h2>
-    <p class="bb-help-lead">Before you come in, please read and agree to how we use it together.</p>
+    <p class="bb-help-lead">Before you come in, please read how we use the board together. You agree at the end of the Terms.</p>
     <ul class="bb-terms-list">
       <li>Christian conduct: be considerate, honest and kind. No harassment, threats, hate, or explicit material.</li>
       <li>You are responsible for what you post, and a message can't be taken back once it's sent.</li>
@@ -609,45 +609,18 @@ function showTermsDialog(version: string): void {
       <li>Moderators and admins can remove posts and access.</li>
       <li>Members under 18 are welcome with a parent's or guardian's permission.</li>
     </ul>
-    <p class="bb-help-lead"><a href="/board/terms/" target="_blank" rel="noopener" class="underline">Read the full Terms of Use</a></p>
-    <label class="bb-terms-check">
-      <input type="checkbox" id="terms-check" />
-      <span>I have read the Terms of Use and I agree to them.</span>
-    </label>
     <div class="bb-help-actions">
-      <button type="button" id="terms-agree" class="bb-btn bb-btn-strong" disabled>Agree and enter the board</button>
+      <a id="terms-read" class="bb-btn bb-btn-strong" href="/board/terms/?next=${encodeURIComponent(window.location.pathname + window.location.search)}">Read the Terms and agree</a>
       <button type="button" id="terms-leave" class="bb-btn">Not now</button>
-      <span id="terms-status" class="text-sm" role="status"></span>
     </div>`;
   document.body.appendChild(dialog);
 
-  const check = dialog.querySelector("#terms-check") as HTMLInputElement;
-  const agree = dialog.querySelector("#terms-agree") as HTMLButtonElement;
-  const status = dialog.querySelector("#terms-status") as HTMLElement;
   const leave = () => window.location.assign("/");
-  check.addEventListener("change", () => {
-    agree.disabled = !check.checked;
-  });
   dialog.querySelector("#terms-leave")?.addEventListener("click", leave);
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     leave();
   });
-  agree.addEventListener("click", async () => {
-    agree.disabled = true;
-    status.textContent = "Saving…";
-    const res = await fetch("/api/board/agree", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ version }),
-    });
-    if (!res.ok) {
-      agree.disabled = false;
-      status.textContent = "Couldn't save that. Please try again.";
-      return;
-    }
-    window.location.reload();
-  });
+  void version;
   dialog.showModal();
 }

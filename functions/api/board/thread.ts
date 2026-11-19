@@ -19,6 +19,7 @@ import {
   jsonResponse,
   shortName,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 import {
   attachPhotos,
@@ -106,6 +107,8 @@ export async function onRequestGet(
     const ids = [...new Set((posts ?? []).map((p) => p.author_id).filter(Boolean))] as string[];
     const names = new Map<string, string>();
     const panels = new Map<string, AuthorPanel>();
+    // Admins and moderators can't be suspended.
+    const staffIds = new Set<string>();
     if (ids.length) {
       const { data: profiles } = await supabase
         .from("profiles")
@@ -132,6 +135,7 @@ export async function onRequestGet(
         const id = p.id as string;
         const name = shortName(p.first_name as string | null, p.last_name as string | null);
         names.set(id, name);
+        if (p.role === "admin" || moderators.has(id)) staffIds.add(id);
         panels.set(id, {
           name,
           rank:
@@ -259,6 +263,8 @@ export async function onRequestGet(
               // For the Message link beside a post. Nobody gets a link to
               // themselves, or to someone who's gone.
               authorId: p.author_id && p.author_id !== viewer.id ? p.author_id : null,
+              canSuspend:
+                viewer.isModerator && !!p.author_id && p.author_id !== viewer.id && !staffIds.has(p.author_id as string),
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
               body: p.body,
               photos: (photosByPost.get(p.id as string) ?? []).map((ph) => ({
@@ -314,6 +320,8 @@ export async function onRequestPost(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     let body: { id?: unknown; body?: unknown; photoIds?: unknown };

@@ -87,6 +87,14 @@ import "../../styles/board.css";
       </div>
 
       <!-- Admin: who helps moderate -->
+      <section id="suspended-box" class="hidden mt-10">
+        <h2 class="text-lg font-semibold mb-1">Suspended members</h2>
+        <p class="text-sm text-text-secondary mb-2">
+          They can read but can't post. A timed suspension ends by itself.
+        </p>
+        <ul id="suspended-list" class="space-y-1 text-sm"></ul>
+      </section>
+
       <section id="mod-tools" class="hidden mt-10">
         <table class="bb-table">
           <thead>
@@ -331,6 +339,15 @@ import "../../styles/board.css";
       `<strong>${s.members ?? 0}</strong> ${s.members === 1 ? "person" : "people"} can post here` +
       (s.newestMember ? ` &middot; newest is <strong>${escapeHtml(s.newestMember)}</strong>` : "");
 
+    if (data.viewer?.isModerator) loadSuspended();
+    if (data.viewer?.suspension) {
+      const s = data.viewer.suspension;
+      (document.getElementById("you-unread") as HTMLElement).insertAdjacentHTML(
+        "beforeend",
+        `<p class="mt-2"><strong>You're suspended from posting${s.until ? " until " + escapeHtml(new Date(s.until).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })) : ""}.</strong> You can still read.</p>`,
+      );
+    }
+
     if (isAdmin) {
       adminTools.classList.remove("hidden");
       renderAdminList(categories);
@@ -477,6 +494,38 @@ import "../../styles/board.css";
   const modList = document.getElementById("moderator-list") as HTMLElement;
   const modPick = document.getElementById("moderator-pick") as HTMLSelectElement;
   const modStatus = document.getElementById("moderator-status") as HTMLElement;
+
+  async function loadSuspended() {
+    const box = document.getElementById("suspended-box") as HTMLElement;
+    const list = document.getElementById("suspended-list") as HTMLElement;
+    const res = await boardFetch("/api/board/suspend", {}, here);
+    if (!res || !res.ok) return;
+    const rows: Array<{ id: string; name: string; until: string | null; reason: string | null }> =
+      (await res.json()).suspended ?? [];
+    box.classList.toggle("hidden", rows.length === 0);
+    list.innerHTML = rows
+      .map(
+        (r) => `
+        <li>
+          <strong>${escapeHtml(r.name)}</strong>
+          ${r.until ? `until ${escapeHtml(new Date(r.until).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }))}` : "until lifted"}
+          ${r.reason ? `<span class="text-text-secondary">(${escapeHtml(r.reason)})</span>` : ""}
+          <button type="button" class="bb-btn lift-suspension" data-id="${escapeHtml(r.id)}">Lift</button>
+        </li>`,
+      )
+      .join("");
+  }
+
+  document.getElementById("suspended-list")?.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest(".lift-suspension") as HTMLElement | null;
+    if (!button?.dataset.id) return;
+    const res = await boardFetch(
+      `/api/board/suspend?userId=${encodeURIComponent(button.dataset.id)}`,
+      { method: "DELETE" },
+      here,
+    );
+    if (res?.ok) await loadSuspended();
+  });
 
   async function loadModerators() {
     const res = await boardFetch("/api/board/moderators");

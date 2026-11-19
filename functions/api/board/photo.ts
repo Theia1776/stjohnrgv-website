@@ -20,6 +20,7 @@ import {
   canSeeCategory,
   jsonResponse,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 import {
   MAX_FULL_BYTES,
@@ -100,6 +101,8 @@ export async function onRequestPost(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     const bucket = context.env.LIBRARY_BUCKET;

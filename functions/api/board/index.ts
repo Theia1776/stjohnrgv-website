@@ -197,6 +197,7 @@ export async function onRequestGet(
                 : viewer.role === "member" ? "Member"
                 : viewer.role === "catechumen" ? "Catechumen" : "Inquirer",
             unreadTotal,
+            suspension: viewer.suspension,
           },
         },
         200,

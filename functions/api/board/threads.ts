@@ -17,6 +17,7 @@ import {
   jsonResponse,
   shortName,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 import { attachPhotos } from "../../../src/lib/board-photos.ts";
 
@@ -165,6 +166,8 @@ export async function onRequestPost(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown };

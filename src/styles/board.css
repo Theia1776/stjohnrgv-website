@@ -993,3 +993,13 @@
   margin-top: 0.1rem;
   flex: none;
 }
+
+.bb-suspend-select {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-bg);
+  color: var(--color-text-primary);
+  font: inherit;
+}

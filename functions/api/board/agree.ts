@@ -14,6 +14,21 @@ import {
 } from "../../../src/lib/board-access.ts";
 import { TERMS_VERSION } from "../../../src/lib/board-terms.ts";
 
+export async function onRequestGet(
+  context: { request: Request; env: BoardEnv },
+): Promise<Response> {
+  const gate = await requireBoardAccess(context);
+  if (gate.error) return gate.error;
+  const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const { data } = await supabase
+    .from("board_agreements")
+    .select("user_id")
+    .eq("user_id", viewer.id)
+    .eq("version", TERMS_VERSION)
+    .maybeSingle();
+  return wrap(jsonResponse({ agreed: !!data, version: TERMS_VERSION }, 200));
+}
+
 export async function onRequestPost(
   context: { request: Request; env: BoardEnv },
 ): Promise<Response> {

@@ -13,6 +13,7 @@ import {
   requireBoardAccess,
   jsonResponse,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 
 const MAX_SIGNATURE = 300;
@@ -46,6 +47,8 @@ export async function onRequestPut(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     let payload: { body?: unknown };

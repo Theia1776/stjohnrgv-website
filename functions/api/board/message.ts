@@ -21,6 +21,7 @@ import {
   requireBoardAccess,
   jsonResponse,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 import {
   MAX_BODY,
@@ -131,6 +132,8 @@ export async function onRequestPost(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     let input: { to?: unknown; subject?: unknown; body?: unknown; id?: unknown };

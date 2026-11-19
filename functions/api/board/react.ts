@@ -17,10 +17,11 @@ import {
   canSeeCategory,
   jsonResponse,
   type BoardEnv,
+  suspensionBlock,
 } from "../../../src/lib/board-access.ts";
 
 /** What you can answer a post with. Keep it small and kind. */
-export const REACTIONS = ["🙏", "☦️", "❤️", "👍", "😂", "🕯️"];
+export const REACTIONS = ["🙏", "☦️", "❤️", "👍", "😂", "🕯️", "😢"];
 
 export async function onRequestPost(
   context: { request: Request; env: BoardEnv },
@@ -28,6 +29,8 @@ export async function onRequestPost(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
 
   try {
     let body: { post?: unknown; emoji?: unknown };

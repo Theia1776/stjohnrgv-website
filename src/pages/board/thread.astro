@@ -26,11 +26,13 @@ import "../../styles/board.css";
         <span>
           <button id="reply-top" type="button" class="bb-btn bb-btn-strong">Post Reply</button>
           <a id="back-link" href="/board/" class="bb-btn">Back to forum</a>
+          <a id="jump-new" href="#first-new" class="bb-btn hidden">Go to first new post</a>
         </span>
         <span id="thread-meta" class="text-xs text-text-secondary"></span>
       </div>
 
       <div id="mod-note" class="hidden bb-notice" role="status"></div>
+      <div id="flash" class="hidden bb-notice" role="status"></div>
 
       <table class="bb-table">
         <thead>
@@ -72,6 +74,34 @@ import "../../styles/board.css";
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
         </div>
       </form>
+
+      <dialog id="suspend-dialog" class="bb-help-dialog" aria-labelledby="suspend-title">
+        <form id="suspend-form" method="dialog">
+          <h2 id="suspend-title">Suspend</h2>
+          <p class="bb-help-lead">
+            They can still read the board, but can't post, reply, react, send messages or add photos. Their
+            existing posts stay. It ends by itself when the time is up.
+          </p>
+          <label class="block">
+            <span class="bb-help-label">How long</span>
+            <select id="suspend-days" class="bb-suspend-select">
+              <option value="1">One day</option>
+              <option value="7" selected>One week</option>
+              <option value="30">One month</option>
+              <option value="0">Until a moderator lifts it</option>
+            </select>
+          </label>
+          <label class="block mt-3">
+            <span class="bb-help-label">Reason (they'll see this)</span>
+            <input id="suspend-reason" type="text" maxlength="300" class="bb-suspend-select" />
+          </label>
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Suspend</button>
+            <button type="button" class="bb-btn suspend-close">Cancel</button>
+            <span id="suspend-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
 
       <dialog id="help-dialog" class="bb-help-dialog" aria-labelledby="help-title">
         <div id="help-ask">
@@ -159,11 +189,12 @@ import "../../styles/board.css";
     editedAt: string | null;
     mine: boolean;
     authorId?: string | null;
+    canSuspend?: boolean;
     reactions: Reaction[];
   };
 
   /** Must match REACTIONS in functions/api/board/react.ts. */
-  const PALETTE = ["🙏", "☦️", "❤️", "👍", "😂", "🕯️"];
+  const PALETTE = ["🙏", "☦️", "❤️", "👍", "😂", "🕯️", "😢"];
 
   const threadId = new URLSearchParams(window.location.search).get("id") ?? "";
   const here = `/board/thread/?id=${encodeURIComponent(threadId)}`;
@@ -184,6 +215,11 @@ import "../../styles/board.css";
   let isAdmin = false;
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
+  let suspendTarget: { id: string; name: string } | null = null;
+
+  const suspendDialog = document.getElementById("suspend-dialog") as HTMLDialogElement;
+  const suspendTitle = document.getElementById("suspend-title") as HTMLElement;
+  const suspendStatus = document.getElementById("suspend-status") as HTMLElement;
 
   const helpDialog = document.getElementById("help-dialog") as HTMLDialogElement;
   const helpForm = document.getElementById("help-form") as HTMLFormElement;
@@ -319,7 +355,7 @@ import "../../styles/board.css";
         let divider = "";
         if (isNew && !dividerDrawn && index > 0) {
           dividerDrawn = true;
-          divider = `<tr class="bb-newline"><td colspan="2">New since you last looked</td></tr>`;
+          divider = `<tr class="bb-newline" id="first-new"><td colspan="2">New since you last looked</td></tr>`;
         }
 
         const canEdit = p.mine || isAdmin;
@@ -336,6 +372,8 @@ import "../../styles/board.css";
             ? '<span class="bb-flag" title="A moderator will look at it">Help requested</span>'
             : "",
           canReply ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
+          !p.mine ? '<button type="button" class="bb-btn post-report" title="Tell the moderators about this post">Report</button>' : "",
+          p.canSuspend ? '<button type="button" class="bb-btn post-suspend" title="Stop this member posting for a while">Suspend</button>' : "",
           canEdit ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
           canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
         ]
@@ -421,6 +459,7 @@ import "../../styles/board.css";
     // The Help button goes on the opening post, for the person who started it.
     helpState = { canAsk: !!data.canRequestClose, waiting: !!thread.closeRequested && !!thread.mine };
     renderPosts(posts, data.previouslyReadAt);
+    document.getElementById("jump-new")?.classList.toggle("hidden", !document.getElementById("first-new"));
 
     // --- a waiting request to close, as moderators see it ---
     if (data.closeRequest) {
@@ -461,6 +500,45 @@ import "../../styles/board.css";
       if (!id || !row) return;
       const post = posts.find((p) => p.id === id);
       if (!post) return;
+
+      // --- report a post ---
+      if (button.classList.contains("post-report")) {
+        const goAhead = await confirmAction({
+          message:
+            "Report this post? The moderators get a note with a link to it and what it said. " +
+            "Nothing is removed until a moderator looks.",
+          confirmLabel: "Yes, report it",
+          cancelLabel: "No",
+          danger: true,
+        });
+        if (!goAhead) return;
+        const res = await boardFetch(
+          "/api/board/post-report",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ postId: id }),
+          },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't send that (${res.status}).`);
+          return;
+        }
+        (button as HTMLButtonElement).textContent = "Reported";
+        (button as HTMLButtonElement).disabled = true;
+        return;
+      }
+
+      // --- suspend the author ---
+      if (button.classList.contains("post-suspend") && post.authorId) {
+        suspendTarget = { id: post.authorId, name: post.panel.name };
+        suspendTitle.textContent = `Suspend ${post.panel.name}`;
+        suspendStatus.textContent = "";
+        suspendDialog.showModal();
+        return;
+      }
 
       // --- Help: open the message window ---
       if (button.classList.contains("post-help")) {
@@ -631,6 +709,47 @@ import "../../styles/board.css";
     banner.classList.add("hidden");
     content.classList.remove("hidden");
   }
+
+  function showNotice(message: string) {
+    const flash = document.getElementById("flash") as HTMLElement;
+    flash.textContent = message;
+    flash.classList.remove("hidden");
+    flash.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  // ---- suspend: how long, and why ----
+  document.querySelectorAll(".suspend-close").forEach((b) =>
+    b.addEventListener("click", () => suspendDialog.close()),
+  );
+  (document.getElementById("suspend-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!suspendTarget) return;
+    suspendStatus.textContent = "Saving…";
+    const res = await boardFetch(
+      "/api/board/suspend",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: suspendTarget.id,
+          days: Number((document.getElementById("suspend-days") as HTMLSelectElement).value),
+          reason: (document.getElementById("suspend-reason") as HTMLInputElement).value,
+        }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      suspendStatus.textContent = (await errorDetail(res)) || `Couldn't do that (${res.status}).`;
+      return;
+    }
+    suspendStatus.textContent = "";
+    suspendDialog.close();
+    showNotice(
+      `${suspendTarget.name} is suspended. They can still read the board but can't post, reply, react or message. ` +
+        `You can lift it from the board's front page.`,
+    );
+  });
 
   // ---- Help: a message window to the moderators and admins ----
   helpDialog.addEventListener("click", (event) => {
