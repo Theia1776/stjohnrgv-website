@@ -35,6 +35,8 @@ import {
   ignoredBy,
   overHourlyLimit,
   postMessage,
+  isIgnored,
+  withoutThoseIgnoring,
   type ConversationRow,
 } from "../../../src/lib/board-messages.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -62,9 +64,13 @@ async function openFor(
     .eq("conversation_id", id)
     .eq("user_id", viewer.id)
     .maybeSingle();
-  if (member) return row;
-  if (row.kind === "help" && viewer.isModerator) return row;
-  return null;
+  if (row.kind === "help") return member || viewer.isModerator ? row : null;
+  if (!member) return null;
+  // A conversation with someone you ignore is closed to you.
+  if (isIgnored(row, viewer.id, await ignoredBy(supabase, viewer.id), await privilegedIds(supabase))) {
+    return null;
+  }
+  return row;
 }
 
 export async function onRequestGet(
@@ -103,7 +109,6 @@ export async function onRequestGet(
     const nameOf = (uid: string | null) => (uid ? (names.get(uid) ?? GONE) : GONE);
 
     const privileged = other ? await privilegedIds(supabase) : new Set<string>();
-    const ignoring = other ? await ignoredBy(supabase, viewer.id) : new Set<string>();
 
     let topic: { id: string; title: string } | null = null;
     if (conv.thread_id) {
@@ -142,7 +147,7 @@ export async function onRequestGet(
           // ignored; staff never can.
           person:
             other && !privileged.has(other)
-              ? { id: other, name: nameOf(other), ignored: ignoring.has(other) }
+              ? { id: other, name: nameOf(other), ignored: false }
               : null,
         },
         200,
@@ -199,6 +204,7 @@ export async function onRequestPost(
         recipients = other ? [other] : [];
       }
 
+      recipients = await withoutThoseIgnoring(supabase, viewer.id, recipients);
       await postMessage(supabase, conv.id, viewer.id, text, recipients);
       return wrap(jsonResponse({ ok: true, id: conv.id }, 200));
     }
@@ -230,7 +236,9 @@ export async function onRequestPost(
     if (makeError) return wrap(jsonResponse({ error: makeError.message }, 500));
 
     try {
-      await postMessage(supabase, made.id as string, viewer.id, text, [to]);
+      // If they've ignored you, it's kept for you and never reaches them.
+      const deliver = await withoutThoseIgnoring(supabase, viewer.id, [to]);
+      await postMessage(supabase, made.id as string, viewer.id, text, deliver);
     } catch (err) {
       await supabase.from("board_conversations").delete().eq("id", made.id);
       throw err;

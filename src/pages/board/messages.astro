@@ -107,23 +107,23 @@ import "../../styles/board.css";
         No messages yet. Press New message to write to someone.
       </p>
 
-      <details id="ignored-box" class="hidden mt-6">
-        <summary class="cursor-pointer text-sm font-semibold">
-          <span id="ignored-count"></span>
-        </summary>
-        <table class="bb-table mt-2">
-          <tbody id="ignored"></tbody>
-        </table>
-      </details>
-
       <div id="ignoring-box" class="hidden mt-8 text-sm">
         <h2 class="font-semibold mb-1">People you're ignoring</h2>
         <p class="text-text-secondary mb-2">
-          Their messages still arrive, but they wait under "Ignored" and never show as new. They
-          aren't told. If there's a problem between you and someone, it's best talked through, with
-          Father's help if need be.
+          You get nothing from them: their messages never reach you, and they aren't told. An ignore
+          stays until a moderator or admin lifts it, so it's worth talking a problem through,
+          with Father's help if need be.
         </p>
         <ul id="ignoring" class="space-y-1"></ul>
+        <p id="lift-status" class="text-text-secondary mt-2" role="status"></p>
+      </div>
+
+      <div id="mod-ignores" class="hidden mt-8 text-sm">
+        <h2 class="font-semibold mb-1">Ignores in place (moderators and admins)</h2>
+        <p class="text-text-secondary mb-2">
+          Lifting one lets that person's messages reach the other again.
+        </p>
+        <ul id="mod-ignores-list" class="space-y-1"></ul>
       </div>
     </div>
   </main>
@@ -148,7 +148,6 @@ import "../../styles/board.css";
     lastAt: string;
     lastBy: string;
     unread: boolean;
-    ignored: boolean;
   };
   type Person = { id: string; name: string; staff: boolean };
 
@@ -159,9 +158,9 @@ import "../../styles/board.css";
   const inbox = document.getElementById("inbox") as HTMLElement;
   const inboxTable = document.getElementById("inbox-table") as HTMLElement;
   const emptyState = document.getElementById("empty-state") as HTMLElement;
-  const ignoredBox = document.getElementById("ignored-box") as HTMLElement;
-  const ignoredBody = document.getElementById("ignored") as HTMLElement;
-  const ignoredCount = document.getElementById("ignored-count") as HTMLElement;
+  const modIgnores = document.getElementById("mod-ignores") as HTMLElement;
+  const modIgnoresList = document.getElementById("mod-ignores-list") as HTMLElement;
+  const liftStatus = document.getElementById("lift-status") as HTMLElement;
   const ignoringBox = document.getElementById("ignoring-box") as HTMLElement;
   const ignoringList = document.getElementById("ignoring") as HTMLElement;
 
@@ -216,16 +215,10 @@ import "../../styles/board.css";
 
     const data = await res.json();
     const rows: Row[] = data.conversations ?? [];
-    const normal = rows.filter((r) => !r.ignored);
-    const ignored = rows.filter((r) => r.ignored);
 
-    inboxTable.classList.toggle("hidden", normal.length === 0);
-    emptyState.classList.toggle("hidden", normal.length > 0);
-    inbox.innerHTML = normal.map(rowHtml).join("");
-
-    ignoredBox.classList.toggle("hidden", ignored.length === 0);
-    ignoredCount.textContent = `Ignored (${ignored.length})`;
-    ignoredBody.innerHTML = ignored.map(rowHtml).join("");
+    inboxTable.classList.toggle("hidden", rows.length === 0);
+    emptyState.classList.toggle("hidden", rows.length > 0);
+    inbox.innerHTML = rows.map(rowHtml).join("");
 
     const ignoring: Array<{ id: string; name: string }> = data.ignoring ?? [];
     ignoringBox.classList.toggle("hidden", ignoring.length === 0);
@@ -234,7 +227,7 @@ import "../../styles/board.css";
         (p) => `
         <li>
           ${escapeHtml(p.name)}
-          <button type="button" class="bb-btn unignore" data-id="${escapeHtml(p.id)}">Stop ignoring</button>
+          <button type="button" class="bb-btn ask-lift" data-id="${escapeHtml(p.id)}">Ask the moderators to lift this</button>
         </li>`,
       )
       .join("");
@@ -242,13 +235,33 @@ import "../../styles/board.css";
     loading.classList.add("hidden");
     banner.classList.add("hidden");
     content.classList.remove("hidden");
+
+    if (data.viewer?.isModerator) await loadModIgnores();
   }
 
-  ignoringList.addEventListener("click", async (event) => {
-    const button = (event.target as HTMLElement).closest(".unignore") as HTMLElement | null;
-    if (!button?.dataset.id) return;
+  type Ignore = { by: string; byName: string; ignored: string; ignoredName: string; since: string };
+  async function loadModIgnores() {
+    const res = await boardFetch("/api/board/ignore", {}, here);
+    if (!res || !res.ok) return;
+    const list: Ignore[] = (await res.json()).ignores ?? [];
+    modIgnores.classList.toggle("hidden", list.length === 0);
+    modIgnoresList.innerHTML = list
+      .map(
+        (i) => `
+        <li>
+          ${escapeHtml(i.byName)} is ignoring ${escapeHtml(i.ignoredName)}
+          <span class="text-text-secondary">(since ${escapeHtml(when(i.since))})</span>
+          <button type="button" class="bb-btn lift" data-by="${escapeHtml(i.by)}" data-id="${escapeHtml(i.ignored)}">Lift</button>
+        </li>`,
+      )
+      .join("");
+  }
+
+  modIgnoresList.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest(".lift") as HTMLElement | null;
+    if (!button?.dataset.id || !button.dataset.by) return;
     const res = await boardFetch(
-      `/api/board/ignore?userId=${encodeURIComponent(button.dataset.id)}`,
+      `/api/board/ignore?userId=${encodeURIComponent(button.dataset.id)}&by=${encodeURIComponent(button.dataset.by)}`,
       { method: "DELETE" },
       here,
     );
@@ -257,7 +270,31 @@ import "../../styles/board.css";
       showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
       return;
     }
-    await load();
+    await loadModIgnores();
+  });
+
+  // Only a moderator can lift an ignore; the person who set it can ask.
+  ignoringList.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest(".ask-lift") as HTMLButtonElement | null;
+    if (!button?.dataset.id) return;
+    button.disabled = true;
+    const res = await boardFetch(
+      "/api/board/ignore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ askLift: button.dataset.id }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      button.disabled = false;
+      liftStatus.textContent = (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
+      return;
+    }
+    liftStatus.textContent =
+      "Sent. The moderators and admins have your request, and any answer will be in your Messages.";
   });
 
   // ---- writing a new message ----

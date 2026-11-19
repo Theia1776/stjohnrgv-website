@@ -63,7 +63,8 @@ import "../../styles/board.css";
         <button id="ignore" type="button" class="bb-btn hidden"></button>
       </div>
       <p id="ignore-note" class="hidden text-xs text-text-secondary">
-        Ignoring only changes where their messages land in your inbox. They aren't told.
+        Ignoring blocks them completely: nothing from them reaches you, and they aren't told. Only a
+        moderator or admin can undo it.
       </p>
     </div>
   </main>
@@ -110,11 +111,7 @@ import "../../styles/board.css";
   function drawIgnore() {
     ignoreButton.classList.toggle("hidden", !person);
     ignoreNote.classList.toggle("hidden", !person);
-    if (person) {
-      ignoreButton.textContent = person.ignored
-        ? `Stop ignoring ${person.name}`
-        : `Ignore ${person.name}`;
-    }
+    if (person) ignoreButton.textContent = `Ignore ${person.name}`;
   }
 
   async function load() {
@@ -209,28 +206,31 @@ import "../../styles/board.css";
 
   ignoreButton.addEventListener("click", async () => {
     if (!person) return;
-    const res = person.ignored
-      ? await boardFetch(
-          `/api/board/ignore?userId=${encodeURIComponent(person.id)}`,
-          { method: "DELETE" },
-          here,
-        )
-      : await boardFetch(
-          "/api/board/ignore",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: person.id }),
-          },
-          here,
-        );
+    const ok = await confirmAction({
+      message:
+        `Ignore ${person.name}? Nothing from them will reach you, and this conversation leaves your inbox. ` +
+        `You can't undo it yourself: only a moderator or admin can lift it.`,
+      confirmLabel: "Ignore them",
+      cancelLabel: "Not now",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await boardFetch(
+      "/api/board/ignore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: person.id }),
+      },
+      here,
+    );
     if (!res) return;
     if (!res.ok) {
       showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
       return;
     }
-    person.ignored = !person.ignored;
-    drawIgnore();
+    // The conversation is closed to you now, so go back to the inbox.
+    window.location.assign("/board/messages/");
   });
 
   (document.getElementById("remove") as HTMLButtonElement).addEventListener("click", async () => {

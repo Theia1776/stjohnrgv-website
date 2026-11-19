@@ -98,12 +98,11 @@ export interface InboxRow {
   lastAt: string;
   lastBy: string;
   unread: boolean;
-  ignored: boolean;
 }
 
 /**
- * The viewer's inbox, newest first. Ignored conversations are marked and
- * never count as unread.
+ * The viewer's inbox, newest first. A conversation with someone they
+ * ignore is left out entirely: ignoring is a block, not a folder.
  */
 export async function loadInbox(
   supabase: SupabaseClient,
@@ -140,9 +139,9 @@ export async function loadInbox(
 
   let unreadCount = 0;
   const rows = list
+    .filter((c) => !isIgnored(c, viewerId, ignoring, privileged))
     .map((c): InboxRow => {
-      const ignored = isIgnored(c, viewerId, ignoring, privileged);
-      const unread = !ignored && isUnread(c.last_message_at, readAt.get(c.id) ?? null);
+      const unread = isUnread(c.last_message_at, readAt.get(c.id) ?? null);
       if (unread) unreadCount += 1;
       // A Help request reads as "the moderators" to the person who sent
       // it, and as the person's name to a moderator.
@@ -160,7 +159,6 @@ export async function loadInbox(
         lastAt: c.last_message_at,
         lastBy: c.last_author_id === viewerId ? "you" : nameOf(c.last_author_id),
         unread,
-        ignored,
       };
     })
     .sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
@@ -189,6 +187,27 @@ export async function addMembers(
       missing.map((user_id) => ({ conversation_id: conversationId, user_id, last_read_at: null })),
     );
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Drop recipients who have ignored the sender. The message is kept for
+ * the sender, who isn't told; it just never reaches the other person.
+ * Moderators and admins can't be ignored, so theirs always arrive.
+ */
+export async function withoutThoseIgnoring(
+  supabase: SupabaseClient,
+  senderId: string,
+  recipients: string[],
+): Promise<string[]> {
+  if (!recipients.length) return recipients;
+  if ((await privilegedIds(supabase)).has(senderId)) return recipients;
+  const { data } = await supabase
+    .from("board_ignores")
+    .select("user_id")
+    .eq("ignored_id", senderId)
+    .in("user_id", recipients);
+  const blocking = new Set((data ?? []).map((r) => r.user_id as string));
+  return recipients.filter((id) => !blocking.has(id));
 }
 
 /** Too many in the last hour? */

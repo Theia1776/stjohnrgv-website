@@ -3,8 +3,7 @@
  *
  * The viewer's inbox: every private conversation they are in, newest
  * first, with which are new, and the list of people they are ignoring.
- * Conversations with someone they ignore come back marked, so the page
- * can put them under "Ignored"; they never count as new.
+ * Conversations with someone they ignore aren't in it at all.
  */
 
 import {
@@ -30,6 +29,7 @@ export async function onRequestGet(
         {
           conversations: rows,
           unreadCount,
+          viewer: { isModerator: viewer.isModerator },
           ignoring: [...ignoring]
             .map((id) => ({ id, name: names.get(id) ?? "A former parishioner" }))
             .sort((a, b) => a.name.localeCompare(b.name)),
