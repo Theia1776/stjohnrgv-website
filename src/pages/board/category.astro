@@ -1,0 +1,325 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="Parish Board"
+  description="Threads in this part of the parish board."
+>
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <p class="text-sm mb-4">
+      <a href="/board/" class="text-brand-blue-dark hover:underline">&larr; All categories</a>
+    </p>
+
+    <h1 id="category-name" class="text-3xl font-bold mb-1">Loading…</h1>
+    <p id="category-description" class="text-text-secondary mb-8"></p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="mb-6">
+        <button id="start-toggle" type="button" class="btn btn-primary">
+          Start a new thread
+        </button>
+      </div>
+
+      <form
+        id="start-form"
+        class="hidden border border-border-soft bg-cream-card p-4 mb-8 space-y-3"
+      >
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
+            Title
+          </span>
+          <input
+            id="new-title"
+            type="text"
+            maxlength="160"
+            required
+            placeholder="What's this about?"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          />
+        </label>
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
+            Your post
+          </span>
+          <textarea
+            id="new-body"
+            rows="6"
+            maxlength="10000"
+            required
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          ></textarea>
+        </label>
+        <div class="flex items-center gap-2">
+          <button id="start-submit" type="submit" class="btn btn-primary">Post it</button>
+          <button id="start-cancel" type="button" class="btn btn-secondary">Cancel</button>
+          <span id="start-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </form>
+
+      <ul id="threads" class="space-y-2"></ul>
+
+      <p id="empty-state" class="hidden text-center text-text-secondary italic mt-8">
+        Nobody has started a thread here yet. You could be the first.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { confirmAction } from "../../lib/confirm";
+  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  type Thread = {
+    id: string;
+    title: string;
+    startedBy: string;
+    lastPostBy: string;
+    pinned: boolean;
+    locked: boolean;
+    createdAt: string;
+    lastPostAt: string;
+    replyCount: number;
+    unread: boolean;
+    mine: boolean;
+  };
+
+  const slug = new URLSearchParams(window.location.search).get("c") ?? "";
+  const here = `/board/category/?c=${encodeURIComponent(slug)}`;
+
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const nameEl = document.getElementById("category-name") as HTMLElement;
+  const descEl = document.getElementById("category-description") as HTMLElement;
+  const list = document.getElementById("threads") as HTMLElement;
+  const emptyState = document.getElementById("empty-state") as HTMLElement;
+  const startForm = document.getElementById("start-form") as HTMLFormElement;
+  const startStatus = document.getElementById("start-status") as HTMLElement;
+
+  let isAdmin = false;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  function renderThreads(threads: Thread[]) {
+    if (!threads.length) {
+      list.innerHTML = "";
+      emptyState.classList.remove("hidden");
+      return;
+    }
+    emptyState.classList.add("hidden");
+
+    list.innerHTML = threads
+      .map((t) => {
+        const marks = [
+          t.pinned ? '<span class="text-sacred-gold" title="Pinned">&#9733;</span>' : "",
+          t.locked ? '<span class="text-text-secondary" title="Closed to replies">&#128274;</span>' : "",
+          t.unread ? '<span class="bg-brand-blue text-cream-card text-xs px-1.5 py-0.5">New</span>' : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        const replies = `${t.replyCount} ${t.replyCount === 1 ? "reply" : "replies"}`;
+        const adminButtons = isAdmin
+          ? `<span class="flex gap-1 shrink-0">
+               <button type="button" class="btn btn-secondary text-xs thread-pin">${t.pinned ? "Unpin" : "Pin"}</button>
+               <button type="button" class="btn btn-secondary text-xs thread-lock">${t.locked ? "Reopen" : "Close"}</button>
+               <button type="button" class="btn btn-secondary text-xs thread-delete">Delete</button>
+             </span>`
+          : "";
+
+        return `
+          <li class="border border-border-soft bg-cream-card" data-id="${escapeHtml(t.id)}">
+            <div class="flex items-start justify-between gap-3 p-3">
+              <a href="/board/thread/?id=${encodeURIComponent(t.id)}"
+                 class="min-w-0 flex-1 no-underline">
+                <span class="block ${t.unread ? "font-bold" : "font-semibold"} text-text-primary">
+                  ${marks ? marks + " " : ""}${escapeHtml(t.title)}
+                </span>
+                <span class="block text-xs text-text-secondary mt-1">
+                  Started by ${escapeHtml(t.startedBy)} &middot; ${replies} &middot;
+                  <span title="${escapeHtml(exactly(t.lastPostAt))}">
+                    last post by ${escapeHtml(t.lastPostBy)} ${escapeHtml(when(t.lastPostAt))}
+                  </span>
+                </span>
+              </a>
+              ${adminButtons}
+            </div>
+          </li>`;
+      })
+      .join("");
+  }
+
+  async function patchThread(id: string, updates: Record<string, unknown>) {
+    const res = await boardFetch(
+      "/api/board/thread",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      },
+      here,
+    );
+    if (!res) return false;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't save that (${res.status}).`);
+      return false;
+    }
+    return true;
+  }
+
+  async function load() {
+    if (!slug) {
+      showError("No category in that link. Go back and pick one from the board.");
+      return;
+    }
+
+    const res = await boardFetch(
+      `/api/board/threads?category=${encodeURIComponent(slug)}`,
+      {},
+      here,
+    );
+    if (!res) return;
+
+    if (res.status === 403) {
+      showError(
+        (await errorDetail(res)) ||
+          "The parish board opens up when Father receives you as a catechumen.",
+      );
+      return;
+    }
+    if (res.status === 404) {
+      showError("That category isn't on the board any more.");
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this category (${res.status}).`);
+      return;
+    }
+
+    const data = await res.json();
+    isAdmin = !!data.viewer?.isAdmin;
+
+    nameEl.textContent = data.category?.name ?? "Parish Board";
+    descEl.textContent = data.category?.description ?? "";
+    document.title = `${data.category?.name ?? "Parish Board"} | St. John of Kronstadt Orthodox Mission`;
+
+    const threads: Thread[] = data.threads ?? [];
+    renderThreads(threads);
+
+    list.onclick = async (event) => {
+      const button = (event.target as HTMLElement).closest("button");
+      if (!button) return;
+      const id = button.closest("li")?.dataset.id;
+      if (!id) return;
+      const thread = threads.find((t) => t.id === id);
+      if (!thread) return;
+
+      if (button.classList.contains("thread-pin")) {
+        if (await patchThread(id, { pinned: !thread.pinned })) await load();
+        return;
+      }
+      if (button.classList.contains("thread-lock")) {
+        if (await patchThread(id, { locked: !thread.locked })) await load();
+        return;
+      }
+      if (button.classList.contains("thread-delete")) {
+        const goAhead = await confirmAction({
+          message:
+            `Delete "${thread.title}"? Every post in it goes too, and that can't ` +
+            `be undone. Closing it instead leaves it readable but takes new replies off.`,
+          confirmLabel: "Delete the thread",
+          cancelLabel: "Keep it",
+          danger: true,
+        });
+        if (!goAhead) return;
+
+        const res = await boardFetch(
+          `/api/board/thread?id=${encodeURIComponent(id)}`,
+          { method: "DELETE" },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't delete that (${res.status}).`);
+          return;
+        }
+        await load();
+      }
+    };
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  // ---- starting a thread --------------------------------------------------
+  const toggle = document.getElementById("start-toggle") as HTMLButtonElement;
+  toggle.addEventListener("click", () => {
+    startForm.classList.toggle("hidden");
+    if (!startForm.classList.contains("hidden")) {
+      (document.getElementById("new-title") as HTMLInputElement).focus();
+    }
+  });
+
+  (document.getElementById("start-cancel") as HTMLButtonElement).addEventListener("click", () => {
+    startForm.classList.add("hidden");
+    startStatus.textContent = "";
+  });
+
+  startForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const titleInput = document.getElementById("new-title") as HTMLInputElement;
+    const bodyInput = document.getElementById("new-body") as HTMLTextAreaElement;
+    const submit = document.getElementById("start-submit") as HTMLButtonElement;
+
+    const title = titleInput.value.trim();
+    const body = bodyInput.value.trim();
+    if (!title) {
+      startStatus.textContent = "Give it a title first.";
+      return;
+    }
+    if (!body) {
+      startStatus.textContent = "Write something to start it off.";
+      return;
+    }
+
+    submit.disabled = true;
+    startStatus.textContent = "Posting…";
+
+    const res = await boardFetch(
+      "/api/board/threads",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: slug, title, body }),
+      },
+      here,
+    );
+    submit.disabled = false;
+    if (!res) return;
+
+    if (!res.ok) {
+      startStatus.textContent = (await errorDetail(res)) || `Couldn't post that (${res.status}).`;
+      return;
+    }
+
+    const { id } = await res.json();
+    window.location.assign(`/board/thread/?id=${encodeURIComponent(id)}`);
+  });
+
+  load();
+</script>

@@ -1,0 +1,365 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Parish Board" description="A conversation on the parish board.">
+  <main class="max-w-3xl mx-auto px-4 py-12">
+    <p class="text-sm mb-4">
+      <a id="back-link" href="/board/" class="text-brand-blue-dark hover:underline">
+        &larr; Back to the board
+      </a>
+    </p>
+
+    <h1 id="thread-title" class="text-3xl font-bold mb-1">Loading…</h1>
+    <p id="thread-meta" class="text-sm text-text-secondary mb-8"></p>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <ol id="posts" class="space-y-4"></ol>
+
+      <p id="locked-note" class="hidden mt-8 border border-border-soft bg-cream-card p-4 text-sm text-text-secondary">
+        This thread is closed to new replies.
+      </p>
+
+      <form id="reply-form" class="hidden mt-8 border border-border-soft bg-cream-card p-4 space-y-3">
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
+            Your reply
+          </span>
+          <textarea
+            id="reply-body"
+            rows="5"
+            maxlength="10000"
+            required
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          ></textarea>
+        </label>
+        <div class="flex items-center gap-2">
+          <button id="reply-submit" type="submit" class="btn btn-primary">Post reply</button>
+          <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </form>
+
+      <div id="thread-tools" class="hidden mt-8 flex flex-wrap gap-2 border-t border-border-soft pt-4">
+        <button id="tool-delete" type="button" class="btn btn-secondary text-xs hidden">
+          Delete this thread
+        </button>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { confirmAction } from "../../lib/confirm";
+  import {
+    escapeHtml,
+    renderBody,
+    when,
+    exactly,
+    errorDetail,
+    boardFetch,
+  } from "../../lib/board-ui";
+
+  type Post = {
+    id: string;
+    author: string;
+    body: string;
+    createdAt: string;
+    editedAt: string | null;
+    mine: boolean;
+  };
+
+  const threadId = new URLSearchParams(window.location.search).get("id") ?? "";
+  const here = `/board/thread/?id=${encodeURIComponent(threadId)}`;
+
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const titleEl = document.getElementById("thread-title") as HTMLElement;
+  const metaEl = document.getElementById("thread-meta") as HTMLElement;
+  const postsEl = document.getElementById("posts") as HTMLElement;
+  const backLink = document.getElementById("back-link") as HTMLAnchorElement;
+  const replyForm = document.getElementById("reply-form") as HTMLFormElement;
+  const replyStatus = document.getElementById("reply-status") as HTMLElement;
+  const lockedNote = document.getElementById("locked-note") as HTMLElement;
+  const tools = document.getElementById("thread-tools") as HTMLElement;
+  const deleteButton = document.getElementById("tool-delete") as HTMLButtonElement;
+
+  let isAdmin = false;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  function renderPosts(posts: Post[], previouslyReadAt: string | null) {
+    // The line that says "you've read down to here". Only drawn when
+    // there's something below it and something above it.
+    const seen = previouslyReadAt ? new Date(previouslyReadAt).getTime() : null;
+    let dividerDrawn = false;
+
+    postsEl.innerHTML = posts
+      .map((p, index) => {
+        const isNew = seen !== null && new Date(p.createdAt).getTime() > seen;
+        let divider = "";
+        if (isNew && !dividerDrawn && index > 0) {
+          dividerDrawn = true;
+          divider = `
+            <li aria-hidden="true" class="flex items-center gap-3 text-xs uppercase tracking-widest text-brand-blue-dark">
+              <span class="h-px flex-1 bg-brand-blue"></span>
+              <span>New since you last looked</span>
+              <span class="h-px flex-1 bg-brand-blue"></span>
+            </li>`;
+        }
+
+        const canEdit = p.mine || isAdmin;
+        // The opening post can be edited but not deleted on its own —
+        // the whole thread hangs off it.
+        const canDelete = canEdit && index > 0;
+        const buttons = `
+          <span class="flex gap-1 shrink-0">
+            ${canEdit ? '<button type="button" class="btn btn-secondary text-xs post-edit">Edit</button>' : ""}
+            ${canDelete ? '<button type="button" class="btn btn-secondary text-xs post-delete">Delete</button>' : ""}
+          </span>`;
+
+        return `
+          ${divider}
+          <li class="border border-border-soft bg-cream-card p-4" data-id="${escapeHtml(p.id)}">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <span class="text-sm">
+                <span class="font-semibold text-text-primary">${escapeHtml(p.author)}</span>
+                <span class="text-text-secondary" title="${escapeHtml(exactly(p.createdAt))}">
+                  &middot; ${escapeHtml(when(p.createdAt))}
+                </span>
+                ${p.editedAt ? `<span class="text-text-secondary italic" title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</span>` : ""}
+              </span>
+              ${buttons}
+            </div>
+            <div class="post-body prose-parish text-text-primary">${renderBody(p.body)}</div>
+          </li>`;
+      })
+      .join("");
+  }
+
+  async function load() {
+    if (!threadId) {
+      showError("No thread in that link. Go back to the board and pick one.");
+      return;
+    }
+
+    const res = await boardFetch(`/api/board/thread?id=${encodeURIComponent(threadId)}`, {}, here);
+    if (!res) return;
+
+    if (res.status === 403) {
+      showError(
+        (await errorDetail(res)) ||
+          "The parish board opens up when Father receives you as a catechumen.",
+      );
+      return;
+    }
+    if (res.status === 404) {
+      showError("That thread isn't on the board any more.");
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this thread (${res.status}).`);
+      return;
+    }
+
+    const data = await res.json();
+    const thread = data.thread;
+    const posts: Post[] = data.posts ?? [];
+    isAdmin = !!data.viewer?.isAdmin;
+
+    titleEl.textContent = thread.title;
+    document.title = `${thread.title} | St. John of Kronstadt Orthodox Mission`;
+    metaEl.innerHTML =
+      `Started by ${escapeHtml(thread.startedBy)} ` +
+      `<span title="${escapeHtml(exactly(thread.createdAt))}">${escapeHtml(when(thread.createdAt))}</span>` +
+      (thread.category
+        ? ` in <a href="/board/category/?c=${encodeURIComponent(thread.category.slug)}" class="text-brand-blue-dark hover:underline">${escapeHtml(thread.category.name)}</a>`
+        : "") +
+      (thread.locked ? " &middot; closed to replies" : "");
+
+    if (thread.category) {
+      backLink.href = `/board/category/?c=${encodeURIComponent(thread.category.slug)}`;
+      backLink.textContent = `← Back to ${thread.category.name}`;
+    }
+
+    renderPosts(posts, data.previouslyReadAt);
+
+    // A locked thread still takes an admin's reply — sometimes the last
+    // word is the point of closing it.
+    if (thread.locked && !isAdmin) {
+      lockedNote.classList.remove("hidden");
+      replyForm.classList.add("hidden");
+    } else {
+      lockedNote.classList.toggle("hidden", !thread.locked);
+      replyForm.classList.remove("hidden");
+    }
+
+    if (data.canDelete) {
+      tools.classList.remove("hidden");
+      deleteButton.classList.remove("hidden");
+    }
+
+    postsEl.onclick = async (event) => {
+      const button = (event.target as HTMLElement).closest("button");
+      if (!button) return;
+      const row = button.closest("li") as HTMLElement | null;
+      const id = row?.dataset.id;
+      if (!id || !row) return;
+      const post = posts.find((p) => p.id === id);
+      if (!post) return;
+
+      if (button.classList.contains("post-edit")) {
+        // Edited in place, same reasoning as renaming a category: no
+        // browser dialog that freezes the page.
+        const bodyEl = row.querySelector(".post-body") as HTMLElement;
+        bodyEl.innerHTML = `
+          <textarea rows="6" maxlength="10000"
+                    class="block w-full border border-border-soft bg-cream-bg px-3 py-2">${escapeHtml(post.body)}</textarea>
+          <span class="mt-2 flex items-center gap-2">
+            <button type="button" class="btn btn-primary text-xs edit-save">Save</button>
+            <button type="button" class="btn btn-secondary text-xs edit-cancel">Cancel</button>
+          </span>`;
+        const textarea = bodyEl.querySelector("textarea") as HTMLTextAreaElement;
+        textarea.focus();
+
+        (bodyEl.querySelector(".edit-save") as HTMLElement).onclick = async () => {
+          const text = textarea.value.trim();
+          if (!text) return;
+          const res = await boardFetch(
+            "/api/board/post",
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, body: text }),
+            },
+            here,
+          );
+          if (!res) return;
+          if (!res.ok) {
+            showError((await errorDetail(res)) || `Couldn't save that (${res.status}).`);
+            return;
+          }
+          await load();
+        };
+        (bodyEl.querySelector(".edit-cancel") as HTMLElement).onclick = () => load();
+        return;
+      }
+
+      if (button.classList.contains("post-delete")) {
+        const goAhead = await confirmAction({
+          message: "Delete this post? It won't come back.",
+          confirmLabel: "Delete it",
+          cancelLabel: "Keep it",
+          danger: true,
+        });
+        if (!goAhead) return;
+
+        const res = await boardFetch(
+          `/api/board/post?id=${encodeURIComponent(id)}`,
+          { method: "DELETE" },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't delete that (${res.status}).`);
+          return;
+        }
+        await load();
+      }
+    };
+
+    deleteButton.onclick = async () => {
+      const goAhead = await confirmAction({
+        message:
+          `Delete "${thread.title}" and every post in it? That can't be undone.`,
+        confirmLabel: "Delete the thread",
+        cancelLabel: "Keep it",
+        danger: true,
+      });
+      if (!goAhead) return;
+
+      const res = await boardFetch(
+        `/api/board/thread?id=${encodeURIComponent(threadId)}`,
+        { method: "DELETE" },
+        here,
+      );
+      if (!res) return;
+      if (!res.ok) {
+        showError((await errorDetail(res)) || `Couldn't delete that (${res.status}).`);
+        return;
+      }
+      window.location.assign(
+        thread.category
+          ? `/board/category/?c=${encodeURIComponent(thread.category.slug)}`
+          : "/board/",
+      );
+    };
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  replyForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const bodyInput = document.getElementById("reply-body") as HTMLTextAreaElement;
+    const submit = document.getElementById("reply-submit") as HTMLButtonElement;
+    const text = bodyInput.value.trim();
+    if (!text) {
+      replyStatus.textContent = "Nothing to post yet.";
+      return;
+    }
+
+    submit.disabled = true;
+    replyStatus.textContent = "Posting…";
+
+    const res = await boardFetch(
+      "/api/board/thread",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: threadId, body: text }),
+      },
+      here,
+    );
+    submit.disabled = false;
+    if (!res) return;
+
+    if (!res.ok) {
+      replyStatus.textContent = (await errorDetail(res)) || `Couldn't post that (${res.status}).`;
+      return;
+    }
+
+    bodyInput.value = "";
+    replyStatus.textContent = "Posted.";
+    await load();
+    // Land on what was just written rather than at the top.
+    postsEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  load();
+</script>
+
+<style>
+  /* Paragraph spacing inside a post. Tailwind's reset flattens <p>
+     margins, and a post with two paragraphs needs the gap back. */
+  .prose-parish :global(p) {
+    margin-bottom: 0.75rem;
+  }
+  .prose-parish :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>
