@@ -9,7 +9,7 @@ export function welcomeEmail(fullName: string, link: string, days: number) {
   const subject = "Your St. John of Kronstadt website account is ready";
 
   const text =
-    `Dear ${name},\n\n` +
+    `Greetings, ${name}!\n\n` +
     `We have set up an account for you on the St. John of Kronstadt ` +
     `parish website. It is all ready. The only thing left is for you to ` +
     `choose a password.\n\n` +
