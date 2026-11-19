@@ -82,7 +82,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
         <span aria-hidden="true" class="absolute bottom-3 left-3 h-3 w-3 border-l border-b border-sacred-gold"></span>
         <span aria-hidden="true" class="absolute bottom-3 right-3 h-3 w-3 border-r border-b border-sacred-gold"></span>
 
-        <p class="font-display text-xs uppercase tracking-widest text-sacred-gold">Saint of the Day</p>
+        <p data-saint-eyebrow class="font-display text-xs uppercase tracking-widest text-sacred-gold">Saint of the Day</p>
 
         <!-- Shown on a day the catalogue has no entry for. The book no
              longer vanishes on those days, because the month lives in
@@ -194,12 +194,20 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
       return MONTHS[julian.getMonth()] + ' ' + julian.getDate();
     }
 
-    function loadForDate(gregorian) {
+    // Feasts of the Lord and of the Theotokos aren't "saints".
+    const FEAST_RE = /(of Our Lord|of the Most Holy Theotokos|Nativity|Theophany|Annunciation|Transfiguration|Dormition|Pascha|Resurrection|Ascension|Pentecost|Circumcision|Presentation|Elevation|Exaltation|Entry of|Meeting of|Palm Sunday)/i;
+
+    function loadFromCatalog(gregorian, forced) {
       const feastKey = feastKeyForGregorian(gregorian);
 
-      const saint = saints.find(
+      const saint = forced || saints.find(
         (s) => Array.isArray(s.feasts) && s.feasts.includes(feastKey),
       );
+
+      const eyebrow = host.querySelector('[data-saint-eyebrow]');
+      if (eyebrow) {
+        eyebrow.textContent = forced && FEAST_RE.test(forced.name) ? 'Feast of the Day' : 'Saint of the Day';
+      }
 
       const bodyEl = host.querySelector('[data-saint-body]');
       const emptyEl = host.querySelector('[data-saint-empty]');
@@ -257,6 +265,68 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
         iconArea.innerHTML = '';
         iconArea.hidden = true;
       }
+    }
+
+    // What the panel shows is the day's first commemoration, the one the
+    // church calendar leads with: St. Nicholas on Dec 19, the Nativity
+    // on Jan 7, Theophany on Jan 19. It used to pick the first catalogue
+    // saint whose feast fell on the date, which on a crowded day could be
+    // anyone, and on a great feast was never the feast. The catalogue now
+    // only adds the icon and the life when it has that same saint.
+    const NORM_PREFIX = /^(?:(?:the\s+)?(?:saint(?:ed)?|holy|venerable|monk|martyr|hieromartyr|priestmartyr|righteous|apostle|prophet|blessed)\s+)+/i;
+    function norm(t) {
+      let n = String(t == null ? '' : t).toLowerCase();
+      n = n.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' ');
+      n = n.replace(NORM_PREFIX, '');
+      return n.replace(/[^a-z0-9\s]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function sameSaint(target, other) {
+      return !!other && other.length >= 5 && (target === other || target.startsWith(other) || other.startsWith(target));
+    }
+    function catalogMatch(leadName) {
+      const target = norm(leadName);
+      if (!target) return null;
+      for (const sa of saints) {
+        if (sameSaint(target, sa._norm)) return sa;
+        if (sa._normAliases && sa._normAliases.some((a) => sameSaint(target, a))) return sa;
+      }
+      return null;
+    }
+
+    const leadCache = new Map();
+    let dayToken = 0;
+    async function leadFor(g) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const iso = g.getFullYear() + '-' + pad(g.getMonth() + 1) + '-' + pad(g.getDate());
+      if (!leadCache.has(iso)) {
+        const res = await fetch('/api/calendar?date=' + iso);
+        if (!res.ok) throw new Error('calendar');
+        const data = await res.json();
+        const first = (data.saints || [])[0];
+        leadCache.set(iso, first ? (typeof first === 'string' ? first : first.name) : null);
+      }
+      return leadCache.get(iso);
+    }
+
+    async function loadForDate(gregorian) {
+      const token = ++dayToken;
+      let lead = null;
+      try {
+        lead = await leadFor(gregorian);
+      } catch (_e) {
+        lead = null;
+      }
+      if (token !== dayToken) return; // they've moved on to another day
+      if (!lead) return loadFromCatalog(gregorian);
+
+      const match = catalogMatch(lead);
+      if (match) return loadFromCatalog(gregorian, match);
+      // Nobody in the catalogue for it: show the commemoration itself.
+      return loadFromCatalog(gregorian, {
+        name: String(lead).replace(/\.\s*$/, ''),
+        life: '',
+        iconSlug: null,
+      });
     }
 
     // Initial render — today's date.
