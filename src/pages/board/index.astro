@@ -147,6 +147,18 @@ import "../../styles/board.css";
       </section>
 
       <section id="mod-tools" class="hidden mt-10">
+        <table class="bb-table mb-6">
+          <thead>
+            <tr>
+              <th>Board members (<span id="member-count">0</span>)</th>
+              <th>Is</th>
+              <th class="bb-hide-small">Joined</th>
+              <th class="bb-num">Posts</th>
+            </tr>
+          </thead>
+          <tbody id="member-list"></tbody>
+        </table>
+
         <table class="bb-table">
           <thead>
             <tr><th colspan="2">Moderators</th></tr>
@@ -420,6 +432,7 @@ import "../../styles/board.css";
       adminTools.classList.remove("hidden");
       renderAdminList(categories);
       loadModerators();
+      loadMembers();
     }
 
     adminList.onclick = async (event) => {
@@ -658,6 +671,29 @@ import "../../styles/board.css";
     await load();
   });
   loadDates();
+
+  // ---- the roll of board members (admins) ----
+  async function loadMembers() {
+    const res = await boardFetch("/api/board/members", {}, here);
+    if (!res || !res.ok) return;
+    const members: Array<{ id: string; name: string; rank: string; joined: string; posts: number; suspended: boolean }> =
+      (await res.json()).members ?? [];
+    (document.getElementById("member-count") as HTMLElement).textContent = String(members.length);
+    (document.getElementById("member-list") as HTMLElement).innerHTML = members
+      .map(
+        (m) => `
+        <tr>
+          <td>
+            <a class="bb-title" href="/board/profile/?id=${encodeURIComponent(m.id)}">${escapeHtml(m.name)}</a>
+            ${m.suspended ? '<span class="bb-flag">Suspended</span>' : ""}
+          </td>
+          <td>${escapeHtml(m.rank)}</td>
+          <td class="bb-hide-small">${escapeHtml(new Date(m.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}</td>
+          <td class="bb-num">${m.posts}</td>
+        </tr>`,
+      )
+      .join("");
+  }
 
   async function loadSuspended() {
     const box = document.getElementById("suspended-box") as HTMLElement;
