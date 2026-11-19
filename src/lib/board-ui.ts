@@ -278,6 +278,7 @@ function wrapSelection(field: HTMLTextAreaElement, open: string, close: string):
 export function attachFormatBar(field: HTMLTextAreaElement): void {
   if (field.dataset.formatBar === "1") return;
   field.dataset.formatBar = "1";
+  attachMentions(field);
 
   const bar = document.createElement("div");
   bar.className = "bb-format";
@@ -408,7 +409,7 @@ export function renderBody(text: string): string {
     match = rest.match(quote);
   }
 
-  return out + paragraphs(rest);
+  return highlightMentions(out + paragraphs(rest));
 }
 
 /**
@@ -623,4 +624,127 @@ function showTermsDialog(version: string): void {
   });
   void version;
   dialog.showModal();
+}
+
+
+/* ---------------------------------------------------------------
+   @mentions
+   ---------------------------------------------------------------
+   Type @ and the start of a name and a short list of people appears;
+   pick one and "@Maria G. " goes into the box. When a post is shown,
+   any "@Name" that matches someone on the board is highlighted. The
+   text stays plain so it reads fine while it's being typed.
+   --------------------------------------------------------------- */
+let mentionRegex: RegExp | null = null;
+
+/** Tell the page whom to highlight. Names as the board shows them. */
+export function setMentionNames(names: string[]): void {
+  const alternatives = names
+    .filter(Boolean)
+    .map((n) => escapeHtml(n).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .sort((a, b) => b.length - a.length);
+  mentionRegex = alternatives.length
+    ? new RegExp(`(^|[\\s>(])@(${alternatives.join("|")})(?![\\p{L}\\p{N}])`, "giu")
+    : null;
+}
+
+function highlightMentions(html: string): string {
+  return mentionRegex ? html.replace(mentionRegex, '$1<span class="bb-mention">@$2</span>') : html;
+}
+
+let mentionPeopleCache: string[] | null = null;
+
+async function mentionPeople(): Promise<string[]> {
+  if (mentionPeopleCache) return mentionPeopleCache;
+  try {
+    const res = await fetch("/api/board/people", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const names: string[] = (data.people ?? []).map((p: { name: string }) => p.name);
+    mentionPeopleCache = names;
+    setMentionNames([...names, ...(data.me?.name ? [data.me.name as string] : [])]);
+    return names;
+  } catch {
+    return [];
+  }
+}
+
+/** Hang the @ list off a text box. */
+export function attachMentions(field: HTMLTextAreaElement): void {
+  if (field.dataset.mentions === "1") return;
+  field.dataset.mentions = "1";
+
+  const list = document.createElement("div");
+  list.className = "bb-mention-list hidden";
+  list.setAttribute("role", "listbox");
+  field.insertAdjacentElement("afterend", list);
+
+  let items: string[] = [];
+  let active = 0;
+  const tail = /(^|\s)@([^\n@]{0,30})$/u;
+
+  const close = () => {
+    items = [];
+    list.classList.add("hidden");
+  };
+  const draw = () => {
+    list.innerHTML = items
+      .map(
+        (n, i) =>
+          `<button type="button" class="bb-mention-item${i === active ? " active" : ""}" data-i="${i}">@${escapeHtml(n)}</button>`,
+      )
+      .join("");
+    list.classList.toggle("hidden", items.length === 0);
+  };
+  const pick = (i: number) => {
+    const name = items[i];
+    const pos = field.selectionStart ?? field.value.length;
+    const m = field.value.slice(0, pos).match(tail);
+    if (!name || !m) return close();
+    const start = pos - m[2].length - 1;
+    field.value = field.value.slice(0, start) + "@" + name + " " + field.value.slice(pos);
+    const after = start + name.length + 2;
+    field.focus();
+    field.setSelectionRange(after, after);
+    close();
+  };
+
+  field.addEventListener("input", async () => {
+    const pos = field.selectionStart ?? field.value.length;
+    const m = field.value.slice(0, pos).match(tail);
+    if (!m) return close();
+    const q = m[2].toLowerCase();
+    const names = await mentionPeople();
+    items = names
+      .filter((n) => {
+        const low = n.toLowerCase();
+        return !q || low.startsWith(q) || low.split(" ").some((w) => w.startsWith(q));
+      })
+      .slice(0, 6);
+    active = 0;
+    draw();
+  });
+  field.addEventListener("keydown", (event) => {
+    if (list.classList.contains("hidden") || !items.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      active = (active + 1) % items.length;
+      draw();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      active = (active - 1 + items.length) % items.length;
+      draw();
+    } else if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      pick(active);
+    } else if (event.key === "Escape") {
+      close();
+    }
+  });
+  list.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    const hit = (event.target as HTMLElement).closest(".bb-mention-item") as HTMLElement | null;
+    if (hit?.dataset.i) pick(Number(hit.dataset.i));
+  });
+  field.addEventListener("blur", () => setTimeout(close, 150));
 }

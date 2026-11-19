@@ -167,6 +167,7 @@ import "../../styles/board.css";
     attachSmilies,
     attachFormatBar,
     videoEmbeds,
+    setMentionNames,
   } from "../../lib/board-ui";
   import { attachPhotoPicker } from "../../lib/board-photo-picker";
 
@@ -458,6 +459,7 @@ import "../../styles/board.css";
 
     // The Help button goes on the opening post, for the person who started it.
     helpState = { canAsk: !!data.canRequestClose, waiting: !!thread.closeRequested && !!thread.mine };
+    setMentionNames(data.mentionNames ?? []);
     renderPosts(posts, data.previouslyReadAt);
     document.getElementById("jump-new")?.classList.toggle("hidden", !document.getElementById("first-new"));
 

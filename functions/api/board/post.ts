@@ -16,6 +16,7 @@ import {
   type BoardEnv,
   suspensionBlock,
 } from "../../../src/lib/board-access.ts";
+import { recordMentions } from "../../../src/lib/board-mentions.ts";
 import { attachPhotos, purgePhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_BODY = 10000;
@@ -99,6 +100,7 @@ export async function onRequestPatch(
     // Photos added while editing. Only the post's own author can hang
     // their own pictures on it; an admin editing words adds none.
     await attachPhotos(supabase, viewer.id, id, body.photoIds);
+    await recordMentions(supabase, id, (post.author_id as string | null) ?? viewer.id, text);
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {

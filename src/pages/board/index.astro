@@ -23,6 +23,19 @@ import "../../styles/board.css";
     </div>
 
     <div id="content" class="hidden">
+      <form action="/board/search/" method="get" class="flex flex-wrap gap-2 mb-4">
+        <input
+          name="q"
+          type="search"
+          maxlength="80"
+          autocomplete="off"
+          placeholder="Search the board"
+          aria-label="Search the board"
+          class="flex-1 min-w-[12rem] border border-border-soft bg-cream-bg px-3 py-2"
+        />
+        <button type="submit" class="bb-btn">Search</button>
+      </form>
+
       <div class="bb-layout">
         <div>
           <table class="bb-table">
@@ -57,6 +70,7 @@ import "../../styles/board.css";
             <a href="/directory/">Parish Directory</a>
             <a href="/learn/library/">Parish Library</a>
             <a href="/board/messages/" id="messages-link">Messages</a>
+            <a href="/board/mentions/" id="mentions-link">Mentions</a>
             <a href="/board/terms/">Board terms</a>
             <a href="/board/new/">New posts</a>
             <a href="#" id="mark-all-read">Mark all topics read</a>
@@ -331,6 +345,12 @@ import "../../styles/board.css";
       unreadMessages > 0
         ? `Messages <span class="bb-flag">${unreadMessages} new</span>`
         : "Messages";
+
+    const unreadMentions = data.unreadMentions ?? 0;
+    (document.getElementById("mentions-link") as HTMLElement).innerHTML =
+      unreadMentions > 0
+        ? `Mentions <span class="bb-flag">${unreadMentions} new</span>`
+        : "Mentions";
 
     const s = data.stats ?? {};
     statsEl.innerHTML =

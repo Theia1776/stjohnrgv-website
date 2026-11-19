@@ -166,6 +166,19 @@ export async function onRequestGet(
       };
     });
 
+    // Posts that tag this person and haven't been looked at.
+    let unreadMentions = 0;
+    try {
+      const { count } = await supabase
+        .from("board_mentions")
+        .select("post_id", { count: "exact", head: true })
+        .eq("user_id", viewer.id)
+        .is("seen_at", null);
+      unreadMentions = count ?? 0;
+    } catch {
+      unreadMentions = 0;
+    }
+
     // New private messages, for the Messages link. If it can't be worked
     // out the board still loads; it just shows none.
     let unreadMessages = 0;
@@ -181,6 +194,7 @@ export async function onRequestGet(
           categories: payload,
           unreadTotal,
           unreadMessages,
+          unreadMentions,
           // The line along the bottom of every board ever made.
           stats: {
             topics: (threads ?? []).length,

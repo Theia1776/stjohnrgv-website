@@ -1,0 +1,89 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Search | Parish Board" description="Search the parish board.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">Search</h1>
+    <p class="text-text-secondary text-sm mb-2">
+      Find a topic or a post in any room you can see.
+    </p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; Search
+    </div>
+
+    <form id="search-form" method="get" action="/board/search/" class="flex flex-wrap gap-2 mb-6">
+      <input
+        id="q"
+        name="q"
+        type="search"
+        maxlength="80"
+        autocomplete="off"
+        placeholder="What are you looking for?"
+        aria-label="Search the board"
+        class="flex-1 min-w-[12rem] border border-border-soft bg-cream-bg px-3 py-2"
+      />
+      <button type="submit" class="bb-btn bb-btn-strong">Search</button>
+    </form>
+
+    <div id="status" class="text-sm text-text-secondary" role="status"></div>
+    <ul id="results" class="space-y-4 mt-4"></ul>
+  </main>
+</Layout>
+
+<script>
+  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  const params = new URLSearchParams(window.location.search);
+  const q = (params.get("q") ?? "").trim();
+  const input = document.getElementById("q") as HTMLInputElement;
+  const status = document.getElementById("status") as HTMLElement;
+  const list = document.getElementById("results") as HTMLElement;
+  input.value = q;
+
+  function mark(text: string, term: string): string {
+    const safe = escapeHtml(text);
+    const needle = escapeHtml(term).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return needle ? safe.replace(new RegExp(needle, "gi"), (m) => `<mark>${m}</mark>`) : safe;
+  }
+
+  async function run() {
+    if (q.length < 2) {
+      status.textContent = q ? "Type at least two letters." : "";
+      return;
+    }
+    status.textContent = "Searching…";
+    const here = `/board/search/?q=${encodeURIComponent(q)}`;
+    const res = await boardFetch(`/api/board/search?q=${encodeURIComponent(q)}`, {}, here);
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await errorDetail(res)) || `Couldn't search (${res.status}).`;
+      return;
+    }
+    const data = await res.json();
+    const results: Array<{
+      postId: string | null; threadId: string; title: string; room: string; by: string; snippet: string; at: string;
+    }> = data.results ?? [];
+
+    status.textContent = results.length
+      ? `${results.length}${data.more ? "+" : ""} ${results.length === 1 ? "result" : "results"} for "${q}".`
+      : `Nothing found for "${q}".`;
+    list.innerHTML = results
+      .map((r) => {
+        const href = `/board/thread/?id=${encodeURIComponent(r.threadId)}${r.postId ? `#p${encodeURIComponent(r.postId)}` : ""}`;
+        return `
+        <li class="border-b border-border-soft pb-3">
+          <a class="bb-title" href="${href}">${mark(r.title, q)}</a>
+          <div class="text-xs text-text-secondary">
+            in ${escapeHtml(r.room)} &middot; ${escapeHtml(r.by)} &middot;
+            <span title="${escapeHtml(exactly(r.at))}">${escapeHtml(when(r.at))}</span>
+          </div>
+          ${r.snippet ? `<p class="text-sm mt-1">${mark(r.snippet, q)}</p>` : ""}
+        </li>`;
+      })
+      .join("");
+  }
+  run();
+</script>

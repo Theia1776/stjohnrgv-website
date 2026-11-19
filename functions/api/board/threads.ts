@@ -19,6 +19,7 @@ import {
   type BoardEnv,
   suspensionBlock,
 } from "../../../src/lib/board-access.ts";
+import { recordMentions } from "../../../src/lib/board-mentions.ts";
 import { attachPhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_TITLE = 160;
@@ -220,6 +221,7 @@ export async function onRequestPost(
     }
 
     await attachPhotos(supabase, viewer.id, firstPost.id as string, body.photoIds);
+    await recordMentions(supabase, firstPost.id as string, viewer.id, text);
 
     // You've read what you just wrote.
     await supabase

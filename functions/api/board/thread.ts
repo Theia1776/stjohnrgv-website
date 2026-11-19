@@ -21,6 +21,7 @@ import {
   type BoardEnv,
   suspensionBlock,
 } from "../../../src/lib/board-access.ts";
+import { mentionLabels, recordMentions } from "../../../src/lib/board-mentions.ts";
 import {
   attachPhotos,
   photoUrl,
@@ -238,6 +239,7 @@ export async function onRequestGet(
     }
 
     const list = posts ?? [];
+    const labels = await mentionLabels(supabase);
     return wrap(
       jsonResponse(
         {
@@ -286,6 +288,8 @@ export async function onRequestGet(
             };
           }),
           previouslyReadAt,
+          // The names an @ can tag, so the page can highlight them.
+          mentionNames: [...labels.values()],
           // Only the person who started it, and only while nobody has
           // answered, may remove the whole thread. After that it's a
           // conversation, not a note of theirs to take back.
@@ -366,6 +370,7 @@ export async function onRequestPost(
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));
 
     await attachPhotos(supabase, viewer.id, post.id as string, body.photoIds);
+    await recordMentions(supabase, post.id as string, viewer.id, text);
 
     await supabase
       .from("board_reads")

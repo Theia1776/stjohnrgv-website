@@ -1,0 +1,89 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Mentions | Parish Board" description="Posts on the parish board that mention you.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">Mentions</h1>
+    <p class="text-text-secondary text-sm mb-2">Posts where someone wrote your name with an @.</p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; Mentions
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="bb-bar">
+        <a href="/board/" class="bb-btn">Back to the board</a>
+        <button id="seen" type="button" class="bb-btn">Mark all as seen</button>
+      </div>
+      <ul id="list" class="space-y-4 mt-4"></ul>
+      <p id="empty" class="hidden text-center text-text-secondary mt-8">Nobody has mentioned you yet.</p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  const here = "/board/mentions/";
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const list = document.getElementById("list") as HTMLElement;
+  const empty = document.getElementById("empty") as HTMLElement;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  async function load() {
+    const res = await boardFetch("/api/board/mentions", {}, here);
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+    const rows: Array<{
+      postId: string; threadId: string; title: string; room: string; by: string;
+      snippet: string; at: string; fresh: boolean;
+    }> = (await res.json()).mentions ?? [];
+
+    empty.classList.toggle("hidden", rows.length > 0);
+    list.innerHTML = rows
+      .map(
+        (r) => `
+        <li class="border-b border-border-soft pb-3 ${r.fresh ? "bb-unread" : ""}">
+          <a class="bb-title" href="/board/thread/?id=${encodeURIComponent(r.threadId)}#p${encodeURIComponent(r.postId)}">${escapeHtml(r.title)}</a>
+          ${r.fresh ? '<span class="bb-flag">New</span>' : ""}
+          <div class="text-xs text-text-secondary">
+            ${escapeHtml(r.by)} mentioned you in ${escapeHtml(r.room)} &middot;
+            <span title="${escapeHtml(exactly(r.at))}">${escapeHtml(when(r.at))}</span>
+          </div>
+          <p class="text-sm mt-1">${escapeHtml(r.snippet)}</p>
+        </li>`,
+      )
+      .join("");
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  (document.getElementById("seen") as HTMLButtonElement).addEventListener("click", async () => {
+    const res = await boardFetch("/api/board/mentions", { method: "POST" }, here);
+    if (res?.ok) await load();
+  });
+
+  load();
+</script>
