@@ -130,9 +130,14 @@ import Layout from "../layouts/Layout.astro";
 
   function renderAvatar(e: Entry): string {
     if (e.avatar_url) {
+      const who = fullName(e) || "this person";
       return `
-        <img src="${escapeHtml(e.avatar_url)}" alt=""
-             class="w-12 h-12 rounded-full object-cover border border-border-soft shrink-0" />
+        <button type="button" data-enlarge="${escapeHtml(e.avatar_url)}" data-who="${escapeHtml(who)}"
+                class="shrink-0 self-start rounded-full cursor-zoom-in transition hover:ring-2 hover:ring-sacred-gold focus-visible:ring-2 focus-visible:ring-sacred-gold"
+                aria-label="Enlarge the photo of ${escapeHtml(who)}" title="Click to enlarge">
+          <img src="${escapeHtml(e.avatar_url)}" alt=""
+               class="w-12 h-12 rounded-full object-cover border border-border-soft" />
+        </button>
       `;
     }
     return `
@@ -285,6 +290,62 @@ import Layout from "../layouts/Layout.astro";
   // Admin role toggle
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Enlarging a photo
+  // ---------------------------------------------------------------------------
+  // The round 48px picture is too small to tell who it is. Clicking it
+  // (or tapping it on a phone, where there is no hover) opens the same
+  // photo large, uncropped, with the name under it. Click anywhere,
+  // press Escape or use the Close button to put it away.
+
+  function attachPhotoEnlarger() {
+    const list = document.getElementById("entries");
+    if (!list) return;
+
+    const overlay = document.createElement("div");
+    overlay.className =
+      "hidden fixed inset-0 z-50 flex-col items-center justify-center gap-3 p-4 bg-black/80";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Photo");
+    overlay.innerHTML = `
+      <img alt="" class="max-w-[min(92vw,30rem)] max-h-[75vh] object-contain border-4 border-cream-card bg-cream-card shadow-2xl" />
+      <p class="text-cream-card text-lg font-semibold"></p>
+      <button type="button" class="px-4 py-2 border border-cream-card text-cream-card hover:bg-cream-card hover:text-text-primary text-sm uppercase tracking-widest">Close</button>
+    `;
+    document.body.appendChild(overlay);
+
+    const img = overlay.querySelector("img") as HTMLImageElement;
+    const caption = overlay.querySelector("p") as HTMLElement;
+    const closeButton = overlay.querySelector("button") as HTMLButtonElement;
+    let opener: HTMLElement | null = null;
+
+    function close() {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+      img.removeAttribute("src");
+      opener?.focus();
+      opener = null;
+    }
+
+    list.addEventListener("click", (event) => {
+      const trigger = (event.target as HTMLElement | null)?.closest("[data-enlarge]") as HTMLElement | null;
+      if (!trigger?.dataset.enlarge) return;
+      opener = trigger;
+      img.src = trigger.dataset.enlarge;
+      img.alt = `Photo of ${trigger.dataset.who ?? "this person"}`;
+      caption.textContent = trigger.dataset.who ?? "";
+      overlay.classList.remove("hidden");
+      overlay.classList.add("flex");
+      closeButton.focus();
+    });
+
+    overlay.addEventListener("click", close);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !overlay.classList.contains("hidden")) close();
+    });
+  }
+
   function attachRoleToggleHandler() {
     const list = document.getElementById("entries");
     if (!list) return;
@@ -389,6 +450,7 @@ import Layout from "../layouts/Layout.astro";
     renderAll();
     attachSearchHandler();
     attachRoleToggleHandler();
+    attachPhotoEnlarger();
   }
 
   load();
