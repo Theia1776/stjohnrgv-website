@@ -35,9 +35,9 @@ export function welcomeEmail(fullName: string, link: string, days: number) {
     `<div style="background:#FAF7F0;padding:28px 12px">` +
     `<div style="${BODY};color:#2C3E50;line-height:1.65;font-size:19px;max-width:540px;` +
     `margin:0 auto;background:#FFFFFF;border:1px solid #E5DFD3;border-top:4px solid #C9A84C\">` +
-    `<div style="background:#2A5E84;padding:26px 30px">` +
+    `<div style="background:#1A2B42;padding:26px 30px">` +
     `<p style="${HEAD};margin:0;font-size:22px;font-weight:700;letter-spacing:1px;color:#FFFFFF">ST. JOHN OF KRONSTADT</p>` +
-    `<p style="${HEAD};margin:4px 0 0;font-size:13px;letter-spacing:3px;color:#E8F1F8">ORTHODOX MISSION</p>` +
+    `<p style="${HEAD};margin:4px 0 0;font-size:13px;letter-spacing:3px;color:#C9B99A">ORTHODOX MISSION</p>` +
     `</div>` +
     `<div style="padding:30px 30px 34px">` +
     `<p style="${HEAD};margin:0 0 18px;font-size:26px;font-weight:600;color:#2C3E50">Your account is ready</p>` +
@@ -47,9 +47,9 @@ export function welcomeEmail(fullName: string, link: string, days: number) {
     `<p style="margin:0 0 28px">Press the button, type a password you will remember, ` +
     `and you will land right in your account. There is nothing else to fill out.</p>` +
     `<p style="margin:0 0 30px;text-align:center">` +
-    `<a href="${link}" style="${HEAD};display:inline-block;background:#2A5E84;color:#FFFFFF;` +
+    `<a href="${link}" style="${HEAD};display:inline-block;background:#1A2B42;color:#FFFFFF;` +
     `text-decoration:none;font-size:19px;font-weight:700;letter-spacing:.5px;padding:17px 34px;` +
-    `border:1px solid #2A5E84">Choose my password</a></p>` +
+    `border:1px solid #C9A84C">Choose my password</a></p>` +
     `<p style="margin:0 0 16px;font-size:16px;color:#5C6B7A">The button works for ${days} days. ` +
     `If it stops working, or anything looks wrong, just reply to this email or call ` +
     `the parish office and we will sort it out with you.</p>` +
