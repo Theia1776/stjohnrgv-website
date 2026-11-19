@@ -158,7 +158,7 @@ import "../../styles/board.css";
     const dayText = (d: { month: number; day: number } | null) => (d ? `${MONTHS[d.month - 1]} ${d.day}` : "");
     const dts = p.dates ?? {};
     const lines: string[] = [];
-    if (dts.nameDay) lines.push(`<strong>Name day:</strong> ${escapeHtml(dayText(dts.nameDay))}${dts.nameDay.saint ? ` (St. ${escapeHtml(dts.nameDay.saint)})` : ""}`);
+    if (dts.nameDay) lines.push(`<strong>Name day:</strong> ${escapeHtml(dayText(dts.nameDay))}${dts.nameDay.saint ? ` (${escapeHtml(dts.nameDay.saint)})` : ""}`);
     if (dts.baptism) lines.push(`<strong>Baptism day:</strong> ${escapeHtml(dayText(dts.baptism))}`);
     if (dts.birthday) lines.push(`<strong>Birthday:</strong> ${escapeHtml(dayText(dts.birthday))}`);
     (document.getElementById("dates-show") as HTMLElement).innerHTML = lines.length

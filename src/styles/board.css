@@ -1120,3 +1120,10 @@ mark {
 .bb-dragging .bb-grip {
   cursor: grabbing;
 }
+
+/* A board button marked hidden stays hidden. (.bb-btn sets its own display, which
+   used to win over the plain hidden class.) */
+.bb-btn.hidden,
+.bb-btn[hidden] {
+  display: none !important;
+}
