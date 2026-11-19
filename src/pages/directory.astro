@@ -309,9 +309,9 @@ import Layout from "../layouts/Layout.astro";
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-label", "Photo");
     overlay.innerHTML = `
-      <img alt="" class="max-w-[min(92vw,30rem)] max-h-[75vh] object-contain border-4 border-cream-card bg-cream-card shadow-2xl" />
-      <p class="text-cream-card text-lg font-semibold"></p>
-      <button type="button" class="px-4 py-2 border border-cream-card text-cream-card hover:bg-cream-card hover:text-text-primary text-sm uppercase tracking-widest">Close</button>
+      <img alt="" class="max-w-[min(92vw,30rem)] max-h-[75vh] object-contain border-4 border-[#FAF7F0] bg-[#FAF7F0] shadow-2xl" />
+      <p class="text-[#FAF7F0] text-lg font-semibold"></p>
+      <button type="button" class="px-4 py-2 border border-[#FAF7F0] text-[#FAF7F0] hover:bg-[#FAF7F0] hover:text-[#2C3E50] text-sm uppercase tracking-widest">Close</button>
     `;
     document.body.appendChild(overlay);
 
