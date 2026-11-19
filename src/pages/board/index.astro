@@ -485,7 +485,7 @@ import "../../styles/board.css";
         // A browser prompt() freezes the page the way confirm() did,
         // and we took those out.
         const row = button.closest("tr") as HTMLElement;
-        const cell = row.firstElementChild as HTMLElement;
+        const cell = row.children[1] as HTMLElement; // the grip is the first cell
         cell.innerHTML = `
           <input type="text" maxlength="80" value="${escapeHtml(category.name)}"
                  aria-label="Category name" spellcheck="true"
