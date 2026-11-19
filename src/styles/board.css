@@ -28,6 +28,7 @@
      behind body text goes dark, so navy *text* would disappear into
      it. This is the one that has to flip; --bb-navy never does. */
   --bb-ink:       #2C3E50;
+  --bb-danger:    #8B2C2C;  /* the liturgical oxblood */
 
   --bb-navy:      #2C3E50;  /* the heading navy -- BACKGROUNDS only */
   --bb-navy-deep: #22303E;  /* a shade down, for section bars */
@@ -37,6 +38,10 @@
 
 :root[data-theme="dark"] {
   --bb-ink: #FAF7F0;
+  /* The liturgical oxblood is a dark red meant for light surfaces; on
+     the dark theme's near-navy card it reads as a smudge. Lifted just
+     for the board's Delete buttons. */
+  --bb-danger: #E09090;
 }
 
 /* ---- the table itself ---------------------------------- */
@@ -193,12 +198,12 @@
   border-color: var(--bb-gold);
 }
 .bb-btn-danger {
-  border-color: var(--color-liturgical-red);
-  color: var(--color-liturgical-red);
+  border-color: var(--bb-danger);
+  color: var(--bb-danger);
 }
 .bb-btn-danger:hover {
-  background: var(--color-liturgical-red);
-  color: #fff;
+  background: var(--bb-danger);
+  color: var(--color-cream-card);
 }
 
 /* ---- a post ------------------------------------------- */
