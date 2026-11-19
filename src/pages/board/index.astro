@@ -206,9 +206,12 @@ import "../../styles/board.css";
 
       <!-- Admin: arrange the rooms -->
       <section id="admin-tools" class="hidden mt-10">
-        <table class="bb-table">
+        <details>
+        <summary class="cursor-pointer font-semibold text-lg">Manage categories</summary>
+        <p class="text-xs text-text-secondary mt-1">Drag a row by its handle to move it.</p>
+        <table class="bb-table mt-2">
           <thead>
-            <tr><th colspan="3">Manage Categories <span class="text-xs font-normal">(drag a row by its handle to move it)</span></th></tr>
+            <tr><th colspan="3">Rooms</th></tr>
           </thead>
           <tbody id="admin-categories"></tbody>
         </table>
@@ -243,6 +246,7 @@ import "../../styles/board.css";
           </label>
           <button type="submit" class="bb-btn bb-btn-strong">Add</button>
         </form>
+        </details>
       </section>
     </div>
   </main>
