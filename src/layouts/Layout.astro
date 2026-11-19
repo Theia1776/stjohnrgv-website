@@ -141,6 +141,37 @@ const liturgicalRootStyle =
     </script>
 
     <script>
+      // Show / Hide on every password box. Typing a password blind on a
+      // phone keyboard is how people get locked out, so each one gets a
+      // button that lets them see what they typed. Done here once rather
+      // than on each page, so a password box added later gets it too.
+      document.querySelectorAll<HTMLInputElement>('input[type="password"]').forEach((input) => {
+        const wrap = document.createElement("div");
+        wrap.className = "relative";
+        input.parentNode?.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        input.classList.add("pr-16");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Show";
+        btn.setAttribute("aria-label", "Show password");
+        btn.setAttribute("aria-pressed", "false");
+        btn.className =
+          "absolute inset-y-0 right-0 px-3 text-sm font-semibold text-brand-blue-dark hover:text-brand-blue";
+        btn.addEventListener("click", () => {
+          const showing = input.type === "text";
+          input.type = showing ? "password" : "text";
+          btn.textContent = showing ? "Show" : "Hide";
+          btn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+          btn.setAttribute("aria-pressed", showing ? "false" : "true");
+          input.focus();
+        });
+        wrap.appendChild(btn);
+      });
+    </script>
+
+    <script>
       /**
        * Liturgical season hydration.
        *
