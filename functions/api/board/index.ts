@@ -20,6 +20,7 @@ import {
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
 import { loadInbox } from "../../../src/lib/board-messages.ts";
+import { whenText } from "../../../src/lib/board-events.ts";
 import { celebrationsAhead, type Celebration } from "../../../src/lib/board-celebrations.ts";
 
 interface CategoryRow {
@@ -207,6 +208,32 @@ export async function onRequestGet(
       unreadMessages = 0;
     }
 
+    // The next few events, soonest first.
+    const todayChicago = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+    let upcoming: Array<{ id: string; title: string; when: string; place: string }> = [];
+    try {
+      const { data: evs } = await supabase
+        .from("board_events")
+        .select("thread_id, event_date, start_time, end_time, place, board_threads ( title, board_categories ( hidden, audience ) )")
+        .gte("event_date", todayChicago)
+        .order("event_date", { ascending: true })
+        .limit(10);
+      upcoming = ((evs ?? []) as unknown as Array<{
+        thread_id: string; event_date: string; start_time: string; end_time: string | null; place: string;
+        board_threads: { title: string; board_categories: { hidden: boolean; audience: string } | null } | null;
+      }>)
+        .filter((e) => e.board_threads && (!e.board_threads.board_categories || canSeeCategory(viewer, e.board_threads.board_categories)))
+        .slice(0, 3)
+        .map((e) => ({
+          id: e.thread_id,
+          title: e.board_threads!.title,
+          when: whenText(String(e.event_date), String(e.start_time).slice(0, 5), e.end_time ? String(e.end_time).slice(0, 5) : null),
+          place: e.place,
+        }));
+    } catch {
+      upcoming = [];
+    }
+
     // Topics a moderator has put on the front page.
     const roomName = new Map(visible.map((c: CategoryRow) => [c.id, c.name]));
     const announcements = (threads ?? [])
@@ -224,6 +251,7 @@ export async function onRequestGet(
         {
           categories: payload,
           announcements,
+          upcoming,
           celebrations,
           unreadTotal,
           unreadMessages,

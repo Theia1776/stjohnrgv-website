@@ -11,6 +11,7 @@
  * Map beat a nested select nobody can read.
  */
 
+import { whenText } from "../../../src/lib/board-events.ts";
 import {
   requireBoardAccess,
   canSeeCategory,
@@ -85,6 +86,21 @@ export async function onRequestGet(
     });
     const threadIds = rows.map((t) => t.id);
 
+    // Event topics show when and where under the title.
+    const eventOf = new Map<string, { when: string; place: string }>();
+    if (threadIds.length) {
+      const { data: evs } = await supabase
+        .from("board_events")
+        .select("thread_id, event_date, start_time, end_time, place")
+        .in("thread_id", threadIds);
+      for (const e of evs ?? []) {
+        eventOf.set(e.thread_id as string, {
+          when: whenText(String(e.event_date), String(e.start_time).slice(0, 5), e.end_time ? String(e.end_time).slice(0, 5) : null),
+          place: e.place as string,
+        });
+      }
+    }
+
     // Who wrote the newest post in each thread.
     const lastAuthorByThread = new Map<string, string | null>();
     if (threadIds.length) {
@@ -137,6 +153,7 @@ export async function onRequestGet(
               pinned: t.pinned,
               locked: t.locked,
               announce: !!t.announce,
+              event: eventOf.get(t.id) ?? null,
               createdAt: t.created_at,
               lastPostAt: t.last_post_at,
               replyCount: Math.max(0, (t.post_count ?? 0) - 1),

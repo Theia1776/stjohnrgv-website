@@ -52,6 +52,17 @@ import "../../styles/board.css";
         </form>
       </dialog>
 
+      <form id="event-form" class="hidden border border-border-soft bg-cream-card p-4 mb-4 space-y-3">
+        <h2 class="font-semibold">New event</h2>
+        <div id="event-fields" class="space-y-3"></div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="event-submit" type="submit" class="bb-btn bb-btn-strong">Post the event</button>
+          <button id="event-cancel" type="button" class="bb-btn">Cancel</button>
+          <a href="#" id="plain-topic" class="text-sm underline hidden">Start an ordinary topic instead</a>
+          <span id="event-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </form>
+
       <form id="start-form" class="hidden border border-border-soft bg-cream-card p-4 mb-4 space-y-3">
         <label class="block">
           <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
@@ -153,6 +164,7 @@ import "../../styles/board.css";
     attachFormatBar,
   } from "../../lib/board-ui";
   import { attachPhotoPicker } from "../../lib/board-photo-picker";
+  import { renderEventForm, readEventForm } from "../../lib/board-event-form";
 
   type Thread = {
     id: string;
@@ -162,6 +174,7 @@ import "../../styles/board.css";
     pinned: boolean;
     locked: boolean;
     announce?: boolean;
+    event?: { when: string; place: string } | null;
     createdAt: string;
     lastPostAt: string;
     replyCount: number;
@@ -270,6 +283,7 @@ import "../../styles/board.css";
             <td>
               ${prefix}<a class="bb-title" href="/board/thread/?id=${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
               ${t.announce ? '<span class="bb-flag" title="Shown at the top of the board\'s front page">Announced</span>' : ""}
+              ${t.event ? `<span class="bb-desc">📅 ${escapeHtml(t.event.when)} · ${escapeHtml(t.event.place)}</span>` : ""}
               ${t.closeRequested ? '<span class="bb-flag" title="The person who started it asked for it to be closed">Close requested</span>' : ""}
               <span class="bb-desc">by ${escapeHtml(t.startedBy)}, ${escapeHtml(when(t.createdAt))}</span>
               ${admin}
@@ -411,11 +425,60 @@ import "../../styles/board.css";
   attachFormatBar(document.getElementById("new-body") as HTMLTextAreaElement);
   const newPhotos = attachPhotoPicker(document.getElementById("new-photos") as HTMLElement);
 
+  // In the Events room "New Topic" is "New event": a form, so nothing gets forgotten.
+  const isEvents = slug === "events";
+  const eventForm = document.getElementById("event-form") as HTMLFormElement;
+  const eventFields = document.getElementById("event-fields") as HTMLElement;
+  const eventStatus = document.getElementById("event-status") as HTMLElement;
+  if (isEvents) {
+    renderEventForm(eventFields, { rsvp: true });
+    document.getElementById("start-toggle")!.textContent = "New event";
+    document.getElementById("start-toggle-2")!.textContent = "New event";
+    document.getElementById("plain-topic")?.classList.remove("hidden");
+  }
+  document.getElementById("plain-topic")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    eventForm.classList.add("hidden");
+    startForm.classList.remove("hidden");
+    (document.getElementById("new-title") as HTMLInputElement).focus();
+  });
+  document.getElementById("event-cancel")?.addEventListener("click", () => {
+    eventForm.classList.add("hidden");
+    eventStatus.textContent = "";
+  });
+  eventForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = document.getElementById("event-submit") as HTMLButtonElement;
+    submit.disabled = true;
+    eventStatus.textContent = "Posting…";
+    const res = await boardFetch(
+      "/api/board/event",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(readEventForm(eventFields)),
+      },
+      here,
+    );
+    submit.disabled = false;
+    if (!res) return;
+    if (!res.ok) {
+      eventStatus.textContent = (await errorDetail(res)) || `Couldn't post that (${res.status}).`;
+      return;
+    }
+    const { id } = await res.json();
+    window.location.assign(`/board/thread/?id=${encodeURIComponent(id)}`);
+  });
+
   function toggleForm() {
-    startForm.classList.toggle("hidden");
-    if (!startForm.classList.contains("hidden")) {
-      (document.getElementById("new-title") as HTMLInputElement).focus();
-      startForm.scrollIntoView({ behavior: "smooth", block: "center" });
+    const form = isEvents ? eventForm : startForm;
+    form.classList.toggle("hidden");
+    if (!form.classList.contains("hidden")) {
+      (isEvents
+        ? (eventFields.querySelector("#ev-title") as HTMLInputElement)
+        : (document.getElementById("new-title") as HTMLInputElement)
+      ).focus();
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }
   (document.getElementById("start-toggle") as HTMLButtonElement).addEventListener("click", toggleForm);

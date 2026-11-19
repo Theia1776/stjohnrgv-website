@@ -28,6 +28,11 @@ import "../../styles/board.css";
         <ul id="today-list" class="mt-1 space-y-1"></ul>
       </section>
 
+      <section id="upcoming" class="hidden bb-notice">
+        <strong>Coming up</strong>
+        <ul id="upcoming-list" class="mt-1 space-y-1"></ul>
+      </section>
+
       <section id="announcements" class="hidden bb-notice">
         <strong>Announcements</strong>
         <ul id="announcement-list" class="mt-1 space-y-1"></ul>
@@ -436,6 +441,15 @@ import "../../styles/board.css";
       unreadMessages > 0
         ? `Messages <span class="bb-flag">${unreadMessages} new</span>`
         : "Messages";
+
+    const coming: Array<{ id: string; title: string; when: string; place: string }> = data.upcoming ?? [];
+    (document.getElementById("upcoming") as HTMLElement).classList.toggle("hidden", coming.length === 0);
+    (document.getElementById("upcoming-list") as HTMLElement).innerHTML = coming
+      .map(
+        (c) =>
+          `<li>📅 <a class="underline" href="/board/thread/?id=${encodeURIComponent(c.id)}">${escapeHtml(c.title)}</a> <span class="text-text-secondary">${escapeHtml(c.when)} · ${escapeHtml(c.place)}</span></li>`,
+      )
+      .join("");
 
     const notes: Array<{ id: string; title: string; room: string }> = data.announcements ?? [];
     (document.getElementById("announcements") as HTMLElement).classList.toggle("hidden", notes.length === 0);

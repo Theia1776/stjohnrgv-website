@@ -1151,3 +1151,14 @@ html.bb-large {
   font-style: italic;
   color: var(--color-text-secondary);
 }
+
+/* The event form in a window: tall, so it scrolls. */
+.bb-event-dialog {
+  max-width: 40rem;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+.bb-event-dialog input,
+.bb-event-dialog select {
+  color: var(--color-text-primary);
+}

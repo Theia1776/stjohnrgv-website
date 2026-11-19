@@ -23,6 +23,7 @@ import {
 } from "../../../src/lib/board-access.ts";
 import { logAction } from "../../../src/lib/board-modlog.ts";
 import { mentionLabels, recordMentions } from "../../../src/lib/board-mentions.ts";
+import { whenText } from "../../../src/lib/board-events.ts";
 import {
   attachPhotos,
   photoUrl,
@@ -311,9 +312,44 @@ export async function onRequestGet(
       };
     }
 
+    // The event, if this topic is one: the details, and the please-bring list.
+    let event: unknown = null;
+    const { data: ev } = await supabase.from("board_events").select("*").eq("thread_id", id).maybeSingle();
+    if (ev) {
+      const { data: itemRows } = await supabase
+        .from("board_event_items")
+        .select("id, label, position, claimed_by")
+        .eq("thread_id", id)
+        .order("position", { ascending: true });
+      const { namesOf: namesForEvent } = await import("../../../src/lib/board-messages.ts");
+      const claimers = [...new Set((itemRows ?? []).map((i) => i.claimed_by as string | null).filter(Boolean))] as string[];
+      const claimerNames = await namesForEvent(supabase, claimers);
+      const first = list[0]?.body as string | undefined;
+      event = {
+        hosting: ev.hosting,
+        date: String(ev.event_date),
+        start: String(ev.start_time).slice(0, 5),
+        end: ev.end_time ? String(ev.end_time).slice(0, 5) : null,
+        place: ev.place,
+        address: ev.address ?? "",
+        contact: ev.contact ?? "",
+        gift: ev.gift ?? "",
+        when: whenText(String(ev.event_date), String(ev.start_time).slice(0, 5), ev.end_time ? String(ev.end_time).slice(0, 5) : null),
+        details: first ? first.split("\n\n").slice(1).join("\n\n") : "",
+        canEdit: viewer.isModerator || thread.author_id === viewer.id,
+        items: (itemRows ?? []).map((i) => ({
+          id: i.id,
+          label: i.label,
+          claimedBy: i.claimed_by ? (claimerNames.get(i.claimed_by as string) ?? "Someone") : null,
+          mine: i.claimed_by === viewer.id,
+        })),
+      };
+    }
+
     return wrap(
       jsonResponse(
         {
+          event,
           thread: {
             id: thread.id,
             title: thread.title,

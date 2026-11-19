@@ -34,6 +34,7 @@ import "../../styles/board.css";
 
       <div id="mod-note" class="hidden bb-notice" role="status"></div>
       <div id="flash" class="hidden bb-notice" role="status"></div>
+      <div id="event-card" class="hidden bb-notice"></div>
       <div id="poll" class="hidden bb-notice"></div>
 
       <table class="bb-table">
@@ -76,6 +77,18 @@ import "../../styles/board.css";
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
         </div>
       </form>
+
+<dialog id="event-edit-dialog" class="bb-help-dialog bb-event-dialog" aria-labelledby="event-edit-h">
+        <form id="event-edit-form" method="dialog" class="space-y-3">
+          <h2 id="event-edit-h">Edit the event</h2>
+          <div id="event-edit-fields" class="space-y-3"></div>
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Save</button>
+            <button type="button" class="bb-btn event-edit-close">Cancel</button>
+            <span id="event-edit-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
 
 <dialog id="title-dialog" class="bb-help-dialog" aria-labelledby="title-dialog-h">
         <form id="title-form" method="dialog">
@@ -207,6 +220,7 @@ import "../../styles/board.css";
     setMentionNames,
   } from "../../lib/board-ui";
   import { attachPhotoPicker } from "../../lib/board-photo-picker";
+  import { renderEventForm, fillEventForm, readEventForm, eventIcs } from "../../lib/board-event-form";
 
   type Reaction = { emoji: string; count: number; mine: boolean };
   type Panel = {
@@ -261,6 +275,12 @@ import "../../styles/board.css";
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
   let jumpedToPost = false;
+  type EventView = {
+    hosting: boolean; date: string; start: string; end: string | null; place: string; address: string;
+    contact: string; gift: string; when: string; details: string; canEdit: boolean;
+    items: Array<{ id: string; label: string; claimedBy: string | null; mine: boolean }>;
+  };
+  let eventData: EventView | null = null;
   let reportTarget = "";
   let pollData: {
     id: string; multiple: boolean; question?: string | null; closed: boolean; voters: number; mine: string[];
@@ -397,6 +417,39 @@ import "../../styles/board.css";
       : "";
 
     return `<span class="bb-reacts">${given}${adder}</span>`;
+  }
+
+  function renderEventCard(title: string) {
+    const box = document.getElementById("event-card") as HTMLElement;
+    const e = eventData;
+    if (!e) {
+      box.classList.add("hidden");
+      return;
+    }
+    const giftLine = e.gift ? (e.gift === "anyone" ? "A gift is needed." : `A gift is needed for a ${e.gift}.`) : "";
+    let html = `<strong>${e.hosting ? "Hosting" : "Shared"} · ${escapeHtml(e.when)}</strong>
+      <div class="mt-1 text-sm">${escapeHtml(e.place)}${e.address ? `, ${escapeHtml(e.address)}` : ""}</div>`;
+    if (e.contact) html += `<div class="text-sm">RSVP / questions: ${escapeHtml(e.contact)}</div>`;
+    if (giftLine) html += `<div class="text-sm">${escapeHtml(giftLine)}</div>`;
+    if (e.items.length) {
+      html += `<div class="mt-2 text-sm font-semibold">Please bring</div><ul class="mt-1 space-y-1 text-sm">` +
+        e.items
+          .map((i) => {
+            const state = i.claimedBy
+              ? i.mine
+                ? `<span>You're bringing this</span> <button type="button" class="bb-btn event-unclaim" data-id="${escapeHtml(i.id)}">Take it back</button>`
+                : `<span class="text-text-secondary">${escapeHtml(i.claimedBy)} is bringing this</span>${e.canEdit ? ` <button type="button" class="bb-btn event-unclaim" data-id="${escapeHtml(i.id)}">Clear</button>` : ""}`
+              : `<button type="button" class="bb-btn event-claim" data-id="${escapeHtml(i.id)}">I'll bring this</button>`;
+            return `<li class="flex flex-wrap items-center gap-2"><span>${escapeHtml(i.label)}</span> ${state}</li>`;
+          })
+          .join("") +
+        `</ul>`;
+    }
+    html += `<div class="mt-2 flex flex-wrap gap-2"><button type="button" class="bb-btn event-ics">Add to my calendar</button>${
+      e.canEdit ? '<button type="button" class="bb-btn event-edit">Edit event</button>' : ""
+    }</div>`;
+    box.innerHTML = html;
+    box.classList.remove("hidden");
   }
 
   function renderPoll(question: string) {
@@ -561,6 +614,8 @@ import "../../styles/board.css";
     // The Help button goes on the opening post, for the person who started it.
     helpState = { canAsk: !!data.canRequestClose, waiting: !!thread.closeRequested && !!thread.mine };
     setMentionNames(data.mentionNames ?? []);
+    eventData = data.event ?? null;
+    renderEventCard(thread.title);
     const wantedPost = !jumpedToPost && window.location.hash.startsWith("#p") ? window.location.hash.slice(1) : "";
     isMod = !!data.viewer?.isModerator;
     pollData = data.poll ?? null;
@@ -917,6 +972,77 @@ import "../../styles/board.css";
       titleDialog.close();
       await load();
     }
+  });
+
+  // ---- the event: sign-ups, calendar, edit ----
+  const eventEditDialog = document.getElementById("event-edit-dialog") as HTMLDialogElement;
+  const eventEditFields = document.getElementById("event-edit-fields") as HTMLElement;
+  document.querySelectorAll(".event-edit-close").forEach((b) => b.addEventListener("click", () => eventEditDialog.close()));
+  document.getElementById("event-card")?.addEventListener("click", async (event) => {
+    const t = event.target as HTMLElement;
+    const claim = t.closest(".event-claim, .event-unclaim") as HTMLElement | null;
+    if (claim?.dataset.id) {
+      const res = await boardFetch(
+        "/api/board/event-item",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId: claim.dataset.id, claim: claim.classList.contains("event-claim") }),
+        },
+        here,
+      );
+      if (!res) return;
+      if (!res.ok) showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+      await load();
+      return;
+    }
+    if (t.closest(".event-ics") && eventData) {
+      const ics = eventIcs(
+        { title: titleEl.textContent ?? "Event", hosting: eventData.hosting, date: eventData.date, start: eventData.start, end: eventData.end,
+          place: eventData.place, address: eventData.address, contact: eventData.contact, gift: eventData.gift, items: [] },
+        window.location.href,
+      );
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+      a.download = "event.ics";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return;
+    }
+    if (t.closest(".event-edit") && eventData) {
+      renderEventForm(eventEditFields, { rsvp: false });
+      fillEventForm(eventEditFields, {
+        title: titleEl.textContent ?? "",
+        hosting: eventData.hosting, date: eventData.date, start: eventData.start, end: eventData.end,
+        place: eventData.place, address: eventData.address, contact: eventData.contact, gift: eventData.gift,
+        details: eventData.details,
+        items: eventData.items.map((i) => ({ id: i.id, label: i.label })),
+      });
+      (document.getElementById("event-edit-status") as HTMLElement).textContent = "";
+      eventEditDialog.showModal();
+    }
+  });
+  (document.getElementById("event-edit-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const status = document.getElementById("event-edit-status") as HTMLElement;
+    status.textContent = "Saving…";
+    const res = await boardFetch(
+      "/api/board/event",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...readEventForm(eventEditFields), threadId }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await errorDetail(res)) || `Couldn't save that (${res.status}).`;
+      return;
+    }
+    eventEditDialog.close();
+    await load();
   });
 
   // ---- the poll ----
