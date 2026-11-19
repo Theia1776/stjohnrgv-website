@@ -61,7 +61,9 @@ import "../../styles/board.css";
         <a href="/board/messages/" class="bb-btn">Back to Messages</a>
         <button id="remove" type="button" class="bb-btn bb-btn-danger">Remove from my inbox</button>
         <button id="ignore" type="button" class="bb-btn hidden"></button>
+        <button id="report" type="button" class="bb-btn">Report this conversation</button>
       </div>
+      <p id="report-status" class="text-sm text-text-secondary" role="status"></p>
       <p id="ignore-note" class="hidden text-xs text-text-secondary">
         Ignoring blocks them completely: nothing from them reaches you, and they aren't told. Only a
         moderator or admin can undo it.
@@ -208,10 +210,10 @@ import "../../styles/board.css";
     if (!person) return;
     const ok = await confirmAction({
       message:
-        `Ignore ${person.name}? Nothing from them will reach you, and this conversation leaves your inbox. ` +
-        `You can't undo it yourself: only a moderator or admin can lift it.`,
-      confirmLabel: "Ignore them",
-      cancelLabel: "Not now",
+        "Are you sure you would like to ignore this person? This action cannot be undone " +
+        "except by a moderator.",
+      confirmLabel: "Yes",
+      cancelLabel: "No",
       danger: true,
     });
     if (!ok) return;
@@ -249,6 +251,32 @@ import "../../styles/board.css";
       return;
     }
     window.location.assign("/board/messages/");
+  });
+
+  (document.getElementById("report") as HTMLButtonElement).addEventListener("click", async () => {
+    const ok = await confirmAction({
+      message:
+        "Report this conversation? A copy of all of it, as it stands now, is sent to the site's admins to " +
+        "read. Nobody else sees it. Use this if something said here is wrong or frightening.",
+      confirmLabel: "Yes, report it",
+      cancelLabel: "No",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await boardFetch(
+      "/api/board/report",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      },
+      here,
+    );
+    if (!res) return;
+    const note = document.getElementById("report-status") as HTMLElement;
+    note.textContent = res.ok
+      ? "Reported. A copy of this conversation has gone to the admins, who will look at it."
+      : (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
   });
 
   attachSmilies(replyBody, document.getElementById("reply-smilies") as HTMLElement);

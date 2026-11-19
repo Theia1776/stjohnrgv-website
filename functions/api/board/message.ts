@@ -21,10 +21,8 @@ import {
   requireBoardAccess,
   jsonResponse,
   type BoardEnv,
-  type BoardViewer,
 } from "../../../src/lib/board-access.ts";
 import {
-  CONVERSATION_COLUMNS,
   MAX_BODY,
   MAX_SUBJECT,
   UUID,
@@ -32,46 +30,13 @@ import {
   namesOf,
   otherParty,
   privilegedIds,
-  ignoredBy,
   overHourlyLimit,
   postMessage,
-  isIgnored,
   withoutThoseIgnoring,
-  type ConversationRow,
+  openFor,
 } from "../../../src/lib/board-messages.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 const BOARD_ROLES = ["catechumen", "member", "admin"];
-
-/** The conversation, if this person is allowed to see it. */
-async function openFor(
-  supabase: SupabaseClient,
-  viewer: BoardViewer,
-  id: string,
-): Promise<ConversationRow | null> {
-  if (!UUID.test(id)) return null;
-  const { data: conv } = await supabase
-    .from("board_conversations")
-    .select(CONVERSATION_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
-  if (!conv) return null;
-  const row = conv as ConversationRow;
-
-  const { data: member } = await supabase
-    .from("board_conversation_members")
-    .select("user_id")
-    .eq("conversation_id", id)
-    .eq("user_id", viewer.id)
-    .maybeSingle();
-  if (row.kind === "help") return member || viewer.isModerator ? row : null;
-  if (!member) return null;
-  // A conversation with someone you ignore is closed to you.
-  if (isIgnored(row, viewer.id, await ignoredBy(supabase, viewer.id), await privilegedIds(supabase))) {
-    return null;
-  }
-  return row;
-}
 
 export async function onRequestGet(
   context: { request: Request; env: BoardEnv },

@@ -24,12 +24,22 @@ export async function onRequestGet(
     const { rows, unreadCount, ignoring } = await loadInbox(supabase, viewer.id);
     const names = await namesOf(supabase, [...ignoring]);
 
+    let openReports = 0;
+    if (viewer.isAdmin) {
+      const { count } = await supabase
+        .from("board_reports")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open");
+      openReports = count ?? 0;
+    }
+
     return wrap(
       jsonResponse(
         {
           conversations: rows,
           unreadCount,
-          viewer: { isModerator: viewer.isModerator },
+          viewer: { isModerator: viewer.isModerator, isAdmin: viewer.isAdmin },
+          openReports,
           ignoring: [...ignoring]
             .map((id) => ({ id, name: names.get(id) ?? "A former parishioner" }))
             .sort((a, b) => a.name.localeCompare(b.name)),

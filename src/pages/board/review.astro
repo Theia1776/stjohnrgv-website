@@ -1,0 +1,333 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Review | Parish Board" description="Reported conversations, for the site's admins.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">Review</h1>
+    <p class="text-text-secondary text-sm mb-2">
+      Reported conversations, and a way to open one in an emergency. For admins only.
+    </p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; <a href="/board/messages/">Messages</a> &rsaquo; Review
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden space-y-8">
+      <p class="bb-notice">
+        Everything you open here is written to the log at the bottom, with your name, the time and the
+        reason, and every admin can see it. Open things only when there's a real reason to.
+      </p>
+
+      <section>
+        <h2 class="font-semibold mb-2">Reports</h2>
+        <table class="bb-table" id="reports-table">
+          <thead>
+            <tr>
+              <th>Conversation</th>
+              <th>Reported by</th>
+              <th class="bb-last">When</th>
+            </tr>
+          </thead>
+          <tbody id="reports"></tbody>
+        </table>
+        <p id="no-reports" class="hidden text-sm text-text-secondary">No reports.</p>
+
+        <div id="report-view" class="hidden mt-4 border border-border-soft bg-cream-card p-4">
+          <h3 id="report-title" class="font-semibold"></h3>
+          <p id="report-meta" class="text-xs text-text-secondary mb-3"></p>
+          <div id="report-messages" class="space-y-3 text-sm"></div>
+          <div class="bb-bar">
+            <button id="report-reviewed" type="button" class="bb-btn bb-btn-strong">Mark reviewed</button>
+            <button id="report-delete" type="button" class="bb-btn bb-btn-danger">Delete this report</button>
+            <button id="report-close" type="button" class="bb-btn">Close</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="font-semibold mb-1">Open a conversation that was not reported</h2>
+        <p class="text-sm text-text-secondary mb-2">
+          Pick a person to see who they are talking with. You'll be asked why before anything opens.
+          Only conversations still on the server show up: one that everyone has cleared is gone.
+        </p>
+        <select id="person" aria-label="Person" class="border border-border-soft bg-cream-bg px-3 py-2">
+          <option value="">Pick a person…</option>
+        </select>
+        <ul id="person-convs" class="mt-3 space-y-2 text-sm"></ul>
+        <form id="open-form" class="hidden mt-3 space-y-2">
+          <label class="block text-sm">
+            Why are you opening this? (It goes in the log.)
+            <input
+              id="open-reason"
+              type="text"
+              maxlength="1000"
+              class="block w-full border border-border-soft bg-cream-bg px-3 py-2 mt-1"
+            />
+          </label>
+          <button type="submit" class="bb-btn bb-btn-strong">Open it</button>
+          <span id="open-status" class="text-sm text-text-secondary" role="status"></span>
+        </form>
+        <div id="live-view" class="hidden mt-4 border border-border-soft bg-cream-card p-4">
+          <h3 id="live-title" class="font-semibold mb-2"></h3>
+          <div id="live-messages" class="space-y-3 text-sm"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="font-semibold mb-2">Access log</h2>
+        <table class="bb-table">
+          <thead>
+            <tr>
+              <th>Admin</th>
+              <th>What</th>
+              <th>Reason</th>
+              <th class="bb-last">When</th>
+            </tr>
+          </thead>
+          <tbody id="log"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { confirmAction } from "../../lib/confirm";
+  import { escapeHtml, renderBody, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  const here = "/board/review/";
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const reportsEl = document.getElementById("reports") as HTMLElement;
+  const reportsTable = document.getElementById("reports-table") as HTMLElement;
+  const noReports = document.getElementById("no-reports") as HTMLElement;
+  const reportView = document.getElementById("report-view") as HTMLElement;
+  const logEl = document.getElementById("log") as HTMLElement;
+  const personSel = document.getElementById("person") as HTMLSelectElement;
+  const personConvs = document.getElementById("person-convs") as HTMLElement;
+  const openForm = document.getElementById("open-form") as HTMLFormElement;
+  const openReason = document.getElementById("open-reason") as HTMLInputElement;
+  const openStatus = document.getElementById("open-status") as HTMLElement;
+  const liveView = document.getElementById("live-view") as HTMLElement;
+
+  let openReportId = "";
+  let openConvId = "";
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  type Msg = { author: string; body: string; at: string };
+  function messagesHtml(list: Msg[]): string {
+    return list
+      .map(
+        (m) => `
+        <div class="border-l-4 pl-3" style="border-color: var(--bb-gold)">
+          <div class="text-xs text-text-secondary">
+            <strong>${escapeHtml(m.author)}</strong> &middot; ${escapeHtml(exactly(m.at) || when(m.at))}
+          </div>
+          <div class="bb-body">${renderBody(m.body)}</div>
+        </div>`,
+      )
+      .join("");
+  }
+
+  async function load() {
+    const res = await boardFetch("/api/board/review", {}, here);
+    if (!res) return;
+    if (res.status === 403) {
+      showError("Only the site's admins can open this page.");
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+    const data = await res.json();
+    const reports: Array<{ id: string; reporter: string; subject: string; status: string; at: string }> =
+      data.reports ?? [];
+
+    reportsTable.classList.toggle("hidden", reports.length === 0);
+    noReports.classList.toggle("hidden", reports.length > 0);
+    reportsEl.innerHTML = reports
+      .map(
+        (r) => `
+        <tr class="${r.status === "open" ? "bb-unread" : ""}">
+          <td>
+            <a href="#" class="bb-title open-report" data-id="${escapeHtml(r.id)}">${escapeHtml(r.subject)}</a>
+            ${r.status === "open" ? '<span class="bb-flag">To look at</span>' : "<em>(reviewed)</em>"}
+          </td>
+          <td>${escapeHtml(r.reporter)}</td>
+          <td class="bb-last">${escapeHtml(when(r.at))}</td>
+        </tr>`,
+      )
+      .join("");
+
+    const log: Array<{ admin: string; kind: string; reason: string; at: string }> = data.log ?? [];
+    logEl.innerHTML = log
+      .map(
+        (l) => `
+        <tr>
+          <td>${escapeHtml(l.admin)}</td>
+          <td>${l.kind === "report" ? "Opened a report" : "Opened a conversation"}</td>
+          <td>${l.kind === "report" ? "" : escapeHtml(l.reason ?? "")}</td>
+          <td class="bb-last">${escapeHtml(exactly(l.at) || when(l.at))}</td>
+        </tr>`,
+      )
+      .join("");
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  reportsEl.addEventListener("click", async (event) => {
+    const link = (event.target as HTMLElement).closest(".open-report") as HTMLElement | null;
+    if (!link?.dataset.id) return;
+    event.preventDefault();
+    const res = await boardFetch(
+      `/api/board/review?report=${encodeURIComponent(link.dataset.id)}`,
+      {},
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't open that (${res.status}).`);
+      return;
+    }
+    const { report } = await res.json();
+    openReportId = report.id;
+    (document.getElementById("report-title") as HTMLElement).textContent = report.subject;
+    (document.getElementById("report-meta") as HTMLElement).textContent =
+      `Reported by ${report.reporter} on ${exactly(report.created_at)}` +
+      (report.reason ? `. They said: ${report.reason}` : ".");
+    (document.getElementById("report-messages") as HTMLElement).innerHTML =
+      `<p class="text-xs text-text-secondary">Between: ${(report.snapshot.participants ?? [])
+        .map((p: { name: string }) => escapeHtml(p.name))
+        .join(", ")}</p>` +
+      messagesHtml(
+        (report.snapshot.messages ?? []).map((m: { author: string; body: string; at: string }) => m),
+      );
+    reportView.classList.remove("hidden");
+    reportView.scrollIntoView({ behavior: "smooth", block: "start" });
+    await load();
+  });
+
+  (document.getElementById("report-close") as HTMLButtonElement).addEventListener("click", () =>
+    reportView.classList.add("hidden"),
+  );
+  (document.getElementById("report-reviewed") as HTMLButtonElement).addEventListener("click", async () => {
+    const res = await boardFetch(
+      "/api/board/review",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ report: openReportId, status: "reviewed" }),
+      },
+      here,
+    );
+    if (!res) return;
+    reportView.classList.add("hidden");
+    await load();
+  });
+  (document.getElementById("report-delete") as HTMLButtonElement).addEventListener("click", async () => {
+    const ok = await confirmAction({
+      message: "Delete this report and its saved copy of the conversation? This can't be undone.",
+      confirmLabel: "Delete it",
+      cancelLabel: "Keep it",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await boardFetch(
+      `/api/board/review?report=${encodeURIComponent(openReportId)}`,
+      { method: "DELETE" },
+      here,
+    );
+    if (!res) return;
+    reportView.classList.add("hidden");
+    await load();
+  });
+
+  // ---- opening a conversation by person ----
+  async function loadPeople() {
+    const res = await boardFetch("/api/board/people", {}, here);
+    if (!res || !res.ok) return;
+    const people: Array<{ id: string; name: string }> = (await res.json()).people ?? [];
+    personSel.innerHTML =
+      `<option value="">Pick a person…</option>` +
+      people.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join("");
+  }
+
+  personSel.addEventListener("change", async () => {
+    openForm.classList.add("hidden");
+    liveView.classList.add("hidden");
+    personConvs.innerHTML = "";
+    if (!personSel.value) return;
+    const res = await boardFetch(
+      `/api/board/review?person=${encodeURIComponent(personSel.value)}`,
+      {},
+      here,
+    );
+    if (!res || !res.ok) return;
+    const list: Array<{ id: string; between: string; lastAt: string }> =
+      (await res.json()).conversations ?? [];
+    personConvs.innerHTML = list.length
+      ? list
+          .map(
+            (c) => `
+          <li>${escapeHtml(c.between)} <span class="text-text-secondary">(last message ${escapeHtml(when(c.lastAt))})</span>
+            <button type="button" class="bb-btn pick-conv" data-id="${escapeHtml(c.id)}">Open…</button></li>`,
+          )
+          .join("")
+      : `<li class="text-text-secondary">No conversations on the server for that person.</li>`;
+  });
+
+  personConvs.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest(".pick-conv") as HTMLElement | null;
+    if (!button?.dataset.id) return;
+    openConvId = button.dataset.id;
+    openForm.classList.remove("hidden");
+    openStatus.textContent = "";
+    openReason.focus();
+  });
+
+  openForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const res = await boardFetch(
+      "/api/board/review",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: openConvId, reason: openReason.value }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      openStatus.textContent = (await errorDetail(res)) || `Couldn't open that (${res.status}).`;
+      return;
+    }
+    const data = await res.json();
+    (document.getElementById("live-title") as HTMLElement).textContent = data.subject;
+    (document.getElementById("live-messages") as HTMLElement).innerHTML = messagesHtml(data.messages ?? []);
+    liveView.classList.remove("hidden");
+    openReason.value = "";
+    openForm.classList.add("hidden");
+    await load();
+  });
+
+  load().then(loadPeople);
+</script>

@@ -34,6 +34,7 @@ import "../../styles/board.css";
       <div class="bb-bar">
         <button id="new-message" type="button" class="bb-btn bb-btn-strong">New message</button>
         <a href="/board/" class="bb-btn">Back to the board</a>
+        <a href="/board/review/" id="review-link" class="bb-btn hidden">Review</a>
       </div>
 
       <form
@@ -237,6 +238,11 @@ import "../../styles/board.css";
     content.classList.remove("hidden");
 
     if (data.viewer?.isModerator) await loadModIgnores();
+    if (data.viewer?.isAdmin) {
+      const link = document.getElementById("review-link") as HTMLElement;
+      link.classList.remove("hidden");
+      link.textContent = data.openReports > 0 ? `Review (${data.openReports} to look at)` : "Review";
+    }
   }
 
   type Ignore = { by: string; byName: string; ignored: string; ignoredName: string; since: string };
