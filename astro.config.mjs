@@ -29,6 +29,7 @@ export default defineConfig({
         !page.includes('/admin') &&
         !page.includes('/login') &&
         !page.includes('/reset-password') &&
+        !page.includes('/welcome') &&
         !page.includes('/seasons-preview') &&
         // noindex, and an account-holders' form besides.
         !page.includes('/table/share') &&

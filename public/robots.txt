@@ -14,6 +14,7 @@ Disallow: /coffee-hour/
 Disallow: /admin/
 Disallow: /login/
 Disallow: /reset-password/
+Disallow: /welcome/
 Disallow: /api/
 
 # Internal preview page — not part of the public site.

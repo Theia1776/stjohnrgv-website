@@ -1,0 +1,105 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Welcome | St. John of Kronstadt Orthodox Mission"
+  description="Choose a password for your St. John of Kronstadt parish website account."
+>
+  <meta slot="head" name="robots" content="noindex,nofollow" />
+
+  <section class="bg-cream-bg">
+    <div class="mx-auto max-w-md px-4 py-16 md:py-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Parish Website</p>
+      <h1 id="hello" class="mt-2 font-display text-3xl text-text-primary md:text-4xl">Welcome</h1>
+      <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+
+      <form id="form" class="mt-8 space-y-5" hidden novalidate>
+        <p class="text-lg leading-relaxed text-text-primary/90">
+          Your account is ready. Choose a password, and we will take you
+          right in.
+        </p>
+        <div>
+          <label for="pw" class="block text-lg font-semibold text-text-primary">Your password</label>
+          <input
+            id="pw" type="password" autocomplete="new-password" minlength="8" required
+            class="mt-2 block w-full border border-text-secondary bg-cream-card px-4 py-3 text-xl text-text-primary"
+          />
+          <p class="mt-2 text-sm text-text-secondary">At least 8 letters or numbers. Pick something you will remember.</p>
+          <label class="mt-3 flex items-center gap-2 text-base text-text-primary">
+            <input id="show" type="checkbox" class="h-5 w-5" /> Show what I am typing
+          </label>
+        </div>
+        <button id="go" type="submit" class="btn btn-primary btn-lg">Take me to my account</button>
+        <p id="err" role="alert" hidden class="text-base font-semibold text-liturgical-red"></p>
+      </form>
+
+      <p id="gone" role="alert" hidden class="mt-8 border-l-2 border-sacred-gold bg-cream-card p-4 text-base leading-relaxed text-text-primary/90"></p>
+      <p id="wait" class="mt-8 text-text-secondary">One moment…</p>
+    </div>
+  </section>
+
+  <script>
+    const token = new URLSearchParams(location.search).get("t") ?? "";
+    const form = document.getElementById("form") as HTMLFormElement;
+    const gone = document.getElementById("gone") as HTMLElement;
+    const wait = document.getElementById("wait") as HTMLElement;
+    const err = document.getElementById("err") as HTMLElement;
+    const pw = document.getElementById("pw") as HTMLInputElement;
+    const go = document.getElementById("go") as HTMLButtonElement;
+
+    document.getElementById("show")!.addEventListener("change", (e) => {
+      pw.type = (e.target as HTMLInputElement).checked ? "text" : "password";
+    });
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/auth/welcome?t=${encodeURIComponent(token)}`);
+        const j = await res.json().catch(() => ({}));
+        wait.hidden = true;
+        if (res.ok) {
+          if (j.firstName) document.getElementById("hello")!.textContent = `Welcome, ${j.firstName}`;
+          form.hidden = false;
+          pw.focus();
+        } else {
+          gone.textContent = j.error || "This link did not work. Please call the parish office.";
+          gone.hidden = false;
+        }
+      } catch {
+        wait.hidden = true;
+        gone.textContent = "We could not reach the website. Please check your internet and try again.";
+        gone.hidden = false;
+      }
+    })();
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.hidden = true;
+      if (pw.value.length < 8) {
+        err.textContent = "Please use at least 8 letters or numbers.";
+        err.hidden = false;
+        return;
+      }
+      go.disabled = true;
+      go.textContent = "One moment…";
+      try {
+        const res = await fetch("/api/auth/welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password: pw.value }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (res.ok) {
+          location.href = j.signedIn ? "/account/" : "/login/";
+          return;
+        }
+        err.textContent = j.error || "Something went wrong. Please try again.";
+      } catch {
+        err.textContent = "We could not reach the website. Please try again.";
+      }
+      err.hidden = false;
+      go.disabled = false;
+      go.textContent = "Take me to my account";
+    });
+  </script>
+</Layout>
