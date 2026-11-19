@@ -1127,3 +1127,16 @@ mark {
 .bb-btn[hidden] {
   display: none !important;
 }
+
+/* The buttons beside a room in the admin list: one line on a wide screen,
+   wrapping on a phone so the table doesn't push the page sideways. */
+.bb-cat-actions {
+  width: 20rem;
+  white-space: nowrap;
+}
+@media (max-width: 40rem) {
+  .bb-cat-actions {
+    width: auto;
+    white-space: normal;
+  }
+}

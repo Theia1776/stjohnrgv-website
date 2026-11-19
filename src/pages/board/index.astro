@@ -327,7 +327,7 @@ import "../../styles/board.css";
             ${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}${audienceLabel(c)}
             <span class="bb-desc">${c.description ? escapeHtml(c.description) : "<em>no subtitle</em>"}</span>
           </td>
-          <td style="width: 20rem; white-space: nowrap;">
+          <td class="bb-cat-actions">
             <button type="button" class="bb-btn cat-edit">Edit</button>
             <button type="button" class="bb-btn cat-hide">${c.hidden ? "Show" : "Hide"}</button>
             ${c.slug === "moderation" || c.slug === "admin" ? "" : '<button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>'}
