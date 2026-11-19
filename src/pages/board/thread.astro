@@ -33,6 +33,7 @@ import "../../styles/board.css";
 
       <div id="mod-note" class="hidden bb-notice" role="status"></div>
       <div id="flash" class="hidden bb-notice" role="status"></div>
+      <div id="poll" class="hidden bb-notice"></div>
 
       <table class="bb-table">
         <thead>
@@ -74,6 +75,14 @@ import "../../styles/board.css";
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
         </div>
       </form>
+
+      <dialog id="history-dialog" class="bb-help-dialog" aria-labelledby="history-title">
+        <h2 id="history-title">Earlier versions</h2>
+        <div id="history-body" class="text-sm"></div>
+        <div class="bb-help-actions">
+          <button type="button" class="bb-btn history-close">Close</button>
+        </div>
+      </dialog>
 
       <dialog id="suspend-dialog" class="bb-help-dialog" aria-labelledby="suspend-title">
         <form id="suspend-form" method="dialog">
@@ -190,6 +199,7 @@ import "../../styles/board.css";
     editedAt: string | null;
     mine: boolean;
     authorId?: string | null;
+    profileId?: string | null;
     canSuspend?: boolean;
     reactions: Reaction[];
   };
@@ -216,6 +226,12 @@ import "../../styles/board.css";
   let isAdmin = false;
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
+  let isMod = false;
+  let pollData: {
+    id: string; multiple: boolean; closed: boolean; voters: number; mine: string[];
+    options: Array<{ id: string; label: string; votes: number }>;
+  } | null = null;
+  let pollChanging = false;
   let suspendTarget: { id: string; name: string } | null = null;
 
   const suspendDialog = document.getElementById("suspend-dialog") as HTMLDialogElement;
@@ -272,7 +288,7 @@ import "../../styles/board.css";
   }
 
   /** "Joined: 14 Oct 2026 · Posts: 9" down the left of a post. */
-  function authorCell(panel: Panel, authorId: string | null): string {
+  function authorCell(panel: Panel, authorId: string | null, profileId: string | null): string {
     const joined = panel.joined
       ? new Date(panel.joined).toLocaleDateString("en-US", {
           day: "numeric",
@@ -283,7 +299,7 @@ import "../../styles/board.css";
     return `
       <td class="bb-author">
         ${panel.avatarUrl ? `<img class="bb-avatar" src="${escapeHtml(panel.avatarUrl)}" alt="" />` : ""}
-        <span class="bb-author-name">${escapeHtml(panel.name)}</span>
+        <span class="bb-author-name">${profileId ? `<a href="/board/profile/?id=${encodeURIComponent(profileId)}" class="underline">${escapeHtml(panel.name)}</a>` : escapeHtml(panel.name)}</span>
         ${authorId ? `<a class="bb-author-msg" href="/board/messages/?to=${encodeURIComponent(authorId)}" title="Send ${escapeHtml(panel.name)} a private message">Message</a>` : ""}
         ${panel.rank ? `<span class="bb-author-rank">${escapeHtml(panel.rank)}</span>` : ""}
         <span class="bb-author-meta">
@@ -346,6 +362,40 @@ import "../../styles/board.css";
     return `<span class="bb-reacts">${given}${adder}</span>`;
   }
 
+  function renderPoll(question: string) {
+    const box = document.getElementById("poll") as HTMLElement;
+    if (!pollData) {
+      box.classList.add("hidden");
+      return;
+    }
+    const p = pollData;
+    const voted = p.mine.length > 0;
+    let html = `<strong>Poll: ${escapeHtml(question)}</strong>`;
+    if (!p.closed && (!voted || pollChanging)) {
+      html += `<form id="poll-form" class="mt-2 space-y-1">` +
+        p.options
+          .map(
+            (o) => `<label class="flex items-center gap-2"><input type="${p.multiple ? "checkbox" : "radio"}" name="choice" value="${escapeHtml(o.id)}" ${p.mine.includes(o.id) ? "checked" : ""} class="h-4 w-4" /> ${escapeHtml(o.label)}</label>`,
+          )
+          .join("") +
+        `<div class="mt-2"><button type="submit" class="bb-btn bb-btn-strong">Vote</button> <span id="poll-status" class="text-sm" role="status"></span></div></form>` +
+        (p.multiple ? `<p class="text-xs text-text-secondary mt-1">You can choose more than one.</p>` : "");
+    } else {
+      const top = Math.max(1, ...p.options.map((o) => o.votes));
+      html += `<div class="mt-2 space-y-2">` +
+        p.options
+          .map((o) => {
+            const pct = p.voters ? Math.round((o.votes / p.voters) * 100) : 0;
+            return `<div><div class="flex justify-between text-sm"><span>${escapeHtml(o.label)}${p.mine.includes(o.id) ? " ✓" : ""}</span><span>${o.votes} (${pct}%)</span></div><div class="bb-poll-bar"><i style="width:${Math.round((o.votes / top) * 100)}%"></i></div></div>`;
+          })
+          .join("") +
+        `</div><p class="text-xs text-text-secondary mt-2">${p.voters} ${p.voters === 1 ? "person" : "people"} voted${p.closed ? " · This poll is closed." : ""}</p>`;
+      if (!p.closed) html += `<button type="button" id="poll-change" class="bb-btn mt-2">Change my vote</button>`;
+    }
+    box.innerHTML = html;
+    box.classList.remove("hidden");
+  }
+
   function renderPosts(posts: Post[], previouslyReadAt: string | null) {
     const seen = previouslyReadAt ? new Date(previouslyReadAt).getTime() : null;
     let dividerDrawn = false;
@@ -384,12 +434,12 @@ import "../../styles/board.css";
         return `
           ${divider}
           <tr class="bb-post-row" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
-            ${authorCell(p.panel, p.authorId ?? null)}
+            ${authorCell(p.panel, p.authorId ?? null, p.profileId ?? null)}
             <td>
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
                   Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
-                  ${p.editedAt ? `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>` : ""}
+                  ${p.editedAt ? (isMod ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
                 </span>
                 <span>${buttons}</span>
               </div>
@@ -460,6 +510,9 @@ import "../../styles/board.css";
     // The Help button goes on the opening post, for the person who started it.
     helpState = { canAsk: !!data.canRequestClose, waiting: !!thread.closeRequested && !!thread.mine };
     setMentionNames(data.mentionNames ?? []);
+    isMod = !!data.viewer?.isModerator;
+    pollData = data.poll ?? null;
+    renderPoll(thread.title);
     renderPosts(posts, data.previouslyReadAt);
     document.getElementById("jump-new")?.classList.toggle("hidden", !document.getElementById("first-new"));
 
@@ -502,6 +555,27 @@ import "../../styles/board.css";
       if (!id || !row) return;
       const post = posts.find((p) => p.id === id);
       if (!post) return;
+
+      // --- what it said before ---
+      if (button.classList.contains("post-history")) {
+        const res = await boardFetch(`/api/board/post-history?id=${encodeURIComponent(id)}`, {}, here);
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't load that (${res.status}).`);
+          return;
+        }
+        const h = await res.json();
+        (document.getElementById("history-body") as HTMLElement).innerHTML = h.earlier.length
+          ? h.earlier
+              .map(
+                (e: { body: string; by: string; replacedAt: string }) =>
+                  `<div class="border-l-4 pl-3 mb-3" style="border-color: var(--bb-gold)"><div class="text-xs text-text-secondary">Before ${escapeHtml(e.by)} changed it, ${escapeHtml(exactly(e.replacedAt))}:</div><div class="bb-body">${renderBody(e.body)}</div></div>`,
+              )
+              .join("")
+          : "<p>No earlier version was kept. It was edited before this was recorded.</p>";
+        (document.getElementById("history-dialog") as HTMLDialogElement).showModal();
+        return;
+      }
 
       // --- report a post ---
       if (button.classList.contains("post-report")) {
@@ -718,6 +792,47 @@ import "../../styles/board.css";
     flash.classList.remove("hidden");
     flash.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+
+  // ---- the poll ----
+  document.getElementById("poll")?.addEventListener("click", (event) => {
+    if ((event.target as HTMLElement).id === "poll-change") {
+      pollChanging = true;
+      renderPoll(titleEl.textContent ?? "");
+    }
+  });
+  document.getElementById("poll")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!pollData) return;
+    const form = event.target as HTMLFormElement;
+    const picked = [...form.querySelectorAll("input:checked")].map((i) => (i as HTMLInputElement).value);
+    const status = document.getElementById("poll-status") as HTMLElement;
+    if (!picked.length) {
+      status.textContent = "Pick an answer first.";
+      return;
+    }
+    status.textContent = "Saving…";
+    const res = await boardFetch(
+      "/api/board/vote",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pollId: pollData.id, optionIds: picked }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await errorDetail(res)) || `Couldn't save that (${res.status}).`;
+      return;
+    }
+    pollChanging = false;
+    await load();
+  });
+
+  // ---- what a post said before it was edited (moderators) ----
+  document.querySelectorAll(".history-close").forEach((b) =>
+    b.addEventListener("click", () => (document.getElementById("history-dialog") as HTMLDialogElement).close()),
+  );
 
   // ---- suspend: how long, and why ----
   document.querySelectorAll(".suspend-close").forEach((b) =>

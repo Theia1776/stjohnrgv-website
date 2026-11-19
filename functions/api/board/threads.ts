@@ -31,6 +31,7 @@ interface ThreadRow {
   author_id: string | null;
   pinned: boolean;
   locked: boolean;
+  announce: boolean;
   created_at: string;
   close_requested_at: string | null;
   last_post_at: string;
@@ -66,7 +67,7 @@ export async function onRequestGet(
     const { data: threads, error: threadError } = await supabase
       .from("board_threads")
       .select(
-        "id, title, author_id, pinned, locked, created_at, last_post_at, post_count, view_count, close_requested_at",
+        "id, title, author_id, pinned, locked, announce, created_at, last_post_at, post_count, view_count, close_requested_at",
       )
       .eq("category_id", category.id)
       .order("pinned", { ascending: false })
@@ -135,6 +136,7 @@ export async function onRequestGet(
               lastPostBy: lastAuthorId ? (names.get(lastAuthorId) ?? GONE) : GONE,
               pinned: t.pinned,
               locked: t.locked,
+              announce: !!t.announce,
               createdAt: t.created_at,
               lastPostAt: t.last_post_at,
               replyCount: Math.max(0, (t.post_count ?? 0) - 1),
@@ -171,7 +173,7 @@ export async function onRequestPost(
   if (blocked) return blocked;
 
   try {
-    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown };
+    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown; poll?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -188,6 +190,22 @@ export async function onRequestPost(
       return wrap(jsonResponse({ error: `Titles top out at ${MAX_TITLE} characters.` }, 400));
     }
     if (!text) return wrap(jsonResponse({ error: "Please write something to start it off." }, 400));
+
+    // An optional poll: 2 to 8 choices.
+    let poll: { options: string[]; multiple: boolean } | null = null;
+    if (body.poll && typeof body.poll === "object") {
+      const raw = body.poll as { options?: unknown; multiple?: unknown };
+      const options = Array.isArray(raw.options)
+        ? raw.options.filter((o): o is string => typeof o === "string").map((o) => o.trim()).filter(Boolean)
+        : [];
+      if (options.length < 2 || options.length > 8) {
+        return wrap(jsonResponse({ error: "A poll needs between two and eight choices." }, 400));
+      }
+      if (options.some((o) => o.length > 100)) {
+        return wrap(jsonResponse({ error: "Keep each choice to 100 characters or fewer." }, 400));
+      }
+      poll = { options, multiple: raw.multiple === true };
+    }
     if (text.length > MAX_BODY) {
       return wrap(jsonResponse({ error: `Posts top out at ${MAX_BODY} characters.` }, 400));
     }
@@ -222,6 +240,19 @@ export async function onRequestPost(
 
     await attachPhotos(supabase, viewer.id, firstPost.id as string, body.photoIds);
     await recordMentions(supabase, firstPost.id as string, viewer.id, text);
+
+    if (poll) {
+      const { data: made, error: pollError } = await supabase
+        .from("board_polls")
+        .insert({ thread_id: thread.id, multiple: poll.multiple })
+        .select("id")
+        .single();
+      if (!pollError && made) {
+        await supabase.from("board_poll_options").insert(
+          poll.options.map((label, position) => ({ poll_id: made.id, label, position })),
+        );
+      }
+    }
 
     // You've read what you just wrote.
     await supabase

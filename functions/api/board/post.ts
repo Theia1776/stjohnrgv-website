@@ -91,6 +91,14 @@ export async function onRequestPatch(
       return wrap(jsonResponse({ error: "This thread is closed." }, 403));
     }
 
+    // Keep what it said before, for the moderators' edit history.
+    const { data: before } = await supabase.from("board_posts").select("body").eq("id", id).maybeSingle();
+    if (before && before.body !== text) {
+      await supabase
+        .from("board_post_edits")
+        .insert({ post_id: id, body: before.body, edited_by: viewer.id });
+    }
+
     const { error: updateError } = await supabase
       .from("board_posts")
       .update({ body: text, edited_at: new Date().toISOString() })

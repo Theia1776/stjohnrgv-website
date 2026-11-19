@@ -72,6 +72,19 @@ import "../../styles/board.css";
         </label>
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
+        <div class="border border-border-soft p-3">
+          <label class="flex items-center gap-2 text-sm font-semibold">
+            <input id="poll-on" type="checkbox" class="h-4 w-4" /> Add a poll to this topic
+          </label>
+          <div id="poll-fields" class="hidden mt-3 space-y-2">
+            <p class="text-xs text-text-secondary">Two to eight choices. The subject above is the question.</p>
+            <div id="poll-options" class="space-y-2"></div>
+            <button id="poll-more" type="button" class="bb-btn">Add another choice</button>
+            <label class="flex items-center gap-2 text-sm">
+              <input id="poll-multiple" type="checkbox" class="h-4 w-4" /> People can choose more than one
+            </label>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
           <button id="start-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <button id="start-cancel" type="button" class="bb-btn">Cancel</button>
@@ -123,6 +136,7 @@ import "../../styles/board.css";
     lastPostBy: string;
     pinned: boolean;
     locked: boolean;
+    announce?: boolean;
     createdAt: string;
     lastPostAt: string;
     replyCount: number;
@@ -219,6 +233,7 @@ import "../../styles/board.css";
           ? `<div class="mt-1">
                <button type="button" class="bb-btn thread-pin">${t.pinned ? "Unpin" : "Pin"}</button>
                <button type="button" class="bb-btn thread-lock">${t.locked ? "Reopen" : "Close"}</button>
+               <button type="button" class="bb-btn thread-announce" title="Show this topic on the board's front page">${t.announce ? "Remove announcement" : "Announce"}</button>
                <button type="button" class="bb-btn bb-btn-danger thread-delete">Delete</button>
              </div>`
           : "";
@@ -315,6 +330,10 @@ import "../../styles/board.css";
         if (await patchThread(id, { pinned: !thread.pinned })) await load();
         return;
       }
+      if (button.classList.contains("thread-announce")) {
+        if (await patchThread(id, { announce: !thread.announce })) await load();
+        return;
+      }
       if (button.classList.contains("thread-lock")) {
         if (await patchThread(id, { locked: !thread.locked })) await load();
         return;
@@ -392,6 +411,24 @@ import "../../styles/board.css";
     },
   );
 
+  // ---- the optional poll on a new topic ----
+  const pollOn = document.getElementById("poll-on") as HTMLInputElement;
+  const pollFields = document.getElementById("poll-fields") as HTMLElement;
+  const pollOptions = document.getElementById("poll-options") as HTMLElement;
+  function addPollOption() {
+    if (pollOptions.children.length >= 8) return;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 100;
+    input.placeholder = `Choice ${pollOptions.children.length + 1}`;
+    input.className = "block w-full border border-border-soft bg-cream-bg px-3 py-2";
+    pollOptions.appendChild(input);
+  }
+  addPollOption();
+  addPollOption();
+  pollOn.addEventListener("change", () => pollFields.classList.toggle("hidden", !pollOn.checked));
+  (document.getElementById("poll-more") as HTMLButtonElement).addEventListener("click", addPollOption);
+
   startForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const titleInput = document.getElementById("new-title") as HTMLInputElement;
@@ -422,7 +459,18 @@ import "../../styles/board.css";
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: slug, title, body: text, photoIds: newPhotos.ids() }),
+        body: JSON.stringify({
+          category: slug,
+          title,
+          body: text,
+          photoIds: newPhotos.ids(),
+          poll: pollOn.checked
+            ? {
+                options: [...pollOptions.querySelectorAll("input")].map((i) => (i as HTMLInputElement).value),
+                multiple: (document.getElementById("poll-multiple") as HTMLInputElement).checked,
+              }
+            : undefined,
+        }),
       },
       here,
     );

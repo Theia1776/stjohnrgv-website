@@ -240,6 +240,42 @@ export async function onRequestGet(
 
     const list = posts ?? [];
     const labels = await mentionLabels(supabase);
+
+    // The poll, if this topic has one. Counts only, never who chose what.
+    let poll: unknown = null;
+    const { data: pollRow } = await supabase
+      .from("board_polls")
+      .select("id, multiple")
+      .eq("thread_id", id)
+      .maybeSingle();
+    if (pollRow) {
+      const { data: options } = await supabase
+        .from("board_poll_options")
+        .select("id, label, position")
+        .eq("poll_id", pollRow.id)
+        .order("position", { ascending: true });
+      const { data: votes } = await supabase
+        .from("board_poll_votes")
+        .select("option_id, user_id")
+        .eq("poll_id", pollRow.id);
+      const tally = new Map<string, number>();
+      const mine: string[] = [];
+      const voters = new Set<string>();
+      for (const v of votes ?? []) {
+        tally.set(v.option_id as string, (tally.get(v.option_id as string) ?? 0) + 1);
+        voters.add(v.user_id as string);
+        if (v.user_id === viewer.id) mine.push(v.option_id as string);
+      }
+      poll = {
+        id: pollRow.id,
+        multiple: pollRow.multiple,
+        closed: !!thread.locked,
+        voters: voters.size,
+        mine,
+        options: (options ?? []).map((o) => ({ id: o.id, label: o.label, votes: tally.get(o.id as string) ?? 0 })),
+      };
+    }
+
     return wrap(
       jsonResponse(
         {
@@ -265,6 +301,7 @@ export async function onRequestGet(
               // For the Message link beside a post. Nobody gets a link to
               // themselves, or to someone who's gone.
               authorId: p.author_id && p.author_id !== viewer.id ? p.author_id : null,
+              profileId: p.author_id ?? null,
               canSuspend:
                 viewer.isModerator && !!p.author_id && p.author_id !== viewer.id && !staffIds.has(p.author_id as string),
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
@@ -288,6 +325,7 @@ export async function onRequestGet(
             };
           }),
           previouslyReadAt,
+          poll,
           // The names an @ can tag, so the page can highlight them.
           mentionNames: [...labels.values()],
           // Only the person who started it, and only while nobody has
@@ -401,6 +439,7 @@ export async function onRequestPatch(
       locked?: unknown;
       title?: unknown;
       category?: unknown;
+      announce?: unknown;
       dismissRequest?: unknown;
     };
     try {
@@ -436,6 +475,7 @@ export async function onRequestPatch(
         updates.close_requested_by = null;
       }
       if (typeof body.pinned === "boolean") updates.pinned = body.pinned;
+      if (typeof body.announce === "boolean") updates.announce = body.announce;
       if (typeof body.locked === "boolean") updates.locked = body.locked;
       if (typeof body.category === "string" && body.category.trim()) {
         const { data: category } = await supabase

@@ -23,6 +23,11 @@ import "../../styles/board.css";
     </div>
 
     <div id="content" class="hidden">
+      <section id="announcements" class="hidden bb-notice">
+        <strong>Announcements</strong>
+        <ul id="announcement-list" class="mt-1 space-y-1"></ul>
+      </section>
+
       <form action="/board/search/" method="get" class="flex flex-wrap gap-2 mb-4">
         <input
           name="q"
@@ -345,6 +350,15 @@ import "../../styles/board.css";
       unreadMessages > 0
         ? `Messages <span class="bb-flag">${unreadMessages} new</span>`
         : "Messages";
+
+    const notes: Array<{ id: string; title: string; room: string }> = data.announcements ?? [];
+    (document.getElementById("announcements") as HTMLElement).classList.toggle("hidden", notes.length === 0);
+    (document.getElementById("announcement-list") as HTMLElement).innerHTML = notes
+      .map(
+        (n) =>
+          `<li><a class="underline" href="/board/thread/?id=${encodeURIComponent(n.id)}">${escapeHtml(n.title)}</a> <span class="text-text-secondary">in ${escapeHtml(n.room)}</span></li>`,
+      )
+      .join("");
 
     const unreadMentions = data.unreadMentions ?? 0;
     (document.getElementById("mentions-link") as HTMLElement).innerHTML =

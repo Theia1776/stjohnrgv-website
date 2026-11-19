@@ -37,6 +37,7 @@ interface ThreadRow {
   last_post_at: string;
   post_count: number;
   title: string;
+  announce?: boolean;
 }
 
 export async function onRequestGet(
@@ -61,7 +62,7 @@ export async function onRequestGet(
 
     const { data: allThreads, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, category_id, last_post_at, post_count, title");
+      .select("id, category_id, last_post_at, post_count, title, announce");
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
     // Counts and "unread" only ever cover rooms this person can see.
     const threads = (allThreads ?? []).filter((t) => visibleIds.has(t.category_id as string));
@@ -188,10 +189,23 @@ export async function onRequestGet(
       unreadMessages = 0;
     }
 
+    // Topics a moderator has put on the front page.
+    const roomName = new Map(visible.map((c: CategoryRow) => [c.id, c.name]));
+    const announcements = (threads ?? [])
+      .filter((t) => (t as ThreadRow).announce)
+      .sort((a, b) => ((a as ThreadRow).last_post_at < (b as ThreadRow).last_post_at ? 1 : -1))
+      .slice(0, 5)
+      .map((t) => ({
+        id: (t as ThreadRow).id,
+        title: (t as ThreadRow).title,
+        room: roomName.get((t as ThreadRow).category_id) ?? "",
+      }));
+
     return wrap(
       jsonResponse(
         {
           categories: payload,
+          announcements,
           unreadTotal,
           unreadMessages,
           unreadMentions,

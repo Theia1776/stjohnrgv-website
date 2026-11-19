@@ -1,0 +1,108 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Member | Parish Board" description="A member of the parish board and what they've written.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; <span id="crumb-name">Member</span>
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="flex items-center gap-4 mb-6">
+        <img id="avatar" class="bb-avatar hidden" alt="" style="width: 4.5rem; height: 4.5rem" />
+        <div>
+          <h1 id="name" class="text-3xl font-bold"></h1>
+          <p id="rank" class="text-text-secondary text-sm"></p>
+          <p id="facts" class="text-text-secondary text-sm"></p>
+        </div>
+      </div>
+
+      <div class="bb-bar">
+        <a href="/board/" class="bb-btn">Back to the board</a>
+        <a id="message" href="#" class="bb-btn bb-btn-strong hidden">Send a message</a>
+      </div>
+
+      <h2 class="font-semibold mt-6 mb-2">Latest posts</h2>
+      <ul id="recent" class="space-y-4"></ul>
+      <p id="none" class="hidden text-text-secondary">Nothing posted yet.</p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  const id = new URLSearchParams(window.location.search).get("id") ?? "";
+  const here = `/board/profile/?id=${encodeURIComponent(id)}`;
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  async function load() {
+    if (!id) {
+      showError("No member in that link.");
+      return;
+    }
+    const res = await boardFetch(`/api/board/profile?id=${encodeURIComponent(id)}`, {}, here);
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+    const data = await res.json();
+    const p = data.profile;
+    document.title = `${p.name} | Parish Board`;
+    (document.getElementById("crumb-name") as HTMLElement).textContent = p.name;
+    (document.getElementById("name") as HTMLElement).textContent = p.name;
+    (document.getElementById("rank") as HTMLElement).textContent = p.rank;
+    (document.getElementById("facts") as HTMLElement).textContent =
+      `Joined ${new Date(p.joined).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} · ${p.posts} ${p.posts === 1 ? "post" : "posts"}`;
+
+    const avatar = document.getElementById("avatar") as HTMLImageElement;
+    if (p.avatarUrl) {
+      avatar.src = p.avatarUrl;
+      avatar.classList.remove("hidden");
+    }
+    const msg = document.getElementById("message") as HTMLAnchorElement;
+    if (!p.isMe) {
+      msg.href = `/board/messages/?to=${encodeURIComponent(p.id)}`;
+      msg.classList.remove("hidden");
+    }
+
+    const recent: Array<{ postId: string; threadId: string; title: string; room: string; snippet: string; at: string }> =
+      data.recent ?? [];
+    (document.getElementById("none") as HTMLElement).classList.toggle("hidden", recent.length > 0);
+    (document.getElementById("recent") as HTMLElement).innerHTML = recent
+      .map(
+        (r) => `
+        <li class="border-b border-border-soft pb-3">
+          <a class="bb-title" href="/board/thread/?id=${encodeURIComponent(r.threadId)}#p${encodeURIComponent(r.postId)}">${escapeHtml(r.title)}</a>
+          <div class="text-xs text-text-secondary">
+            in ${escapeHtml(r.room)} &middot; <span title="${escapeHtml(exactly(r.at))}">${escapeHtml(when(r.at))}</span>
+          </div>
+          <p class="text-sm mt-1">${escapeHtml(r.snippet)}</p>
+        </li>`,
+      )
+      .join("");
+
+    loading.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+  load();
+</script>
