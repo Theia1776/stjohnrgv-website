@@ -23,7 +23,9 @@
  */
 (async () => {
   // The site's own formatter, so this can't drift from what pages display.
-  // Export names are minified in the build; `f` is formatPhone.
+  // Export names are minified in the build; `f` is formatPhone. The hash
+  // in the filename changes whenever src/lib/phone.ts does — if this 404s,
+  // look up the current name in dist/_astro/ and paste it in.
   const mod = await import("/_astro/phone.B8vsF3wr.js");
   const formatPhone = mod.formatPhone || mod.f;
 
