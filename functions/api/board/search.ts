@@ -51,7 +51,7 @@ export async function onRequestGet(
     const { data: posts, error } = await supabase
       .from("board_posts")
       .select(
-        "id, body, created_at, author_id, thread_id, board_threads ( id, title, board_categories ( name, slug, hidden, audience ) )",
+        "id, body, created_at, author_id, thread_id, reported_hidden, board_threads ( id, title, board_categories ( name, slug, hidden, audience ) )",
       )
       .ilike("body", pattern)
       .order("created_at", { ascending: false })
@@ -93,10 +93,11 @@ export async function onRequestGet(
       });
     }
     for (const p of (posts ?? []) as unknown as Array<{
-      id: string; body: string; created_at: string; author_id: string | null; thread_id: string;
+      id: string; body: string; created_at: string; author_id: string | null; thread_id: string; reported_hidden?: boolean;
       board_threads: { id: string; title: string; board_categories: Room | null } | null;
     }>) {
       const t = p.board_threads;
+      if (p.reported_hidden && !viewer.isModerator) continue;
       if (!t || (t.board_categories && !canSeeCategory(viewer, t.board_categories))) continue;
       hits.push({
         postId: p.id,

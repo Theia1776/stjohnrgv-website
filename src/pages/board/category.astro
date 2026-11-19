@@ -77,7 +77,17 @@ import "../../styles/board.css";
             <input id="poll-on" type="checkbox" class="h-4 w-4" /> Add a poll to this topic
           </label>
           <div id="poll-fields" class="hidden mt-3 space-y-2">
-            <p class="text-xs text-text-secondary">Two to eight choices. The subject above is the question.</p>
+            <label class="block">
+              <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">Poll question</span>
+              <input
+                id="poll-question"
+                type="text"
+                maxlength="200"
+                placeholder="What do you want to ask?"
+                class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+              />
+            </label>
+            <p class="text-xs text-text-secondary">Two to eight choices.</p>
             <div id="poll-options" class="space-y-2"></div>
             <button id="poll-more" type="button" class="bb-btn">Add another choice</button>
             <label class="flex items-center gap-2 text-sm">
@@ -468,6 +478,7 @@ import "../../styles/board.css";
             ? {
                 options: [...pollOptions.querySelectorAll("input")].map((i) => (i as HTMLInputElement).value),
                 multiple: (document.getElementById("poll-multiple") as HTMLInputElement).checked,
+                question: (document.getElementById("poll-question") as HTMLInputElement).value,
               }
             : undefined,
         }),

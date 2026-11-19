@@ -198,6 +198,7 @@ import "../../styles/board.css";
     createdAt: string;
     editedAt: string | null;
     mine: boolean;
+    hidden?: boolean;
     authorId?: string | null;
     profileId?: string | null;
     canSuspend?: boolean;
@@ -228,7 +229,7 @@ import "../../styles/board.css";
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
   let pollData: {
-    id: string; multiple: boolean; closed: boolean; voters: number; mine: string[];
+    id: string; multiple: boolean; question?: string | null; closed: boolean; voters: number; mine: string[];
     options: Array<{ id: string; label: string; votes: number }>;
   } | null = null;
   let pollChanging = false;
@@ -370,7 +371,7 @@ import "../../styles/board.css";
     }
     const p = pollData;
     const voted = p.mine.length > 0;
-    let html = `<strong>Poll: ${escapeHtml(question)}</strong>`;
+    let html = `<strong>Poll: ${escapeHtml(p.question || question)}</strong>`;
     if (!p.closed && (!voted || pollChanging)) {
       html += `<form id="poll-form" class="mt-2 space-y-1">` +
         p.options
@@ -413,6 +414,8 @@ import "../../styles/board.css";
         // The opening post can be edited but not deleted on its own —
         // the whole topic hangs off it.
         const canDelete = canEdit && index > 0;
+        // A reported post is held back from everyone but the moderators.
+        const underReview = !!p.hidden && !isMod;
 
         const asking = index === 0 && helpState.canAsk;
         const buttons = [
@@ -422,11 +425,13 @@ import "../../styles/board.css";
           index === 0 && helpState.waiting
             ? '<span class="bb-flag" title="A moderator will look at it">Help requested</span>'
             : "",
-          canReply ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
-          !p.mine ? '<button type="button" class="bb-btn post-report" title="Tell the moderators about this post">Report</button>' : "",
+          p.hidden && isMod ? '<button type="button" class="bb-btn bb-btn-strong post-restore" title="Put this post back on the board">Restore this post</button>' : "",
+          canReply && !underReview ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
           p.canSuspend ? '<button type="button" class="bb-btn post-suspend" title="Stop this member posting for a while">Suspend</button>' : "",
-          canEdit ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
+          canEdit && !underReview ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
           canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
+          // On every post, own included: a small red hand in the corner.
+          !underReview ? '<button type="button" class="bb-btn bb-report-icon post-report" title="Report this post" aria-label="Report this post"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="9" width="12" height="11" rx="4"/><rect x="6" y="3" width="2.6" height="9" rx="1.3"/><rect x="9.6" y="1.5" width="2.6" height="10" rx="1.3"/><rect x="13.2" y="2.5" width="2.6" height="9.5" rx="1.3"/><rect x="16.6" y="5" width="2.4" height="8" rx="1.2"/><path d="M6 13 L2.5 10.5 a1.4 1.4 0 0 0 -2 2 L5 18z"/></svg></button>' : "",
         ]
           .filter(Boolean)
           .join(" ");
@@ -443,10 +448,15 @@ import "../../styles/board.css";
                 </span>
                 <span>${buttons}</span>
               </div>
+              ${
+                underReview
+                  ? `<div class="bb-notice">This post is hidden while the moderators look at a report. It comes back if they find nothing wrong.</div>`
+                  : `${p.hidden ? '<div class="bb-notice">Reported. Hidden from everyone but moderators until it is restored.</div>' : ""}
               <div class="bb-body post-body">${renderBody(p.body)}</div>
               ${videoEmbeds(p.body)}
               ${photosHtml(p, canEdit)}
-              ${p.signature ? `<div class="bb-signature">${renderSignature(p.signature)}</div>` : ""}
+              ${p.signature ? `<div class="bb-signature">${renderSignature(p.signature)}</div>` : ""}`
+              }
               <div class="bb-foot">
                 ${reactionStrip(p)}
                 <a href="#top" class="bb-react-add">Back to top</a>
@@ -521,7 +531,7 @@ import "../../styles/board.css";
       const who = data.closeRequest.by ? escapeHtml(data.closeRequest.by) : "The person who started it";
       modNote.innerHTML = `
         <p><strong>${who} asked the moderators for help with this topic.</strong>
-           Their message is in your <a class="underline" href="/board/messages/">Messages</a>.</p>
+           Their message is in your <a class="underline" href="/board/messages/">Messages</a>, and a note is in the Moderation Forum.</p>
         <p class="mt-2">
           <button type="button" class="bb-btn bb-btn-strong note-close">Close this topic</button>
           <button type="button" class="bb-btn note-dismiss">Dismiss</button>
@@ -577,12 +587,32 @@ import "../../styles/board.css";
         return;
       }
 
+      // --- restore a reported post (moderators) ---
+      if (button.classList.contains("post-restore")) {
+        const res = await boardFetch(
+          "/api/board/post-restore",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ postId: id }),
+          },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+          return;
+        }
+        await load();
+        return;
+      }
+
       // --- report a post ---
       if (button.classList.contains("post-report")) {
         const goAhead = await confirmAction({
           message:
-            "Report this post? The moderators get a note with a link to it and what it said. " +
-            "Nothing is removed until a moderator looks.",
+            "Report this post? It's hidden from the board right away, and the moderators get a note with " +
+            "a link to it and what it said. It comes back if they find nothing wrong.",
           confirmLabel: "Yes, report it",
           cancelLabel: "No",
           danger: true,
@@ -602,8 +632,8 @@ import "../../styles/board.css";
           showError((await errorDetail(res)) || `Couldn't send that (${res.status}).`);
           return;
         }
-        (button as HTMLButtonElement).textContent = "Reported";
-        (button as HTMLButtonElement).disabled = true;
+        // It's off the board now; draw it that way.
+        await load();
         return;
       }
 

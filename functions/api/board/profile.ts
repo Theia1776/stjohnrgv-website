@@ -54,17 +54,17 @@ export async function onRequestGet(
 
     const { data: posts } = await supabase
       .from("board_posts")
-      .select("id, body, created_at, thread_id, board_threads ( id, title, board_categories ( name, hidden, audience ) )")
+      .select("id, body, created_at, thread_id, reported_hidden, board_threads ( id, title, board_categories ( name, hidden, audience ) )")
       .eq("author_id", id)
       .order("created_at", { ascending: false })
       .limit(120);
 
     type Row = {
-      id: string; body: string; created_at: string;
+      id: string; body: string; created_at: string; reported_hidden?: boolean;
       board_threads: { id: string; title: string; board_categories: Room | null } | null;
     };
     const visible = ((posts ?? []) as unknown as Row[]).filter(
-      (r) => r.board_threads && (!r.board_threads.board_categories || canSeeCategory(viewer, r.board_threads.board_categories)),
+      (r) => (!r.reported_hidden || viewer.isModerator) && r.board_threads && (!r.board_threads.board_categories || canSeeCategory(viewer, r.board_threads.board_categories)),
     );
 
     const { count } = await supabase

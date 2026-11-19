@@ -92,7 +92,14 @@ export async function onRequestPatch(
     }
 
     // Keep what it said before, for the moderators' edit history.
-    const { data: before } = await supabase.from("board_posts").select("body").eq("id", id).maybeSingle();
+    const { data: before } = await supabase
+      .from("board_posts")
+      .select("body, reported_hidden")
+      .eq("id", id)
+      .maybeSingle();
+    if (before?.reported_hidden && !viewer.isModerator) {
+      return wrap(jsonResponse({ error: "This post is under review, so it can't be edited right now." }, 403));
+    }
     if (before && before.body !== text) {
       await supabase
         .from("board_post_edits")

@@ -24,7 +24,7 @@ export async function onRequestGet(
     const { data, error } = await supabase
       .from("board_mentions")
       .select(
-        "post_id, by_id, created_at, seen_at, board_posts ( id, body, thread_id, board_threads ( id, title, board_categories ( name, slug, hidden, audience ) ) )",
+        "post_id, by_id, created_at, seen_at, board_posts ( id, body, reported_hidden, thread_id, board_threads ( id, title, board_categories ( name, slug, hidden, audience ) ) )",
       )
       .eq("user_id", viewer.id)
       .order("created_at", { ascending: false })
@@ -37,6 +37,7 @@ export async function onRequestGet(
       created_at: string;
       seen_at: string | null;
       board_posts: {
+        reported_hidden?: boolean;
         body: string;
         board_threads: {
           id: string;
@@ -47,6 +48,7 @@ export async function onRequestGet(
     };
     const rows = ((data ?? []) as unknown as Joined[]).filter((r) => {
       const t = r.board_posts?.board_threads;
+      if (r.board_posts?.reported_hidden && !viewer.isModerator) return false;
       return !!t && (!t.board_categories || canSeeCategory(viewer, t.board_categories));
     });
     const names = await namesOf(

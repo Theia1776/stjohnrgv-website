@@ -96,7 +96,7 @@ export async function onRequestGet(
 
     const { data: posts, error: postError } = await supabase
       .from("board_posts")
-      .select("id, author_id, body, created_at, edited_at")
+      .select("id, author_id, body, created_at, edited_at, reported_hidden")
       .eq("thread_id", id)
       .order("created_at", { ascending: true });
     if (postError) return wrap(jsonResponse({ error: postError.message }, 500));
@@ -240,12 +240,15 @@ export async function onRequestGet(
 
     const list = posts ?? [];
     const labels = await mentionLabels(supabase);
+    // A reported post's words, photos and signature go to nobody but
+    // moderators until it's restored.
+    const hiddenFor = (p: { reported_hidden?: unknown }) => !!p.reported_hidden && !viewer.isModerator;
 
     // The poll, if this topic has one. Counts only, never who chose what.
     let poll: unknown = null;
     const { data: pollRow } = await supabase
       .from("board_polls")
-      .select("id, multiple")
+      .select("id, multiple, question")
       .eq("thread_id", id)
       .maybeSingle();
     if (pollRow) {
@@ -269,6 +272,7 @@ export async function onRequestGet(
       poll = {
         id: pollRow.id,
         multiple: pollRow.multiple,
+        question: pollRow.question ?? null,
         closed: !!thread.locked,
         voters: voters.size,
         mine,
@@ -305,15 +309,16 @@ export async function onRequestGet(
               canSuspend:
                 viewer.isModerator && !!p.author_id && p.author_id !== viewer.id && !staffIds.has(p.author_id as string),
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
-              body: p.body,
-              photos: (photosByPost.get(p.id as string) ?? []).map((ph) => ({
+              hidden: !!p.reported_hidden,
+              body: hiddenFor(p) ? "" : p.body,
+              photos: hiddenFor(p) ? [] : (photosByPost.get(p.id as string) ?? []).map((ph) => ({
                 id: ph.id,
                 width: ph.width,
                 height: ph.height,
                 thumb: photoUrl(ph.id, "thumb"),
                 full: photoUrl(ph.id, "full"),
               })),
-              signature: p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
+              signature: hiddenFor(p) ? "" : p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
               createdAt: p.created_at,
               editedAt: p.edited_at,
               mine: p.author_id === viewer.id,

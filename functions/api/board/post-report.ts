@@ -43,9 +43,6 @@ export async function onRequestPost(
     if (!post || !thread || (thread.board_categories && !canSeeCategory(viewer, thread.board_categories))) {
       return wrap(jsonResponse({ error: "That post is gone." }, 404));
     }
-    if (post.author_id === viewer.id) {
-      return wrap(jsonResponse({ error: "That's your own post. You can edit or delete it." }, 400));
-    }
     if (await overHourlyLimit(supabase, viewer.id)) {
       return wrap(jsonResponse({ error: "Try again a little later." }, 429));
     }
@@ -108,7 +105,7 @@ export async function onRequestPost(
               body:
                 `${viewer.displayName} reported a post by ${author} in "${thread.title}"` +
                 `${thread.board_categories ? ` (${thread.board_categories.name})` : ""}.\n\n` +
-                `${link}\n\nWhat it said:\n${post.body}`,
+                `${link}\n\nThe post is hidden from the board until a moderator restores it: open the topic and press "Restore this post."\n\nWhat it said:\n${post.body}`,
             });
           }
         }
@@ -121,6 +118,9 @@ export async function onRequestPost(
       .from("board_post_reports")
       .insert({ post_id: postId, reporter_id: viewer.id, note_thread_id: noteId });
     if (error) return wrap(jsonResponse({ error: error.message }, 500));
+
+    // Off the board for everyone but moderators until one restores it.
+    await supabase.from("board_posts").update({ reported_hidden: true }).eq("id", postId);
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {

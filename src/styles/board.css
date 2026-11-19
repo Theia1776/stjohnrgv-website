@@ -1059,3 +1059,24 @@ mark {
   color: inherit;
   cursor: pointer;
 }
+
+/* The small red hand that reports a post. */
+.bb-report-icon {
+  padding: 0.2rem 0.4rem;
+  color: #B3261E;
+  border-color: #B3261E;
+  line-height: 0;
+  vertical-align: middle;
+}
+.bb-report-icon:hover {
+  background: #B3261E;
+  color: #fff;
+}
+:root[data-theme="dark"] .bb-report-icon {
+  color: #F2A0A0;
+  border-color: #F2A0A0;
+}
+:root[data-theme="dark"] .bb-report-icon:hover {
+  background: #F2A0A0;
+  color: #22303E;
+}

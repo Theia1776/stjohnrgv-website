@@ -105,6 +105,42 @@ export async function onRequestPost(
       );
     }
 
+    // Also a note in the Moderation Forum, so the moderators and admins
+    // see it in the room they already check. Answering still happens in
+    // Messages, privately with the person.
+    try {
+      const { data: room2 } = await supabase
+        .from("board_categories")
+        .select("id")
+        .eq("slug", "moderation")
+        .maybeSingle();
+      if (room2) {
+        const { data: note } = await supabase
+          .from("board_threads")
+          .insert({
+            category_id: room2.id,
+            title: `Help requested: ${topicTitle}`.slice(0, 160),
+            author_id: null,
+          })
+          .select("id")
+          .single();
+        if (note) {
+          await supabase.from("board_posts").insert({
+            thread_id: note.id,
+            author_id: null,
+            body:
+              `${viewer.displayName} asked the moderators for help with their topic "${topicTitle}"` +
+              `${room ? ` in ${room.name}` : ""}.\n\n` +
+              `Topic: ${origin}/board/thread/?id=${id}\n\n` +
+              `What they said:\n${reason || "(nothing added)"}\n\n` +
+              `Answer them privately in your Messages, or close the topic from the notice at the top of it.`,
+          });
+        }
+      }
+    } catch {
+      // The private message above still went out.
+    }
+
     const { error: markError } = await supabase
       .from("board_threads")
       .update({ close_requested_at: new Date().toISOString(), close_requested_by: viewer.id })

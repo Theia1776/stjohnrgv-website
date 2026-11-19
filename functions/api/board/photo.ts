@@ -55,7 +55,7 @@ export async function onRequestGet(
       .from("board_photos")
       .select(
         "id, post_id, uploader_id, " +
-          "board_posts ( board_threads ( board_categories ( hidden, audience ) ) )",
+          "board_posts ( reported_hidden, board_threads ( board_categories ( hidden, audience ) ) )",
       )
       .eq("id", id)
       .maybeSingle();
@@ -68,6 +68,14 @@ export async function onRequestGet(
         | null
     )?.board_threads?.board_categories;
     if (room && !canSeeCategory(viewer, room)) {
+      return wrap(jsonResponse({ error: "That photo is gone." }, 404));
+    }
+
+    // A reported post's photos are held back from everyone but moderators.
+    const reported = (
+      (photo as Record<string, unknown>).board_posts as { reported_hidden?: boolean } | null
+    )?.reported_hidden;
+    if (reported && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "That photo is gone." }, 404));
     }
 
