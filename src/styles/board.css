@@ -23,10 +23,20 @@
    surfaces follow the site into dark mode on their own.
    -------------------------------------------------------- */
 :root {
-  --bb-navy:      #2C3E50;  /* the heading navy */
+  /* Ink for text on an ordinary surface. Navy in the light theme --
+     but a navy bar keeps its navy in the dark theme while the surface
+     behind body text goes dark, so navy *text* would disappear into
+     it. This is the one that has to flip; --bb-navy never does. */
+  --bb-ink:       #2C3E50;
+
+  --bb-navy:      #2C3E50;  /* the heading navy -- BACKGROUNDS only */
   --bb-navy-deep: #22303E;  /* a shade down, for section bars */
   --bb-gold:      #C9A84C;  /* the masthead hairline */
   --bb-on-navy:   #FAF7F0;  /* cream, for text sitting on navy */
+}
+
+:root[data-theme="dark"] {
+  --bb-ink: #FAF7F0;
 }
 
 /* ---- the table itself ---------------------------------- */
@@ -124,7 +134,7 @@
   width: 2rem;
   text-align: center;
   font-size: 1.05rem;
-  color: var(--bb-navy);
+  color: var(--bb-ink);
 }
 .bb-unread .bb-icon {
   color: var(--color-sacred-gold);
@@ -161,9 +171,9 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--bb-navy);
+  color: var(--bb-ink);
   background: var(--color-cream-card);
-  border: 1px solid var(--bb-navy);
+  border: 1px solid var(--bb-ink);
   border-radius: 2px;
   text-decoration: none;
   cursor: pointer;
@@ -176,7 +186,7 @@
 .bb-btn-strong {
   background: var(--bb-navy);
   color: var(--bb-on-navy);
-  border-color: var(--bb-navy);
+  border-color: var(--bb-ink);
 }
 .bb-btn-strong:hover {
   background: var(--bb-navy-deep);
@@ -205,7 +215,7 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--bb-navy);
+  color: var(--bb-ink);
   margin-bottom: 0.1rem;
 }
 .bb-author-rank {
@@ -389,7 +399,7 @@
   display: block;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--bb-navy);
+  color: var(--bb-ink);
 }
 .bb-panel-body a {
   color: var(--color-brand-blue-dark);
