@@ -967,3 +967,29 @@
   gap: 0.5rem;
   margin-top: 0.9rem;
 }
+
+/* The welcome / terms window. */
+.bb-terms-list {
+  margin: 0 0 0.8rem;
+  padding-left: 1.2rem;
+  list-style: disc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.bb-terms-list li {
+  margin-bottom: 0.35rem;
+}
+.bb-terms-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.bb-terms-check input {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-top: 0.1rem;
+  flex: none;
+}

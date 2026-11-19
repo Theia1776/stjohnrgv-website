@@ -576,5 +576,78 @@ export async function boardFetch(
     window.location.assign(`/login/?next=${encodeURIComponent(returnTo)}`);
     return null;
   }
+  if (res.status === 403) {
+    const detail = await res
+      .clone()
+      .json()
+      .catch(() => null);
+    if (detail?.terms) {
+      showTermsDialog(String(detail.version ?? ""));
+      return null;
+    }
+  }
   return res;
+}
+
+/**
+ * The welcome window: shown the first time someone opens the board, and
+ * again whenever the terms change. The server won't answer anything
+ * else until they agree, so closing it just leaves them outside.
+ */
+function showTermsDialog(version: string): void {
+  if (document.getElementById("terms-dialog")) return;
+  const dialog = document.createElement("dialog");
+  dialog.id = "terms-dialog";
+  dialog.className = "bb-help-dialog";
+  dialog.innerHTML = `
+    <h2>Welcome to the parish board</h2>
+    <p class="bb-help-lead">Before you come in, please read and agree to how we use it together.</p>
+    <ul class="bb-terms-list">
+      <li>Christian conduct: be considerate, honest and kind. No harassment, threats, hate, or explicit material.</li>
+      <li>You are responsible for what you post, and a message can't be taken back once it's sent.</li>
+      <li>Private messages are private between the people in them, but they are not encrypted. A reported conversation is read by the admins.</li>
+      <li>Moderators and admins can remove posts and access.</li>
+      <li>Members under 18 are welcome with a parent's or guardian's permission.</li>
+    </ul>
+    <p class="bb-help-lead"><a href="/board/terms/" target="_blank" rel="noopener" class="underline">Read the full Terms of Use</a></p>
+    <label class="bb-terms-check">
+      <input type="checkbox" id="terms-check" />
+      <span>I have read the Terms of Use and I agree to them.</span>
+    </label>
+    <div class="bb-help-actions">
+      <button type="button" id="terms-agree" class="bb-btn bb-btn-strong" disabled>Agree and enter the board</button>
+      <button type="button" id="terms-leave" class="bb-btn">Not now</button>
+      <span id="terms-status" class="text-sm" role="status"></span>
+    </div>`;
+  document.body.appendChild(dialog);
+
+  const check = dialog.querySelector("#terms-check") as HTMLInputElement;
+  const agree = dialog.querySelector("#terms-agree") as HTMLButtonElement;
+  const status = dialog.querySelector("#terms-status") as HTMLElement;
+  const leave = () => window.location.assign("/");
+  check.addEventListener("change", () => {
+    agree.disabled = !check.checked;
+  });
+  dialog.querySelector("#terms-leave")?.addEventListener("click", leave);
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    leave();
+  });
+  agree.addEventListener("click", async () => {
+    agree.disabled = true;
+    status.textContent = "Saving…";
+    const res = await fetch("/api/board/agree", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ version }),
+    });
+    if (!res.ok) {
+      agree.disabled = false;
+      status.textContent = "Couldn't save that. Please try again.";
+      return;
+    }
+    window.location.reload();
+  });
+  dialog.showModal();
 }

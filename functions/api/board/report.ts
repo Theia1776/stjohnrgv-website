@@ -84,6 +84,45 @@ export async function onRequestPost(
     });
     if (saveError) return wrap(jsonResponse({ error: saveError.message }, 500));
 
+    // A short note in the Admin Forum so the admins see it where they
+    // already look, and can talk it over. It carries no message text:
+    // the conversation itself stays on the Review page, where each
+    // opening is logged. If the note can't be written the report is
+    // still saved and still shows on the Review page.
+    try {
+      const { data: room } = await supabase
+        .from("board_categories")
+        .select("id")
+        .eq("slug", "admin")
+        .maybeSingle();
+      if (room) {
+        const origin = new URL(context.request.url).origin;
+        const date = new Date().toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+          timeZone: "America/Chicago",
+        });
+        const { data: note } = await supabase
+          .from("board_threads")
+          .insert({ category_id: room.id, title: `Conversation reported, ${date}`, author_id: null })
+          .select("id")
+          .single();
+        if (note) {
+          await supabase.from("board_posts").insert({
+            thread_id: note.id,
+            author_id: null,
+            body:
+              `${viewer.displayName} reported a private conversation.\n\n` +
+              `Read it on the Review page, where each opening is logged:\n${origin}/board/review/\n\n` +
+              `Talk it over here if you like. The conversation itself isn't copied into this room.`,
+          });
+        }
+      }
+    } catch {
+      // The Review page still has it.
+    }
+
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
     return wrap(

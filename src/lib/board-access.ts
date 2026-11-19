@@ -18,6 +18,7 @@ import { boardIsOpen, NOT_OPEN_YET } from "./board-reveal.ts";
 import { SUPABASE_URL } from "./supabase";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { R2Bucket } from "./board-photos.ts";
+import { TERMS_VERSION } from "./board-terms.ts";
 
 export interface BoardEnv {
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -114,6 +115,28 @@ export async function requireBoardAccess(
   // the board can be set up before anyone else arrives.
   if (!boardIsOpen() && role !== "admin") {
     return { error: wrap(jsonResponse({ error: NOT_OPEN_YET }, 403)), wrap };
+  }
+
+  // Nobody gets in until they've agreed to the current terms. The route
+  // that records the agreement is the one way through.
+  if (new URL(context.request.url).pathname !== "/api/board/agree") {
+    const { data: agreed } = await supabase
+      .from("board_agreements")
+      .select("user_id")
+      .eq("user_id", session.user.id)
+      .eq("version", TERMS_VERSION)
+      .maybeSingle();
+    if (!agreed) {
+      return {
+        error: wrap(
+          jsonResponse(
+            { error: "Please agree to the Parish Board Terms first.", terms: true, version: TERMS_VERSION },
+            403,
+          ),
+        ),
+        wrap,
+      };
+    }
   }
 
   return {
