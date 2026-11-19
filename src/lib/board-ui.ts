@@ -782,7 +782,7 @@ function mountBoardNav(): void {
     `<a class="bb-btn" href="/directory/">Directory</a>`;
 
   const crumb = main.querySelector(".bb-crumb");
-  if (crumb) main.insertBefore(nav, crumb);
+  if (crumb && crumb.parentNode) crumb.parentNode.insertBefore(nav, crumb);
   else main.insertBefore(nav, main.firstChild);
 
   fetch("/api/board/counts", { credentials: "same-origin", cache: "no-store" })
