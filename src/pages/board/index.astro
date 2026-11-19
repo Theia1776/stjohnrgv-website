@@ -23,6 +23,11 @@ import "../../styles/board.css";
     </div>
 
     <div id="content" class="hidden">
+      <section id="today" class="hidden bb-notice">
+        <strong id="today-feast"></strong>
+        <ul id="today-list" class="mt-1 space-y-1"></ul>
+      </section>
+
       <section id="announcements" class="hidden bb-notice">
         <strong>Announcements</strong>
         <ul id="announcement-list" class="mt-1 space-y-1"></ul>
@@ -100,6 +105,31 @@ import "../../styles/board.css";
                 <button type="button" id="sig-cancel" class="bb-btn">Cancel</button>
               </div>
               <span id="sig-status" class="bb-sig-count" role="status"></span>
+            </form>
+          </div>
+          <div class="bb-panel-links" id="dates">
+            <strong>My special days</strong>
+            <p class="bb-sig-count">Optional. Shown to people on the board, with no year.</p>
+            <a href="#" id="dates-edit">Add my name day, baptism day or birthday</a>
+            <form id="dates-form" class="bb-sig-form hidden">
+              <fieldset class="mb-2">
+                <legend class="text-xs font-semibold">Name day</legend>
+                <input id="nd-saint" type="text" maxlength="60" placeholder="Saint (for example, Philothei)" aria-label="Saint for your name day" class="bb-suspend-select mb-1" />
+                <span class="flex gap-1"><select id="nd-month" aria-label="Name day month" class="bb-suspend-select"></select><select id="nd-day" aria-label="Name day" class="bb-suspend-select"></select></span>
+              </fieldset>
+              <fieldset class="mb-2">
+                <legend class="text-xs font-semibold">Baptism day</legend>
+                <span class="flex gap-1"><select id="bp-month" aria-label="Baptism month" class="bb-suspend-select"></select><select id="bp-day" aria-label="Baptism day" class="bb-suspend-select"></select></span>
+              </fieldset>
+              <fieldset class="mb-2">
+                <legend class="text-xs font-semibold">Birthday</legend>
+                <span class="flex gap-1"><select id="bd-month" aria-label="Birthday month" class="bb-suspend-select"></select><select id="bd-day" aria-label="Birthday day" class="bb-suspend-select"></select></span>
+              </fieldset>
+              <div class="mt-2 flex flex-wrap items-center gap-1">
+                <button type="submit" id="dates-save" class="bb-btn bb-btn-strong">Save</button>
+                <button type="button" id="dates-cancel" class="bb-btn">Cancel</button>
+              </div>
+              <span id="dates-status" class="bb-sig-count" role="status"></span>
             </form>
           </div>
         </aside>
@@ -360,6 +390,8 @@ import "../../styles/board.css";
       )
       .join("");
 
+    renderToday(data.celebrations ?? []);
+
     const unreadMentions = data.unreadMentions ?? 0;
     (document.getElementById("mentions-link") as HTMLElement).innerHTML =
       unreadMentions > 0
@@ -528,6 +560,92 @@ import "../../styles/board.css";
   const modList = document.getElementById("moderator-list") as HTMLElement;
   const modPick = document.getElementById("moderator-pick") as HTMLSelectElement;
   const modStatus = document.getElementById("moderator-status") as HTMLElement;
+
+  // ---- today's feast, and who has a special day ----
+  async function renderToday(list: Array<{ name: string; what: string; when: string }>) {
+    const box = document.getElementById("today") as HTMLElement;
+    const feast = document.getElementById("today-feast") as HTMLElement;
+    const ul = document.getElementById("today-list") as HTMLElement;
+
+    let feastText = "";
+    try {
+      const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+      const res = await fetch(`/api/calendar?date=${parts}`, { cache: "no-store" });
+      if (res.ok) {
+        const cal = await res.json();
+        const names: string[] = (cal.saints ?? []).map((s: { name: string }) => s.name).slice(0, 2);
+        feastText = names.length ? `Today: ${names.join(" · ")}` : "";
+      }
+    } catch {
+      feastText = "";
+    }
+    feast.textContent = feastText;
+    ul.innerHTML = list
+      .map(
+        (c) =>
+          `<li>${c.when === "Today" ? "🎉" : "•"} <strong>${escapeHtml(c.name)}</strong> — ${escapeHtml(c.what)}${c.when === "Today" ? " today" : `, ${escapeHtml(c.when)}`}</li>`,
+      )
+      .join("");
+    box.classList.toggle("hidden", !feastText && list.length === 0);
+  }
+
+  // ---- my special days ----
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const pairs: Array<[string, string]> = [["nd-month", "nd-day"], ["bp-month", "bp-day"], ["bd-month", "bd-day"]];
+  for (const [m, d] of pairs) {
+    (document.getElementById(m) as HTMLSelectElement).innerHTML =
+      `<option value="">Month</option>` + MONTHS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join("");
+    (document.getElementById(d) as HTMLSelectElement).innerHTML =
+      `<option value="">Day</option>` + Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+  }
+  const datesForm = document.getElementById("dates-form") as HTMLFormElement;
+  const datesStatus = document.getElementById("dates-status") as HTMLElement;
+  const val = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
+  const setVal = (id: string, v: string | number | undefined) => {
+    (document.getElementById(id) as HTMLInputElement).value = v === undefined ? "" : String(v);
+  };
+  const dayOf = (m: string, d: string) => (val(m) && val(d) ? { month: Number(val(m)), day: Number(val(d)) } : null);
+
+  async function loadDates() {
+    const res = await boardFetch("/api/board/dates", {}, here);
+    if (!res || !res.ok) return;
+    const d = await res.json();
+    setVal("nd-month", d.nameDay?.month); setVal("nd-day", d.nameDay?.day); setVal("nd-saint", d.nameDay?.saint);
+    setVal("bp-month", d.baptism?.month); setVal("bp-day", d.baptism?.day);
+    setVal("bd-month", d.birthday?.month); setVal("bd-day", d.birthday?.day);
+  }
+  document.getElementById("dates-edit")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    datesForm.classList.toggle("hidden");
+  });
+  document.getElementById("dates-cancel")?.addEventListener("click", () => datesForm.classList.add("hidden"));
+  datesForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    datesStatus.textContent = "Saving…";
+    const nd = dayOf("nd-month", "nd-day");
+    const res = await boardFetch(
+      "/api/board/dates",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nameDay: nd ? { ...nd, saint: val("nd-saint") } : null,
+          baptism: dayOf("bp-month", "bp-day"),
+          birthday: dayOf("bd-month", "bd-day"),
+        }),
+      },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      datesStatus.textContent = (await errorDetail(res)) || `Couldn't save that (${res.status}).`;
+      return;
+    }
+    datesStatus.textContent = "Saved. It shows on the board on the day.";
+    datesForm.classList.add("hidden");
+    await load();
+  });
+  loadDates();
 
   async function loadSuspended() {
     const box = document.getElementById("suspended-box") as HTMLElement;

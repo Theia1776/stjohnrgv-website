@@ -20,6 +20,7 @@ import {
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
 import { loadInbox } from "../../../src/lib/board-messages.ts";
+import { celebrationsAhead, type Celebration } from "../../../src/lib/board-celebrations.ts";
 
 interface CategoryRow {
   id: string;
@@ -167,6 +168,14 @@ export async function onRequestGet(
       };
     });
 
+    // Name days, baptism days and birthdays, today and this week.
+    let celebrations: Celebration[] = [];
+    try {
+      celebrations = await celebrationsAhead(supabase, 7);
+    } catch {
+      celebrations = [];
+    }
+
     // Posts that tag this person and haven't been looked at.
     let unreadMentions = 0;
     try {
@@ -206,6 +215,7 @@ export async function onRequestGet(
         {
           categories: payload,
           announcements,
+          celebrations,
           unreadTotal,
           unreadMessages,
           unreadMentions,
