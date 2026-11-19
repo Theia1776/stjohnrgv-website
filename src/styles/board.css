@@ -1080,3 +1080,20 @@ mark {
   background: #F2A0A0;
   color: #22303E;
 }
+
+/* The row of links across the top of every board page but the front. */
+.bb-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+}
+.bb-nav .bb-btn[aria-current="page"] {
+  background: var(--bb-navy);
+  color: var(--bb-on-navy);
+}
+
+/* A shared post, once you've landed on it. */
+.bb-landed td {
+  box-shadow: inset 0 0 0 2px var(--bb-gold);
+}

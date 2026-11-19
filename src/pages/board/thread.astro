@@ -228,6 +228,7 @@ import "../../styles/board.css";
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
+  let jumpedToPost = false;
   let pollData: {
     id: string; multiple: boolean; question?: string | null; closed: boolean; voters: number; mine: string[];
     options: Array<{ id: string; label: string; votes: number }>;
@@ -430,6 +431,7 @@ import "../../styles/board.css";
           p.canSuspend ? '<button type="button" class="bb-btn post-suspend" title="Stop this member posting for a while">Suspend</button>' : "",
           canEdit && !underReview ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
           canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
+          !underReview ? '<button type="button" class="bb-btn post-share" title="Copy a link to this post, to send to someone on the board">Share</button>' : "",
           // On every post, own included: a small red hand in the corner.
           !underReview ? '<button type="button" class="bb-btn bb-report-icon post-report" title="Report this post" aria-label="Report this post"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="9" width="12" height="11" rx="4"/><rect x="6" y="3" width="2.6" height="9" rx="1.3"/><rect x="9.6" y="1.5" width="2.6" height="10" rx="1.3"/><rect x="13.2" y="2.5" width="2.6" height="9.5" rx="1.3"/><rect x="16.6" y="5" width="2.4" height="8" rx="1.2"/><path d="M6 13 L2.5 10.5 a1.4 1.4 0 0 0 -2 2 L5 18z"/></svg></button>' : "",
         ]
@@ -520,11 +522,20 @@ import "../../styles/board.css";
     // The Help button goes on the opening post, for the person who started it.
     helpState = { canAsk: !!data.canRequestClose, waiting: !!thread.closeRequested && !!thread.mine };
     setMentionNames(data.mentionNames ?? []);
+    const wantedPost = !jumpedToPost && window.location.hash.startsWith("#p") ? window.location.hash.slice(1) : "";
     isMod = !!data.viewer?.isModerator;
     pollData = data.poll ?? null;
     renderPoll(thread.title);
     renderPosts(posts, data.previouslyReadAt);
     document.getElementById("jump-new")?.classList.toggle("hidden", !document.getElementById("first-new"));
+    if (wantedPost) {
+      jumpedToPost = true;
+      const target = document.getElementById(wantedPost);
+      if (target) {
+        target.scrollIntoView({ block: "start" });
+        target.classList.add("bb-landed");
+      }
+    }
 
     // --- a waiting request to close, as moderators see it ---
     if (data.closeRequest) {
@@ -584,6 +595,36 @@ import "../../styles/board.css";
               .join("")
           : "<p>No earlier version was kept. It was edited before this was recorded.</p>";
         (document.getElementById("history-dialog") as HTMLDialogElement).showModal();
+        return;
+      }
+
+      // --- share a link to this post ---
+      if (button.classList.contains("post-share")) {
+        const link = `${window.location.origin}/board/thread/?id=${encodeURIComponent(threadId)}#p${id}`;
+        const nav = navigator as Navigator & { share?: (d: { title?: string; url?: string }) => Promise<void> };
+        const label = button as HTMLButtonElement;
+        try {
+          if (nav.share) {
+            await nav.share({ title: titleEl.textContent ?? "Parish board", url: link });
+            return;
+          }
+        } catch {
+          // They closed the share sheet; fall through to copying.
+        }
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(link);
+          copied = true;
+        } catch {
+          const probe = document.createElement("textarea");
+          probe.value = link;
+          document.body.appendChild(probe);
+          probe.select();
+          copied = document.execCommand("copy");
+          probe.remove();
+        }
+        label.textContent = copied ? "Link copied" : "Copy failed";
+        setTimeout(() => (label.textContent = "Share"), 2200);
         return;
       }
 

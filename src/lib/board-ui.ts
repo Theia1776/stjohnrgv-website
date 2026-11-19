@@ -748,3 +748,60 @@ export function attachMentions(field: HTMLTextAreaElement): void {
   });
   field.addEventListener("blur", () => setTimeout(close, 150));
 }
+
+
+/* ---------------------------------------------------------------
+   The navigation strip
+   ---------------------------------------------------------------
+   Every board page except the front page (which has its own panel) and
+   the terms gets a row of links across the top: the board, Messages,
+   Mentions, New posts, Search. The counts beside Messages and Mentions
+   come from one small request. It adds itself when this file loads, so
+   no page has to remember to ask for it.
+   --------------------------------------------------------------- */
+function mountBoardNav(): void {
+  const path = window.location.pathname;
+  if (!path.startsWith("/board/")) return;
+  if (path === "/board/" || path.startsWith("/board/terms")) return;
+  if (document.getElementById("bb-nav")) return;
+
+  const main = document.querySelector("main");
+  if (!main) return;
+
+  const nav = document.createElement("nav");
+  nav.id = "bb-nav";
+  nav.className = "bb-nav";
+  nav.setAttribute("aria-label", "Parish board");
+  const here = (href: string) => (path === href ? ' aria-current="page"' : "");
+  nav.innerHTML =
+    `<a class="bb-btn" href="/board/"${here("/board/")}>Parish Board</a>` +
+    `<a class="bb-btn" href="/board/messages/" id="bb-nav-messages"${here("/board/messages/")}>Messages</a>` +
+    `<a class="bb-btn" href="/board/mentions/" id="bb-nav-mentions"${here("/board/mentions/")}>Mentions</a>` +
+    `<a class="bb-btn" href="/board/new/"${here("/board/new/")}>New posts</a>` +
+    `<a class="bb-btn" href="/board/search/"${here("/board/search/")}>Search</a>` +
+    `<a class="bb-btn" href="/directory/">Directory</a>`;
+
+  const crumb = main.querySelector(".bb-crumb");
+  if (crumb) main.insertBefore(nav, crumb);
+  else main.insertBefore(nav, main.firstChild);
+
+  fetch("/api/board/counts", { credentials: "same-origin", cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((c) => {
+      if (!c) return;
+      const tag = (n: number) => (n > 0 ? ` <span class="bb-flag">${n} new</span>` : "");
+      const m = document.getElementById("bb-nav-messages");
+      const t = document.getElementById("bb-nav-mentions");
+      if (m) m.innerHTML = "Messages" + tag(c.messages ?? 0);
+      if (t) t.innerHTML = "Mentions" + tag(c.mentions ?? 0);
+    })
+    .catch(() => {});
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountBoardNav);
+  } else {
+    mountBoardNav();
+  }
+}
