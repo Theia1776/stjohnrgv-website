@@ -289,8 +289,29 @@
   color: var(--color-text-secondary);
 }
 .bb-react-add {
+  position: relative;
   color: var(--color-text-secondary);
   font-size: 0.72rem;
+}
+
+/* The little palette that opens off the + button.
+   Written here rather than inline: an inline display:flex outranks
+   the hidden class, so the tray sat open over the top of the post. */
+.react-tray {
+  position: absolute;
+  left: 0;
+  bottom: 125%;
+  z-index: 20;
+  display: flex;
+  gap: 0.15rem;
+  white-space: nowrap;
+  padding: 0.2rem;
+  background: var(--color-cream-card);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+}
+.react-tray.hidden {
+  display: none;
 }
 
 /* The line across a thread where you stopped reading. */

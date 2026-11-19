@@ -169,9 +169,9 @@ import "../../styles/board.css";
     const taken = new Set(post.reactions.map((r) => r.emoji));
     const rest = PALETTE.filter((e) => !taken.has(e));
     const adder = canReply
-      ? `<span class="bb-react-add" style="position:relative;">
+      ? `<span class="bb-react-add">
            <button type="button" class="bb-react react-open" title="React to this post">＋</button>
-           <span class="react-tray hidden" style="position:absolute; left:0; bottom:120%; z-index:20; display:flex; gap:.15rem; background:var(--color-cream-card); border:1px solid var(--color-border-soft); padding:.2rem; white-space:nowrap;">
+           <span class="react-tray hidden">
              ${rest.map((e) => `<button type="button" class="bb-react" data-emoji="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join("")}
            </span>
          </span>`
