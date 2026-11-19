@@ -33,6 +33,13 @@
  */
 export const BOARD_OPENS_AT = "2026-11-29T06:00:00Z";
 
+/**
+ * Accounts let in before the board opens, for testing. Just Theia's test
+ * account (Grouchy McTester / the BeautyBeast address). Meaningless after
+ * the 29th, like everything else in this file.
+ */
+export const EARLY_ACCESS = new Set(["6e4d77c0-f34e-4a6d-b4fc-6421c907c284"]);
+
 /** Is the board open to everyone yet? */
 export function boardIsOpen(now: Date = new Date()): boolean {
   return now.getTime() >= Date.parse(BOARD_OPENS_AT);

@@ -14,7 +14,7 @@
  */
 
 import { verifySession, withSessionCookies } from "./session.ts";
-import { boardIsOpen, NOT_OPEN_YET } from "./board-reveal.ts";
+import { boardIsOpen, NOT_OPEN_YET, EARLY_ACCESS } from "./board-reveal.ts";
 import { SUPABASE_URL } from "./supabase";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { R2Bucket } from "./board-photos.ts";
@@ -124,7 +124,7 @@ export async function requireBoardAccess(
 
   // Held back until the newsletter announces it. Admins get in now so
   // the board can be set up before anyone else arrives.
-  if (!boardIsOpen() && role !== "admin") {
+  if (!boardIsOpen() && role !== "admin" && !EARLY_ACCESS.has(session.user.id)) {
     return { error: wrap(jsonResponse({ error: NOT_OPEN_YET }, 403)), wrap };
   }
 
