@@ -56,6 +56,7 @@ import "../../styles/board.css";
             <a href="/account/">My Account</a>
             <a href="/directory/">Parish Directory</a>
             <a href="/learn/library/">Parish Library</a>
+            <a href="/board/new/">New posts</a>
             <a href="#" id="mark-all-read">Mark all topics read</a>
           </div>
           <div class="bb-panel-links" id="signature">
@@ -82,6 +83,32 @@ import "../../styles/board.css";
           </div>
         </aside>
       </div>
+
+      <!-- Admin: who helps moderate -->
+      <section id="mod-tools" class="hidden mt-10">
+        <table class="bb-table">
+          <thead>
+            <tr><th colspan="2">Moderators</th></tr>
+          </thead>
+          <tbody id="moderator-list"></tbody>
+        </table>
+        <p class="text-xs text-text-secondary mt-2">
+          A moderator is a member you trust to help. They can pin, close, move and remove
+          topics, remove other people's posts and photos, and see the Moderation Forum.
+          They can't manage the rooms or see the Admin Forum. Everywhere else on the site
+          they're an ordinary member.
+        </p>
+        <form id="add-moderator" class="flex flex-wrap gap-2 items-end mt-3">
+          <label class="flex-1 min-w-[12rem]">
+            <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
+              Make someone a moderator
+            </span>
+            <select id="moderator-pick" class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"></select>
+          </label>
+          <button type="submit" class="bb-btn bb-btn-strong">Add</button>
+          <span id="moderator-status" class="text-sm text-text-secondary" role="status"></span>
+        </form>
+      </section>
 
       <!-- Admin: arrange the rooms -->
       <section id="admin-tools" class="hidden mt-10">
@@ -136,6 +163,7 @@ import "../../styles/board.css";
     name: string;
     description: string | null;
     hidden: boolean;
+    audience?: string;
     threadCount: number;
     postCount: number;
     unreadThreads: number;
@@ -158,6 +186,13 @@ import "../../styles/board.css";
     banner.textContent = message;
     banner.classList.remove("hidden");
     loading.classList.add("hidden");
+  }
+
+  /** Who can see a room, when it isn't everybody. */
+  function audienceLabel(c: Category): string {
+    if (c.audience === "admins") return ' <span class="bb-react-count">(admins only)</span>';
+    if (c.audience === "moderators") return ' <span class="bb-react-count">(moderators and admins)</span>';
+    return "";
   }
 
   function renderCategories(categories: Category[]) {
@@ -189,7 +224,7 @@ import "../../styles/board.css";
             <td class="bb-icon">${icon}</td>
             <td>
               ${pin}<a class="bb-title" href="/board/category/?c=${encodeURIComponent(c.slug)}">${escapeHtml(c.name)}</a>
-              ${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}
+              ${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}${audienceLabel(c)}
               ${c.description ? `<span class="bb-desc">${escapeHtml(c.description)}</span>` : ""}
               ${unread ? `<span class="bb-desc">${c.unreadThreads} new ${c.unreadThreads === 1 ? "topic" : "topics"}</span>` : ""}
             </td>
@@ -207,7 +242,7 @@ import "../../styles/board.css";
         (c) => `
         <tr data-slug="${escapeHtml(c.slug)}">
           <td>
-            ${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}
+            ${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}${audienceLabel(c)}
             <span class="bb-desc">${c.description ? escapeHtml(c.description) : "<em>no subtitle</em>"}</span>
           </td>
           <td style="width: 20rem; white-space: nowrap;">
@@ -215,7 +250,7 @@ import "../../styles/board.css";
             <button type="button" class="bb-btn cat-down">Down</button>
             <button type="button" class="bb-btn cat-edit">Edit</button>
             <button type="button" class="bb-btn cat-hide">${c.hidden ? "Show" : "Hide"}</button>
-            <button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>
+            ${c.slug === "moderation" || c.slug === "admin" ? "" : '<button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>'}
           </td>
         </tr>`,
       )
@@ -291,6 +326,7 @@ import "../../styles/board.css";
     if (isAdmin) {
       adminTools.classList.remove("hidden");
       renderAdminList(categories);
+      loadModerators();
     }
 
     adminList.onclick = async (event) => {
@@ -425,6 +461,89 @@ import "../../styles/board.css";
       nameInput.value = "";
       descInput.value = "";
       await load();
+    },
+  );
+
+  // ---- moderators (admins only) ------------------------------------------
+  const modTools = document.getElementById("mod-tools") as HTMLElement;
+  const modList = document.getElementById("moderator-list") as HTMLElement;
+  const modPick = document.getElementById("moderator-pick") as HTMLSelectElement;
+  const modStatus = document.getElementById("moderator-status") as HTMLElement;
+
+  async function loadModerators() {
+    const res = await boardFetch("/api/board/moderators");
+    if (!res || !res.ok) return;
+    const data = await res.json();
+    modTools.classList.remove("hidden");
+
+    modList.innerHTML = data.moderators.length
+      ? data.moderators
+          .map(
+            (m: { id: string; name: string }) => `
+          <tr data-user="${escapeHtml(m.id)}">
+            <td>${escapeHtml(m.name)}</td>
+            <td style="width: 8rem;"><button type="button" class="bb-btn bb-btn-danger mod-remove">Remove</button></td>
+          </tr>`,
+          )
+          .join("")
+      : '<tr><td colspan="2"><em>No moderators yet. You\'re the only one.</em></td></tr>';
+
+    modPick.innerHTML =
+      '<option value="">Choose a person…</option>' +
+      data.candidates
+        .map(
+          (p: { id: string; name: string; role: string }) =>
+            `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.role)})</option>`,
+        )
+        .join("");
+  }
+
+  modList.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest(".mod-remove");
+    const row = button?.closest("tr") as HTMLElement | null;
+    if (!button || !row?.dataset.user) return;
+    const name = row.firstElementChild?.textContent ?? "this person";
+    const goAhead = await confirmAction({
+      message: `Take moderator powers away from ${name}? They stay a member, and nothing they've written is touched.`,
+      confirmLabel: "Remove",
+      cancelLabel: "Keep them",
+      danger: true,
+    });
+    if (!goAhead) return;
+    const res = await boardFetch(
+      `/api/board/moderators?userId=${encodeURIComponent(row.dataset.user)}`,
+      { method: "DELETE" },
+    );
+    if (!res) return;
+    if (!res.ok) {
+      modStatus.textContent = (await errorDetail(res)) || `Couldn't do that (${res.status}).`;
+      return;
+    }
+    modStatus.textContent = `${name} is no longer a moderator.`;
+    await loadModerators();
+  });
+
+  (document.getElementById("add-moderator") as HTMLFormElement).addEventListener(
+    "submit",
+    async (event) => {
+      event.preventDefault();
+      if (!modPick.value) {
+        modStatus.textContent = "Choose a person first.";
+        return;
+      }
+      const name = modPick.selectedOptions[0]?.textContent?.replace(/ \(.*\)$/, "") ?? "They";
+      const res = await boardFetch("/api/board/moderators", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: modPick.value }),
+      });
+      if (!res) return;
+      if (!res.ok) {
+        modStatus.textContent = (await errorDetail(res)) || `Couldn't do that (${res.status}).`;
+        return;
+      }
+      modStatus.textContent = `${name} is now a moderator.`;
+      await loadModerators();
     },
   );
 

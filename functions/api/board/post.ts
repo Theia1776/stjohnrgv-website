@@ -11,6 +11,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
@@ -25,10 +26,13 @@ async function loadPost(
 ) {
   const { data: post, error } = await supabase
     .from("board_posts")
-    .select("id, thread_id, author_id, created_at, board_threads ( locked )")
+    .select(
+      "id, thread_id, author_id, created_at, " +
+        "board_threads ( locked, board_categories ( hidden, audience ) )",
+    )
     .eq("id", id)
     .maybeSingle();
-  if (error || !post) return { post: null, isOpener: false, locked: false };
+  if (error || !post) return { post: null, isOpener: false, locked: false, category: null };
 
   const { data: first } = await supabase
     .from("board_posts")
@@ -38,8 +42,15 @@ async function loadPost(
     .limit(1)
     .maybeSingle();
 
-  const thread = (post as Record<string, unknown>).board_threads as { locked: boolean } | null;
-  return { post, isOpener: first?.id === post.id, locked: !!thread?.locked };
+  const thread = (post as Record<string, unknown>).board_threads as
+    | { locked: boolean; board_categories: { hidden: boolean; audience: string } | null }
+    | null;
+  return {
+    post,
+    isOpener: first?.id === post.id,
+    locked: !!thread?.locked,
+    category: thread?.board_categories ?? null,
+  };
 }
 
 export async function onRequestPatch(
@@ -65,12 +76,14 @@ export async function onRequestPatch(
       return wrap(jsonResponse({ error: `Posts top out at ${MAX_BODY} characters.` }, 400));
     }
 
-    const { post, locked } = await loadPost(supabase, id);
-    if (!post) return wrap(jsonResponse({ error: "That post is gone." }, 404));
-    if (post.author_id !== viewer.id && !viewer.isAdmin) {
+    const { post, locked, category } = await loadPost(supabase, id);
+    if (!post || (category && !canSeeCategory(viewer, category))) {
+      return wrap(jsonResponse({ error: "That post is gone." }, 404));
+    }
+    if (post.author_id !== viewer.id && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "That isn't your post." }, 403));
     }
-    if (locked && !viewer.isAdmin) {
+    if (locked && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "This thread is closed." }, 403));
     }
 
@@ -103,12 +116,15 @@ export async function onRequestDelete(
     const id = new URL(context.request.url).searchParams.get("id")?.trim() ?? "";
     if (!id) return wrap(jsonResponse({ error: "Which post?" }, 400));
 
-    const { post, isOpener, locked } = await loadPost(supabase, id);
+    const { post, isOpener, locked, category } = await loadPost(supabase, id);
+    if (post && category && !canSeeCategory(viewer, category)) {
+      return wrap(jsonResponse({ error: "That post is gone." }, 404));
+    }
     if (!post) return wrap(jsonResponse({ ok: true }, 200));
-    if (post.author_id !== viewer.id && !viewer.isAdmin) {
+    if (post.author_id !== viewer.id && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "That isn't your post." }, 403));
     }
-    if (locked && !viewer.isAdmin) {
+    if (locked && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "This thread is closed." }, 403));
     }
     if (isOpener) {

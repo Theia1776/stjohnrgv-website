@@ -13,6 +13,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   shortName,
   type BoardEnv,
@@ -29,6 +30,7 @@ interface ThreadRow {
   pinned: boolean;
   locked: boolean;
   created_at: string;
+  close_requested_at: string | null;
   last_post_at: string;
   post_count: number;
   view_count: number;
@@ -50,18 +52,20 @@ export async function onRequestGet(
 
     const { data: category, error: catError } = await supabase
       .from("board_categories")
-      .select("id, slug, name, description, hidden")
+      .select("id, slug, name, description, hidden, audience")
       .eq("slug", slug)
       .maybeSingle();
     if (catError) return wrap(jsonResponse({ error: catError.message }, 500));
     if (!category) return wrap(jsonResponse({ error: "No such category." }, 404));
-    if (category.hidden && !viewer.isAdmin) {
+    if (!canSeeCategory(viewer, category)) {
       return wrap(jsonResponse({ error: "No such category." }, 404));
     }
 
     const { data: threads, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, title, author_id, pinned, locked, created_at, last_post_at, post_count, view_count")
+      .select(
+        "id, title, author_id, pinned, locked, created_at, last_post_at, post_count, view_count, close_requested_at",
+      )
       .eq("category_id", category.id)
       .order("pinned", { ascending: false })
       .order("last_post_at", { ascending: false });
@@ -133,11 +137,17 @@ export async function onRequestGet(
               lastPostAt: t.last_post_at,
               replyCount: Math.max(0, (t.post_count ?? 0) - 1),
               viewCount: t.view_count ?? 0,
+              // Only moderators are told; it's their queue.
+              closeRequested: viewer.isModerator && !!t.close_requested_at,
               unread: seen === undefined || new Date(t.last_post_at).getTime() > seen,
               mine: t.author_id === viewer.id,
             };
           }),
-          viewer: { displayName: viewer.displayName, isAdmin: viewer.isAdmin },
+          viewer: {
+            displayName: viewer.displayName,
+            isAdmin: viewer.isAdmin,
+            isModerator: viewer.isModerator,
+          },
         },
         200,
       ),
@@ -180,11 +190,11 @@ export async function onRequestPost(
 
     const { data: category, error: catError } = await supabase
       .from("board_categories")
-      .select("id, hidden")
+      .select("id, hidden, audience")
       .eq("slug", slug)
       .maybeSingle();
     if (catError) return wrap(jsonResponse({ error: catError.message }, 500));
-    if (!category || (category.hidden && !viewer.isAdmin)) {
+    if (!category || !canSeeCategory(viewer, category)) {
       return wrap(jsonResponse({ error: "No such category." }, 404));
     }
 

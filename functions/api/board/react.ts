@@ -14,6 +14,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
@@ -47,18 +48,18 @@ export async function onRequestPost(
     // can see — a hidden category shouldn't be reachable this way.
     const { data: post } = await supabase
       .from("board_posts")
-      .select("id, board_threads ( locked, board_categories ( hidden ) )")
+      .select("id, board_threads ( locked, board_categories ( hidden, audience ) )")
       .eq("id", postId)
       .maybeSingle();
     if (!post) return wrap(jsonResponse({ error: "That post is gone." }, 404));
 
     const thread = (post as Record<string, unknown>).board_threads as
-      | { locked: boolean; board_categories: { hidden: boolean } | null }
+      | { locked: boolean; board_categories: { hidden: boolean; audience: string } | null }
       | null;
-    if (thread?.board_categories?.hidden && !viewer.isAdmin) {
+    if (thread?.board_categories && !canSeeCategory(viewer, thread.board_categories)) {
       return wrap(jsonResponse({ error: "That post is gone." }, 404));
     }
-    if (thread?.locked && !viewer.isAdmin) {
+    if (thread?.locked && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "This thread is closed." }, 403));
     }
 

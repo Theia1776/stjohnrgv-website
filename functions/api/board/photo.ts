@@ -17,6 +17,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
@@ -51,10 +52,23 @@ export async function onRequestGet(
 
     const { data: photo } = await supabase
       .from("board_photos")
-      .select("id, post_id, uploader_id")
+      .select(
+        "id, post_id, uploader_id, " +
+          "board_posts ( board_threads ( board_categories ( hidden, audience ) ) )",
+      )
       .eq("id", id)
       .maybeSingle();
     if (!photo) return wrap(jsonResponse({ error: "That photo is gone." }, 404));
+
+    // A photo in a room this person can't see is as gone as the room.
+    const room = (
+      (photo as Record<string, unknown>).board_posts as
+        | { board_threads: { board_categories: { hidden: boolean; audience: string } | null } | null }
+        | null
+    )?.board_threads?.board_categories;
+    if (room && !canSeeCategory(viewer, room)) {
+      return wrap(jsonResponse({ error: "That photo is gone." }, 404));
+    }
 
     // Not on a post yet: only the person adding it (or an admin) sees it.
     if (!photo.post_id && photo.uploader_id !== viewer.id && !viewer.isAdmin) {
@@ -202,7 +216,7 @@ export async function onRequestDelete(
       | { author_id: string | null }
       | null;
     const allowed =
-      viewer.isAdmin || photo.uploader_id === viewer.id || post?.author_id === viewer.id;
+      viewer.isModerator || photo.uploader_id === viewer.id || post?.author_id === viewer.id;
     if (!allowed) return wrap(jsonResponse({ error: "That isn't your photo." }, 403));
 
     await purgePhotos(supabase, context.env.LIBRARY_BUCKET, { photoIds: [id] });

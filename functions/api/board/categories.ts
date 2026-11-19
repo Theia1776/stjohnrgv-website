@@ -155,6 +155,16 @@ export async function onRequestDelete(
     const url = new URL(context.request.url);
     const slug = url.searchParams.get("slug")?.trim() ?? "";
     if (!slug) return wrap(jsonResponse({ error: "Which category?" }, 400));
+    // The Moderation Forum is where close requests are sent; the Admin
+    // Forum is the admins' own. Neither is something to delete by accident.
+    if (slug === "moderation" || slug === "admin") {
+      return wrap(
+        jsonResponse(
+          { error: "That room is built in and can't be deleted. You can hide it instead." },
+          400,
+        ),
+      );
+    }
 
     const { data: category } = await supabase
       .from("board_categories")

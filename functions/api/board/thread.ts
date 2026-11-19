@@ -15,6 +15,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   shortName,
   type BoardEnv,
@@ -76,7 +77,8 @@ export async function onRequestGet(
       .from("board_threads")
       .select(
         "id, title, author_id, pinned, locked, created_at, category_id, view_count, post_count, " +
-          "board_categories ( slug, name, hidden )",
+          "close_requested_at, close_requested_by, " +
+          "board_categories ( slug, name, hidden, audience )",
       )
       .eq("id", id)
       .maybeSingle();
@@ -84,9 +86,9 @@ export async function onRequestGet(
     if (!thread) return wrap(jsonResponse({ error: "That thread is gone." }, 404));
 
     const category = (thread as Record<string, unknown>).board_categories as
-      | { slug: string; name: string; hidden: boolean }
+      | { slug: string; name: string; hidden: boolean; audience: string }
       | null;
-    if (category?.hidden && !viewer.isAdmin) {
+    if (category && !canSeeCategory(viewer, category)) {
       return wrap(jsonResponse({ error: "That thread is gone." }, 404));
     }
 
@@ -110,6 +112,12 @@ export async function onRequestGet(
         .select("id, first_name, last_name, role, avatar_url, created_at")
         .in("id", ids);
 
+      const { data: modRows } = await supabase
+        .from("board_moderators")
+        .select("user_id")
+        .in("user_id", ids);
+      const moderators = new Set((modRows ?? []).map((r) => r.user_id as string));
+
       const { data: counts } = await supabase
         .from("board_posts")
         .select("author_id")
@@ -126,7 +134,8 @@ export async function onRequestGet(
         names.set(id, name);
         panels.set(id, {
           name,
-          rank: rankOf(p.role as string | null),
+          rank:
+            moderators.has(id) && p.role !== "admin" ? "Moderator" : rankOf(p.role as string | null),
           joined: p.created_at as string,
           posts: postTally.get(id) ?? 0,
           avatarUrl: (p.avatar_url as string | null) ?? null,
@@ -210,6 +219,20 @@ export async function onRequestGet(
         { onConflict: "user_id,thread_id" },
       );
 
+    // A waiting request to close the topic: moderators see who asked;
+    // the person who started it just learns that theirs is in.
+    let requester: string | null = null;
+    if (thread.close_requested_at && viewer.isModerator && thread.close_requested_by) {
+      const { data: who } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", thread.close_requested_by as string)
+        .maybeSingle();
+      requester = who
+        ? shortName(who.first_name as string | null, who.last_name as string | null)
+        : null;
+    }
+
     const list = posts ?? [];
     return wrap(
       jsonResponse(
@@ -226,6 +249,7 @@ export async function onRequestGet(
             viewCount: (thread.view_count ?? 0) + 1,
             replyCount: Math.max(0, (thread.post_count ?? 0) - 1),
             category: category ? { slug: category.slug, name: category.name } : null,
+            closeRequested: !!thread.close_requested_at,
           },
           posts: list.map((p) => {
             const forPost = reactions.get(p.id as string);
@@ -256,8 +280,20 @@ export async function onRequestGet(
           // Only the person who started it, and only while nobody has
           // answered, may remove the whole thread. After that it's a
           // conversation, not a note of theirs to take back.
-          canDelete: viewer.isAdmin || (thread.author_id === viewer.id && list.length <= 1),
-          viewer: { displayName: viewer.displayName, isAdmin: viewer.isAdmin },
+          canDelete: viewer.isModerator || (thread.author_id === viewer.id && list.length <= 1),
+          // The person who started it may ask the moderators to close it,
+          // once, while it's open.
+          canRequestClose:
+            thread.author_id === viewer.id && !thread.locked && !thread.close_requested_at,
+          closeRequest:
+            viewer.isModerator && thread.close_requested_at
+              ? { at: thread.close_requested_at, by: requester }
+              : null,
+          viewer: {
+            displayName: viewer.displayName,
+            isAdmin: viewer.isAdmin,
+            isModerator: viewer.isModerator,
+          },
         },
         200,
       ),
@@ -294,20 +330,20 @@ export async function onRequestPost(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, locked, board_categories ( hidden )")
+      .select("id, locked, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
     if (!thread) return wrap(jsonResponse({ error: "That thread is gone." }, 404));
 
     const category = (thread as Record<string, unknown>).board_categories as
-      | { hidden: boolean }
+      | { hidden: boolean; audience: string }
       | null;
-    if (category?.hidden && !viewer.isAdmin) {
+    if (category && !canSeeCategory(viewer, category)) {
       return wrap(jsonResponse({ error: "That thread is gone." }, 404));
     }
-    // A locked thread stays readable; an admin can still add the last word.
-    if (thread.locked && !viewer.isAdmin) {
+    // A locked thread stays readable; a moderator can still add the last word.
+    if (thread.locked && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "This thread is closed to new replies." }, 403));
     }
 
@@ -343,7 +379,14 @@ export async function onRequestPatch(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    let body: { id?: unknown; pinned?: unknown; locked?: unknown; title?: unknown; category?: unknown };
+    let body: {
+      id?: unknown;
+      pinned?: unknown;
+      locked?: unknown;
+      title?: unknown;
+      category?: unknown;
+      dismissRequest?: unknown;
+    };
     try {
       body = await context.request.json();
     } catch {
@@ -355,16 +398,27 @@ export async function onRequestPatch(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, author_id")
+      .select("id, author_id, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
-    if (!thread) return wrap(jsonResponse({ error: "That thread is gone." }, 404));
+    const patchCategory = thread
+      ? ((thread as Record<string, unknown>).board_categories as { hidden: boolean; audience: string } | null)
+      : null;
+    if (!thread || (patchCategory && !canSeeCategory(viewer, patchCategory))) {
+      return wrap(jsonResponse({ error: "That thread is gone." }, 404));
+    }
 
     const updates: Record<string, unknown> = {};
 
-    // Pinning, locking and moving are housekeeping — admins only.
-    if (viewer.isAdmin) {
+    // Pinning, locking and moving are housekeeping: moderators and admins.
+    if (viewer.isModerator) {
+      // Closing a topic answers a request to close it; so does turning
+      // the request down.
+      if (body.locked === true || body.dismissRequest === true) {
+        updates.close_requested_at = null;
+        updates.close_requested_by = null;
+      }
       if (typeof body.pinned === "boolean") updates.pinned = body.pinned;
       if (typeof body.locked === "boolean") updates.locked = body.locked;
       if (typeof body.category === "string" && body.category.trim()) {
@@ -385,7 +439,7 @@ export async function onRequestPatch(
       if (title.length > MAX_TITLE) {
         return wrap(jsonResponse({ error: `Titles top out at ${MAX_TITLE} characters.` }, 400));
       }
-      if (!viewer.isAdmin && thread.author_id !== viewer.id) {
+      if (!viewer.isModerator && thread.author_id !== viewer.id) {
         return wrap(jsonResponse({ error: "That isn't your thread." }, 403));
       }
       updates.title = title;
@@ -422,14 +476,20 @@ export async function onRequestDelete(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, author_id, post_count")
+      .select("id, author_id, post_count, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
     if (!thread) return wrap(jsonResponse({ ok: true }, 200));
+    const deleteCategory = (thread as Record<string, unknown>).board_categories as
+      | { hidden: boolean; audience: string }
+      | null;
+    if (deleteCategory && !canSeeCategory(viewer, deleteCategory)) {
+      return wrap(jsonResponse({ error: "That thread is gone." }, 404));
+    }
 
     const ownAndUnanswered = thread.author_id === viewer.id && (thread.post_count ?? 0) <= 1;
-    if (!viewer.isAdmin && !ownAndUnanswered) {
+    if (!viewer.isModerator && !ownAndUnanswered) {
       return wrap(
         jsonResponse(
           { error: "Once somebody has replied, ask an admin to remove the thread." },

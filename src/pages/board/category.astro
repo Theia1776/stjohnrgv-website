@@ -28,6 +28,18 @@ import "../../styles/board.css";
         <a href="#" id="mark-read" class="bb-btn">Mark topics read</a>
       </div>
 
+      <div class="bb-sortbar">
+        <label for="sort">Sort topics by</label>
+        <select id="sort" class="bb-sort">
+          <option value="latest">Latest activity</option>
+          <option value="newest">Newest topics first</option>
+          <option value="oldest">Oldest topics first</option>
+          <option value="unread">Unread first</option>
+          <option value="replies">Most replies</option>
+        </select>
+        <span class="bb-sort-note">Pinned topics always stay on top.</span>
+      </div>
+
       <form id="start-form" class="hidden border border-border-soft bg-cream-card p-4 mb-4 space-y-3">
         <label class="block">
           <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
@@ -117,6 +129,7 @@ import "../../styles/board.css";
     viewCount: number;
     unread: boolean;
     mine: boolean;
+    closeRequested?: boolean;
   };
 
   const slug = new URLSearchParams(window.location.search).get("c") ?? "";
@@ -133,7 +146,55 @@ import "../../styles/board.css";
   const startForm = document.getElementById("start-form") as HTMLFormElement;
   const startStatus = document.getElementById("start-status") as HTMLElement;
 
+  // True for moderators and admins: they see Pin, Close and Delete.
   let isAdmin = false;
+  let current: Thread[] = [];
+  const sortSelect = document.getElementById("sort") as HTMLSelectElement;
+
+  function sortThreads(list: Thread[]): Thread[] {
+    // Pinned topics stay up top, in the order they came in; the choice
+    // only orders what's under them.
+    const pinned = list.filter((t) => t.pinned);
+    const rest = list.filter((t) => !t.pinned);
+    const newestFirst = (a: string, b: string) => new Date(b).getTime() - new Date(a).getTime();
+
+    switch (sortSelect.value) {
+      case "newest":
+        rest.sort((a, b) => newestFirst(a.createdAt, b.createdAt));
+        break;
+      case "oldest":
+        rest.sort((a, b) => newestFirst(b.createdAt, a.createdAt));
+        break;
+      case "unread":
+        rest.sort(
+          (a, b) => Number(b.unread) - Number(a.unread) || newestFirst(a.lastPostAt, b.lastPostAt),
+        );
+        break;
+      case "replies":
+        rest.sort(
+          (a, b) => b.replyCount - a.replyCount || newestFirst(a.lastPostAt, b.lastPostAt),
+        );
+        break;
+      default:
+        rest.sort((a, b) => newestFirst(a.lastPostAt, b.lastPostAt));
+    }
+    return [...pinned, ...rest];
+  }
+
+  try {
+    const saved = localStorage.getItem("board-sort");
+    if (saved && [...sortSelect.options].some((o) => o.value === saved)) sortSelect.value = saved;
+  } catch {
+    /* no storage: the default is fine */
+  }
+  sortSelect.addEventListener("change", () => {
+    try {
+      localStorage.setItem("board-sort", sortSelect.value);
+    } catch {
+      /* fine */
+    }
+    renderThreads(sortThreads(current));
+  });
 
   function showError(message: string) {
     banner.textContent = message;
@@ -167,6 +228,7 @@ import "../../styles/board.css";
             <td class="bb-icon">${icon}</td>
             <td>
               ${prefix}<a class="bb-title" href="/board/thread/?id=${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
+              ${t.closeRequested ? '<span class="bb-flag" title="The person who started it asked for it to be closed">Close requested</span>' : ""}
               <span class="bb-desc">by ${escapeHtml(t.startedBy)}, ${escapeHtml(when(t.createdAt))}</span>
               ${admin}
             </td>
@@ -229,7 +291,7 @@ import "../../styles/board.css";
     }
 
     const data = await res.json();
-    isAdmin = !!data.viewer?.isAdmin;
+    isAdmin = !!data.viewer?.isModerator;
 
     const name = data.category?.name ?? "Parish Board";
     nameEl.textContent = name;
@@ -238,7 +300,8 @@ import "../../styles/board.css";
     document.title = `${name} | St. John of Kronstadt Orthodox Mission`;
 
     const threads: Thread[] = data.threads ?? [];
-    renderThreads(threads);
+    current = threads;
+    renderThreads(sortThreads(threads));
 
     body.onclick = async (event) => {
       const button = (event.target as HTMLElement).closest("button");

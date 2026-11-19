@@ -1,0 +1,138 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="New Posts | Parish Board" description="Topics on the parish board with something new in them.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">New Posts</h1>
+    <p class="text-text-secondary text-sm mb-2">
+      Every topic, in every room, with something you haven't read yet.
+    </p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; New Posts
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="bb-bar">
+        <a href="/board/" class="bb-btn">All forums</a>
+        <a href="#" id="mark-read" class="bb-btn">Mark all topics read</a>
+      </div>
+
+      <table class="bb-table" id="table">
+        <thead>
+          <tr>
+            <th colspan="2">Topics with something new</th>
+            <th class="bb-num bb-hide-small">Replies</th>
+            <th class="bb-last">Last Post</th>
+          </tr>
+        </thead>
+        <tbody id="threads"></tbody>
+      </table>
+
+      <p id="empty-state" class="hidden text-center text-text-secondary mt-8">
+        You're all caught up. There's nothing new since you last looked.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+
+  type Row = {
+    id: string;
+    title: string;
+    room: { slug: string; name: string };
+    startedBy: string;
+    lastPostBy: string;
+    lastPostAt: string;
+    replyCount: number;
+    pinned: boolean;
+    locked: boolean;
+  };
+
+  const here = "/board/new/";
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const body = document.getElementById("threads") as HTMLElement;
+  const table = document.getElementById("table") as HTMLElement;
+  const emptyState = document.getElementById("empty-state") as HTMLElement;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  async function load() {
+    const res = await boardFetch("/api/board/unread", {}, here);
+    if (!res) return;
+
+    if (res.status === 403) {
+      showError(
+        (await errorDetail(res)) ||
+          "The parish board opens up when Father receives you as a catechumen.",
+      );
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+
+    const rows: Row[] = (await res.json()).threads ?? [];
+
+    table.classList.toggle("hidden", rows.length === 0);
+    emptyState.classList.toggle("hidden", rows.length > 0);
+
+    body.innerHTML = rows
+      .map(
+        (t) => `
+        <tr class="bb-unread">
+          <td class="bb-icon">${t.locked ? "🔒" : "📬"}</td>
+          <td>
+            ${t.pinned ? "<strong>Sticky:</strong> " : ""}<a class="bb-title" href="/board/thread/?id=${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
+            <span class="bb-desc">in <a href="/board/category/?c=${encodeURIComponent(t.room.slug)}">${escapeHtml(t.room.name)}</a>, started by ${escapeHtml(t.startedBy)}</span>
+          </td>
+          <td class="bb-num bb-hide-small">${t.replyCount}</td>
+          <td class="bb-last">
+            <span title="${escapeHtml(exactly(t.lastPostAt))}">${escapeHtml(when(t.lastPostAt))}</span>
+            <br /><span>by ${escapeHtml(t.lastPostBy)}</span>
+          </td>
+        </tr>`,
+      )
+      .join("");
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  (document.getElementById("mark-read") as HTMLAnchorElement).addEventListener(
+    "click",
+    async (event) => {
+      event.preventDefault();
+      const res = await boardFetch("/api/board/read", { method: "POST" }, here);
+      if (!res) return;
+      if (!res.ok) {
+        showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+        return;
+      }
+      await load();
+    },
+  );
+
+  load();
+</script>

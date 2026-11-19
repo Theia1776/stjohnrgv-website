@@ -50,6 +50,8 @@ export interface BoardViewer {
   displayName: string;
   role: string;
   isAdmin: boolean;
+  /** An admin, or a member the admin has made a moderator. */
+  isModerator: boolean;
 }
 
 export interface BoardGate {
@@ -95,6 +97,15 @@ export async function requireBoardAccess(
   if (error) return { error: wrap(jsonResponse({ error: error.message }, 500)), wrap };
 
   const role = profile?.role ?? "inquirer";
+
+  // Moderators are a flag kept on the board, not a role on the account.
+  // If the lookup fails the person is simply not one.
+  const { data: modRow } = await supabase
+    .from("board_moderators")
+    .select("user_id")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  const isModerator = !!modRow;
   if (!BOARD_ROLES.has(role)) {
     return { error: wrap(jsonResponse({ error: INQUIRER_MESSAGE }, 403)), wrap };
   }
@@ -115,8 +126,35 @@ export async function requireBoardAccess(
       displayName: shortName(profile?.first_name ?? null, profile?.last_name ?? null),
       role,
       isAdmin: role === "admin",
+      isModerator: role === "admin" || isModerator,
     },
   };
+}
+
+/**
+ * Whether this person may see a room, and everything in it.
+ *
+ * A room has an audience: everyone on the board, moderators and
+ * admins, or admins alone. Every route that touches a category, a
+ * topic, a post or a photo asks this before answering, so a room an
+ * account can't see isn't just missing from the menu: asking for it by
+ * address gets the same "that's gone" as a room that was never there.
+ * A hidden room (the admin's way of taking one off the board without
+ * deleting it) is visible to admins only, whatever its audience.
+ */
+export function canSeeCategory(
+  viewer: { isAdmin: boolean; isModerator: boolean },
+  category: { hidden?: boolean | null; audience?: string | null },
+): boolean {
+  if (category.hidden && !viewer.isAdmin) return false;
+  switch (category.audience) {
+    case "admins":
+      return viewer.isAdmin;
+    case "moderators":
+      return viewer.isModerator;
+    default:
+      return true;
+  }
 }
 
 /** A slug for a category name: "The Kitchen" -> "the-kitchen". */

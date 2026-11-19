@@ -14,6 +14,7 @@
 
 import {
   requireBoardAccess,
+  canSeeCategory,
   jsonResponse,
   shortName,
   type BoardEnv,
@@ -26,6 +27,7 @@ interface CategoryRow {
   description: string | null;
   position: number;
   hidden: boolean;
+  audience: string;
 }
 
 interface ThreadRow {
@@ -46,21 +48,22 @@ export async function onRequestGet(
   try {
     const { data: categories, error: catError } = await supabase
       .from("board_categories")
-      .select("id, slug, name, description, position, hidden")
+      .select("id, slug, name, description, position, hidden, audience")
       .order("position", { ascending: true })
       .order("name", { ascending: true });
     if (catError) return wrap(jsonResponse({ error: catError.message }, 500));
 
     // A hidden category is off the board for everybody but an admin,
     // who sees it marked so it can be brought back.
-    const visible = (categories ?? []).filter(
-      (c: CategoryRow) => !c.hidden || viewer.isAdmin,
-    );
+    const visible = (categories ?? []).filter((c: CategoryRow) => canSeeCategory(viewer, c));
+    const visibleIds = new Set(visible.map((c: CategoryRow) => c.id));
 
-    const { data: threads, error: threadError } = await supabase
+    const { data: allThreads, error: threadError } = await supabase
       .from("board_threads")
       .select("id, category_id, last_post_at, post_count, title");
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
+    // Counts and "unread" only ever cover rooms this person can see.
+    const threads = (allThreads ?? []).filter((t) => visibleIds.has(t.category_id as string));
 
     // Who wrote the newest post in each category, for the Last Post
     // column. One pass over the posts, newest last, so the final write
@@ -77,9 +80,10 @@ export async function onRequestGet(
     const lastPostAuthorId = new Map<string, string | null>();
     let totalPosts = 0;
     for (const post of recent ?? []) {
-      totalPosts += 1;
       const categoryId = categoryOfThread.get(post.thread_id as string);
-      if (categoryId) lastPostAuthorId.set(categoryId, (post.author_id as string | null) ?? null);
+      if (!categoryId) continue; // a room this person can't see
+      totalPosts += 1;
+      lastPostAuthorId.set(categoryId, (post.author_id as string | null) ?? null);
     }
 
     const authorIds = [...new Set([...lastPostAuthorId.values()].filter(Boolean))] as string[];
@@ -152,6 +156,7 @@ export async function onRequestGet(
         name: c.name,
         description: c.description,
         hidden: c.hidden,
+        audience: c.audience,
         threadCount: list.length,
         postCount: list.reduce((sum, t) => sum + (t.post_count ?? 0), 0),
         unreadThreads: unread,
@@ -175,7 +180,9 @@ export async function onRequestGet(
           viewer: {
             displayName: viewer.displayName,
             isAdmin: viewer.isAdmin,
+            isModerator: viewer.isModerator,
             rank: viewer.role === "admin" ? "Parish Admin"
+                : viewer.isModerator ? "Moderator"
                 : viewer.role === "member" ? "Member"
                 : viewer.role === "catechumen" ? "Catechumen" : "Inquirer",
             unreadTotal,
