@@ -229,7 +229,11 @@ function isActive(hrefWithHash: string): boolean {
     </div>
   </div>
 
-  <div id="mobile-menu" class="hidden border-t border-border-soft bg-cream-bg lg:hidden" aria-label="Mobile">
+  <!-- The header is sticky, so an open menu taller than the phone ran
+       off the bottom of the screen with no way to reach Sign In or
+       Parish Admin. It scrolls on its own instead; the script below
+       caps its height at whatever room is left under the header. -->
+  <div id="mobile-menu" class="hidden max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-cream-bg lg:hidden" aria-label="Mobile">
     <nav class="mx-auto flex max-w-6xl flex-col px-4 py-4">
       {navLinks.map((link) => {
         const active = isActive(link.href);
@@ -293,6 +297,9 @@ function isActive(hrefWithHash: string): boolean {
   const menu = document.getElementById("mobile-menu");
   toggle?.addEventListener("click", () => {
     const open = menu?.classList.toggle("hidden") === false;
+    if (open && menu) {
+      menu.style.maxHeight = `calc(100dvh - ${Math.ceil(menu.getBoundingClientRect().top)}px)`;
+    }
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
