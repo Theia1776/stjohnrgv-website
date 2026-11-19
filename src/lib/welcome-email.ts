@@ -34,10 +34,12 @@ export function welcomeEmail(firstName: string, link: string, days: number) {
   const html =
     `<div style="background:#FAF7F0;padding:28px 12px">` +
     `<div style="${BODY};color:#2C3E50;line-height:1.65;font-size:19px;max-width:540px;` +
-    `margin:0 auto;background:#FFFFFF;border:1px solid #E5DFD3;border-top:4px solid #C9A84C;padding:34px 30px">` +
-    `<p style="${HEAD};margin:0;font-size:20px;font-weight:600;letter-spacing:1px;color:#2C3E50">ST. JOHN OF KRONSTADT</p>` +
-    `<p style="${HEAD};margin:2px 0 0;font-size:12px;letter-spacing:3px;color:#A88758">ORTHODOX MISSION</p>` +
-    `<div style="height:1px;width:96px;background:#C9A84C;margin:18px 0 24px"></div>` +
+    `margin:0 auto;background:#FFFFFF;border:1px solid #E5DFD3;border-top:4px solid #C9A84C\">` +
+    `<div style="background:#2A5E84;padding:26px 30px">` +
+    `<p style="${HEAD};margin:0;font-size:22px;font-weight:700;letter-spacing:1px;color:#FFFFFF">ST. JOHN OF KRONSTADT</p>` +
+    `<p style="${HEAD};margin:4px 0 0;font-size:13px;letter-spacing:3px;color:#E8F1F8">ORTHODOX MISSION</p>` +
+    `</div>` +
+    `<div style="padding:30px 30px 34px">` +
     `<p style="${HEAD};margin:0 0 18px;font-size:26px;font-weight:600;color:#2C3E50">Your account is ready</p>` +
     `<p style="margin:0 0 16px">Dear ${escapeHtml(name)},</p>` +
     `<p style="margin:0 0 16px">We have set up an account for you on the parish ` +
@@ -56,7 +58,7 @@ export function welcomeEmail(firstName: string, link: string, days: number) {
     `<span style="word-break:break-all;color:#2A5E84">${escapeHtml(link)}</span></p>` +
     `<div style="height:1px;background:#E5DFD3;margin:0 0 18px"></div>` +
     `<p style="margin:0">With love in Christ,<br>St. John of Kronstadt Orthodox Mission</p>` +
-    `</div></div>`;
+    `</div></div></div>`;
 
   return { subject, text, html };
 }
