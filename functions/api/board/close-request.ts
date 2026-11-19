@@ -87,14 +87,15 @@ export async function onRequestPost(
 
     const origin = new URL(context.request.url).origin;
     const topicTitle = thread.title as string;
-    const title = `Close request: ${topicTitle}`.slice(0, MAX_TITLE);
+    const title = `Help requested: ${topicTitle}`.slice(0, MAX_TITLE);
     const text =
-      `${viewer.displayName} asked for this topic to be closed to new replies.\n\n` +
+      `${viewer.displayName} asked the moderators for help with this topic. ` +
+      `They may want it closed to new replies.\n\n` +
       `Topic: "${topicTitle}" in ${room?.name ?? "the board"}\n` +
       `${origin}/board/thread/?id=${id}\n\n` +
-      `Their reason:\n${reason || "(none given)"}\n\n` +
+      `What they said:\n${reason || "(nothing added)"}\n\n` +
       `To act on it, open the topic: there is a notice at the top with Close this topic ` +
-      `and Turn down the request.`;
+      `and Dismiss.`;
 
     const { data: request, error: requestError } = await supabase
       .from("board_threads")
