@@ -14,7 +14,7 @@ import {
   shortName,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
-import { UUID } from "../../../src/lib/board-messages.ts";
+import { UUID, privilegedIds } from "../../../src/lib/board-messages.ts";
 
 type Room = { name: string; hidden: boolean; audience: string };
 
@@ -72,6 +72,19 @@ export async function onRequestGet(
       .select("id", { count: "exact", head: true })
       .eq("author_id", id);
 
+    // Moderators can suspend and lift from here.
+    let suspended = false;
+    let canSuspend = false;
+    if (viewer.isModerator && id !== viewer.id) {
+      canSuspend = !(await privilegedIds(supabase)).has(id);
+      const { data: susp } = await supabase
+        .from("board_suspensions")
+        .select("until")
+        .eq("user_id", id)
+        .maybeSingle();
+      suspended = !!susp && (!susp.until || new Date(susp.until as string).getTime() > Date.now());
+    }
+
     return wrap(
       jsonResponse(
         {
@@ -84,6 +97,8 @@ export async function onRequestGet(
             posts: count ?? 0,
             signature: (sig?.body as string | undefined) ?? "",
             isMe: id === viewer.id,
+            suspended,
+            canSuspend,
           },
           recent: visible.slice(0, 25).map((r) => ({
             postId: r.id,

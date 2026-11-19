@@ -217,6 +217,7 @@ import "../../styles/board.css";
     authorId?: string | null;
     profileId?: string | null;
     canSuspend?: boolean;
+    suspended?: boolean;
     reactions: Reaction[];
   };
 
@@ -306,7 +307,7 @@ import "../../styles/board.css";
   }
 
   /** "Joined: 14 Oct 2026 · Posts: 9" down the left of a post. */
-  function authorCell(panel: Panel, authorId: string | null, profileId: string | null): string {
+  function authorCell(panel: Panel, authorId: string | null, profileId: string | null, suspended = false): string {
     const joined = panel.joined
       ? new Date(panel.joined).toLocaleDateString("en-US", {
           day: "numeric",
@@ -320,6 +321,7 @@ import "../../styles/board.css";
         <span class="bb-author-name">${profileId ? `<a href="/board/profile/?id=${encodeURIComponent(profileId)}" class="underline">${escapeHtml(panel.name)}</a>` : escapeHtml(panel.name)}</span>
         ${authorId ? `<a class="bb-author-msg" href="/board/messages/?to=${encodeURIComponent(authorId)}" title="Send ${escapeHtml(panel.name)} a private message">Message</a>` : ""}
         ${panel.rank ? `<span class="bb-author-rank">${escapeHtml(panel.rank)}</span>` : ""}
+        ${suspended ? '<span class="bb-flag" title="Suspended from posting">Suspended</span>' : ""}
         <span class="bb-author-meta">
           ${joined ? `Joined: ${escapeHtml(joined)}<br />` : ""}
           Posts: ${panel.posts}
@@ -444,7 +446,11 @@ import "../../styles/board.css";
             : "",
           p.hidden && isMod ? '<button type="button" class="bb-btn bb-btn-strong post-restore" title="Put this post back on the board">Restore this post</button>' : "",
           canReply && !underReview ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
-          p.canSuspend ? '<button type="button" class="bb-btn post-suspend" title="Stop this member posting for a while">Suspend</button>' : "",
+          p.canSuspend
+            ? p.suspended
+              ? '<button type="button" class="bb-btn bb-btn-strong post-unsuspend" title="Let this member post again">Lift suspension</button>'
+              : '<button type="button" class="bb-btn post-suspend" title="Stop this member posting for a while">Suspend</button>'
+            : "",
           canEdit && !underReview ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
           canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
           !underReview ? '<button type="button" class="bb-btn post-share" title="Copy a link to this post, to send to someone on the board">Share</button>' : "",
@@ -457,7 +463,7 @@ import "../../styles/board.css";
         return `
           ${divider}
           <tr class="bb-post-row" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
-            ${authorCell(p.panel, p.authorId ?? null, p.profileId ?? null)}
+            ${authorCell(p.panel, p.authorId ?? null, p.profileId ?? null, !!p.suspended)}
             <td>
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
@@ -671,6 +677,23 @@ import "../../styles/board.css";
         (document.getElementById("report-status") as HTMLElement).textContent = "";
         (document.getElementById("report-dialog") as HTMLDialogElement).showModal();
         (document.getElementById("report-reason") as HTMLTextAreaElement).focus();
+        return;
+      }
+
+      // --- lift a suspension ---
+      if (button.classList.contains("post-unsuspend") && post.authorId) {
+        const res = await boardFetch(
+          `/api/board/suspend?userId=${encodeURIComponent(post.authorId)}`,
+          { method: "DELETE" },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+          return;
+        }
+        showNotice(`${post.panel.name} can post again.`);
+        await load();
         return;
       }
 

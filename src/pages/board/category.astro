@@ -253,6 +253,7 @@ import "../../styles/board.css";
             <td class="bb-icon">${icon}</td>
             <td>
               ${prefix}<a class="bb-title" href="/board/thread/?id=${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
+              ${t.announce ? '<span class="bb-flag" title="Shown at the top of the board\'s front page">Announced</span>' : ""}
               ${t.closeRequested ? '<span class="bb-flag" title="The person who started it asked for it to be closed">Close requested</span>' : ""}
               <span class="bb-desc">by ${escapeHtml(t.startedBy)}, ${escapeHtml(when(t.createdAt))}</span>
               ${admin}

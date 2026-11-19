@@ -78,7 +78,7 @@ export async function onRequestGet(
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
       .select(
-        "id, title, author_id, pinned, locked, created_at, category_id, view_count, post_count, " +
+        "id, title, author_id, pinned, locked, announce, created_at, category_id, view_count, post_count, " +
           "close_requested_at, close_requested_by, " +
           "board_categories ( slug, name, hidden, audience )",
       )
@@ -110,6 +110,8 @@ export async function onRequestGet(
     const panels = new Map<string, AuthorPanel>();
     // Admins and moderators can't be suspended.
     const staffIds = new Set<string>();
+    // Who is suspended right now. Moderators only are told.
+    const suspendedIds = new Set<string>();
     if (ids.length) {
       const { data: profiles } = await supabase
         .from("profiles")
@@ -121,6 +123,18 @@ export async function onRequestGet(
         .select("user_id")
         .in("user_id", ids);
       const moderators = new Set((modRows ?? []).map((r) => r.user_id as string));
+
+      if (viewer.isModerator) {
+        const { data: susp } = await supabase
+          .from("board_suspensions")
+          .select("user_id, until")
+          .in("user_id", ids);
+        for (const r of susp ?? []) {
+          if (!r.until || new Date(r.until as string).getTime() > Date.now()) {
+            suspendedIds.add(r.user_id as string);
+          }
+        }
+      }
 
       const { data: counts } = await supabase
         .from("board_posts")
@@ -296,6 +310,7 @@ export async function onRequestGet(
             replyCount: Math.max(0, (thread.post_count ?? 0) - 1),
             category: category ? { slug: category.slug, name: category.name } : null,
             closeRequested: !!thread.close_requested_at,
+            announce: !!thread.announce,
           },
           posts: list.map((p) => {
             const forPost = reactions.get(p.id as string);
@@ -308,6 +323,7 @@ export async function onRequestGet(
               profileId: p.author_id ?? null,
               canSuspend:
                 viewer.isModerator && !!p.author_id && p.author_id !== viewer.id && !staffIds.has(p.author_id as string),
+              suspended: viewer.isModerator && !!p.author_id && suspendedIds.has(p.author_id as string),
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
               hidden: !!p.reported_hidden,
               body: hiddenFor(p) ? "" : p.body,

@@ -30,7 +30,36 @@ import "../../styles/board.css";
       <div class="bb-bar">
         <a href="/board/" class="bb-btn">Back to the board</a>
         <a id="message" href="#" class="bb-btn bb-btn-strong hidden">Send a message</a>
+        <button id="suspend-btn" type="button" class="bb-btn hidden"></button>
       </div>
+
+      <dialog id="suspend-dialog" class="bb-help-dialog" aria-labelledby="suspend-title">
+        <form id="suspend-form" method="dialog">
+          <h2 id="suspend-title">Suspend</h2>
+          <p class="bb-help-lead">
+            They can still read the board, but can't post, reply, react, send messages or add photos.
+            It ends by itself when the time is up.
+          </p>
+          <label class="block">
+            <span class="bb-help-label">How long</span>
+            <select id="suspend-days" class="bb-suspend-select">
+              <option value="1">One day</option>
+              <option value="7" selected>One week</option>
+              <option value="30">One month</option>
+              <option value="0">Until a moderator lifts it</option>
+            </select>
+          </label>
+          <label class="block mt-3">
+            <span class="bb-help-label">Reason (they'll see this)</span>
+            <input id="suspend-reason" type="text" maxlength="300" class="bb-suspend-select" />
+          </label>
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Suspend</button>
+            <button type="button" id="suspend-cancel" class="bb-btn">Cancel</button>
+            <span id="suspend-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
 
       <h2 class="font-semibold mt-6 mb-2">Latest posts</h2>
       <ul id="recent" class="space-y-4"></ul>
@@ -84,6 +113,45 @@ import "../../styles/board.css";
       msg.href = `/board/messages/?to=${encodeURIComponent(p.id)}`;
       msg.classList.remove("hidden");
     }
+
+    const sb = document.getElementById("suspend-btn") as HTMLButtonElement;
+    sb.classList.toggle("hidden", !p.canSuspend);
+    sb.textContent = p.suspended ? "Lift suspension" : "Suspend…";
+    sb.onclick = async () => {
+      if (p.suspended) {
+        const r = await boardFetch(`/api/board/suspend?userId=${encodeURIComponent(p.id)}`, { method: "DELETE" }, here);
+        if (r?.ok) await load();
+        return;
+      }
+      (document.getElementById("suspend-dialog") as HTMLDialogElement).showModal();
+    };
+    (document.getElementById("suspend-cancel") as HTMLButtonElement).onclick = () =>
+      (document.getElementById("suspend-dialog") as HTMLDialogElement).close();
+    (document.getElementById("suspend-form") as HTMLFormElement).onsubmit = async (event) => {
+      event.preventDefault();
+      const status = document.getElementById("suspend-status") as HTMLElement;
+      status.textContent = "Saving…";
+      const r = await boardFetch(
+        "/api/board/suspend",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: p.id,
+            days: Number((document.getElementById("suspend-days") as HTMLSelectElement).value),
+            reason: (document.getElementById("suspend-reason") as HTMLInputElement).value,
+          }),
+        },
+        here,
+      );
+      if (!r) return;
+      if (!r.ok) {
+        status.textContent = (await errorDetail(r)) || `Couldn't do that (${r.status}).`;
+        return;
+      }
+      (document.getElementById("suspend-dialog") as HTMLDialogElement).close();
+      await load();
+    };
 
     const recent: Array<{ postId: string; threadId: string; title: string; room: string; snippet: string; at: string }> =
       data.recent ?? [];
