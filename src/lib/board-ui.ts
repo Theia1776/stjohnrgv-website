@@ -114,6 +114,80 @@ export function exactly(iso: string | null | undefined): string {
       });
 }
 
+/**
+ * The smilies panel, the way boards used to put one beside the post
+ * box. Click one and it drops in wherever the cursor is.
+ *
+ * A fixed set rather than the system picker: it's one click instead of
+ * a keyboard shortcut nobody remembers, it looks the same on every
+ * machine, and it keeps the box to things that suit a parish board.
+ * Anyone who wants the full set can still use their own keyboard's
+ * picker — this doesn't block that.
+ */
+const SMILIES: Array<[string, string[]]> = [
+  ["Faces", ["🙂", "😀", "😄", "😅", "😂", "🥹", "😉", "😊", "🥰", "😍", "🤗", "🤔", "😬", "😴", "😢", "😭", "😳", "🙃", "😇", "🫶"]],
+  ["Hands", ["🙏", "👍", "👋", "👏", "🤝", "💪", "✌️", "🤞"]],
+  ["Church", ["☦️", "✝️", "🕯️", "⛪", "📖", "🛐", "😇", "🕊️", "📿", "🪔"]],
+  ["Table", ["🍞", "🍲", "🥘", "🫓", "🥗", "🍇", "🍎", "🐟", "🍯", "☕", "🫖", "🍋"]],
+  ["Other", ["❤️", "🔥", "✨", "⭐", "🎉", "📌", "✅", "❓", "❗", "💡"]],
+];
+
+/**
+ * Hang a smilies panel off a text box. `mount` is where the button
+ * goes; the tray opens under it and inserts at the cursor.
+ */
+export function attachSmilies(field: HTMLTextAreaElement | HTMLInputElement, mount: HTMLElement): void {
+  if (mount.dataset.smilies === "1") return;
+  mount.dataset.smilies = "1";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "bb-btn";
+  button.textContent = "Smilies";
+  button.setAttribute("aria-expanded", "false");
+
+  const tray = document.createElement("div");
+  tray.className = "bb-smilies hidden";
+  tray.innerHTML = SMILIES.map(
+    ([group, list]) =>
+      `<div class="bb-smilie-group"><span class="bb-smilie-label">${group}</span>` +
+      list
+        .map(
+          (e) =>
+            `<button type="button" class="bb-smilie" data-emoji="${e}" title="${e}" aria-label="Insert ${e}">${e}</button>`,
+        )
+        .join("") +
+      `</div>`,
+  ).join("");
+
+  button.addEventListener("click", () => {
+    const nowHidden = tray.classList.toggle("hidden");
+    button.setAttribute("aria-expanded", String(!nowHidden));
+  });
+
+  tray.addEventListener("click", (event) => {
+    const hit = (event.target as HTMLElement).closest(".bb-smilie") as HTMLElement | null;
+    if (!hit?.dataset.emoji) return;
+    insertAtCursor(field, hit.dataset.emoji);
+  });
+
+  mount.appendChild(button);
+  mount.appendChild(tray);
+}
+
+/** Drop text in at the cursor, keeping the cursor after it. */
+export function insertAtCursor(
+  field: HTMLTextAreaElement | HTMLInputElement,
+  text: string,
+): void {
+  const start = field.selectionStart ?? field.value.length;
+  const end = field.selectionEnd ?? field.value.length;
+  field.value = field.value.slice(0, start) + text + field.value.slice(end);
+  const after = start + text.length;
+  field.focus();
+  field.setSelectionRange(after, after);
+}
+
 /** The error text an API route sent, if it sent one. */
 export async function errorDetail(res: Response): Promise<string> {
   try {

@@ -59,6 +59,7 @@ import "../../styles/board.css";
             class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
           ></textarea>
         </label>
+        <div id="reply-smilies"></div>
         <div class="flex items-center gap-2">
           <button id="reply-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
@@ -85,6 +86,7 @@ import "../../styles/board.css";
     exactly,
     errorDetail,
     boardFetch,
+    attachSmilies,
   } from "../../lib/board-ui";
 
   type Reaction = { emoji: string; count: number; mine: boolean };
@@ -343,6 +345,9 @@ import "../../styles/board.css";
             <button type="button" class="bb-btn edit-cancel">Cancel</button>
           </span>`;
         const textarea = bodyEl.querySelector("textarea") as HTMLTextAreaElement;
+        const smilieMount = document.createElement("div");
+        bodyEl.insertBefore(smilieMount, textarea.nextSibling);
+        attachSmilies(textarea, smilieMount);
         textarea.focus();
 
         (bodyEl.querySelector(".edit-save") as HTMLElement).onclick = async () => {
@@ -418,6 +423,8 @@ import "../../styles/board.css";
     banner.classList.add("hidden");
     content.classList.remove("hidden");
   }
+
+  attachSmilies(replyBody, document.getElementById("reply-smilies") as HTMLElement);
 
   (document.getElementById("reply-top") as HTMLButtonElement).addEventListener("click", () => {
     replyForm.classList.remove("hidden");

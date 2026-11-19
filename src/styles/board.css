@@ -477,3 +477,57 @@
     display: none;
   }
 }
+
+/* ---- the smilies panel --------------------------------- */
+/* The tray of faces beside the post box, the way boards put
+   one there. Opens under its button and inserts at the cursor. */
+.bb-smilies {
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-soft);
+  border-top: 2px solid var(--bb-gold);
+  background: var(--color-cream-bg);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+.bb-smilies.hidden {
+  display: none;
+}
+.bb-smilie-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+}
+.bb-smilie-group:last-child {
+  margin-bottom: 0;
+}
+.bb-smilie-label {
+  width: 4rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.bb-smilie {
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0.2rem 0.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.bb-smilie:hover {
+  background: var(--color-cream-card);
+  border-color: var(--bb-gold);
+}
+@media (max-width: 40rem) {
+  .bb-smilie-label {
+    width: 100%;
+    margin-bottom: 0.1rem;
+  }
+}

@@ -58,6 +58,7 @@ import "../../styles/board.css";
             class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
           ></textarea>
         </label>
+        <div id="new-smilies"></div>
         <div class="flex items-center gap-2">
           <button id="start-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <button id="start-cancel" type="button" class="bb-btn">Cancel</button>
@@ -91,7 +92,7 @@ import "../../styles/board.css";
 
 <script>
   import { confirmAction } from "../../lib/confirm";
-  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+  import { escapeHtml, when, exactly, errorDetail, boardFetch, attachSmilies } from "../../lib/board-ui";
 
   type Thread = {
     id: string;
@@ -276,6 +277,11 @@ import "../../styles/board.css";
   }
 
   // ---- starting a topic ---------------------------------------------------
+  attachSmilies(
+    document.getElementById("new-body") as HTMLTextAreaElement,
+    document.getElementById("new-smilies") as HTMLElement,
+  );
+
   function toggleForm() {
     startForm.classList.toggle("hidden");
     if (!startForm.classList.contains("hidden")) {
