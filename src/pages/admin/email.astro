@@ -204,8 +204,15 @@ import Layout from "../../layouts/Layout.astro";
       </form>
 
       <!-- ============== RECENT ============== -->
-      <section class="mt-12" aria-labelledby="recent-heading">
-        <h2 id="recent-heading" class="font-display text-xl text-text-primary mb-4">Recently Sent</h2>
+      <!-- Folded shut by default: the list only grows, and the page is
+           for writing, not for scrolling past every message ever sent.
+           The count on the fold says how many are inside. -->
+      <details class="admin-fold mt-12">
+        <summary class="admin-summary mb-4">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="recent-heading" class="font-display text-xl text-text-primary">Sent Emails</h2>
+          <span id="recent-count" class="text-sm font-normal text-text-secondary"></span>
+        </summary>
         <div class="overflow-x-auto border border-border-soft rounded">
           <table class="w-full text-sm border-collapse">
             <thead>
@@ -221,10 +228,33 @@ import Layout from "../../layouts/Layout.astro";
           </table>
         </div>
         <p id="recent-empty" class="text-text-secondary mt-4 hidden">Nothing has been sent yet.</p>
-      </section>
+      </details>
     </div>
   </main>
 </Layout>
+
+<style>
+  /* Same fold as the sections on /admin/. */
+  .admin-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .admin-summary::-webkit-details-marker { display: none; }
+  .fold-chevron {
+    color: var(--color-sacred-gold);
+    font-size: 0.9rem;
+    transition: transform 200ms ease;
+  }
+  .admin-fold[open] > .admin-summary .fold-chevron { transform: rotate(90deg); }
+  .admin-summary:hover { color: var(--color-brand-blue-dark); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fold-chevron { transition: none; }
+  }
+</style>
 
 <script>
   import { confirmAction } from "../../lib/confirm";
@@ -331,6 +361,9 @@ import Layout from "../../layouts/Layout.astro";
     const tbody = document.getElementById("recent-tbody");
     const empty = document.getElementById("recent-empty");
     if (!tbody || !empty) return;
+
+    const count = document.getElementById("recent-count");
+    if (count) count.textContent = recent.length ? `(${recent.length})` : "";
 
     if (recent.length === 0) {
       tbody.innerHTML = "";
