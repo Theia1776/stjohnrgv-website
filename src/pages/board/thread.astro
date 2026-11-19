@@ -353,13 +353,19 @@ import Layout from "../../layouts/Layout.astro";
   load();
 </script>
 
-<style>
+<style is:global>
   /* Paragraph spacing inside a post. Tailwind's reset flattens <p>
-     margins, and a post with two paragraphs needs the gap back. */
-  .prose-parish :global(p) {
+     margins and a post with two paragraphs needs the gap back.
+
+     is:global, not a scoped rule: these paragraphs are built in
+     JavaScript after the page loads, so they never carry the
+     data-astro-cid attribute a scoped selector matches on, and the
+     rule silently did nothing. Narrowed to .post-body so it can't
+     reach anything else on the site. */
+  .post-body p {
     margin-bottom: 0.75rem;
   }
-  .prose-parish :global(p:last-child) {
+  .post-body p:last-child {
     margin-bottom: 0;
   }
 </style>
