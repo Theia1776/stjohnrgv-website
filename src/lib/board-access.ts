@@ -17,9 +17,12 @@ import { verifySession, withSessionCookies } from "./session.ts";
 import { boardIsOpen, NOT_OPEN_YET } from "./board-reveal.ts";
 import { SUPABASE_URL } from "./supabase";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { R2Bucket } from "./board-photos.ts";
 
 export interface BoardEnv {
   SUPABASE_SERVICE_ROLE_KEY: string;
+  /** Where the picture files live. Same bucket as the library. */
+  LIBRARY_BUCKET?: R2Bucket;
 }
 
 /** Roles that may read and post on the board. */

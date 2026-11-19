@@ -14,6 +14,7 @@ import {
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { attachPhotos, purgePhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_BODY = 10000;
 
@@ -49,7 +50,7 @@ export async function onRequestPatch(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    let body: { id?: unknown; body?: unknown };
+    let body: { id?: unknown; body?: unknown; photoIds?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -78,6 +79,10 @@ export async function onRequestPatch(
       .update({ body: text, edited_at: new Date().toISOString() })
       .eq("id", id);
     if (updateError) return wrap(jsonResponse({ error: updateError.message }, 500));
+
+    // Photos added while editing. Only the post's own author can hang
+    // their own pictures on it; an admin editing words adds none.
+    await attachPhotos(supabase, viewer.id, id, body.photoIds);
 
     return wrap(jsonResponse({ ok: true }, 200));
   } catch (err) {
@@ -118,6 +123,8 @@ export async function onRequestDelete(
         ),
       );
     }
+
+    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, { postIds: [id] });
 
     const { error: deleteError } = await supabase.from("board_posts").delete().eq("id", id);
     if (deleteError) return wrap(jsonResponse({ error: deleteError.message }, 500));

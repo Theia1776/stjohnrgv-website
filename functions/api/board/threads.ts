@@ -17,6 +17,7 @@ import {
   shortName,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { attachPhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_TITLE = 160;
 const MAX_BODY = 10000;
@@ -148,7 +149,7 @@ export async function onRequestPost(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    let body: { category?: unknown; title?: unknown; body?: unknown };
+    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -186,14 +187,18 @@ export async function onRequestPost(
       .single();
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));
 
-    const { error: postError } = await supabase
+    const { data: firstPost, error: postError } = await supabase
       .from("board_posts")
-      .insert({ thread_id: thread.id, author_id: viewer.id, body: text });
+      .insert({ thread_id: thread.id, author_id: viewer.id, body: text })
+      .select("id")
+      .single();
     if (postError) {
       // A thread with no opening post is a broken row, not a thread.
       await supabase.from("board_threads").delete().eq("id", thread.id);
       return wrap(jsonResponse({ error: postError.message }, 500));
     }
+
+    await attachPhotos(supabase, viewer.id, firstPost.id as string, body.photoIds);
 
     // You've read what you just wrote.
     await supabase

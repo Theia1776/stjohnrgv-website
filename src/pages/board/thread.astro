@@ -60,6 +60,7 @@ import "../../styles/board.css";
           ></textarea>
         </label>
         <div id="reply-smilies"></div>
+        <div id="reply-photos"></div>
         <p class="text-xs text-text-secondary">
           If you have a signature, it goes under your post by itself.
           <a href="/board/#signature" class="underline">Set or change it</a>
@@ -92,7 +93,10 @@ import "../../styles/board.css";
     errorDetail,
     boardFetch,
     attachSmilies,
+    attachFormatBar,
+    videoEmbeds,
   } from "../../lib/board-ui";
+  import { attachPhotoPicker } from "../../lib/board-photo-picker";
 
   type Reaction = { emoji: string; count: number; mine: boolean };
   type Panel = {
@@ -108,6 +112,7 @@ import "../../styles/board.css";
     panel: Panel;
     body: string;
     signature: string;
+    photos: Array<{ id: string; width: number; height: number; thumb: string; full: string }>;
     createdAt: string;
     editedAt: string | null;
     mine: boolean;
@@ -161,6 +166,32 @@ import "../../styles/board.css";
           Posts: ${panel.posts}
         </span>
       </td>`;
+  }
+
+  /** The pictures on a post. Click one to see it large. */
+  function photosHtml(post: Post, canEdit: boolean): string {
+    if (!post.photos?.length) return "";
+    return (
+      `<div class="bb-photos">` +
+      post.photos
+        .map(
+          (ph) => `
+          <span class="bb-photo-wrap">
+            <a class="bb-photo" href="${escapeHtml(ph.full)}" target="_blank" rel="noopener"
+               data-full="${escapeHtml(ph.full)}">
+              <img src="${escapeHtml(ph.thumb)}" width="${ph.width}" height="${ph.height}"
+                   loading="lazy" alt="Photo posted by ${escapeHtml(post.panel.name)}" />
+            </a>
+            ${
+              canEdit
+                ? `<button type="button" class="bb-btn bb-btn-danger photo-remove" data-photo-id="${escapeHtml(ph.id)}">Remove photo</button>`
+                : ""
+            }
+          </span>`,
+        )
+        .join("") +
+      `</div>`
+    );
   }
 
   function reactionStrip(post: Post): string {
@@ -229,6 +260,8 @@ import "../../styles/board.css";
                 <span>${buttons}</span>
               </div>
               <div class="bb-body post-body">${renderBody(p.body)}</div>
+              ${videoEmbeds(p.body)}
+              ${photosHtml(p, canEdit)}
               ${p.signature ? `<div class="bb-signature">${renderSignature(p.signature)}</div>` : ""}
               <div class="bb-foot">
                 ${reactionStrip(p)}
@@ -298,6 +331,15 @@ import "../../styles/board.css";
 
     postsEl.onclick = async (event) => {
       const target = event.target as HTMLElement;
+
+      // A photo: show it large instead of leaving the page.
+      const photoLink = target.closest("a.bb-photo") as HTMLAnchorElement | null;
+      if (photoLink) {
+        event.preventDefault();
+        openLightbox(photoLink.dataset.full ?? photoLink.href);
+        return;
+      }
+
       const button = target.closest("button");
       if (!button) return;
       const row = button.closest("tr") as HTMLElement | null;
@@ -305,6 +347,29 @@ import "../../styles/board.css";
       if (!id || !row) return;
       const post = posts.find((p) => p.id === id);
       if (!post) return;
+
+      // --- take a photo off ---
+      if (button.classList.contains("photo-remove") && button.dataset.photoId) {
+        const goAhead = await confirmAction({
+          message: "Remove this photo from the post? It can't be brought back.",
+          confirmLabel: "Remove it",
+          cancelLabel: "Keep it",
+          danger: true,
+        });
+        if (!goAhead) return;
+        const res = await boardFetch(
+          `/api/board/photo?id=${encodeURIComponent(button.dataset.photoId)}`,
+          { method: "DELETE" },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't remove that (${res.status}).`);
+          return;
+        }
+        await load();
+        return;
+      }
 
       // --- react ---
       if (button.classList.contains("react-open")) {
@@ -355,17 +420,25 @@ import "../../styles/board.css";
         const smilieMount = document.createElement("div");
         bodyEl.insertBefore(smilieMount, textarea.nextSibling);
         attachSmilies(textarea, smilieMount);
+        attachFormatBar(textarea);
+        const photoMount = document.createElement("div");
+        smilieMount.insertAdjacentElement("afterend", photoMount);
+        const editPhotos = attachPhotoPicker(photoMount, post.photos?.length ?? 0);
         textarea.focus();
 
         (bodyEl.querySelector(".edit-save") as HTMLElement).onclick = async () => {
           const text = textarea.value.trim();
           if (!text) return;
+          if (editPhotos.busy()) {
+            showError("Hold on, a photo is still being added.");
+            return;
+          }
           const res = await boardFetch(
             "/api/board/post",
             {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id, body: text }),
+              body: JSON.stringify({ id, body: text, photoIds: editPhotos.ids() }),
             },
             here,
           );
@@ -376,7 +449,10 @@ import "../../styles/board.css";
           }
           await load();
         };
-        (bodyEl.querySelector(".edit-cancel") as HTMLElement).onclick = () => load();
+        (bodyEl.querySelector(".edit-cancel") as HTMLElement).onclick = async () => {
+          await editPhotos.discard();
+          await load();
+        };
         return;
       }
 
@@ -432,6 +508,31 @@ import "../../styles/board.css";
   }
 
   attachSmilies(replyBody, document.getElementById("reply-smilies") as HTMLElement);
+  attachFormatBar(replyBody);
+  const replyPhotos = attachPhotoPicker(document.getElementById("reply-photos") as HTMLElement);
+
+  // One lightbox for every photo on the page.
+  const lightbox = document.createElement("div");
+  lightbox.className = "bb-lightbox hidden";
+  lightbox.setAttribute("role", "dialog");
+  lightbox.setAttribute("aria-label", "Photo");
+  lightbox.innerHTML =
+    '<button type="button" class="bb-btn bb-btn-strong bb-lightbox-close">Close</button><img alt="" />';
+  document.body.appendChild(lightbox);
+  const lightboxImg = lightbox.querySelector("img") as HTMLImageElement;
+
+  function openLightbox(src: string) {
+    lightboxImg.src = src;
+    lightbox.classList.remove("hidden");
+  }
+  function closeLightbox() {
+    lightbox.classList.add("hidden");
+    lightboxImg.removeAttribute("src");
+  }
+  lightbox.addEventListener("click", closeLightbox);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lightbox.classList.contains("hidden")) closeLightbox();
+  });
 
   (document.getElementById("reply-top") as HTMLButtonElement).addEventListener("click", () => {
     replyForm.classList.remove("hidden");
@@ -448,6 +549,11 @@ import "../../styles/board.css";
       return;
     }
 
+    if (replyPhotos.busy()) {
+      replyStatus.textContent = "Hold on, a photo is still being added.";
+      return;
+    }
+
     submit.disabled = true;
     replyStatus.textContent = "Posting…";
 
@@ -456,7 +562,7 @@ import "../../styles/board.css";
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: threadId, body: text }),
+        body: JSON.stringify({ id: threadId, body: text, photoIds: replyPhotos.ids() }),
       },
       here,
     );
@@ -469,6 +575,7 @@ import "../../styles/board.css";
     }
 
     replyBody.value = "";
+    replyPhotos.clear();
     replyStatus.textContent = "";
     await load();
     postsEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });

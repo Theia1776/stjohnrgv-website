@@ -16,6 +16,7 @@ import {
   slugify,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { postIdsInThreads, purgePhotos } from "../../../src/lib/board-photos.ts";
 
 const MAX_NAME = 80;
 
@@ -182,6 +183,19 @@ export async function onRequestDelete(
         ),
       );
     }
+
+    // Photo files first: the rows cascade away with the posts, the
+    // files in R2 don't.
+    const { data: threadRows } = await supabase
+      .from("board_threads")
+      .select("id")
+      .eq("category_id", category.id);
+    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, {
+      postIds: await postIdsInThreads(
+        supabase,
+        (threadRows ?? []).map((t) => t.id as string),
+      ),
+    });
 
     const { error } = await supabase.from("board_categories").delete().eq("id", category.id);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));

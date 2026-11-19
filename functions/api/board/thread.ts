@@ -19,6 +19,12 @@ import {
   shortName,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import {
+  attachPhotos,
+  photoUrl,
+  purgePhotos,
+  postIdsInThreads,
+} from "../../../src/lib/board-photos.ts";
 
 const MAX_BODY = 10000;
 const MAX_TITLE = 160;
@@ -167,6 +173,24 @@ export async function onRequestGet(
       }
     }
 
+    // The photos on these posts. The files are served through
+    // /api/board/photo, which checks the session, so these are plain
+    // same-origin addresses rather than signed links that expire.
+    const photosByPost = new Map<string, Array<{ id: string; width: number; height: number }>>();
+    if (postIds.length) {
+      const { data: photoRows } = await supabase
+        .from("board_photos")
+        .select("id, post_id, width, height")
+        .in("post_id", postIds)
+        .order("created_at", { ascending: true });
+      for (const r of photoRows ?? []) {
+        const key = r.post_id as string;
+        const list = photosByPost.get(key) ?? [];
+        list.push({ id: r.id as string, width: r.width as number, height: r.height as number });
+        photosByPost.set(key, list);
+      }
+    }
+
     // Opening it counts as a view.
     await supabase.rpc("board_bump_views", { thread: id });
 
@@ -210,6 +234,13 @@ export async function onRequestGet(
               author: p.author_id ? (names.get(p.author_id as string) ?? GONE) : GONE,
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
               body: p.body,
+              photos: (photosByPost.get(p.id as string) ?? []).map((ph) => ({
+                id: ph.id,
+                width: ph.width,
+                height: ph.height,
+                thumb: photoUrl(ph.id, "thumb"),
+                full: photoUrl(ph.id, "full"),
+              })),
               signature: p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
               createdAt: p.created_at,
               editedAt: p.edited_at,
@@ -246,7 +277,7 @@ export async function onRequestPost(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    let body: { id?: unknown; body?: unknown };
+    let body: { id?: unknown; body?: unknown; photoIds?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -286,6 +317,8 @@ export async function onRequestPost(
       .select("id")
       .single();
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));
+
+    await attachPhotos(supabase, viewer.id, post.id as string, body.photoIds);
 
     await supabase
       .from("board_reads")
@@ -404,6 +437,11 @@ export async function onRequestDelete(
         ),
       );
     }
+
+    // The photo files first: the rows go by cascade, the files don't.
+    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, {
+      postIds: await postIdsInThreads(supabase, [id]),
+    });
 
     // Posts and read marks go with it — both cascade on the thread.
     const { error: deleteError } = await supabase.from("board_threads").delete().eq("id", id);

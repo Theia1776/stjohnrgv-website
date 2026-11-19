@@ -13,22 +13,372 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
+/* ---------------------------------------------------------------
+   Formatting
+   ---------------------------------------------------------------
+   Written the way boards always wrote it, in square brackets:
+
+     [b]bold[/b]  [i]italic[/i]  [u]underlined[/u]
+     [size=large]bigger[/size]  [color=red]red[/color]
+
+   The toolbar above the post box types these for you, so nobody has
+   to know them. Sizes and colours come from a fixed list, and each is
+   a CSS class -- never a value somebody typed -- so there is no way to
+   put anything but a size or a colour on the page, and the colours
+   have a lighter twin for the dark theme (see board.css).
+   --------------------------------------------------------------- */
+
+/** Name, label, in the order the picker shows them. */
+export const COLORS: Array<[string, string]> = [
+  ["navy", "Navy"],
+  ["red", "Red"],
+  ["orange", "Orange"],
+  ["gold", "Gold"],
+  ["green", "Green"],
+  ["blue", "Blue"],
+  ["purple", "Purple"],
+  ["gray", "Gray"],
+];
+const SIZES: Array<[string, string]> = [
+  ["tiny", "Tiny"],
+  ["small", "Small"],
+  ["large", "Large"],
+  ["huge", "Huge"],
+];
+const COLOR_NAMES = new Set(COLORS.map(([name]) => name));
+const SIZE_NAMES = new Set(SIZES.map(([name]) => name));
+
+type FormatTag = { close: boolean; name: string; value: string };
+
+const FORMAT_TAG = /\[(\/?)(b|i|u|size|color)(?:=([a-z]+))?\]/gi;
+// Private-use characters stand in for a tag between pairing and
+// output. Anything a person types in that range is dropped first.
+const MARK_OPEN = "\uE000";
+const MARK_CLOSE = "\uE001";
+
+function validTag(name: string, value: string, close: boolean): boolean {
+  if (close) return value === "";
+  if (name === "size") return SIZE_NAMES.has(value);
+  if (name === "color") return COLOR_NAMES.has(value);
+  return value === "";
+}
+
+function openHtml(tag: FormatTag): string {
+  switch (tag.name) {
+    case "b":
+      return "<strong>";
+    case "i":
+      return "<em>";
+    case "u":
+      return "<u>";
+    case "size":
+      return `<span class="bb-s-${tag.value}">`;
+    default:
+      return `<span class="bb-c-${tag.value}">`;
+  }
+}
+
+function closeHtml(name: string): string {
+  return name === "b" ? "</strong>" : name === "i" ? "</em>" : name === "u" ? "</u>" : "</span>";
+}
+
+/**
+ * Pair up the tags. One that never gets closed, or is closed out of
+ * order, or has a size or colour that isn't on the list, is left alone
+ * and shows as the plain text it was typed as -- which is what a board
+ * does with a tag it can't make sense of, and tells the writer what
+ * went wrong.
+ */
+function markFormatting(text: string): { marked: string; toks: FormatTag[] } {
+  const clean = text.replace(/[\uE000\uE001]/g, "");
+
+  const found: Array<{ start: number; end: number; tag: FormatTag; paired: boolean }> = [];
+  for (const m of clean.matchAll(FORMAT_TAG)) {
+    const close = m[1] === "/";
+    const name = m[2].toLowerCase();
+    const value = (m[3] ?? "").toLowerCase();
+    if (!validTag(name, value, close)) continue;
+    const start = m.index ?? 0;
+    found.push({ start, end: start + m[0].length, tag: { close, name, value }, paired: false });
+  }
+
+  const stack: number[] = [];
+  found.forEach((t, i) => {
+    if (!t.tag.close) {
+      stack.push(i);
+      return;
+    }
+    for (let s = stack.length - 1; s >= 0; s--) {
+      if (found[stack[s]].tag.name === t.tag.name) {
+        found[stack[s]].paired = true;
+        t.paired = true;
+        stack.length = s; // anything opened inside and never closed is dropped
+        return;
+      }
+    }
+  });
+
+  const toks: FormatTag[] = [];
+  let marked = "";
+  let at = 0;
+  for (const t of found) {
+    if (!t.paired) continue;
+    marked += clean.slice(at, t.start) + MARK_OPEN + toks.length + MARK_CLOSE;
+    toks.push(t.tag);
+    at = t.end;
+  }
+  return { marked: marked + clean.slice(at), toks };
+}
+
+/**
+ * Turn web addresses in already-escaped text into links. Only http and
+ * https, opens in a new tab, and tells search engines not to count it.
+ */
+function linkify(escaped: string): string {
+  return escaped.replace(
+    /https?:\/\/(?:(?!&lt;|&gt;|&quot;)[^\s\uE000\uE001])+/g,
+    (raw) => {
+      let url = raw;
+      let tail = "";
+      // A full stop or bracket at the end of a sentence isn't part of the address.
+      for (;;) {
+        const before = url;
+        url = url.replace(/(?:&#39;|[.,;:!?])$/, (t) => {
+          tail = t + tail;
+          return "";
+        });
+        const opens = (url.match(/\(/g) ?? []).length;
+        const closes = (url.match(/\)/g) ?? []).length;
+        if (url.endsWith(")") && closes > opens) {
+          url = url.slice(0, -1);
+          tail = ")" + tail;
+        }
+        if (url === before) break;
+      }
+      if (!/^https?:\/\/[^/]/.test(url)) return raw;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${url}</a>${tail}`;
+    },
+  );
+}
+
 /** Plain text to paragraphs. Escaped first, always. */
 function paragraphs(text: string): string {
   const trimmed = text.replace(/^\n+|\n+$/g, "");
   if (!trimmed) return "";
-  return trimmed
+
+  const { marked, toks } = markFormatting(trimmed);
+  const tagOrBreak = new RegExp(`${MARK_OPEN}(\\d+)${MARK_CLOSE}|\\n`, "g");
+
+  // A bold or coloured stretch can run across a blank line. Each
+  // paragraph is its own <p>, so whatever is still open is closed at
+  // the end of one and opened again at the start of the next.
+  const open: FormatTag[] = [];
+  return linkify(marked)
     .split(/\n{2,}/)
-    .map((para) => `<p>${para.replace(/\n/g, "<br />")}</p>`)
+    .map((para) => {
+      let html = open.map(openHtml).join("");
+      html += para.replace(tagOrBreak, (_m, n?: string) => {
+        if (n === undefined) return "<br />";
+        const tag = toks[Number(n)];
+        if (tag.close) {
+          open.pop();
+          return closeHtml(tag.name);
+        }
+        open.push(tag);
+        return openHtml(tag);
+      });
+      html += [...open].reverse().map((t) => closeHtml(t.name)).join("");
+      return `<p>${html}</p>`;
+    })
     .join("");
+}
+
+/* ---------------------------------------------------------------
+   Video links
+   ---------------------------------------------------------------
+   Nobody uploads video here -- it is enormous, and the people who
+   have it already put it on YouTube. A YouTube or Vimeo link in a
+   post gets a player under the post, and the link itself stays
+   clickable. Only those two sites, recognised by address; nothing
+   else a person pastes is ever put in a frame.
+   --------------------------------------------------------------- */
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+
+function embedSource(raw: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(raw.replace(/[.,;:!?)]+$/, ""));
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase().replace(/^(www|m)\./, "");
+
+  if (host === "youtu.be") {
+    const id = url.pathname.slice(1).split("/")[0];
+    return YOUTUBE_ID.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+  }
+  if (host === "youtube.com") {
+    let id = "";
+    if (url.pathname === "/watch") id = url.searchParams.get("v") ?? "";
+    else {
+      const m = url.pathname.match(/^\/(?:shorts|embed|live)\/([^/]+)/);
+      if (m) id = m[1];
+    }
+    return YOUTUBE_ID.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+  }
+  if (host === "vimeo.com") {
+    const m = url.pathname.match(/^\/(\d{6,12})\/?$/);
+    return m ? `https://player.vimeo.com/video/${m[1]}` : null;
+  }
+  return null;
+}
+
+/** Players for any YouTube or Vimeo links in a post's own words (not in a quote). */
+export function videoEmbeds(text: string): string {
+  const own = text.replace(/\[quote(?:=[^\]]*)?\][\s\S]*?\[\/quote\]/g, "");
+  const seen = new Set<string>();
+  const out: string[] = [];
+
+  for (const m of own.matchAll(/https?:\/\/[^\s<>"'\[\]]+/g)) {
+    const src = embedSource(m[0]);
+    if (!src || seen.has(src)) continue;
+    seen.add(src);
+    out.push(
+      `<div class="bb-video"><iframe src="${src}" title="Video" loading="lazy" allowfullscreen ` +
+        `referrerpolicy="strict-origin-when-cross-origin" ` +
+        `allow="encrypted-media; picture-in-picture; fullscreen"></iframe></div>`,
+    );
+    if (out.length >= 3) break;
+  }
+  return out.join("");
+}
+
+/* ---------------------------------------------------------------
+   The toolbar above a post box
+   --------------------------------------------------------------- */
+
+/** Wrap whatever is selected, or drop the pair in with the cursor between. */
+function wrapSelection(field: HTMLTextAreaElement, open: string, close: string): void {
+  const start = field.selectionStart ?? field.value.length;
+  const end = field.selectionEnd ?? field.value.length;
+  const chosen = field.value.slice(start, end);
+  field.value = field.value.slice(0, start) + open + chosen + close + field.value.slice(end);
+  field.focus();
+  if (chosen) field.setSelectionRange(start + open.length, start + open.length + chosen.length);
+  else field.setSelectionRange(start + open.length, start + open.length);
+  field.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/**
+ * Bold, italic, underline, size and colour -- plus a Preview, because
+ * the box holds the little bracket tags and people want to see the
+ * result before they post it. Sits above the box (above its label, if
+ * it has one). Ctrl/Cmd+B, I and U work inside the box too.
+ */
+export function attachFormatBar(field: HTMLTextAreaElement): void {
+  if (field.dataset.formatBar === "1") return;
+  field.dataset.formatBar = "1";
+
+  const bar = document.createElement("div");
+  bar.className = "bb-format";
+  bar.setAttribute("role", "toolbar");
+  bar.setAttribute("aria-label", "Text formatting");
+  bar.innerHTML =
+    `<button type="button" class="bb-btn bb-fmt" data-tag="b" title="Bold (Ctrl+B)" aria-label="Bold"><strong>B</strong></button>` +
+    `<button type="button" class="bb-btn bb-fmt" data-tag="i" title="Italic (Ctrl+I)" aria-label="Italic"><em>I</em></button>` +
+    `<button type="button" class="bb-btn bb-fmt" data-tag="u" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>` +
+    `<select class="bb-fmt-size" aria-label="Text size">` +
+    `<option value="">Size</option>` +
+    SIZES.map(([v, label]) => `<option value="${v}">${label}</option>`).join("") +
+    `</select>` +
+    `<span class="bb-fmt-color">` +
+    `<button type="button" class="bb-btn bb-fmt-colorbtn" aria-expanded="false">Color</button>` +
+    `<span class="bb-swatches hidden">` +
+    COLORS.map(
+      ([v, label]) =>
+        `<button type="button" class="bb-swatch bb-sw-${v}" data-color="${v}" title="${label}" aria-label="${label}"></button>`,
+    ).join("") +
+    `</span></span>` +
+    `<button type="button" class="bb-btn bb-fmt-preview" aria-pressed="false">Preview</button>`;
+
+  const anchor = field.closest("label") ?? field;
+  anchor.insertAdjacentElement("beforebegin", bar);
+
+  const preview = document.createElement("div");
+  preview.className = "bb-preview bb-body hidden";
+  preview.setAttribute("aria-live", "polite");
+  field.insertAdjacentElement("afterend", preview);
+
+  const swatches = bar.querySelector(".bb-swatches") as HTMLElement;
+  const colorButton = bar.querySelector(".bb-fmt-colorbtn") as HTMLElement;
+  const previewButton = bar.querySelector(".bb-fmt-preview") as HTMLElement;
+  const sizeSelect = bar.querySelector(".bb-fmt-size") as HTMLSelectElement;
+
+  const refresh = () => {
+    preview.innerHTML =
+      renderBody(field.value) + videoEmbeds(field.value) ||
+      '<p class="bb-preview-empty">Nothing to preview yet.</p>';
+  };
+
+  bar.addEventListener("click", (event) => {
+    const hit = event.target as HTMLElement;
+
+    const tagButton = hit.closest(".bb-fmt") as HTMLElement | null;
+    if (tagButton?.dataset.tag) {
+      const t = tagButton.dataset.tag;
+      wrapSelection(field, `[${t}]`, `[/${t}]`);
+      return;
+    }
+
+    const swatch = hit.closest(".bb-swatch") as HTMLElement | null;
+    if (swatch?.dataset.color) {
+      wrapSelection(field, `[color=${swatch.dataset.color}]`, "[/color]");
+      swatches.classList.add("hidden");
+      colorButton.setAttribute("aria-expanded", "false");
+      return;
+    }
+
+    if (hit.closest(".bb-fmt-colorbtn")) {
+      const nowHidden = swatches.classList.toggle("hidden");
+      colorButton.setAttribute("aria-expanded", String(!nowHidden));
+      return;
+    }
+
+    if (hit.closest(".bb-fmt-preview")) {
+      const nowHidden = preview.classList.toggle("hidden");
+      previewButton.setAttribute("aria-pressed", String(!nowHidden));
+      previewButton.textContent = nowHidden ? "Preview" : "Hide preview";
+      if (!nowHidden) refresh();
+    }
+  });
+
+  sizeSelect.addEventListener("change", () => {
+    if (sizeSelect.value) wrapSelection(field, `[size=${sizeSelect.value}]`, "[/size]");
+    sizeSelect.value = "";
+  });
+
+  field.addEventListener("input", () => {
+    if (!preview.classList.contains("hidden")) refresh();
+  });
+
+  field.addEventListener("keydown", (event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    const key = event.key.toLowerCase();
+    if (key === "b" || key === "i" || key === "u") {
+      event.preventDefault();
+      wrapSelection(field, `[${key}]`, `[/${key}]`);
+    }
+  });
 }
 
 /**
  * What somebody wrote, ready to drop into the page.
  *
  * Escaped first and always — no markdown, no HTML. If a person types
- * <b> they see <b>. The one piece of markup understood is the forum
- * quote, written the way boards have always written it:
+ * <b> they see <b>. The only markup understood is the board's own
+ * square-bracket kind: [b] [i] [u] [size=] [color=] (see above), web
+ * addresses becoming links, and the forum quote, written the way
+ * boards have always written it:
  *
  *   [quote=Maria G.]what she said[/quote]
  *   and here's my answer

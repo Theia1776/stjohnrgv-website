@@ -59,6 +59,7 @@ import "../../styles/board.css";
           ></textarea>
         </label>
         <div id="new-smilies"></div>
+        <div id="new-photos"></div>
         <div class="flex items-center gap-2">
           <button id="start-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <button id="start-cancel" type="button" class="bb-btn">Cancel</button>
@@ -92,7 +93,16 @@ import "../../styles/board.css";
 
 <script>
   import { confirmAction } from "../../lib/confirm";
-  import { escapeHtml, when, exactly, errorDetail, boardFetch, attachSmilies } from "../../lib/board-ui";
+  import {
+    escapeHtml,
+    when,
+    exactly,
+    errorDetail,
+    boardFetch,
+    attachSmilies,
+    attachFormatBar,
+  } from "../../lib/board-ui";
+  import { attachPhotoPicker } from "../../lib/board-photo-picker";
 
   type Thread = {
     id: string;
@@ -281,6 +291,8 @@ import "../../styles/board.css";
     document.getElementById("new-body") as HTMLTextAreaElement,
     document.getElementById("new-smilies") as HTMLElement,
   );
+  attachFormatBar(document.getElementById("new-body") as HTMLTextAreaElement);
+  const newPhotos = attachPhotoPicker(document.getElementById("new-photos") as HTMLElement);
 
   function toggleForm() {
     startForm.classList.toggle("hidden");
@@ -295,6 +307,8 @@ import "../../styles/board.css";
   (document.getElementById("start-cancel") as HTMLButtonElement).addEventListener("click", () => {
     startForm.classList.add("hidden");
     startStatus.textContent = "";
+    // Pictures picked but never posted shouldn't linger in storage.
+    newPhotos.discard();
   });
 
   (document.getElementById("mark-read") as HTMLAnchorElement).addEventListener(
@@ -332,6 +346,11 @@ import "../../styles/board.css";
       return;
     }
 
+    if (newPhotos.busy()) {
+      startStatus.textContent = "Hold on, a photo is still being added.";
+      return;
+    }
+
     submit.disabled = true;
     startStatus.textContent = "Posting…";
 
@@ -340,7 +359,7 @@ import "../../styles/board.css";
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: slug, title, body: text }),
+        body: JSON.stringify({ category: slug, title, body: text, photoIds: newPhotos.ids() }),
       },
       here,
     );
