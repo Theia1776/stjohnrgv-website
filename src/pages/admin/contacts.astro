@@ -593,7 +593,7 @@ import Layout from "../../layouts/Layout.astro";
     const roleSelect = document.getElementById("edit-role") as HTMLSelectElement;
     const roleNote = document.getElementById("edit-role-note") as HTMLParagraphElement;
     const adminOption = roleSelect.querySelector('option[value="admin"]') as HTMLOptionElement;
-    roleSelect.value = c.role ?? "catechumen";
+    roleSelect.value = c.role ?? "inquirer";
 
     adminOption.hidden = !iAmMaster;
     adminOption.disabled = !iAmMaster;
