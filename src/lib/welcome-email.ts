@@ -47,9 +47,9 @@ export function welcomeEmail(firstName: string, link: string, days: number) {
     `<p style="margin:0 0 28px">Press the button, type a password you will remember, ` +
     `and you will land right in your account. There is nothing else to fill out.</p>` +
     `<p style="margin:0 0 30px;text-align:center">` +
-    `<a href="${link}" style="${HEAD};display:inline-block;background:#3B7BA8;color:#FFFFFF;` +
+    `<a href="${link}" style="${HEAD};display:inline-block;background:#2A5E84;color:#FFFFFF;` +
     `text-decoration:none;font-size:19px;font-weight:700;letter-spacing:.5px;padding:17px 34px;` +
-    `border:1px solid #3B7BA8">Choose my password</a></p>` +
+    `border:1px solid #2A5E84">Choose my password</a></p>` +
     `<p style="margin:0 0 16px;font-size:16px;color:#5C6B7A">The button works for ${days} days. ` +
     `If it stops working, or anything looks wrong, just reply to this email or call ` +
     `the parish office and we will sort it out with you.</p>` +
