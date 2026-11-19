@@ -40,6 +40,18 @@ import "../../styles/board.css";
         <span class="bb-sort-note">Pinned topics always stay on top.</span>
       </div>
 
+      <dialog id="rename-dialog" class="bb-help-dialog" aria-labelledby="rename-h">
+        <form id="rename-form" method="dialog">
+          <h2 id="rename-h">Edit the title</h2>
+          <input id="rename-input" type="text" maxlength="160" required spellcheck="true" autocapitalize="sentences" class="bb-suspend-select" />
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Save</button>
+            <button type="button" class="bb-btn rename-close">Cancel</button>
+            <span id="rename-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
+
       <form id="start-form" class="hidden border border-border-soft bg-cream-card p-4 mb-4 space-y-3">
         <label class="block">
           <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
@@ -246,6 +258,7 @@ import "../../styles/board.css";
           ? `<div class="mt-1">
                <button type="button" class="bb-btn thread-pin">${t.pinned ? "Unpin" : "Pin"}</button>
                <button type="button" class="bb-btn thread-lock">${t.locked ? "Reopen" : "Close"}</button>
+               <button type="button" class="bb-btn thread-rename" title="Change this topic's title">Edit title</button>
                <button type="button" class="bb-btn thread-announce" title="Show this topic on the board's front page">${t.announce ? "Remove announcement" : "Announce"}</button>
                <button type="button" class="bb-btn bb-btn-danger thread-delete">Delete</button>
              </div>`
@@ -344,6 +357,14 @@ import "../../styles/board.css";
         if (await patchThread(id, { pinned: !thread.pinned })) await load();
         return;
       }
+      if (button.classList.contains("thread-rename")) {
+        renameTarget = id;
+        renameInput.value = thread.title;
+        renameStatus.textContent = "";
+        renameDialog.showModal();
+        renameInput.select();
+        return;
+      }
       if (button.classList.contains("thread-announce")) {
         if (await patchThread(id, { announce: !thread.announce })) await load();
         return;
@@ -424,6 +445,25 @@ import "../../styles/board.css";
       await load();
     },
   );
+
+  // ---- editing a topic's title ----
+  let renameTarget = "";
+  const renameDialog = document.getElementById("rename-dialog") as HTMLDialogElement;
+  const renameInput = document.getElementById("rename-input") as HTMLInputElement;
+  const renameStatus = document.getElementById("rename-status") as HTMLElement;
+  document.querySelectorAll(".rename-close").forEach((b) => b.addEventListener("click", () => renameDialog.close()));
+  (document.getElementById("rename-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = renameInput.value.trim();
+    if (!title) return;
+    renameStatus.textContent = "Saving…";
+    if (await patchThread(renameTarget, { title })) {
+      renameDialog.close();
+      await load();
+    } else {
+      renameStatus.textContent = "";
+    }
+  });
 
   // ---- the optional poll on a new topic ----
   const pollOn = document.getElementById("poll-on") as HTMLInputElement;

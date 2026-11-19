@@ -27,6 +27,7 @@ import "../../styles/board.css";
           <button id="reply-top" type="button" class="bb-btn bb-btn-strong">Post Reply</button>
           <a id="back-link" href="/board/" class="bb-btn">Back to forum</a>
           <a id="jump-new" href="#first-new" class="bb-btn hidden">Go to first new post</a>
+          <button id="tool-title" type="button" class="bb-btn hidden">Edit title</button>
         </span>
         <span id="thread-meta" class="text-xs text-text-secondary"></span>
       </div>
@@ -75,6 +76,18 @@ import "../../styles/board.css";
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
         </div>
       </form>
+
+<dialog id="title-dialog" class="bb-help-dialog" aria-labelledby="title-dialog-h">
+        <form id="title-form" method="dialog">
+          <h2 id="title-dialog-h">Edit the title</h2>
+          <input id="title-input" type="text" maxlength="160" required spellcheck="true" autocapitalize="sentences" class="bb-suspend-select" />
+          <div class="bb-help-actions">
+            <button type="submit" class="bb-btn bb-btn-strong">Save</button>
+            <button type="button" class="bb-btn title-close">Cancel</button>
+            <span id="title-status" class="text-sm" role="status"></span>
+          </div>
+        </form>
+      </dialog>
 
       <dialog id="report-dialog" class="bb-help-dialog" aria-labelledby="report-title">
         <form id="report-form" method="dialog">
@@ -239,6 +252,9 @@ import "../../styles/board.css";
   const replyStatus = document.getElementById("reply-status") as HTMLElement;
   const lockedNote = document.getElementById("locked-note") as HTMLElement;
   const deleteButton = document.getElementById("tool-delete") as HTMLButtonElement;
+  const titleButton = document.getElementById("tool-title") as HTMLButtonElement;
+  const titleDialog = document.getElementById("title-dialog") as HTMLDialogElement;
+  const titleInput = document.getElementById("title-input") as HTMLInputElement;
 
   let isAdmin = false;
   let canReply = false;
@@ -430,7 +446,7 @@ import "../../styles/board.css";
           divider = `<tr class="bb-newline" id="first-new"><td colspan="2">New since you last looked</td></tr>`;
         }
 
-        const canEdit = p.mine || isAdmin;
+        const canEdit = p.mine || isAdmin || isMod;
         // The opening post can be edited but not deleted on its own —
         // the whole topic hangs off it.
         const canDelete = canEdit && index > 0;
@@ -580,6 +596,7 @@ import "../../styles/board.css";
     replyForm.classList.toggle("hidden", !canReply);
     (document.getElementById("reply-top") as HTMLButtonElement).classList.toggle("hidden", !canReply);
     deleteButton.classList.toggle("hidden", !data.canDelete);
+    titleButton.classList.toggle("hidden", !(data.thread?.mine || data.viewer?.isModerator));
 
     postsEl.onclick = async (event) => {
       const target = event.target as HTMLElement;
@@ -850,6 +867,12 @@ import "../../styles/board.css";
       }
     };
 
+    titleButton.onclick = () => {
+      titleInput.value = titleEl.textContent ?? "";
+      (document.getElementById("title-status") as HTMLElement).textContent = "";
+      titleDialog.showModal();
+      titleInput.select();
+    };
     deleteButton.onclick = async () => {
       const goAhead = await confirmAction({
         message: `Delete "${thread.title}" and every post in it? That can't be undone.`,
@@ -883,6 +906,18 @@ import "../../styles/board.css";
     flash.classList.remove("hidden");
     flash.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+
+  // ---- edit the title ----
+  document.querySelectorAll(".title-close").forEach((b) => b.addEventListener("click", () => titleDialog.close()));
+  (document.getElementById("title-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = titleInput.value.trim();
+    if (!title) return;
+    if (await patchThreadFlags({ title })) {
+      titleDialog.close();
+      await load();
+    }
+  });
 
   // ---- the poll ----
   document.getElementById("poll")?.addEventListener("click", (event) => {
