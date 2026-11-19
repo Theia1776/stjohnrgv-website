@@ -128,6 +128,21 @@ export async function onRequestGet(
       }
     }
 
+    // Each author's signature, if they've set one. Looked up here, not
+    // stored on the post, so editing or clearing it takes effect on
+    // everything they've written. A failed lookup just means no
+    // signatures this time; it shouldn't take the thread down with it.
+    const signatures = new Map<string, string>();
+    if (ids.length) {
+      const { data: sigRows } = await supabase
+        .from("board_signatures")
+        .select("user_id, body")
+        .in("user_id", ids);
+      for (const row of sigRows ?? []) {
+        signatures.set(row.user_id as string, row.body as string);
+      }
+    }
+
     // Reactions on every post in this thread, folded into counts plus
     // whether this person is one of the people who gave each one.
     const postIds = (posts ?? []).map((p) => p.id as string);
@@ -195,6 +210,7 @@ export async function onRequestGet(
               author: p.author_id ? (names.get(p.author_id as string) ?? GONE) : GONE,
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
               body: p.body,
+              signature: p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
               createdAt: p.created_at,
               editedAt: p.edited_at,
               mine: p.author_id === viewer.id,

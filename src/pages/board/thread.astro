@@ -60,6 +60,10 @@ import "../../styles/board.css";
           ></textarea>
         </label>
         <div id="reply-smilies"></div>
+        <p class="text-xs text-text-secondary">
+          If you have a signature, it goes under your post by itself.
+          <a href="/board/#signature" class="underline">Set or change it</a>
+        </p>
         <div class="flex items-center gap-2">
           <button id="reply-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
@@ -81,6 +85,7 @@ import "../../styles/board.css";
   import {
     escapeHtml,
     renderBody,
+    renderSignature,
     quoteOf,
     when,
     exactly,
@@ -102,6 +107,7 @@ import "../../styles/board.css";
     author: string;
     panel: Panel;
     body: string;
+    signature: string;
     createdAt: string;
     editedAt: string | null;
     mine: boolean;
@@ -223,6 +229,7 @@ import "../../styles/board.css";
                 <span>${buttons}</span>
               </div>
               <div class="bb-body post-body">${renderBody(p.body)}</div>
+              ${p.signature ? `<div class="bb-signature">${renderSignature(p.signature)}</div>` : ""}
               <div class="bb-foot">
                 ${reactionStrip(p)}
                 <a href="#top" class="bb-react-add">Back to top</a>

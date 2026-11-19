@@ -282,6 +282,17 @@
   margin-bottom: 0.25rem;
 }
 
+/* A signature: set apart under the post, quieter than the post itself. */
+.bb-signature {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
 /* The foot of a post: reactions on the left, Back to top on the right. */
 .bb-foot {
   display: flex;
@@ -420,6 +431,33 @@
 .bb-panel-links a {
   display: block;
   padding: 0.15rem 0;
+}
+
+/* Editing your signature, in the corner panel. */
+.bb-sig-preview {
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-cream-bg);
+  border: 1px dashed var(--color-border-soft);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.bb-sig-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-bg);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+}
+.bb-sig-count {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
 }
 
 /* The stats line along the bottom. */

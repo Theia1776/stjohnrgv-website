@@ -58,6 +58,28 @@ import "../../styles/board.css";
             <a href="/learn/library/">Parish Library</a>
             <a href="#" id="mark-all-read">Mark all topics read</a>
           </div>
+          <div class="bb-panel-links" id="signature">
+            <strong>My signature</strong>
+            <div id="sig-preview" class="bb-sig-preview hidden"></div>
+            <a href="#" id="sig-edit">Add a signature</a>
+            <form id="sig-form" class="bb-sig-form hidden">
+              <textarea
+                id="sig-body"
+                rows="4"
+                maxlength="300"
+                spellcheck="true"
+                autocapitalize="sentences"
+                aria-label="Your signature"
+                placeholder="A line or two that goes under every post you write"
+              ></textarea>
+              <span id="sig-count" class="bb-sig-count">0 / 300 · up to 4 lines</span>
+              <div class="mt-2 flex flex-wrap items-center gap-1">
+                <button type="submit" id="sig-save" class="bb-btn bb-btn-strong">Save</button>
+                <button type="button" id="sig-cancel" class="bb-btn">Cancel</button>
+              </div>
+              <span id="sig-status" class="bb-sig-count" role="status"></span>
+            </form>
+          </div>
         </aside>
       </div>
 
@@ -107,7 +129,7 @@ import "../../styles/board.css";
 
 <script>
   import { confirmAction } from "../../lib/confirm";
-  import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
+  import { escapeHtml, renderSignature, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
 
   type Category = {
     slug: string;
@@ -406,5 +428,88 @@ import "../../styles/board.css";
     },
   );
 
+  // ---- my signature -------------------------------------------------------
+  const sigPreview = document.getElementById("sig-preview") as HTMLElement;
+  const sigEdit = document.getElementById("sig-edit") as HTMLAnchorElement;
+  const sigForm = document.getElementById("sig-form") as HTMLFormElement;
+  const sigBody = document.getElementById("sig-body") as HTMLTextAreaElement;
+  const sigCount = document.getElementById("sig-count") as HTMLElement;
+  const sigStatus = document.getElementById("sig-status") as HTMLElement;
+  let savedSignature = "";
+
+  function showSignature() {
+    sigPreview.innerHTML = renderSignature(savedSignature);
+    sigPreview.classList.toggle("hidden", !savedSignature);
+    sigEdit.textContent = savedSignature ? "Change my signature" : "Add a signature";
+  }
+
+  function closeSignatureForm() {
+    sigForm.classList.add("hidden");
+    sigEdit.classList.remove("hidden");
+  }
+
+  function updateCount() {
+    const lines = sigBody.value.replace(/\r\n/g, "\n").trim().split("\n").length;
+    sigCount.textContent = `${sigBody.value.length} / 300 · ${sigBody.value.trim() ? lines : 0} of 4 lines`;
+  }
+
+  async function loadSignature() {
+    const res = await boardFetch("/api/board/signature");
+    if (!res || !res.ok) return;
+    const data = await res.json();
+    savedSignature = typeof data.signature === "string" ? data.signature : "";
+    showSignature();
+  }
+
+  sigEdit.addEventListener("click", (event) => {
+    event.preventDefault();
+    sigBody.value = savedSignature;
+    sigStatus.textContent = "";
+    updateCount();
+    sigForm.classList.remove("hidden");
+    sigEdit.classList.add("hidden");
+    sigBody.focus();
+  });
+  sigBody.addEventListener("input", updateCount);
+  (document.getElementById("sig-cancel") as HTMLButtonElement).addEventListener(
+    "click",
+    closeSignatureForm,
+  );
+
+  sigForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const save = document.getElementById("sig-save") as HTMLButtonElement;
+    save.disabled = true;
+    sigStatus.textContent = "Saving…";
+
+    const res = await boardFetch("/api/board/signature", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: sigBody.value }),
+    });
+    save.disabled = false;
+    if (!res) return;
+    if (!res.ok) {
+      sigStatus.textContent = (await errorDetail(res)) || `Couldn't save that (${res.status}).`;
+      return;
+    }
+
+    const data = await res.json();
+    savedSignature = typeof data.signature === "string" ? data.signature : "";
+    showSignature();
+    closeSignatureForm();
+    // A confirmation that outlives the form closing.
+    sigPreview.insertAdjacentHTML(
+      "afterend",
+      `<span id="sig-done" class="bb-sig-count" role="status">${
+        savedSignature
+          ? "Saved. It now goes under every post you write, old ones included."
+          : "Removed. Your posts have no signature now."
+      }</span>`,
+    );
+    setTimeout(() => document.getElementById("sig-done")?.remove(), 6000);
+  });
+
   load();
+  loadSignature();
 </script>

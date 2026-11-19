@@ -61,6 +61,16 @@ export function renderBody(text: string): string {
   return out + paragraphs(rest);
 }
 
+/**
+ * A signature: escaped, line breaks kept, nothing else understood. No
+ * quote tags, no markup, so it can't be used to dress up as somebody
+ * else's words.
+ */
+export function renderSignature(text: string): string {
+  const trimmed = (text ?? "").trim();
+  return trimmed ? escapeHtml(trimmed).replace(/\n/g, "<br />") : "";
+}
+
 /** The [quote=…] block the Quote button drops into the reply box. */
 export function quoteOf(author: string, body: string): string {
   // Strip any quotes already inside it, so quoting a quote of a quote
