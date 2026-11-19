@@ -54,6 +54,8 @@ import "../../styles/board.css";
             rows="7"
             maxlength="10000"
             required
+            spellcheck="true"
+            autocapitalize="sentences"
             class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
           ></textarea>
         </label>
@@ -334,7 +336,7 @@ import "../../styles/board.css";
       if (button.classList.contains("post-edit")) {
         const bodyEl = row.querySelector(".post-body") as HTMLElement;
         bodyEl.innerHTML = `
-          <textarea rows="8" maxlength="10000"
+          <textarea rows="8" maxlength="10000" spellcheck="true" autocapitalize="sentences"
                     class="block w-full border border-border-soft bg-cream-bg px-3 py-2">${escapeHtml(post.body)}</textarea>
           <span class="mt-2 inline-flex gap-2">
             <button type="button" class="bb-btn bb-btn-strong edit-save">Save</button>

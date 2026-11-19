@@ -79,6 +79,7 @@ import "../../styles/board.css";
               id="cat-name"
               type="text"
               maxlength="80"
+              spellcheck="true"
               placeholder="Parish Life"
               class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"
             />
@@ -91,6 +92,8 @@ import "../../styles/board.css";
               id="cat-description"
               type="text"
               maxlength="200"
+              spellcheck="true"
+              autocapitalize="sentences"
               placeholder="What belongs in here"
               class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"
             />
@@ -144,8 +147,14 @@ import "../../styles/board.css";
     emptyState.classList.add("hidden");
 
     body.innerHTML = categories
-      .map((c) => {
+      .map((c, index) => {
         const unread = c.unreadThreads > 0;
+        // A pin on whichever category sits at the top. It follows the
+        // order rather than being a flag of its own, so moving a
+        // category up with the Up button moves the pin with it.
+        const pin = index === 0
+          ? '<span aria-hidden="true" title="Pinned to the top">📌</span> '
+          : "";
         // The folder glyph: full when there's something new in it.
         const icon = unread ? "📬" : "📭";
         const last = c.lastPostAt
@@ -157,7 +166,7 @@ import "../../styles/board.css";
           <tr class="${unread ? "bb-unread" : ""}">
             <td class="bb-icon">${icon}</td>
             <td>
-              <a class="bb-title" href="/board/category/?c=${encodeURIComponent(c.slug)}">${escapeHtml(c.name)}</a>
+              ${pin}<a class="bb-title" href="/board/category/?c=${encodeURIComponent(c.slug)}">${escapeHtml(c.name)}</a>
               ${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}
               ${c.description ? `<span class="bb-desc">${escapeHtml(c.description)}</span>` : ""}
               ${unread ? `<span class="bb-desc">${c.unreadThreads} new ${c.unreadThreads === 1 ? "topic" : "topics"}</span>` : ""}
@@ -286,10 +295,10 @@ import "../../styles/board.css";
         const cell = row.firstElementChild as HTMLElement;
         cell.innerHTML = `
           <input type="text" maxlength="80" value="${escapeHtml(category.name)}"
-                 aria-label="Category name"
+                 aria-label="Category name" spellcheck="true"
                  class="cat-name-input w-full border border-border-soft bg-cream-bg px-2 py-1 text-sm" />
           <input type="text" maxlength="200" value="${escapeHtml(category.description ?? "")}"
-                 aria-label="Subtitle" placeholder="Subtitle — the line under the name"
+                 aria-label="Subtitle" spellcheck="true" autocapitalize="sentences" placeholder="Subtitle — the line under the name"
                  class="cat-desc-input mt-1 w-full border border-border-soft bg-cream-bg px-2 py-1 text-xs" />
           <span class="mt-1 inline-flex gap-1">
             <button type="button" class="bb-btn bb-btn-strong cat-save">Save</button>
