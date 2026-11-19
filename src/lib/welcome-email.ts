@@ -4,8 +4,8 @@
  * straight into their account.
  */
 
-export function welcomeEmail(firstName: string, link: string, days: number) {
-  const name = firstName.trim() || "friend";
+export function welcomeEmail(fullName: string, link: string, days: number) {
+  const name = fullName.trim() || "friend";
   const subject = "Your St. John of Kronstadt website account is ready";
 
   const text =
@@ -41,7 +41,7 @@ export function welcomeEmail(firstName: string, link: string, days: number) {
     `</div>` +
     `<div style="padding:30px 30px 34px">` +
     `<p style="${HEAD};margin:0 0 18px;font-size:26px;font-weight:600;color:#2C3E50">Your account is ready</p>` +
-    `<p style="margin:0 0 16px">Dear ${escapeHtml(name)},</p>` +
+    `<p style="margin:0 0 16px">Greetings, ${escapeHtml(name)}!</p>` +
     `<p style="margin:0 0 16px">We have set up an account for you on the parish ` +
     `website. It is all ready. The only thing left is for you to choose a password.</p>` +
     `<p style="margin:0 0 28px">Press the button, type a password you will remember, ` +

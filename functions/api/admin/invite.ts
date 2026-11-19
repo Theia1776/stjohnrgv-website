@@ -128,7 +128,7 @@ export async function onRequestPost(
     if (tokErr) return wrap(json({ error: tokErr.message }, 500));
 
     const origin = new URL(context.request.url).origin;
-    const { subject, text, html } = welcomeEmail(firstName, `${origin}/welcome/?t=${token}`, WELCOME_DAYS);
+    const { subject, text, html } = welcomeEmail(`${firstName} ${lastName}`, `${origin}/welcome/?t=${token}`, WELCOME_DAYS);
     const result = await sendEmail({
       apiKey: env.RESEND_API_KEY,
       from: env.RESET_EMAIL_FROM,
