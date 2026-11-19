@@ -669,10 +669,32 @@
   max-height: 88vh;
   background: #fff;
 }
+.bb-lightbox-frame {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+/* A plain round X in the corner of the photo, so nobody has to
+   guess how to put it away. Fixed cream and navy, not the theme
+   tokens, because the backdrop is dark in both themes. */
 .bb-lightbox-close {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 2px solid #2C3E50;
+  background: #FAF7F0;
+  color: #2C3E50;
+  font-size: 1.9rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.bb-lightbox-close:hover,
+.bb-lightbox-close:focus-visible {
+  background: #C9A84C;
 }
 
 /* ---- the "Add photos" row under a post box --------------- */

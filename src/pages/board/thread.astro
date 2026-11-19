@@ -517,7 +517,7 @@ import "../../styles/board.css";
   lightbox.setAttribute("role", "dialog");
   lightbox.setAttribute("aria-label", "Photo");
   lightbox.innerHTML =
-    '<button type="button" class="bb-btn bb-btn-strong bb-lightbox-close">Close</button><img alt="" />';
+    '<span class="bb-lightbox-frame"><img alt="" /><button type="button" class="bb-lightbox-close" aria-label="Close photo" title="Close">&times;</button></span>';
   document.body.appendChild(lightbox);
   const lightboxImg = lightbox.querySelector("img") as HTMLImageElement;
 
