@@ -19,6 +19,7 @@ import {
   shortName,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { loadInbox } from "../../../src/lib/board-messages.ts";
 
 interface CategoryRow {
   id: string;
@@ -165,11 +166,21 @@ export async function onRequestGet(
       };
     });
 
+    // New private messages, for the Messages link. If it can't be worked
+    // out the board still loads; it just shows none.
+    let unreadMessages = 0;
+    try {
+      unreadMessages = (await loadInbox(supabase, viewer.id)).unreadCount;
+    } catch {
+      unreadMessages = 0;
+    }
+
     return wrap(
       jsonResponse(
         {
           categories: payload,
           unreadTotal,
+          unreadMessages,
           // The line along the bottom of every board ever made.
           stats: {
             topics: (threads ?? []).length,

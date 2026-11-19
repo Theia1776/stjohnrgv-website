@@ -1,14 +1,15 @@
 /**
  * Cloudflare Pages Function: POST /api/board/close-request
  *
- * { id, reason? }   the person who started a topic asks the moderators
- *                   to close it to new replies.
+ * { id, reason? }   the person who started a topic presses Help.
  *
- * It doesn't close anything. It writes a new topic in the Moderation
- * Forum, from the person asking, with a link to the topic and their
- * reason, and notes on the topic itself that a request is waiting so
- * it can't be sent twice and moderators can see which ones have one.
- * A moderator then closes the topic or turns the request down.
+ * It doesn't close anything. It opens a private conversation between
+ * that person and the moderators and admins, with a link to the topic
+ * and what they said, and notes on the topic itself that help was asked
+ * for, so it isn't sent twice and moderators can see which topics have
+ * one waiting. Any moderator can answer in the conversation, and the
+ * person hears back there. A moderator then closes the topic or
+ * dismisses the request, from the notice at the top of the topic.
  *
  * Only the author of the topic may ask, and only while it's open.
  */
@@ -19,9 +20,9 @@ import {
   jsonResponse,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
+import { MAX_SUBJECT, postMessage, privilegedIds } from "../../../src/lib/board-messages.ts";
 
 const MAX_REASON = 1000;
-const MAX_TITLE = 160;
 
 export async function onRequestPost(
   context: { request: Request; env: BoardEnv },
@@ -74,42 +75,31 @@ export async function onRequestPost(
       );
     }
 
-    const { data: moderation } = await supabase
-      .from("board_categories")
-      .select("id")
-      .eq("slug", "moderation")
-      .maybeSingle();
-    if (!moderation) {
-      return wrap(
-        jsonResponse({ error: "The Moderation Forum isn't set up yet, so the request has nowhere to go." }, 500),
-      );
-    }
-
     const origin = new URL(context.request.url).origin;
     const topicTitle = thread.title as string;
-    const title = `Help requested: ${topicTitle}`.slice(0, MAX_TITLE);
+    const subject = `Help: ${topicTitle}`.slice(0, MAX_SUBJECT);
     const text =
-      `${viewer.displayName} asked the moderators for help with this topic. ` +
-      `They may want it closed to new replies.\n\n` +
-      `Topic: "${topicTitle}" in ${room?.name ?? "the board"}\n` +
-      `${origin}/board/thread/?id=${id}\n\n` +
-      `What they said:\n${reason || "(nothing added)"}\n\n` +
-      `To act on it, open the topic: there is a notice at the top with Close this topic ` +
-      `and Dismiss.`;
+      `I'd like help with my topic "${topicTitle}"${room ? ` in ${room.name}` : ""}.
+` +
+      `${origin}/board/thread/?id=${id}
 
-    const { data: request, error: requestError } = await supabase
-      .from("board_threads")
-      .insert({ category_id: moderation.id, title, author_id: viewer.id })
+` +
+      (reason || "(I didn't add anything more.)");
+
+    const { data: made, error: makeError } = await supabase
+      .from("board_conversations")
+      .insert({ kind: "help", subject, created_by: viewer.id, thread_id: id })
       .select("id")
       .single();
-    if (requestError) return wrap(jsonResponse({ error: requestError.message }, 500));
+    if (makeError) return wrap(jsonResponse({ error: makeError.message }, 500));
 
-    const { error: postError } = await supabase
-      .from("board_posts")
-      .insert({ thread_id: request.id, author_id: viewer.id, body: text });
-    if (postError) {
-      await supabase.from("board_threads").delete().eq("id", request.id);
-      return wrap(jsonResponse({ error: postError.message }, 500));
+    try {
+      await postMessage(supabase, made.id as string, viewer.id, text, [...(await privilegedIds(supabase))]);
+    } catch (err) {
+      await supabase.from("board_conversations").delete().eq("id", made.id);
+      return wrap(
+        jsonResponse({ error: err instanceof Error ? err.message : "Couldn't send that." }, 500),
+      );
     }
 
     const { error: markError } = await supabase

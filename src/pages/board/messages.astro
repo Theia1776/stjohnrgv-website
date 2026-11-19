@@ -1,0 +1,357 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Messages | Parish Board" description="Private messages between people on the parish board.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">Messages</h1>
+    <p class="text-text-secondary text-sm mb-2">
+      Private conversations with other people on the board, outside the topics.
+    </p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; Messages
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <p class="bb-notice">
+        Only the people in a conversation can read it. The board has no page that shows anyone
+        else's messages. They are kept on the parish's site as plain text, though, not locked away
+        with encryption, so don't put anything in a message that you wouldn't trust to the parish
+        office.
+      </p>
+
+      <div class="bb-bar">
+        <button id="new-message" type="button" class="bb-btn bb-btn-strong">New message</button>
+        <a href="/board/" class="bb-btn">Back to the board</a>
+      </div>
+
+      <form
+        id="compose"
+        class="hidden mb-6 border border-border-soft bg-cream-card p-4 space-y-3"
+        novalidate
+      >
+        <div>
+          <label class="block text-xs uppercase tracking-widest text-text-secondary mb-1" for="to-filter">
+            To
+          </label>
+          <input
+            id="to-filter"
+            type="text"
+            autocomplete="off"
+            placeholder="Type a name to narrow the list"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2 mb-2"
+          />
+          <select
+            id="to"
+            size="6"
+            aria-label="Who is this for?"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          ></select>
+          <p id="to-picked" class="text-sm text-text-secondary mt-1"></p>
+        </div>
+
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">Subject</span>
+          <input
+            id="subject"
+            type="text"
+            maxlength="160"
+            autocapitalize="sentences"
+            spellcheck="true"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          />
+        </label>
+
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">Message</span>
+          <textarea
+            id="body"
+            rows="7"
+            maxlength="5000"
+            spellcheck="true"
+            autocapitalize="sentences"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          ></textarea>
+        </label>
+        <div id="body-smilies"></div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="send" type="submit" class="bb-btn bb-btn-strong">Send</button>
+          <button id="cancel" type="button" class="bb-btn">Cancel</button>
+          <span id="compose-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </form>
+
+      <table class="bb-table" id="inbox-table">
+        <thead>
+          <tr>
+            <th colspan="2">Conversation</th>
+            <th>With</th>
+            <th class="bb-last">Latest</th>
+          </tr>
+        </thead>
+        <tbody id="inbox"></tbody>
+      </table>
+      <p id="empty-state" class="hidden text-center text-text-secondary mt-8">
+        No messages yet. Press New message to write to someone.
+      </p>
+
+      <details id="ignored-box" class="hidden mt-6">
+        <summary class="cursor-pointer text-sm font-semibold">
+          <span id="ignored-count"></span>
+        </summary>
+        <table class="bb-table mt-2">
+          <tbody id="ignored"></tbody>
+        </table>
+      </details>
+
+      <div id="ignoring-box" class="hidden mt-8 text-sm">
+        <h2 class="font-semibold mb-1">People you're ignoring</h2>
+        <p class="text-text-secondary mb-2">
+          Their messages still arrive, but they wait under "Ignored" and never show as new. They
+          aren't told. If there's a problem between you and someone, it's best talked through, with
+          Father's help if need be.
+        </p>
+        <ul id="ignoring" class="space-y-1"></ul>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import {
+    escapeHtml,
+    when,
+    exactly,
+    errorDetail,
+    boardFetch,
+    attachSmilies,
+    attachFormatBar,
+  } from "../../lib/board-ui";
+
+  type Row = {
+    id: string;
+    kind: "direct" | "help";
+    subject: string;
+    with: string;
+    lastAt: string;
+    lastBy: string;
+    unread: boolean;
+    ignored: boolean;
+  };
+  type Person = { id: string; name: string; staff: boolean };
+
+  const here = "/board/messages/";
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const inbox = document.getElementById("inbox") as HTMLElement;
+  const inboxTable = document.getElementById("inbox-table") as HTMLElement;
+  const emptyState = document.getElementById("empty-state") as HTMLElement;
+  const ignoredBox = document.getElementById("ignored-box") as HTMLElement;
+  const ignoredBody = document.getElementById("ignored") as HTMLElement;
+  const ignoredCount = document.getElementById("ignored-count") as HTMLElement;
+  const ignoringBox = document.getElementById("ignoring-box") as HTMLElement;
+  const ignoringList = document.getElementById("ignoring") as HTMLElement;
+
+  const compose = document.getElementById("compose") as HTMLFormElement;
+  const toFilter = document.getElementById("to-filter") as HTMLInputElement;
+  const toSelect = document.getElementById("to") as HTMLSelectElement;
+  const toPicked = document.getElementById("to-picked") as HTMLElement;
+  const subject = document.getElementById("subject") as HTMLInputElement;
+  const bodyField = document.getElementById("body") as HTMLTextAreaElement;
+  const status = document.getElementById("compose-status") as HTMLElement;
+  const sendButton = document.getElementById("send") as HTMLButtonElement;
+
+  let people: Person[] = [];
+  let picked = "";
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  function rowHtml(r: Row): string {
+    return `
+      <tr class="${r.unread ? "bb-unread" : ""}">
+        <td class="bb-icon">${r.kind === "help" ? "🆘" : r.unread ? "📬" : "✉️"}</td>
+        <td>
+          <a class="bb-title" href="/board/message/?id=${encodeURIComponent(r.id)}">${escapeHtml(r.subject)}</a>
+          ${r.unread ? '<span class="bb-flag">New</span>' : ""}
+        </td>
+        <td>${escapeHtml(r.with)}</td>
+        <td class="bb-last">
+          <span title="${escapeHtml(exactly(r.lastAt))}">${escapeHtml(when(r.lastAt))}</span>
+          <br /><span>by ${escapeHtml(r.lastBy)}</span>
+        </td>
+      </tr>`;
+  }
+
+  async function load() {
+    const res = await boardFetch("/api/board/messages", {}, here);
+    if (!res) return;
+    if (res.status === 403) {
+      showError(
+        (await errorDetail(res)) ||
+          "The parish board opens up when Father receives you as a catechumen.",
+      );
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+
+    const data = await res.json();
+    const rows: Row[] = data.conversations ?? [];
+    const normal = rows.filter((r) => !r.ignored);
+    const ignored = rows.filter((r) => r.ignored);
+
+    inboxTable.classList.toggle("hidden", normal.length === 0);
+    emptyState.classList.toggle("hidden", normal.length > 0);
+    inbox.innerHTML = normal.map(rowHtml).join("");
+
+    ignoredBox.classList.toggle("hidden", ignored.length === 0);
+    ignoredCount.textContent = `Ignored (${ignored.length})`;
+    ignoredBody.innerHTML = ignored.map(rowHtml).join("");
+
+    const ignoring: Array<{ id: string; name: string }> = data.ignoring ?? [];
+    ignoringBox.classList.toggle("hidden", ignoring.length === 0);
+    ignoringList.innerHTML = ignoring
+      .map(
+        (p) => `
+        <li>
+          ${escapeHtml(p.name)}
+          <button type="button" class="bb-btn unignore" data-id="${escapeHtml(p.id)}">Stop ignoring</button>
+        </li>`,
+      )
+      .join("");
+
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  ignoringList.addEventListener("click", async (event) => {
+    const button = (event.target as HTMLElement).closest(".unignore") as HTMLElement | null;
+    if (!button?.dataset.id) return;
+    const res = await boardFetch(
+      `/api/board/ignore?userId=${encodeURIComponent(button.dataset.id)}`,
+      { method: "DELETE" },
+      here,
+    );
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+      return;
+    }
+    await load();
+  });
+
+  // ---- writing a new message ----
+  function drawPeople() {
+    const q = toFilter.value.trim().toLowerCase();
+    const shown = people.filter((p) => !q || p.name.toLowerCase().includes(q));
+    toSelect.innerHTML = shown
+      .map(
+        (p) =>
+          `<option value="${escapeHtml(p.id)}"${p.id === picked ? " selected" : ""}>${escapeHtml(p.name)}${p.staff ? " (moderator or admin)" : ""}</option>`,
+      )
+      .join("");
+    if (!shown.length) {
+      toSelect.innerHTML = `<option disabled>No one by that name</option>`;
+    }
+  }
+
+  function showPicked() {
+    const who = people.find((p) => p.id === picked);
+    toPicked.textContent = who ? `Writing to ${who.name}.` : "Pick a name from the list.";
+  }
+
+  async function openCompose(toId?: string) {
+    if (!people.length) {
+      const res = await boardFetch("/api/board/people", {}, here);
+      if (!res) return;
+      if (!res.ok) {
+        showError((await errorDetail(res)) || `Couldn't load the list (${res.status}).`);
+        return;
+      }
+      people = (await res.json()).people ?? [];
+    }
+    if (toId && people.some((p) => p.id === toId)) picked = toId;
+    toFilter.value = "";
+    drawPeople();
+    showPicked();
+    compose.classList.remove("hidden");
+    (picked ? subject : toFilter).focus();
+  }
+
+  toFilter.addEventListener("input", drawPeople);
+  toSelect.addEventListener("change", () => {
+    picked = toSelect.value;
+    showPicked();
+  });
+  (document.getElementById("new-message") as HTMLButtonElement).addEventListener("click", () =>
+    openCompose(),
+  );
+  (document.getElementById("cancel") as HTMLButtonElement).addEventListener("click", () => {
+    compose.classList.add("hidden");
+    status.textContent = "";
+  });
+
+  compose.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!picked) {
+      status.textContent = "Pick who it's for first.";
+      return;
+    }
+    if (!subject.value.trim()) {
+      status.textContent = "Give it a subject.";
+      return;
+    }
+    if (!bodyField.value.trim()) {
+      status.textContent = "Write something first.";
+      return;
+    }
+    sendButton.disabled = true;
+    status.textContent = "Sending…";
+    const res = await boardFetch(
+      "/api/board/message",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: picked, subject: subject.value, body: bodyField.value }),
+      },
+      here,
+    );
+    sendButton.disabled = false;
+    if (!res) return;
+    if (!res.ok) {
+      status.textContent = (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
+      return;
+    }
+    const sent = await res.json();
+    // Straight into the conversation, so there's no doubt it went.
+    window.location.assign(`/board/message/?id=${encodeURIComponent(sent.id)}&sent=1`);
+  });
+
+  attachSmilies(bodyField, document.getElementById("body-smilies") as HTMLElement);
+  attachFormatBar(bodyField);
+
+  load().then(() => {
+    const to = new URLSearchParams(window.location.search).get("to");
+    if (to) openCompose(to);
+  });
+</script>

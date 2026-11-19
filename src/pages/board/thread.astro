@@ -73,6 +73,46 @@ import "../../styles/board.css";
         </div>
       </form>
 
+      <dialog id="help-dialog" class="bb-help-dialog" aria-labelledby="help-title">
+        <div id="help-ask">
+          <form id="help-form" method="dialog">
+            <h2 id="help-title">Message the moderators</h2>
+            <p class="bb-help-lead">
+              This goes to the moderators and admins as a private message about this topic. Any one of
+              them can answer you, and you'll see the answer in your Messages. Nothing changes on the
+              topic until one of them acts.
+            </p>
+            <label class="block">
+              <span class="bb-help-label">What's going on? (optional)</span>
+              <textarea
+                id="help-reason"
+                rows="5"
+                maxlength="1000"
+                spellcheck="true"
+                autocapitalize="sentences"
+                placeholder="For example: I'd like this closed, or someone said something unkind."
+              ></textarea>
+            </label>
+            <div class="bb-help-actions">
+              <button id="help-send" type="submit" class="bb-btn bb-btn-strong">Send to the moderators</button>
+              <button type="button" class="bb-btn help-close">Cancel</button>
+              <span id="help-status" class="text-sm" role="status"></span>
+            </div>
+          </form>
+        </div>
+        <div id="help-done" class="hidden">
+          <h2>Sent</h2>
+          <p class="bb-help-lead">
+            Your message is with the moderators and admins now. When one of them answers, it will be in
+            your Messages.
+          </p>
+          <div class="bb-help-actions">
+            <a href="/board/messages/" class="bb-btn bb-btn-strong">Open my Messages</a>
+            <button type="button" class="bb-btn help-close">Close</button>
+          </div>
+        </div>
+      </dialog>
+
       <div class="bb-bar">
         <a id="back-link-2" href="/board/" class="bb-btn">Back to forum</a>
         <button id="tool-delete" type="button" class="bb-btn bb-btn-danger hidden">
@@ -118,6 +158,7 @@ import "../../styles/board.css";
     createdAt: string;
     editedAt: string | null;
     mine: boolean;
+    authorId?: string | null;
     reactions: Reaction[];
   };
 
@@ -143,6 +184,14 @@ import "../../styles/board.css";
   let isAdmin = false;
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
+
+  const helpDialog = document.getElementById("help-dialog") as HTMLDialogElement;
+  const helpForm = document.getElementById("help-form") as HTMLFormElement;
+  const helpAsk = document.getElementById("help-ask") as HTMLElement;
+  const helpDone = document.getElementById("help-done") as HTMLElement;
+  const helpReason = document.getElementById("help-reason") as HTMLTextAreaElement;
+  const helpSend = document.getElementById("help-send") as HTMLButtonElement;
+  const helpStatus = document.getElementById("help-status") as HTMLElement;
   const modNote = document.getElementById("mod-note") as HTMLElement;
 
   async function patchThreadFlags(updates: Record<string, unknown>) {
@@ -186,7 +235,7 @@ import "../../styles/board.css";
   }
 
   /** "Joined: 14 Oct 2026 · Posts: 9" down the left of a post. */
-  function authorCell(panel: Panel): string {
+  function authorCell(panel: Panel, authorId: string | null): string {
     const joined = panel.joined
       ? new Date(panel.joined).toLocaleDateString("en-US", {
           day: "numeric",
@@ -198,6 +247,7 @@ import "../../styles/board.css";
       <td class="bb-author">
         ${panel.avatarUrl ? `<img class="bb-avatar" src="${escapeHtml(panel.avatarUrl)}" alt="" />` : ""}
         <span class="bb-author-name">${escapeHtml(panel.name)}</span>
+        ${authorId ? `<a class="bb-author-msg" href="/board/messages/?to=${encodeURIComponent(authorId)}" title="Send ${escapeHtml(panel.name)} a private message">Message</a>` : ""}
         ${panel.rank ? `<span class="bb-author-rank">${escapeHtml(panel.rank)}</span>` : ""}
         <span class="bb-author-meta">
           ${joined ? `Joined: ${escapeHtml(joined)}<br />` : ""}
@@ -295,7 +345,7 @@ import "../../styles/board.css";
         return `
           ${divider}
           <tr class="bb-post-row" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
-            ${authorCell(p.panel)}
+            ${authorCell(p.panel, p.authorId ?? null)}
             <td>
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
@@ -304,27 +354,6 @@ import "../../styles/board.css";
                 </span>
                 <span>${buttons}</span>
               </div>
-              ${
-                asking
-                  ? `<form class="bb-help-form hidden bb-notice">
-                       <label class="block">
-                         <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
-                           What's going on? (optional)
-                         </span>
-                         <textarea rows="3" maxlength="1000" spellcheck="true" autocapitalize="sentences"
-                                   class="help-reason block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"></textarea>
-                       </label>
-                       <p class="mt-2 text-xs text-text-secondary">
-                         This sends a message to the moderators and admins. Nothing changes until one of them acts.
-                       </p>
-                       <div class="mt-2 flex flex-wrap items-center gap-2">
-                         <button type="submit" class="bb-btn bb-btn-strong help-send">Send to the moderators</button>
-                         <button type="button" class="bb-btn help-cancel">Cancel</button>
-                         <span class="help-status text-sm text-text-secondary" role="status"></span>
-                       </div>
-                     </form>`
-                  : ""
-              }
               <div class="bb-body post-body">${renderBody(p.body)}</div>
               ${videoEmbeds(p.body)}
               ${photosHtml(p, canEdit)}
@@ -398,7 +427,7 @@ import "../../styles/board.css";
       const who = data.closeRequest.by ? escapeHtml(data.closeRequest.by) : "The person who started it";
       modNote.innerHTML = `
         <p><strong>${who} asked the moderators for help with this topic.</strong>
-           What they said is in the Moderation Forum.</p>
+           Their message is in your <a class="underline" href="/board/messages/">Messages</a>.</p>
         <p class="mt-2">
           <button type="button" class="bb-btn bb-btn-strong note-close">Close this topic</button>
           <button type="button" class="bb-btn note-dismiss">Dismiss</button>
@@ -433,15 +462,14 @@ import "../../styles/board.css";
       const post = posts.find((p) => p.id === id);
       if (!post) return;
 
-      // --- Help: open or close the little form ---
+      // --- Help: open the message window ---
       if (button.classList.contains("post-help")) {
-        const form = row.querySelector(".bb-help-form") as HTMLElement | null;
-        form?.classList.toggle("hidden");
-        (form?.querySelector("textarea") as HTMLTextAreaElement | null)?.focus();
-        return;
-      }
-      if (button.classList.contains("help-cancel")) {
-        row.querySelector(".bb-help-form")?.classList.add("hidden");
+        helpAsk.classList.remove("hidden");
+        helpDone.classList.add("hidden");
+        helpStatus.textContent = "";
+        helpReason.value = "";
+        helpDialog.showModal();
+        helpReason.focus();
         return;
       }
 
@@ -604,14 +632,18 @@ import "../../styles/board.css";
     content.classList.remove("hidden");
   }
 
-  // ---- Help: send the request to the moderators ----
-  postsEl.addEventListener("submit", async (event) => {
-    const form = (event.target as HTMLElement).closest(".bb-help-form") as HTMLFormElement | null;
-    if (!form) return;
+  // ---- Help: a message window to the moderators and admins ----
+  helpDialog.addEventListener("click", (event) => {
+    // A click on the dim backdrop (the dialog element itself) puts it away.
+    if (event.target === helpDialog) helpDialog.close();
+  });
+  document.querySelectorAll(".help-close").forEach((b) =>
+    b.addEventListener("click", () => helpDialog.close()),
+  );
+  helpForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    const send = form.querySelector(".help-send") as HTMLButtonElement;
-    const status = form.querySelector(".help-status") as HTMLElement;
+    const send = helpSend;
+    const status = helpStatus;
     send.disabled = true;
     status.textContent = "Sending…";
 
@@ -622,7 +654,7 @@ import "../../styles/board.css";
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: threadId,
-          reason: (form.querySelector(".help-reason") as HTMLTextAreaElement).value,
+          reason: helpReason.value,
         }),
       },
       here,
@@ -633,7 +665,11 @@ import "../../styles/board.css";
       status.textContent = (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
       return;
     }
-    // load() redraws the post with "Help requested" where the button was.
+    // Say plainly what happened and what comes next, then redraw the
+    // post with "Help requested" where the button was.
+    status.textContent = "";
+    helpAsk.classList.add("hidden");
+    helpDone.classList.remove("hidden");
     await load();
   });
 

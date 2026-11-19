@@ -256,6 +256,9 @@ export async function onRequestGet(
             return {
               id: p.id,
               author: p.author_id ? (names.get(p.author_id as string) ?? GONE) : GONE,
+              // For the Message link beside a post. Nobody gets a link to
+              // themselves, or to someone who's gone.
+              authorId: p.author_id && p.author_id !== viewer.id ? p.author_id : null,
               panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
               body: p.body,
               photos: (photosByPost.get(p.id as string) ?? []).map((ph) => ({

@@ -1,0 +1,258 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
+---
+
+<Layout title="Message | Parish Board" description="A private conversation on the parish board.">
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 id="subject" class="text-2xl font-bold mb-1">Message</h1>
+    <p id="with" class="text-text-secondary text-sm mb-2"></p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a> &rsaquo; <a href="/board/messages/">Messages</a> &rsaquo;
+      <span id="crumb-subject">Conversation</span>
+    </div>
+
+    <div id="loading" class="text-sm text-text-secondary">Loading…</div>
+
+    <div
+      id="error-banner"
+      class="hidden border border-liturgical-red bg-cream-card p-4 mb-6 text-sm"
+      role="alert"
+    >
+    </div>
+
+    <div id="content" class="hidden">
+      <p id="sent-note" class="hidden bb-notice" role="status">
+        Sent. It's in their inbox now, and you'll see their answer here.
+      </p>
+      <p id="topic-note" class="hidden bb-notice"></p>
+
+      <table class="bb-table">
+        <thead>
+          <tr>
+            <th class="bb-author">From</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="messages"></tbody>
+      </table>
+
+      <form id="reply-form" class="mt-4 border border-border-soft bg-cream-card p-4 space-y-3">
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">Reply</span>
+          <textarea
+            id="reply-body"
+            rows="6"
+            maxlength="5000"
+            spellcheck="true"
+            autocapitalize="sentences"
+            class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
+          ></textarea>
+        </label>
+        <div id="reply-smilies"></div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="reply-send" type="submit" class="bb-btn bb-btn-strong">Send reply</button>
+          <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
+        </div>
+      </form>
+
+      <div class="bb-bar">
+        <a href="/board/messages/" class="bb-btn">Back to Messages</a>
+        <button id="remove" type="button" class="bb-btn bb-btn-danger">Remove from my inbox</button>
+        <button id="ignore" type="button" class="bb-btn hidden"></button>
+      </div>
+      <p id="ignore-note" class="hidden text-xs text-text-secondary">
+        Ignoring only changes where their messages land in your inbox. They aren't told.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { confirmAction } from "../../lib/confirm";
+  import {
+    escapeHtml,
+    renderBody,
+    when,
+    exactly,
+    errorDetail,
+    boardFetch,
+    attachSmilies,
+    attachFormatBar,
+    videoEmbeds,
+  } from "../../lib/board-ui";
+
+  type Msg = { id: string; author: string; body: string; createdAt: string; mine: boolean };
+
+  const id = new URLSearchParams(window.location.search).get("id") ?? "";
+  const here = `/board/message/?id=${encodeURIComponent(id)}`;
+
+  const loading = document.getElementById("loading") as HTMLElement;
+  const content = document.getElementById("content") as HTMLElement;
+  const banner = document.getElementById("error-banner") as HTMLElement;
+  const messagesEl = document.getElementById("messages") as HTMLElement;
+  const replyForm = document.getElementById("reply-form") as HTMLFormElement;
+  const replyBody = document.getElementById("reply-body") as HTMLTextAreaElement;
+  const replyStatus = document.getElementById("reply-status") as HTMLElement;
+  const replySend = document.getElementById("reply-send") as HTMLButtonElement;
+  const ignoreButton = document.getElementById("ignore") as HTMLButtonElement;
+  const ignoreNote = document.getElementById("ignore-note") as HTMLElement;
+
+  let person: { id: string; name: string; ignored: boolean } | null = null;
+
+  function showError(message: string) {
+    banner.textContent = message;
+    banner.classList.remove("hidden");
+    loading.classList.add("hidden");
+  }
+
+  function drawIgnore() {
+    ignoreButton.classList.toggle("hidden", !person);
+    ignoreNote.classList.toggle("hidden", !person);
+    if (person) {
+      ignoreButton.textContent = person.ignored
+        ? `Stop ignoring ${person.name}`
+        : `Ignore ${person.name}`;
+    }
+  }
+
+  async function load() {
+    if (!id) {
+      showError("No conversation in that link. Go back to Messages and pick one.");
+      return;
+    }
+    const res = await boardFetch(`/api/board/message?id=${encodeURIComponent(id)}`, {}, here);
+    if (!res) return;
+    if (res.status === 404) {
+      showError("That conversation is gone. It may have been removed.");
+      return;
+    }
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't load this (${res.status}).`);
+      return;
+    }
+
+    const data = await res.json();
+    const conv = data.conversation;
+    const messages: Msg[] = data.messages ?? [];
+    person = data.person ?? null;
+
+    document.title = `${conv.subject} | Messages`;
+    (document.getElementById("subject") as HTMLElement).textContent = conv.subject;
+    (document.getElementById("crumb-subject") as HTMLElement).textContent = conv.subject;
+    (document.getElementById("with") as HTMLElement).textContent =
+      conv.kind === "help" ? `Help request: ${conv.with}` : `With ${conv.with}`;
+
+    const topicNote = document.getElementById("topic-note") as HTMLElement;
+    if (conv.topic) {
+      topicNote.innerHTML = `This is about the topic <a class="underline" href="/board/thread/?id=${encodeURIComponent(conv.topic.id)}">${escapeHtml(conv.topic.title)}</a>.`;
+      topicNote.classList.remove("hidden");
+    } else {
+      topicNote.classList.add("hidden");
+    }
+
+    messagesEl.innerHTML = messages
+      .map(
+        (m) => `
+        <tr class="bb-post-row">
+          <td class="bb-author">
+            <span class="bb-author-name">${escapeHtml(m.mine ? "You" : m.author)}</span>
+          </td>
+          <td>
+            <div class="bb-posted">
+              <span title="${escapeHtml(exactly(m.createdAt))}">Sent: ${escapeHtml(exactly(m.createdAt) || when(m.createdAt))}</span>
+            </div>
+            <div class="bb-body">${renderBody(m.body)}</div>
+            ${videoEmbeds(m.body)}
+          </td>
+        </tr>`,
+      )
+      .join("");
+
+    drawIgnore();
+    if (new URLSearchParams(window.location.search).get("sent") === "1") {
+      document.getElementById("sent-note")?.classList.remove("hidden");
+    }
+    loading.classList.add("hidden");
+    banner.classList.add("hidden");
+    content.classList.remove("hidden");
+  }
+
+  replyForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!replyBody.value.trim()) {
+      replyStatus.textContent = "Write something first.";
+      return;
+    }
+    replySend.disabled = true;
+    replyStatus.textContent = "Sending…";
+    const res = await boardFetch(
+      "/api/board/message",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, body: replyBody.value }),
+      },
+      here,
+    );
+    replySend.disabled = false;
+    if (!res) return;
+    if (!res.ok) {
+      replyStatus.textContent = (await errorDetail(res)) || `Couldn't send that (${res.status}).`;
+      return;
+    }
+    replyBody.value = "";
+    replyStatus.textContent = "Sent.";
+    await load();
+  });
+
+  ignoreButton.addEventListener("click", async () => {
+    if (!person) return;
+    const res = person.ignored
+      ? await boardFetch(
+          `/api/board/ignore?userId=${encodeURIComponent(person.id)}`,
+          { method: "DELETE" },
+          here,
+        )
+      : await boardFetch(
+          "/api/board/ignore",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: person.id }),
+          },
+          here,
+        );
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+      return;
+    }
+    person.ignored = !person.ignored;
+    drawIgnore();
+  });
+
+  (document.getElementById("remove") as HTMLButtonElement).addEventListener("click", async () => {
+    const ok = await confirmAction({
+      message:
+        "Remove this conversation from your inbox? If the other person writes again, it comes back as new.",
+      confirmLabel: "Remove it",
+      cancelLabel: "Keep it",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await boardFetch(`/api/board/message?id=${encodeURIComponent(id)}`, { method: "DELETE" }, here);
+    if (!res) return;
+    if (!res.ok) {
+      showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+      return;
+    }
+    window.location.assign("/board/messages/");
+  });
+
+  attachSmilies(replyBody, document.getElementById("reply-smilies") as HTMLElement);
+  attachFormatBar(replyBody);
+
+  load();
+</script>
