@@ -142,7 +142,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     first_name,
     last_name,
     phone,
-    role: "catechumen",
+    // Everyone starts as an inquirer. They can read the library and the
+    // lessons, but not the directory (other people's addresses) or the
+    // downloads, until an admin moves them up to catechumen or member.
+    role: "inquirer",
     approved: false,
   });
 
