@@ -299,8 +299,11 @@
    the hidden class, so the tray sat open over the top of the post. */
 .react-tray {
   position: absolute;
-  left: 0;
-  bottom: 125%;
+  /* Opens beside the + button, not above it. Above meant the palette
+     sat on top of the last lines of the post you were reacting to. */
+  left: 110%;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 20;
   display: flex;
   gap: 0.15rem;
