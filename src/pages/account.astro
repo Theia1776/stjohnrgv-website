@@ -93,7 +93,7 @@ import Layout from "../layouts/Layout.astro";
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="learning-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="learning-heading" class="text-lg font-semibold">My Learning</h2>
@@ -137,7 +137,7 @@ import Layout from "../layouts/Layout.astro";
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="library-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="library-heading" class="text-lg font-semibold">Parish Library</h2>
@@ -163,7 +163,7 @@ import Layout from "../layouts/Layout.astro";
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="coffee-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="coffee-heading" class="text-lg font-semibold">Coffee Hour</h2>
@@ -187,7 +187,7 @@ import Layout from "../layouts/Layout.astro";
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="directory-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="directory-heading" class="text-lg font-semibold">Parish Directory</h2>
@@ -226,7 +226,7 @@ import Layout from "../layouts/Layout.astro";
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="calendar-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="calendar-heading" class="text-lg font-semibold">Calendar &amp; Saints</h2>
@@ -247,13 +247,34 @@ import Layout from "../layouts/Layout.astro";
       </details>
     </section>
 
+    <!-- ============== PARISH BOARD ============== -->
+    <section
+      id="section-board"
+      class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
+      aria-labelledby="board-heading"
+    >
+      <details class="account-fold">
+        <summary class="account-summary">
+          <span class="fold-chevron" aria-hidden="true">▸</span>
+          <h2 id="board-heading" class="text-lg font-semibold">Parish Board</h2>
+        </summary>
+        <div class="mt-4 border-t pt-4 space-y-2">
+          <p class="text-sm">
+            Your board profile has your photo, signature, name day, baptism day and birthday, and
+            what you've written. You can change them there.
+          </p>
+          <p><a href="/board/profile/?id=me" class="underline">My board profile</a> &middot; <a href="/board/" class="underline">The parish board</a></p>
+        </div>
+      </details>
+    </section>
+
     <!-- ============== MY DETAILS (the profile form) ============== -->
     <section
       id="section-profile"
       class="account-section mb-6 scroll-mt-24 border border-border-soft bg-cream-card p-6 shadow-sm md:p-7"
       aria-labelledby="profile-heading"
     >
-      <details class="account-fold" open>
+      <details class="account-fold">
         <summary class="account-summary">
           <span class="fold-chevron" aria-hidden="true">▸</span>
           <h2 id="profile-heading" class="text-lg font-semibold">My Details</h2>
@@ -942,9 +963,9 @@ import Layout from "../layouts/Layout.astro";
   const ACCOUNT_FOLD_KEY = "stjohn_account_open";
 
   function initAccountFolds() {
-    const stored = localStorage.getItem(ACCOUNT_FOLD_KEY);
-    // First visit: everything open. After that, whatever shape you left.
-    const openSet: Set<string> | null = stored ? new Set(JSON.parse(stored) as string[]) : null;
+    // Every section starts folded, every time. A link to one (#section-...)
+    // still opens it; see jumpToSection.
+    const openSet: Set<string> | null = new Set<string>();
 
     document.querySelectorAll<HTMLElement>("section.account-section").forEach((section) => {
       const fold = section.querySelector("details");

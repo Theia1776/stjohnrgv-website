@@ -779,6 +779,7 @@ function mountBoardNav(): void {
     `<a class="bb-btn" href="/board/mentions/" id="bb-nav-mentions"${here("/board/mentions/")}>Mentions</a>` +
     `<a class="bb-btn" href="/board/new/"${here("/board/new/")}>New posts</a>` +
     `<a class="bb-btn" href="/board/search/"${here("/board/search/")}>Search</a>` +
+    `<a class="bb-btn" href="/board/profile/?id=me"${here("/board/profile/")}>My profile</a>` +
     `<a class="bb-btn" href="/directory/">Directory</a>`;
 
   const crumb = main.querySelector(".bb-crumb");

@@ -26,7 +26,8 @@ export async function onRequestGet(
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
 
   try {
-    const id = new URL(context.request.url).searchParams.get("id") ?? "";
+    const asked = new URL(context.request.url).searchParams.get("id") ?? "";
+    const id = asked === "me" ? viewer.id : asked;
     if (!UUID.test(id)) return wrap(jsonResponse({ error: "Who?" }, 400));
 
     const { data: p } = await supabase
@@ -72,6 +73,24 @@ export async function onRequestGet(
       .select("id", { count: "exact", head: true })
       .eq("author_id", id);
 
+    // Name day, baptism day and birthday, if they've given them.
+    const { data: dayRow } = await supabase
+      .from("board_celebrations")
+      .select("*")
+      .eq("user_id", id)
+      .maybeSingle();
+    const pair = (m: unknown, d: unknown) =>
+      typeof m === "number" && typeof d === "number" ? { month: m, day: d } : null;
+    const dates = dayRow
+      ? {
+          nameDay: pair(dayRow.name_day_month, dayRow.name_day_day)
+            ? { ...pair(dayRow.name_day_month, dayRow.name_day_day), saint: (dayRow.name_day_saint as string | null) ?? "" }
+            : null,
+          baptism: pair(dayRow.baptism_month, dayRow.baptism_day),
+          birthday: pair(dayRow.birthday_month, dayRow.birthday_day),
+        }
+      : { nameDay: null, baptism: null, birthday: null };
+
     // Moderators can suspend and lift from here.
     let suspended = false;
     let canSuspend = false;
@@ -97,6 +116,7 @@ export async function onRequestGet(
             posts: count ?? 0,
             signature: (sig?.body as string | undefined) ?? "",
             isMe: id === viewer.id,
+            dates,
             suspended,
             canSuspend,
           },

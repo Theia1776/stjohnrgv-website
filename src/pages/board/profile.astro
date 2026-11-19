@@ -27,6 +27,43 @@ import "../../styles/board.css";
         </div>
       </div>
 
+      <div id="dates-show" class="mb-4 text-sm"></div>
+      <div id="sig-show" class="bb-signature hidden mb-4"></div>
+
+      <div id="mine" class="hidden mb-6 space-y-4">
+        <details class="border border-border-soft bg-cream-card p-4">
+          <summary class="cursor-pointer font-semibold">Change my special days</summary>
+          <form id="dates-form" class="mt-3 space-y-3">
+            <p class="text-xs text-text-secondary">Optional. Shown to people on the board, with no year.</p>
+            <fieldset>
+              <legend class="text-xs font-semibold">Name day</legend>
+              <input id="nd-saint" type="text" maxlength="60" placeholder="Saint (for example, Philothei)" aria-label="Saint for your name day" class="bb-suspend-select mb-1" />
+              <span class="flex gap-1"><select id="nd-month" aria-label="Name day month" class="bb-suspend-select"></select><select id="nd-day" aria-label="Name day" class="bb-suspend-select"></select></span>
+            </fieldset>
+            <fieldset>
+              <legend class="text-xs font-semibold">Baptism day</legend>
+              <span class="flex gap-1"><select id="bp-month" aria-label="Baptism month" class="bb-suspend-select"></select><select id="bp-day" aria-label="Baptism day" class="bb-suspend-select"></select></span>
+            </fieldset>
+            <fieldset>
+              <legend class="text-xs font-semibold">Birthday</legend>
+              <span class="flex gap-1"><select id="bd-month" aria-label="Birthday month" class="bb-suspend-select"></select><select id="bd-day" aria-label="Birthday day" class="bb-suspend-select"></select></span>
+            </fieldset>
+            <button type="submit" class="bb-btn bb-btn-strong">Save</button>
+            <span id="dates-status" class="text-sm" role="status"></span>
+          </form>
+        </details>
+
+        <details class="border border-border-soft bg-cream-card p-4">
+          <summary class="cursor-pointer font-semibold">Change my signature</summary>
+          <form id="sig-form" class="mt-3 space-y-2">
+            <textarea id="sig-body" rows="4" maxlength="300" spellcheck="true" aria-label="Your signature"
+              placeholder="A line or two that goes under every post you write" class="bb-suspend-select"></textarea>
+            <button type="submit" class="bb-btn bb-btn-strong">Save</button>
+            <span id="sig-status" class="text-sm" role="status"></span>
+          </form>
+        </details>
+      </div>
+
       <div class="bb-bar">
         <a href="/board/" class="bb-btn">Back to the board</a>
         <a id="message" href="#" class="bb-btn bb-btn-strong hidden">Send a message</a>
@@ -71,11 +108,13 @@ import "../../styles/board.css";
 <script>
   import { escapeHtml, when, exactly, errorDetail, boardFetch } from "../../lib/board-ui";
 
-  const id = new URLSearchParams(window.location.search).get("id") ?? "";
+  const id = new URLSearchParams(window.location.search).get("id") ?? "me";
   const here = `/board/profile/?id=${encodeURIComponent(id)}`;
   const loading = document.getElementById("loading") as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
   const banner = document.getElementById("error-banner") as HTMLElement;
+
+  let formsReady = false;
 
   function showError(message: string) {
     banner.textContent = message;
@@ -112,6 +151,82 @@ import "../../styles/board.css";
     if (!p.isMe) {
       msg.href = `/board/messages/?to=${encodeURIComponent(p.id)}`;
       msg.classList.remove("hidden");
+    }
+
+    // ---- special days and signature ----
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const dayText = (d: { month: number; day: number } | null) => (d ? `${MONTHS[d.month - 1]} ${d.day}` : "");
+    const dts = p.dates ?? {};
+    const lines: string[] = [];
+    if (dts.nameDay) lines.push(`<strong>Name day:</strong> ${escapeHtml(dayText(dts.nameDay))}${dts.nameDay.saint ? ` (St. ${escapeHtml(dts.nameDay.saint)})` : ""}`);
+    if (dts.baptism) lines.push(`<strong>Baptism day:</strong> ${escapeHtml(dayText(dts.baptism))}`);
+    if (dts.birthday) lines.push(`<strong>Birthday:</strong> ${escapeHtml(dayText(dts.birthday))}`);
+    (document.getElementById("dates-show") as HTMLElement).innerHTML = lines.length
+      ? lines.map((l) => `<div>${l}</div>`).join("")
+      : p.isMe
+        ? '<span class="text-text-secondary">You haven\'t added a name day, baptism day or birthday yet.</span>'
+        : "";
+    const sigShow = document.getElementById("sig-show") as HTMLElement;
+    sigShow.innerHTML = p.signature ? escapeHtml(p.signature).replace(/\n/g, "<br />") : "";
+    sigShow.classList.toggle("hidden", !p.signature);
+
+    (document.getElementById("mine") as HTMLElement).classList.toggle("hidden", !p.isMe);
+    if (p.isMe && !formsReady) {
+      formsReady = true;
+      for (const [m, d] of [["nd-month", "nd-day"], ["bp-month", "bp-day"], ["bd-month", "bd-day"]]) {
+        (document.getElementById(m) as HTMLSelectElement).innerHTML =
+          `<option value="">Month</option>` + MONTHS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join("");
+        (document.getElementById(d) as HTMLSelectElement).innerHTML =
+          `<option value="">Day</option>` + Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+      }
+      const val = (i: string) => (document.getElementById(i) as HTMLInputElement).value;
+      const day = (m: string, d: string) => (val(m) && val(d) ? { month: Number(val(m)), day: Number(val(d)) } : null);
+      (document.getElementById("dates-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const status = document.getElementById("dates-status") as HTMLElement;
+        status.textContent = "Saving…";
+        const nd = day("nd-month", "nd-day");
+        const r = await boardFetch(
+          "/api/board/dates",
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nameDay: nd ? { ...nd, saint: val("nd-saint") } : null,
+              baptism: day("bp-month", "bp-day"),
+              birthday: day("bd-month", "bd-day"),
+            }),
+          },
+          here,
+        );
+        if (!r) return;
+        status.textContent = r.ok ? "Saved." : (await errorDetail(r)) || `Couldn't save that (${r.status}).`;
+        if (r.ok) await load();
+      });
+      (document.getElementById("sig-form") as HTMLFormElement).addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const status = document.getElementById("sig-status") as HTMLElement;
+        status.textContent = "Saving…";
+        const r = await boardFetch(
+          "/api/board/signature",
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ body: val("sig-body") }),
+          },
+          here,
+        );
+        if (!r) return;
+        status.textContent = r.ok ? "Saved." : (await errorDetail(r)) || `Couldn't save that (${r.status}).`;
+        if (r.ok) await load();
+      });
+    }
+    if (p.isMe) {
+      const set = (i: string, v: unknown) => ((document.getElementById(i) as HTMLInputElement).value = v == null ? "" : String(v));
+      set("nd-month", dts.nameDay?.month); set("nd-day", dts.nameDay?.day); set("nd-saint", dts.nameDay?.saint);
+      set("bp-month", dts.baptism?.month); set("bp-day", dts.baptism?.day);
+      set("bd-month", dts.birthday?.month); set("bd-day", dts.birthday?.day);
+      set("sig-body", p.signature);
     }
 
     const sb = document.getElementById("suspend-btn") as HTMLButtonElement;
