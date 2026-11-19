@@ -209,7 +209,11 @@ export async function onRequestPost(
       if (options.some((o) => o.length > 100)) {
         return wrap(jsonResponse({ error: "Keep each choice to 100 characters or fewer." }, 400));
       }
-      poll = { options, multiple: raw.multiple === true, question, showVoters: (raw as { showVoters?: unknown }).showVoters === true };
+      const showVoters = (raw as { showVoters?: unknown }).showVoters === true;
+      if (showVoters && slug !== "events") {
+        return wrap(jsonResponse({ error: "RSVP is only for the Events room." }, 400));
+      }
+      poll = { options, multiple: raw.multiple === true, question, showVoters };
     }
     if (text.length > MAX_BODY) {
       return wrap(jsonResponse({ error: `Posts top out at ${MAX_BODY} characters.` }, 400));

@@ -85,7 +85,7 @@ import "../../styles/board.css";
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
         <div class="border border-border-soft p-3">
-          <label class="flex items-center gap-2 text-sm font-semibold mb-2">
+          <label id="rsvp-row" class="hidden flex items-center gap-2 text-sm font-semibold mb-2">
             <input id="rsvp-on" type="checkbox" class="h-4 w-4" /> Ask people to RSVP (Yes, Maybe, No, with names shown)
           </label>
           <label class="flex items-center gap-2 text-sm font-semibold">
@@ -481,6 +481,8 @@ import "../../styles/board.css";
   addPollOption();
   addPollOption();
   const rsvpOn = document.getElementById("rsvp-on") as HTMLInputElement;
+  // RSVP is for events, so it's only offered in the Events room.
+  if (slug === "events") document.getElementById("rsvp-row")?.classList.remove("hidden");
   pollOn.addEventListener("change", () => {
     if (pollOn.checked) rsvpOn.checked = false;
     pollFields.classList.toggle("hidden", !pollOn.checked);
