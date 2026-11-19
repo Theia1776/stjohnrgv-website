@@ -168,7 +168,7 @@ const saintIconUrlsJson = JSON.stringify(saintIconUrls).replace(/</g, "\\u003c")
   function bothStyles(feast) {
     const ns = newStyleLabel(feast);
     const t = String(feast ?? '').trim();
-    return ns === t ? t : t + ' / ' + ns;
+    return ns === t ? t : ns + ' (Old Style ' + t + ')';
   }
   function newStyleList(feasts, sep) {
     return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';

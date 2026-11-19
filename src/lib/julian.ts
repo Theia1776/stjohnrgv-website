@@ -115,7 +115,11 @@ export function newStyleLabel(feast: string): string {
 export function bothStyles(feast: string, separator = " / "): string {
   const converted = toNewStyle(feast);
   if (!converted.converted) return converted.label;
-  return `${String(feast).trim()}${separator}${converted.label}`;
+  // The day on the wall calendar (and on this site's calendar) first,
+  // then the Old Style date in brackets. Putting Old Style first made
+  // a February list start with "January 20".
+  void separator;
+  return `${converted.label} (Old Style ${String(feast).trim()})`;
 }
 
 /** A list of feasts, each shown both ways. */

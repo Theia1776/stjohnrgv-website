@@ -89,9 +89,26 @@ saints.forEach((saint, idx) => {
   }
 });
 
-// Sort: fixed entries by day-of-month then name; movable by name.
+// Within a day: the feasts of the Lord and the Theotokos first, then the
+// greater saints (apostles, wonderworkers, the Forerunner...), then the
+// rest alphabetically. It used to be alphabetical alone, which put a
+// lesser saint ahead of St. Nicholas on his own day.
+const GREAT_FEAST_RE =
+  /(of Our Lord|Theotokos|Nativity|Theophany|Annunciation|Transfiguration|Dormition|Pascha|Resurrection|Ascension|Pentecost|Circumcision|Presentation|Elevation|Exaltation|Entry of|Meeting of)/i;
+const GREATER_SAINT_RE =
+  /(Equal[- ]to[- ]the[- ]Apostles|Apostle|Wonderworker|Forerunner|Theologian|Great[- ]?martyr|Prophet|Three Hierarchs|Hierarch)/i;
+function priority(name: string): number {
+  if (GREAT_FEAST_RE.test(name)) return 0;
+  if (GREATER_SAINT_RE.test(name)) return 1;
+  return 2;
+}
 monthBuckets.forEach((b) =>
-  b.sort((a, b) => (a.day - b.day) || a.name.localeCompare(b.name)),
+  b.sort(
+    (a, b) =>
+      (a.day - b.day) ||
+      (priority(a.name) - priority(b.name)) ||
+      a.name.localeCompare(b.name),
+  ),
 );
 movableBucket.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -356,7 +373,7 @@ const saintsJson = JSON.stringify(saints).replace(/</g, "\\u003c");
   function bothStyles(feast) {
     const ns = newStyleLabel(feast);
     const t = String(feast ?? '').trim();
-    return ns === t ? t : t + ' / ' + ns;
+    return ns === t ? t : ns + ' (Old Style ' + t + ')';
   }
   function newStyleList(feasts, sep) {
     return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';

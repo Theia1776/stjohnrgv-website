@@ -601,7 +601,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
   function bothStyles(feast) {
     const ns = newStyleLabel(feast);
     const t = String(feast ?? '').trim();
-    return ns === t ? t : t + ' / ' + ns;
+    return ns === t ? t : ns + ' (Old Style ' + t + ')';
   }
   function newStyleList(feasts, sep) {
     return Array.isArray(feasts) ? feasts.map(bothStyles).join(sep || ' · ') : '';
@@ -855,7 +855,49 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       a.getDate() === b.getDate();
 
     /** How a day is shaded. Mirrors the fasting banner's own wording. */
+    // The great feasts, by the Old Style day they fall on, and the ones
+    // counted from Pascha. A great feast takes its own colour on the grid
+    // whatever the fast, since it outranks the day's fasting and every
+    // saint commemorated with it.
+    const GREAT_FIXED = {
+      '9-8': 'Nativity of the Theotokos',
+      '9-14': 'Elevation of the Holy Cross',
+      '11-21': 'Entry of the Theotokos into the Temple',
+      '12-25': 'Nativity of Our Lord',
+      '1-1': 'Circumcision of the Lord',
+      '1-6': 'Holy Theophany',
+      '2-2': 'Meeting of the Lord',
+      '3-25': 'Annunciation of the Theotokos',
+      '6-24': 'Nativity of St. John the Forerunner',
+      '6-29': 'Holy Apostles Peter and Paul',
+      '8-6': 'Transfiguration of Our Lord',
+      '8-15': 'Dormition of the Theotokos',
+      '8-29': 'Beheading of St. John the Forerunner',
+    };
+    function paschaCivil(year) {
+      // Julian Pascha (Meeus), then thirteen days on to the civil date.
+      const a = year % 4, b = year % 7, c = year % 19;
+      const d = (19 * c + 15) % 30;
+      const e = (2 * a + 4 * b - d + 34) % 7;
+      const m = Math.floor((d + e + 114) / 31);
+      const dd = ((d + e + 114) % 31) + 1;
+      return new Date(year, m - 1, dd + 13);
+    }
+    function greatFeastFor(date) {
+      const os = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 13);
+      const fixed = GREAT_FIXED[(os.getMonth() + 1) + '-' + os.getDate()];
+      if (fixed) return fixed;
+      const pascha = paschaCivil(date.getFullYear());
+      const days = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - pascha) / 86400000);
+      if (days === 0) return 'Holy Pascha';
+      if (days === -7) return 'Palm Sunday';
+      if (days === 39) return 'Holy Ascension';
+      if (days === 49) return 'Pentecost';
+      return null;
+    }
+
     function markClasses(kind) {
+      if (kind === 'feast') return 'bg-[#9db8dc] font-bold';
       // /10 and /20 tints on a cream panel are barely a shade — the
       // grid read as blank. These are strong enough to tell apart at a
       // glance, and the day number stays dark on all three.
@@ -880,14 +922,17 @@ import SaintDiptych from "../components/SaintDiptych.astro";
       for (let d = 1; d <= daysIn; d++) {
         const date = new Date(gridYear, gridMonth, d);
         const mark = marks[d];
-        const kind = mark ? mark.kind : null;
+        const feast = greatFeastFor(date);
+        const kind = feast ? 'feast' : (mark ? mark.kind : null);
         const isToday = sameDay(date, today);
         const isShown = sameDay(date, currentDate);
 
         // What the day is, said in words, for anyone on a screen
         // reader and for the tooltip.
         let label = date.toDateString();
-        if (kind === 'fast' || kind === 'fish') {
+        if (feast) {
+          label += ' — ' + feast;
+        } else if (kind === 'fast' || kind === 'fish') {
           label += ' — ' + (mark.season ? mark.season + '. ' : 'Fast. ') + (mark.rule || '');
         } else if (kind === 'none') {
           label += ' — no fast';
@@ -954,6 +999,7 @@ import SaintDiptych from "../components/SaintDiptych.astro";
           // describing colours that weren't on the page.
           '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-liturgical-red/35"></span>Fasting</span>' +
           '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-sacred-gold/50"></span>Fasting &mdash; fish allowed</span>' +
+          '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 bg-[#9db8dc]"></span>Great feast</span>' +
           '<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 border border-border-soft"></span>No fast</span>' +
         '</div>';
     }
