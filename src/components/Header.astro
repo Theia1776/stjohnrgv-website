@@ -470,6 +470,18 @@ function isActive(hrefWithHash: string): boolean {
       if (response.ok && data.loggedIn) {
         const name = escapeHtml(data.name || "Member");
         const isAdmin = data.role === "admin";
+
+        // The parish board is announced with the December newsletter on
+        // 29 Nov 2026. Until then only admins see the link; after it,
+        // everyone does, without anything needing to be redeployed.
+        // Checked here at page load, so it turns itself on.
+        const boardOpen = Date.now() >= Date.parse("2026-11-29T06:00:00Z");
+        const boardItem = (boardOpen || isAdmin)
+          ? `<a href="/board/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Parish Board</a>`
+          : "";
+        const boardMobile = (boardOpen || isAdmin)
+          ? `<a href="/board/" class="btn btn-secondary w-full mb-2">Parish Board</a>`
+          : "";
         const adminDesktopItem = isAdmin
           ? `<div class="my-1 border-t border-border-soft"></div>
              <a href="/admin/" role="menuitem" class="block px-4 py-2 text-sm text-brand-tan-dark no-underline hover:bg-brand-blue-pale">Parish Admin</a>`
@@ -502,7 +514,7 @@ function isActive(hrefWithHash: string): boolean {
               <a href="/account/#section-learning" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">My Learning</a>
               <a href="/learn/library/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Parish Library</a>
               <a href="/table/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">An Orthodox Table</a>
-              <a href="/board/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Parish Board</a>
+              ${boardItem}
               <a href="/directory/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Directory</a>
               <a href="/coffee-hour/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Coffee Hour</a>
               <a href="/prayers/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Prayer Requests</a>
@@ -523,7 +535,7 @@ function isActive(hrefWithHash: string): boolean {
           <a href="/account/#section-learning" class="btn btn-secondary w-full mb-2">My Learning</a>
           <a href="/learn/library/" class="btn btn-secondary w-full mb-2">Parish Library</a>
           <a href="/table/" class="btn btn-secondary w-full mb-2">An Orthodox Table</a>
-          <a href="/board/" class="btn btn-secondary w-full mb-2">Parish Board</a>
+          ${boardMobile}
           <a href="/directory/" class="btn btn-secondary w-full mb-2">Directory</a>
           <a href="/coffee-hour/" class="btn btn-secondary w-full mb-2">Coffee Hour</a>
           <a href="/prayers/" class="btn btn-secondary w-full mb-2">Prayer Requests</a>

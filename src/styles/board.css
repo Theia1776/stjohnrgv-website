@@ -11,6 +11,24 @@
    thing follows into dark mode without a second set of rules.
    ========================================================= */
 
+/* ---- the board's colours -------------------------------
+   Taken off the front page: the navy the headings are set in,
+   the gold hairline that runs under the masthead, cream and
+   white behind them.
+
+   Pinned here as their own tokens rather than borrowed from
+   --color-text-primary, because that token flips to near-white in
+   dark mode -- which would have turned every navy bar into a cream
+   bar with cream text on it. The navy and the gold are fixed; the
+   surfaces follow the site into dark mode on their own.
+   -------------------------------------------------------- */
+:root {
+  --bb-navy:      #2C3E50;  /* the heading navy */
+  --bb-navy-deep: #22303E;  /* a shade down, for section bars */
+  --bb-gold:      #C9A84C;  /* the masthead hairline */
+  --bb-on-navy:   #FAF7F0;  /* cream, for text sitting on navy */
+}
+
 /* ---- the table itself ---------------------------------- */
 .bb-table {
   width: 100%;
@@ -24,8 +42,9 @@
 .bb-table thead th,
 .bb-head th,
 .bb-head td {
-  background: var(--color-brand-blue);
-  color: #fff;
+  background: var(--bb-navy);
+  color: var(--bb-on-navy);
+  border-bottom: 2px solid var(--bb-gold);
   text-align: left;
   font-weight: 600;
   font-size: 0.75rem;
@@ -38,8 +57,8 @@
 
 /* A section heading inside the table, spanning every column. */
 .bb-section td {
-  background: var(--color-brand-blue-dark);
-  color: #fff;
+  background: var(--bb-navy-deep);
+  color: var(--bb-gold);
   font-weight: 700;
   font-size: 0.8rem;
   letter-spacing: 0.06em;
@@ -55,11 +74,11 @@
 
 /* Alternating rows, the way every board has done it. */
 .bb-table tbody tr:nth-child(even) td {
-  background: color-mix(in srgb, var(--color-brand-blue-pale) 55%, transparent);
+  background: var(--color-cream-bg);
 }
 
 .bb-table tbody tr:hover td {
-  background: var(--color-brand-blue-pale);
+  background: color-mix(in srgb, var(--bb-gold) 12%, transparent);
 }
 
 /* Narrow centred number columns: Topics, Posts, Replies, Views. */
@@ -105,7 +124,7 @@
   width: 2rem;
   text-align: center;
   font-size: 1.05rem;
-  color: var(--color-brand-blue);
+  color: var(--bb-navy);
 }
 .bb-unread .bb-icon {
   color: var(--color-sacred-gold);
@@ -142,24 +161,26 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-brand-blue-dark);
+  color: var(--bb-navy);
   background: var(--color-cream-card);
-  border: 1px solid var(--color-brand-blue);
+  border: 1px solid var(--bb-navy);
   border-radius: 2px;
   text-decoration: none;
   cursor: pointer;
   line-height: 1.6;
 }
 .bb-btn:hover {
-  background: var(--color-brand-blue);
-  color: #fff;
+  background: var(--bb-navy);
+  color: var(--bb-on-navy);
 }
 .bb-btn-strong {
-  background: var(--color-brand-blue);
-  color: #fff;
+  background: var(--bb-navy);
+  color: var(--bb-on-navy);
+  border-color: var(--bb-navy);
 }
 .bb-btn-strong:hover {
-  background: var(--color-brand-blue-dark);
+  background: var(--bb-navy-deep);
+  border-color: var(--bb-gold);
 }
 .bb-btn-danger {
   border-color: var(--color-liturgical-red);
@@ -174,7 +195,8 @@
 /* Author down the left, message to the right. */
 .bb-author {
   width: 11rem;
-  background: color-mix(in srgb, var(--color-brand-blue-pale) 70%, transparent);
+  background: var(--color-cream-bg);
+  border-right: 2px solid var(--bb-gold);
   font-size: 0.75rem;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -183,7 +205,7 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--color-brand-blue-dark);
+  color: var(--bb-navy);
   margin-bottom: 0.1rem;
 }
 .bb-author-rank {
@@ -196,7 +218,7 @@
   width: 3.5rem;
   height: 3.5rem;
   object-fit: cover;
-  border: 1px solid var(--color-border-soft);
+  border: 1px solid var(--bb-gold);
   margin-bottom: 0.4rem;
 }
 
@@ -230,9 +252,9 @@
 .bb-quote {
   margin: 0.5rem 0 0.75rem;
   padding: 0.5rem 0.7rem;
-  background: color-mix(in srgb, var(--color-brand-blue-pale) 70%, transparent);
+  background: var(--color-cream-bg);
   border: 1px solid var(--color-border-soft);
-  border-left: 3px solid var(--color-brand-blue);
+  border-left: 3px solid var(--bb-gold);
   font-size: 0.85rem;
 }
 .bb-quote-who {
@@ -276,12 +298,12 @@
   line-height: 1.5;
 }
 .bb-react:hover {
-  border-color: var(--color-brand-blue);
+  border-color: var(--bb-gold);
 }
 /* One you gave yourself. */
 .bb-react-on {
-  background: var(--color-brand-blue-pale);
-  border-color: var(--color-brand-blue);
+  background: color-mix(in srgb, var(--bb-gold) 20%, transparent);
+  border-color: var(--bb-gold);
   font-weight: 700;
 }
 .bb-react-count {
@@ -319,8 +341,8 @@
 
 /* The line across a thread where you stopped reading. */
 .bb-newline td {
-  background: var(--color-brand-blue) !important;
-  color: #fff;
+  background: var(--bb-gold) !important;
+  color: var(--bb-navy);
   text-align: center;
   font-size: 0.68rem;
   font-weight: 700;
@@ -348,8 +370,9 @@
   font-size: 0.78rem;
 }
 .bb-panel h2 {
-  background: var(--color-brand-blue);
-  color: #fff;
+  background: var(--bb-navy);
+  color: var(--bb-on-navy);
+  border-bottom: 2px solid var(--bb-gold);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -366,7 +389,7 @@
   display: block;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--color-brand-blue-dark);
+  color: var(--bb-navy);
 }
 .bb-panel-body a {
   color: var(--color-brand-blue-dark);
@@ -388,6 +411,7 @@
 .bb-stats {
   margin-top: 1rem;
   border: 1px solid var(--color-border-soft);
+  border-top: 2px solid var(--bb-gold);
   background: var(--color-cream-card);
   padding: 0.5rem 0.6rem;
   font-size: 0.75rem;

@@ -24,6 +24,7 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/account') &&
         !page.includes('/directory') &&
+        !page.includes('/board') &&
         !page.includes('/coffee-hour') &&
         !page.includes('/admin') &&
         !page.includes('/login') &&

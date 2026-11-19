@@ -14,6 +14,7 @@
  */
 
 import { verifySession, withSessionCookies } from "./session.ts";
+import { boardIsOpen, NOT_OPEN_YET } from "./board-reveal.ts";
 import { SUPABASE_URL } from "./supabase";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -93,6 +94,12 @@ export async function requireBoardAccess(
   const role = profile?.role ?? "inquirer";
   if (!BOARD_ROLES.has(role)) {
     return { error: wrap(jsonResponse({ error: INQUIRER_MESSAGE }, 403)), wrap };
+  }
+
+  // Held back until the newsletter announces it. Admins get in now so
+  // the board can be set up before anyone else arrives.
+  if (!boardIsOpen() && role !== "admin") {
+    return { error: wrap(jsonResponse({ error: NOT_OPEN_YET }, 403)), wrap };
   }
 
   return {
