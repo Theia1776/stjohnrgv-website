@@ -175,11 +175,14 @@ import "../../styles/board.css";
       .map(
         (c) => `
         <tr data-slug="${escapeHtml(c.slug)}">
-          <td>${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}</td>
+          <td>
+            ${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}
+            <span class="bb-desc">${c.description ? escapeHtml(c.description) : "<em>no subtitle</em>"}</span>
+          </td>
           <td style="width: 20rem; white-space: nowrap;">
             <button type="button" class="bb-btn cat-up">Up</button>
             <button type="button" class="bb-btn cat-down">Down</button>
-            <button type="button" class="bb-btn cat-rename">Rename</button>
+            <button type="button" class="bb-btn cat-edit">Edit</button>
             <button type="button" class="bb-btn cat-hide">${c.hidden ? "Show" : "Hide"}</button>
             <button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>
           </td>
@@ -275,28 +278,50 @@ import "../../styles/board.css";
         return;
       }
 
-      if (button.classList.contains("cat-rename")) {
-        // In place. A browser prompt() freezes the page the way
-        // confirm() did, and we took those out.
+      if (button.classList.contains("cat-edit")) {
+        // Both the name and the line underneath it, edited in place.
+        // A browser prompt() freezes the page the way confirm() did,
+        // and we took those out.
         const row = button.closest("tr") as HTMLElement;
         const cell = row.firstElementChild as HTMLElement;
         cell.innerHTML = `
           <input type="text" maxlength="80" value="${escapeHtml(category.name)}"
-                 class="w-full border border-border-soft bg-cream-bg px-2 py-1 text-sm" />`;
-        const input = cell.querySelector("input") as HTMLInputElement;
-        input.focus();
-        input.select();
+                 aria-label="Category name"
+                 class="cat-name-input w-full border border-border-soft bg-cream-bg px-2 py-1 text-sm" />
+          <input type="text" maxlength="200" value="${escapeHtml(category.description ?? "")}"
+                 aria-label="Subtitle" placeholder="Subtitle — the line under the name"
+                 class="cat-desc-input mt-1 w-full border border-border-soft bg-cream-bg px-2 py-1 text-xs" />
+          <span class="mt-1 inline-flex gap-1">
+            <button type="button" class="bb-btn bb-btn-strong cat-save">Save</button>
+            <button type="button" class="bb-btn cat-cancel">Cancel</button>
+          </span>`;
+
+        const nameInput = cell.querySelector(".cat-name-input") as HTMLInputElement;
+        const descInput = cell.querySelector(".cat-desc-input") as HTMLInputElement;
+        nameInput.focus();
+        nameInput.select();
 
         const save = async () => {
-          const name = input.value.trim();
-          if (!name) return;
-          if (await patchCategory(slug, { name })) await load();
+          const name = nameInput.value.trim();
+          if (!name) {
+            showError("A category needs a name.");
+            return;
+          }
+          // Sent together so one save can't leave the name changed and
+          // the subtitle not. An empty subtitle clears it.
+          if (await patchCategory(slug, { name, description: descInput.value.trim() })) {
+            await load();
+          }
         };
-        input.onblur = save;
-        input.onkeydown = (e) => {
-          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-          if (e.key === "Escape") { input.onblur = null; load(); }
-        };
+
+        (cell.querySelector(".cat-save") as HTMLElement).onclick = save;
+        (cell.querySelector(".cat-cancel") as HTMLElement).onclick = () => load();
+        for (const input of [nameInput, descInput]) {
+          input.onkeydown = (e) => {
+            if (e.key === "Enter") { e.preventDefault(); save(); }
+            if (e.key === "Escape") load();
+          };
+        }
         return;
       }
 

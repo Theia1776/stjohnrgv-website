@@ -1,4 +1,19 @@
 /**
+ * EXPIRES 2026-11-29 — delete this file on the next cleanup pass.
+ *
+ * Nothing here can remove itself from the repository, but it does
+ * switch itself off: from the 29th boardIsOpen() is permanently true
+ * and every check below is a no-op. So leaving it costs nothing but
+ * a few lines of dead code. Grep the repo for "EXPIRES 20" to find
+ * this and anything else like it.
+ *
+ * To remove it: delete this file, drop the boardIsOpen import and the
+ * gate from src/lib/board-access.ts, and drop boardOpen/boardItem/
+ * boardMobile from src/components/Header.astro so the link is
+ * unconditional again.
+ *
+ * ---
+ *
  * When the parish board opens to everyone.
  *
  * The board is finished and live, but it's being held back so it can
