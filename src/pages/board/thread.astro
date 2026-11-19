@@ -1,17 +1,16 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
 ---
 
 <Layout title="Parish Board" description="A conversation on the parish board.">
-  <main class="max-w-3xl mx-auto px-4 py-12">
-    <p class="text-sm mb-4">
-      <a id="back-link" href="/board/" class="text-brand-blue-dark hover:underline">
-        &larr; Back to the board
-      </a>
-    </p>
-
+  <main class="max-w-5xl mx-auto px-4 py-10">
     <h1 id="thread-title" class="text-3xl font-bold mb-1">Loading…</h1>
-    <p id="thread-meta" class="text-sm text-text-secondary mb-8"></p>
+
+    <div class="bb-crumb">
+      <a href="/board/">Parish Board</a>
+      <span id="crumb-tail"></span>
+    </div>
 
     <div id="loading" class="text-sm text-text-secondary">Loading…</div>
 
@@ -23,34 +22,51 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <div id="content" class="hidden">
-      <ol id="posts" class="space-y-4"></ol>
+      <div class="bb-bar">
+        <span>
+          <button id="reply-top" type="button" class="bb-btn bb-btn-strong">Post Reply</button>
+          <a id="back-link" href="/board/" class="bb-btn">Back to forum</a>
+        </span>
+        <span id="thread-meta" class="text-xs text-text-secondary"></span>
+      </div>
 
-      <p id="locked-note" class="hidden mt-8 border border-border-soft bg-cream-card p-4 text-sm text-text-secondary">
-        This thread is closed to new replies.
+      <table class="bb-table">
+        <thead>
+          <tr>
+            <th class="bb-author">Author</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="posts"></tbody>
+      </table>
+
+      <p id="locked-note" class="hidden mt-4 border border-border-soft bg-cream-card p-3 text-sm text-text-secondary">
+        This topic is closed. No new replies can be posted.
       </p>
 
-      <form id="reply-form" class="hidden mt-8 border border-border-soft bg-cream-card p-4 space-y-3">
+      <form id="reply-form" class="hidden mt-4 border border-border-soft bg-cream-card p-4 space-y-3">
         <label class="block">
           <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
-            Your reply
+            Post a reply
           </span>
           <textarea
             id="reply-body"
-            rows="5"
+            rows="7"
             maxlength="10000"
             required
             class="block w-full border border-border-soft bg-cream-bg px-3 py-2"
           ></textarea>
         </label>
         <div class="flex items-center gap-2">
-          <button id="reply-submit" type="submit" class="btn btn-primary">Post reply</button>
+          <button id="reply-submit" type="submit" class="bb-btn bb-btn-strong">Submit</button>
           <span id="reply-status" class="text-sm text-text-secondary" role="status"></span>
         </div>
       </form>
 
-      <div id="thread-tools" class="hidden mt-8 flex flex-wrap gap-2 border-t border-border-soft pt-4">
-        <button id="tool-delete" type="button" class="btn btn-secondary text-xs hidden">
-          Delete this thread
+      <div class="bb-bar">
+        <a id="back-link-2" href="/board/" class="bb-btn">Back to forum</a>
+        <button id="tool-delete" type="button" class="bb-btn bb-btn-danger hidden">
+          Delete this topic
         </button>
       </div>
     </div>
@@ -62,20 +78,34 @@ import Layout from "../../layouts/Layout.astro";
   import {
     escapeHtml,
     renderBody,
+    quoteOf,
     when,
     exactly,
     errorDetail,
     boardFetch,
   } from "../../lib/board-ui";
 
+  type Reaction = { emoji: string; count: number; mine: boolean };
+  type Panel = {
+    name: string;
+    rank: string;
+    joined: string;
+    posts: number;
+    avatarUrl: string | null;
+  };
   type Post = {
     id: string;
     author: string;
+    panel: Panel;
     body: string;
     createdAt: string;
     editedAt: string | null;
     mine: boolean;
+    reactions: Reaction[];
   };
+
+  /** Must match REACTIONS in functions/api/board/react.ts. */
+  const PALETTE = ["🙏", "☦️", "❤️", "👍", "😂", "🕯️"];
 
   const threadId = new URLSearchParams(window.location.search).get("id") ?? "";
   const here = `/board/thread/?id=${encodeURIComponent(threadId)}`;
@@ -85,15 +115,16 @@ import Layout from "../../layouts/Layout.astro";
   const banner = document.getElementById("error-banner") as HTMLElement;
   const titleEl = document.getElementById("thread-title") as HTMLElement;
   const metaEl = document.getElementById("thread-meta") as HTMLElement;
+  const crumbTail = document.getElementById("crumb-tail") as HTMLElement;
   const postsEl = document.getElementById("posts") as HTMLElement;
-  const backLink = document.getElementById("back-link") as HTMLAnchorElement;
   const replyForm = document.getElementById("reply-form") as HTMLFormElement;
+  const replyBody = document.getElementById("reply-body") as HTMLTextAreaElement;
   const replyStatus = document.getElementById("reply-status") as HTMLElement;
   const lockedNote = document.getElementById("locked-note") as HTMLElement;
-  const tools = document.getElementById("thread-tools") as HTMLElement;
   const deleteButton = document.getElementById("tool-delete") as HTMLButtonElement;
 
   let isAdmin = false;
+  let canReply = false;
 
   function showError(message: string) {
     banner.textContent = message;
@@ -101,9 +132,55 @@ import Layout from "../../layouts/Layout.astro";
     loading.classList.add("hidden");
   }
 
+  /** "Joined: 14 Oct 2026 · Posts: 9" down the left of a post. */
+  function authorCell(panel: Panel): string {
+    const joined = panel.joined
+      ? new Date(panel.joined).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "";
+    return `
+      <td class="bb-author">
+        ${panel.avatarUrl ? `<img class="bb-avatar" src="${escapeHtml(panel.avatarUrl)}" alt="" />` : ""}
+        <span class="bb-author-name">${escapeHtml(panel.name)}</span>
+        ${panel.rank ? `<span class="bb-author-rank">${escapeHtml(panel.rank)}</span>` : ""}
+        <span class="bb-author-meta">
+          ${joined ? `Joined: ${escapeHtml(joined)}<br />` : ""}
+          Posts: ${panel.posts}
+        </span>
+      </td>`;
+  }
+
+  function reactionStrip(post: Post): string {
+    const given = post.reactions
+      .map(
+        (r) =>
+          `<button type="button" class="bb-react ${r.mine ? "bb-react-on" : ""}" data-emoji="${escapeHtml(r.emoji)}"
+                   title="${r.mine ? "You reacted. Click to take it back." : "Add yours"}">
+             <span>${escapeHtml(r.emoji)}</span><span class="bb-react-count">${r.count}</span>
+           </button>`,
+      )
+      .join("");
+
+    // The palette only shows what hasn't been given yet, so the row
+    // doesn't turn into twelve buttons on a post nobody answered.
+    const taken = new Set(post.reactions.map((r) => r.emoji));
+    const rest = PALETTE.filter((e) => !taken.has(e));
+    const adder = canReply
+      ? `<span class="bb-react-add" style="position:relative;">
+           <button type="button" class="bb-react react-open" title="React to this post">＋</button>
+           <span class="react-tray hidden" style="position:absolute; left:0; bottom:120%; z-index:20; display:flex; gap:.15rem; background:var(--color-cream-card); border:1px solid var(--color-border-soft); padding:.2rem; white-space:nowrap;">
+             ${rest.map((e) => `<button type="button" class="bb-react" data-emoji="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join("")}
+           </span>
+         </span>`
+      : "";
+
+    return `<span class="bb-reacts">${given}${adder}</span>`;
+  }
+
   function renderPosts(posts: Post[], previouslyReadAt: string | null) {
-    // The line that says "you've read down to here". Only drawn when
-    // there's something below it and something above it.
     const seen = previouslyReadAt ? new Date(previouslyReadAt).getTime() : null;
     let dividerDrawn = false;
 
@@ -113,46 +190,48 @@ import Layout from "../../layouts/Layout.astro";
         let divider = "";
         if (isNew && !dividerDrawn && index > 0) {
           dividerDrawn = true;
-          divider = `
-            <li aria-hidden="true" class="flex items-center gap-3 text-xs uppercase tracking-widest text-brand-blue-dark">
-              <span class="h-px flex-1 bg-brand-blue"></span>
-              <span>New since you last looked</span>
-              <span class="h-px flex-1 bg-brand-blue"></span>
-            </li>`;
+          divider = `<tr class="bb-newline"><td colspan="2">New since you last looked</td></tr>`;
         }
 
         const canEdit = p.mine || isAdmin;
         // The opening post can be edited but not deleted on its own —
-        // the whole thread hangs off it.
+        // the whole topic hangs off it.
         const canDelete = canEdit && index > 0;
-        const buttons = `
-          <span class="flex gap-1 shrink-0">
-            ${canEdit ? '<button type="button" class="btn btn-secondary text-xs post-edit">Edit</button>' : ""}
-            ${canDelete ? '<button type="button" class="btn btn-secondary text-xs post-delete">Delete</button>' : ""}
-          </span>`;
+
+        const buttons = [
+          canReply ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
+          canEdit ? '<button type="button" class="bb-btn post-edit">Edit</button>' : "",
+          canDelete ? '<button type="button" class="bb-btn bb-btn-danger post-delete">Delete</button>' : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
 
         return `
           ${divider}
-          <li class="border border-border-soft bg-cream-card p-4" data-id="${escapeHtml(p.id)}">
-            <div class="flex items-start justify-between gap-3 mb-2">
-              <span class="text-sm">
-                <span class="font-semibold text-text-primary">${escapeHtml(p.author)}</span>
-                <span class="text-text-secondary" title="${escapeHtml(exactly(p.createdAt))}">
-                  &middot; ${escapeHtml(when(p.createdAt))}
+          <tr class="bb-post-row" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
+            ${authorCell(p.panel)}
+            <td>
+              <div class="bb-posted">
+                <span title="${escapeHtml(exactly(p.createdAt))}">
+                  Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
+                  ${p.editedAt ? `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>` : ""}
                 </span>
-                ${p.editedAt ? `<span class="text-text-secondary italic" title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</span>` : ""}
-              </span>
-              ${buttons}
-            </div>
-            <div class="post-body prose-parish text-text-primary">${renderBody(p.body)}</div>
-          </li>`;
+                <span>${buttons}</span>
+              </div>
+              <div class="bb-body post-body">${renderBody(p.body)}</div>
+              <div class="bb-foot">
+                ${reactionStrip(p)}
+                <a href="#top" class="bb-react-add">Back to top</a>
+              </div>
+            </td>
+          </tr>`;
       })
       .join("");
   }
 
   async function load() {
     if (!threadId) {
-      showError("No thread in that link. Go back to the board and pick one.");
+      showError("No topic in that link. Go back to the board and pick one.");
       return;
     }
 
@@ -167,11 +246,11 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
     if (res.status === 404) {
-      showError("That thread isn't on the board any more.");
+      showError("That topic isn't on the board any more.");
       return;
     }
     if (!res.ok) {
-      showError((await errorDetail(res)) || `Couldn't load this thread (${res.status}).`);
+      showError((await errorDetail(res)) || `Couldn't load this topic (${res.status}).`);
       return;
     }
 
@@ -179,58 +258,87 @@ import Layout from "../../layouts/Layout.astro";
     const thread = data.thread;
     const posts: Post[] = data.posts ?? [];
     isAdmin = !!data.viewer?.isAdmin;
+    canReply = !thread.locked || isAdmin;
 
     titleEl.textContent = thread.title;
     document.title = `${thread.title} | St. John of Kronstadt Orthodox Mission`;
-    metaEl.innerHTML =
-      `Started by ${escapeHtml(thread.startedBy)} ` +
-      `<span title="${escapeHtml(exactly(thread.createdAt))}">${escapeHtml(when(thread.createdAt))}</span>` +
-      (thread.category
-        ? ` in <a href="/board/category/?c=${encodeURIComponent(thread.category.slug)}" class="text-brand-blue-dark hover:underline">${escapeHtml(thread.category.name)}</a>`
-        : "") +
-      (thread.locked ? " &middot; closed to replies" : "");
 
-    if (thread.category) {
-      backLink.href = `/board/category/?c=${encodeURIComponent(thread.category.slug)}`;
-      backLink.textContent = `← Back to ${thread.category.name}`;
-    }
+    const backHref = thread.category
+      ? `/board/category/?c=${encodeURIComponent(thread.category.slug)}`
+      : "/board/";
+    (document.getElementById("back-link") as HTMLAnchorElement).href = backHref;
+    (document.getElementById("back-link-2") as HTMLAnchorElement).href = backHref;
+
+    crumbTail.innerHTML = thread.category
+      ? ` &rsaquo; <a href="${backHref}">${escapeHtml(thread.category.name)}</a> &rsaquo; ${escapeHtml(thread.title)}`
+      : ` &rsaquo; ${escapeHtml(thread.title)}`;
+
+    metaEl.innerHTML =
+      `${thread.replyCount} ${thread.replyCount === 1 ? "reply" : "replies"} &middot; ` +
+      `${thread.viewCount} ${thread.viewCount === 1 ? "view" : "views"}` +
+      (thread.locked ? " &middot; closed" : "");
 
     renderPosts(posts, data.previouslyReadAt);
 
-    // A locked thread still takes an admin's reply — sometimes the last
-    // word is the point of closing it.
-    if (thread.locked && !isAdmin) {
-      lockedNote.classList.remove("hidden");
-      replyForm.classList.add("hidden");
-    } else {
-      lockedNote.classList.toggle("hidden", !thread.locked);
-      replyForm.classList.remove("hidden");
-    }
-
-    if (data.canDelete) {
-      tools.classList.remove("hidden");
-      deleteButton.classList.remove("hidden");
-    }
+    lockedNote.classList.toggle("hidden", !thread.locked);
+    replyForm.classList.toggle("hidden", !canReply);
+    (document.getElementById("reply-top") as HTMLButtonElement).classList.toggle("hidden", !canReply);
+    deleteButton.classList.toggle("hidden", !data.canDelete);
 
     postsEl.onclick = async (event) => {
-      const button = (event.target as HTMLElement).closest("button");
+      const target = event.target as HTMLElement;
+      const button = target.closest("button");
       if (!button) return;
-      const row = button.closest("li") as HTMLElement | null;
+      const row = button.closest("tr") as HTMLElement | null;
       const id = row?.dataset.id;
       if (!id || !row) return;
       const post = posts.find((p) => p.id === id);
       if (!post) return;
 
+      // --- react ---
+      if (button.classList.contains("react-open")) {
+        button.parentElement?.querySelector(".react-tray")?.classList.toggle("hidden");
+        return;
+      }
+      if (button.classList.contains("bb-react") && button.dataset.emoji) {
+        const res = await boardFetch(
+          "/api/board/react",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ post: id, emoji: button.dataset.emoji }),
+          },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't react (${res.status}).`);
+          return;
+        }
+        await load();
+        return;
+      }
+
+      // --- quote ---
+      if (button.classList.contains("post-quote")) {
+        replyForm.classList.remove("hidden");
+        const existing = replyBody.value ? replyBody.value.replace(/\n*$/, "\n\n") : "";
+        replyBody.value = existing + quoteOf(post.panel.name, post.body);
+        replyBody.focus();
+        replyBody.setSelectionRange(replyBody.value.length, replyBody.value.length);
+        replyForm.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      // --- edit, in place ---
       if (button.classList.contains("post-edit")) {
-        // Edited in place, same reasoning as renaming a category: no
-        // browser dialog that freezes the page.
         const bodyEl = row.querySelector(".post-body") as HTMLElement;
         bodyEl.innerHTML = `
-          <textarea rows="6" maxlength="10000"
+          <textarea rows="8" maxlength="10000"
                     class="block w-full border border-border-soft bg-cream-bg px-3 py-2">${escapeHtml(post.body)}</textarea>
-          <span class="mt-2 flex items-center gap-2">
-            <button type="button" class="btn btn-primary text-xs edit-save">Save</button>
-            <button type="button" class="btn btn-secondary text-xs edit-cancel">Cancel</button>
+          <span class="mt-2 inline-flex gap-2">
+            <button type="button" class="bb-btn bb-btn-strong edit-save">Save</button>
+            <button type="button" class="bb-btn edit-cancel">Cancel</button>
           </span>`;
         const textarea = bodyEl.querySelector("textarea") as HTMLTextAreaElement;
         textarea.focus();
@@ -258,6 +366,7 @@ import Layout from "../../layouts/Layout.astro";
         return;
       }
 
+      // --- delete ---
       if (button.classList.contains("post-delete")) {
         const goAhead = await confirmAction({
           message: "Delete this post? It won't come back.",
@@ -283,9 +392,8 @@ import Layout from "../../layouts/Layout.astro";
 
     deleteButton.onclick = async () => {
       const goAhead = await confirmAction({
-        message:
-          `Delete "${thread.title}" and every post in it? That can't be undone.`,
-        confirmLabel: "Delete the thread",
+        message: `Delete "${thread.title}" and every post in it? That can't be undone.`,
+        confirmLabel: "Delete the topic",
         cancelLabel: "Keep it",
         danger: true,
       });
@@ -301,11 +409,7 @@ import Layout from "../../layouts/Layout.astro";
         showError((await errorDetail(res)) || `Couldn't delete that (${res.status}).`);
         return;
       }
-      window.location.assign(
-        thread.category
-          ? `/board/category/?c=${encodeURIComponent(thread.category.slug)}`
-          : "/board/",
-      );
+      window.location.assign(backHref);
     };
 
     loading.classList.add("hidden");
@@ -313,11 +417,16 @@ import Layout from "../../layouts/Layout.astro";
     content.classList.remove("hidden");
   }
 
+  (document.getElementById("reply-top") as HTMLButtonElement).addEventListener("click", () => {
+    replyForm.classList.remove("hidden");
+    replyBody.focus();
+    replyForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
   replyForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const bodyInput = document.getElementById("reply-body") as HTMLTextAreaElement;
     const submit = document.getElementById("reply-submit") as HTMLButtonElement;
-    const text = bodyInput.value.trim();
+    const text = replyBody.value.trim();
     if (!text) {
       replyStatus.textContent = "Nothing to post yet.";
       return;
@@ -343,29 +452,11 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
-    bodyInput.value = "";
-    replyStatus.textContent = "Posted.";
+    replyBody.value = "";
+    replyStatus.textContent = "";
     await load();
-    // Land on what was just written rather than at the top.
     postsEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   load();
 </script>
-
-<style is:global>
-  /* Paragraph spacing inside a post. Tailwind's reset flattens <p>
-     margins and a post with two paragraphs needs the gap back.
-
-     is:global, not a scoped rule: these paragraphs are built in
-     JavaScript after the page loads, so they never carry the
-     data-astro-cid attribute a scoped selector matches on, and the
-     rule silently did nothing. Narrowed to .post-body so it can't
-     reach anything else on the site. */
-  .post-body p {
-    margin-bottom: 0.75rem;
-  }
-  .post-body p:last-child {
-    margin-bottom: 0;
-  }
-</style>

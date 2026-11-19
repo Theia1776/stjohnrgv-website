@@ -13,16 +13,60 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
-/**
- * What somebody wrote, ready to drop into the page: escaped, with
- * blank lines becoming paragraphs and single newlines becoming line
- * breaks. No markdown, no HTML — if a person types <b> they see <b>.
- */
-export function renderBody(text: string): string {
-  return escapeHtml(text)
+/** Plain text to paragraphs. Escaped first, always. */
+function paragraphs(text: string): string {
+  const trimmed = text.replace(/^\n+|\n+$/g, "");
+  if (!trimmed) return "";
+  return trimmed
     .split(/\n{2,}/)
     .map((para) => `<p>${para.replace(/\n/g, "<br />")}</p>`)
     .join("");
+}
+
+/**
+ * What somebody wrote, ready to drop into the page.
+ *
+ * Escaped first and always — no markdown, no HTML. If a person types
+ * <b> they see <b>. The one piece of markup understood is the forum
+ * quote, written the way boards have always written it:
+ *
+ *   [quote=Maria G.]what she said[/quote]
+ *   and here's my answer
+ *
+ * which the Quote button fills in for you. Because the escaping
+ * happens before this runs, nobody can smuggle HTML through the quote
+ * tag — by the time we look for it, any angle brackets are already
+ * harmless text.
+ */
+export function renderBody(text: string): string {
+  const escaped = escapeHtml(text);
+  const quote = /\[quote(?:=([^\]]*))?\]([\s\S]*?)\[\/quote\]/;
+
+  let out = "";
+  let rest = escaped;
+  let match = rest.match(quote);
+
+  while (match && match.index !== undefined) {
+    out += paragraphs(rest.slice(0, match.index));
+    const who = (match[1] ?? "").trim();
+    out +=
+      '<blockquote class="bb-quote">' +
+      (who ? `<span class="bb-quote-who">${who} wrote:</span>` : "") +
+      paragraphs(match[2]) +
+      "</blockquote>";
+    rest = rest.slice(match.index + match[0].length);
+    match = rest.match(quote);
+  }
+
+  return out + paragraphs(rest);
+}
+
+/** The [quote=…] block the Quote button drops into the reply box. */
+export function quoteOf(author: string, body: string): string {
+  // Strip any quotes already inside it, so quoting a quote of a quote
+  // doesn't nest five deep the way old boards used to let it.
+  const inner = body.replace(/\[quote(?:=[^\]]*)?\][\s\S]*?\[\/quote\]/g, "").trim();
+  return `[quote=${author}]${inner}[/quote]\n\n`;
 }
 
 /** "just now", "20 minutes ago", "Tuesday", "12 Nov 2026". */

@@ -1,0 +1,416 @@
+/* =========================================================
+   The parish board, dressed the way message boards were.
+
+   This is the phpBB layout -- header bars, dense bordered rows,
+   the author's details running down the left of every post, a
+   button strip in the corner -- drawn in the parish's own colours
+   instead of 2003 blue, so it reads as a message board without
+   looking like a different website bolted onto this one.
+
+   Every colour here is one of the site's tokens, so the whole
+   thing follows into dark mode without a second set of rules.
+   ========================================================= */
+
+/* ---- the table itself ---------------------------------- */
+.bb-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-card);
+  font-size: 0.875rem;
+}
+
+/* The blue bar across the top of a table: Forum / Topics / Posts. */
+.bb-table thead th,
+.bb-head th,
+.bb-head td {
+  background: var(--color-brand-blue);
+  color: #fff;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border-soft);
+  white-space: nowrap;
+}
+
+/* A section heading inside the table, spanning every column. */
+.bb-section td {
+  background: var(--color-brand-blue-dark);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--color-border-soft);
+}
+
+.bb-table td {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-border-soft);
+  vertical-align: top;
+}
+
+/* Alternating rows, the way every board has done it. */
+.bb-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--color-brand-blue-pale) 55%, transparent);
+}
+
+.bb-table tbody tr:hover td {
+  background: var(--color-brand-blue-pale);
+}
+
+/* Narrow centred number columns: Topics, Posts, Replies, Views. */
+.bb-num {
+  width: 4.5rem;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.bb-last {
+  width: 12rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* The forum/topic title itself. */
+.bb-title {
+  font-weight: 600;
+  color: var(--color-brand-blue-dark);
+  text-decoration: none;
+}
+.bb-title:hover {
+  text-decoration: underline;
+}
+
+/* Bold means there's something in there you haven't read. */
+.bb-unread .bb-title {
+  font-weight: 800;
+}
+
+.bb-desc {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+/* The folder glyph at the start of a row. */
+.bb-icon {
+  width: 2rem;
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--color-brand-blue);
+}
+.bb-unread .bb-icon {
+  color: var(--color-sacred-gold);
+}
+
+/* ---- breadcrumbs and button strips --------------------- */
+.bb-crumb {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+.bb-crumb a {
+  color: var(--color-brand-blue-dark);
+  text-decoration: none;
+}
+.bb-crumb a:hover {
+  text-decoration: underline;
+}
+
+.bb-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+/* The small raised buttons: New Topic, Post Reply, Quote, Edit. */
+.bb-btn {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-brand-blue-dark);
+  background: var(--color-cream-card);
+  border: 1px solid var(--color-brand-blue);
+  border-radius: 2px;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.bb-btn:hover {
+  background: var(--color-brand-blue);
+  color: #fff;
+}
+.bb-btn-strong {
+  background: var(--color-brand-blue);
+  color: #fff;
+}
+.bb-btn-strong:hover {
+  background: var(--color-brand-blue-dark);
+}
+.bb-btn-danger {
+  border-color: var(--color-liturgical-red);
+  color: var(--color-liturgical-red);
+}
+.bb-btn-danger:hover {
+  background: var(--color-liturgical-red);
+  color: #fff;
+}
+
+/* ---- a post ------------------------------------------- */
+/* Author down the left, message to the right. */
+.bb-author {
+  width: 11rem;
+  background: color-mix(in srgb, var(--color-brand-blue-pale) 70%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.bb-author-name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-brand-blue-dark);
+  margin-bottom: 0.1rem;
+}
+.bb-author-rank {
+  display: block;
+  font-style: italic;
+  margin-bottom: 0.4rem;
+}
+.bb-avatar {
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  border: 1px solid var(--color-border-soft);
+  margin-bottom: 0.4rem;
+}
+
+/* "Posted: Tuesday 18 Nov, 2:14 pm" with the buttons at the end. */
+.bb-posted {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid var(--color-border-soft);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.bb-body {
+  line-height: 1.65;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.bb-body p {
+  margin-bottom: 0.75rem;
+}
+.bb-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Somebody quoting somebody else. */
+.bb-quote {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.7rem;
+  background: color-mix(in srgb, var(--color-brand-blue-pale) 70%, transparent);
+  border: 1px solid var(--color-border-soft);
+  border-left: 3px solid var(--color-brand-blue);
+  font-size: 0.85rem;
+}
+.bb-quote-who {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+/* The foot of a post: reactions on the left, Back to top on the right. */
+.bb-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.bb-reacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+.bb-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  background: var(--color-cream-card);
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.bb-react:hover {
+  border-color: var(--color-brand-blue);
+}
+/* One you gave yourself. */
+.bb-react-on {
+  background: var(--color-brand-blue-pale);
+  border-color: var(--color-brand-blue);
+  font-weight: 700;
+}
+.bb-react-count {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+.bb-react-add {
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+}
+
+/* The line across a thread where you stopped reading. */
+.bb-newline td {
+  background: var(--color-brand-blue) !important;
+  color: #fff;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.2rem;
+}
+
+/* ---- the panel of your own details --------------------- */
+.bb-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 60rem) {
+  .bb-layout {
+    grid-template-columns: 1fr 14rem;
+    align-items: start;
+  }
+}
+
+.bb-panel {
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-card);
+  font-size: 0.78rem;
+}
+.bb-panel h2 {
+  background: var(--color-brand-blue);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.6rem;
+  margin: 0;
+}
+.bb-panel-body {
+  padding: 0.6rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.bb-panel-you {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-brand-blue-dark);
+}
+.bb-panel-body a {
+  color: var(--color-brand-blue-dark);
+  text-decoration: none;
+}
+.bb-panel-body a:hover {
+  text-decoration: underline;
+}
+.bb-panel-links {
+  border-top: 1px solid var(--color-border-soft);
+  padding: 0.5rem 0.6rem;
+}
+.bb-panel-links a {
+  display: block;
+  padding: 0.15rem 0;
+}
+
+/* The stats line along the bottom. */
+.bb-stats {
+  margin-top: 1rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-card);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.bb-stats strong {
+  color: var(--color-text-primary);
+}
+
+/* ---- narrow screens ------------------------------------ */
+/* A 1024px-wide forum table on a phone is unreadable, so the
+   number columns fold away and the author panel goes on top of
+   its post instead of beside it. The structure stays; only what
+   doesn't fit is dropped. */
+@media (max-width: 40rem) {
+  .bb-table {
+    font-size: 0.82rem;
+  }
+  .bb-hide-small {
+    display: none;
+  }
+  .bb-last {
+    width: auto;
+    white-space: normal;
+  }
+  .bb-post-row,
+  .bb-post-row td {
+    display: block;
+    width: 100%;
+  }
+  .bb-author {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bb-author-name,
+  .bb-author-rank {
+    display: inline;
+    margin: 0;
+  }
+  .bb-avatar {
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+  }
+  .bb-author-meta {
+    display: none;
+  }
+}

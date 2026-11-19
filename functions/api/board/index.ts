@@ -15,6 +15,7 @@
 import {
   requireBoardAccess,
   jsonResponse,
+  shortName,
   type BoardEnv,
 } from "../../../src/lib/board-access.ts";
 
@@ -32,6 +33,7 @@ interface ThreadRow {
   category_id: string;
   last_post_at: string;
   post_count: number;
+  title: string;
 }
 
 export async function onRequestGet(
@@ -57,8 +59,57 @@ export async function onRequestGet(
 
     const { data: threads, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, category_id, last_post_at, post_count");
+      .select("id, category_id, last_post_at, post_count, title");
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
+
+    // Who wrote the newest post in each category, for the Last Post
+    // column. One pass over the posts, newest last, so the final write
+    // per category wins.
+    const { data: recent } = await supabase
+      .from("board_posts")
+      .select("thread_id, author_id, created_at")
+      .order("created_at", { ascending: true });
+
+    const categoryOfThread = new Map<string, string>();
+    for (const t of (threads ?? []) as ThreadRow[]) {
+      categoryOfThread.set(t.id, t.category_id);
+    }
+    const lastPostAuthorId = new Map<string, string | null>();
+    let totalPosts = 0;
+    for (const post of recent ?? []) {
+      totalPosts += 1;
+      const categoryId = categoryOfThread.get(post.thread_id as string);
+      if (categoryId) lastPostAuthorId.set(categoryId, (post.author_id as string | null) ?? null);
+    }
+
+    const authorIds = [...new Set([...lastPostAuthorId.values()].filter(Boolean))] as string[];
+    const authorNames = new Map<string, string>();
+    if (authorIds.length) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name")
+        .in("id", authorIds);
+      for (const p of profiles ?? []) {
+        authorNames.set(
+          p.id as string,
+          shortName(p.first_name as string | null, p.last_name as string | null),
+        );
+      }
+    }
+
+    // "We have N members, the newest is X." Members here means people
+    // who can actually use the board, so inquirers aren't counted —
+    // saying otherwise would overstate the room.
+    const { data: boardMembers } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, created_at")
+      .in("role", ["catechumen", "member", "admin"])
+      .order("created_at", { ascending: false });
+    const memberCount = (boardMembers ?? []).length;
+    const newest = (boardMembers ?? [])[0];
+    const newestMember = newest
+      ? shortName(newest.first_name as string | null, newest.last_name as string | null)
+      : null;
 
     const { data: reads, error: readError } = await supabase
       .from("board_reads")
@@ -95,6 +146,7 @@ export async function onRequestGet(
         (latest, t) => (!latest || t.last_post_at > latest ? t.last_post_at : latest),
         null,
       );
+      const lastId = lastPostAuthorId.get(c.id) ?? null;
       return {
         slug: c.slug,
         name: c.name,
@@ -104,6 +156,7 @@ export async function onRequestGet(
         postCount: list.reduce((sum, t) => sum + (t.post_count ?? 0), 0),
         unreadThreads: unread,
         lastPostAt,
+        lastPostBy: lastPostAt ? (lastId ? (authorNames.get(lastId) ?? "A former parishioner") : "A former parishioner") : null,
       };
     });
 
@@ -112,9 +165,20 @@ export async function onRequestGet(
         {
           categories: payload,
           unreadTotal,
+          // The line along the bottom of every board ever made.
+          stats: {
+            topics: (threads ?? []).length,
+            posts: totalPosts,
+            members: memberCount ?? 0,
+            newestMember: newestMember,
+          },
           viewer: {
             displayName: viewer.displayName,
             isAdmin: viewer.isAdmin,
+            rank: viewer.role === "admin" ? "Parish Admin"
+                : viewer.role === "member" ? "Member"
+                : viewer.role === "catechumen" ? "Catechumen" : "Inquirer",
+            unreadTotal,
           },
         },
         200,

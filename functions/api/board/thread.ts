@@ -24,6 +24,37 @@ const MAX_BODY = 10000;
 const MAX_TITLE = 160;
 const GONE = "A former parishioner";
 
+/** What sits under a name in the author column, the way a forum shows a rank. */
+function rankOf(role: string | null): string {
+  switch (role) {
+    case "admin":
+      return "Parish Admin";
+    case "member":
+      return "Member";
+    case "catechumen":
+      return "Catechumen";
+    default:
+      return "Inquirer";
+  }
+}
+
+interface AuthorPanel {
+  name: string;
+  rank: string;
+  joined: string;
+  posts: number;
+  avatarUrl: string | null;
+}
+
+/** The panel shown for somebody whose account is gone. */
+const GONE_PANEL: AuthorPanel = {
+  name: GONE,
+  rank: "",
+  joined: "",
+  posts: 0,
+  avatarUrl: null,
+};
+
 export async function onRequestGet(
   context: { request: Request; env: BoardEnv },
 ): Promise<Response> {
@@ -38,7 +69,7 @@ export async function onRequestGet(
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
       .select(
-        "id, title, author_id, pinned, locked, created_at, category_id, " +
+        "id, title, author_id, pinned, locked, created_at, category_id, view_count, post_count, " +
           "board_categories ( slug, name, hidden )",
       )
       .eq("id", id)
@@ -60,20 +91,69 @@ export async function onRequestGet(
       .order("created_at", { ascending: true });
     if (postError) return wrap(jsonResponse({ error: postError.message }, 500));
 
+    // Everything the author column down the left of each post shows:
+    // who they are, what they are, when they joined, how much they've
+    // written here. Counted per author in one query rather than per
+    // post, because the same person usually wrote several of them.
     const ids = [...new Set((posts ?? []).map((p) => p.author_id).filter(Boolean))] as string[];
     const names = new Map<string, string>();
+    const panels = new Map<string, AuthorPanel>();
     if (ids.length) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, role, avatar_url")
+        .select("id, first_name, last_name, role, avatar_url, created_at")
         .in("id", ids);
+
+      const { data: counts } = await supabase
+        .from("board_posts")
+        .select("author_id")
+        .in("author_id", ids);
+      const postTally = new Map<string, number>();
+      for (const row of counts ?? []) {
+        const who = row.author_id as string;
+        postTally.set(who, (postTally.get(who) ?? 0) + 1);
+      }
+
       for (const p of profiles ?? []) {
-        names.set(
-          p.id as string,
-          shortName(p.first_name as string | null, p.last_name as string | null),
-        );
+        const id = p.id as string;
+        const name = shortName(p.first_name as string | null, p.last_name as string | null);
+        names.set(id, name);
+        panels.set(id, {
+          name,
+          rank: rankOf(p.role as string | null),
+          joined: p.created_at as string,
+          posts: postTally.get(id) ?? 0,
+          avatarUrl: (p.avatar_url as string | null) ?? null,
+        });
       }
     }
+
+    // Reactions on every post in this thread, folded into counts plus
+    // whether this person is one of the people who gave each one.
+    const postIds = (posts ?? []).map((p) => p.id as string);
+    const reactions = new Map<string, Map<string, { count: number; mine: boolean }>>();
+    if (postIds.length) {
+      const { data: rows } = await supabase
+        .from("board_reactions")
+        .select("post_id, user_id, emoji")
+        .in("post_id", postIds);
+      for (const r of rows ?? []) {
+        const key = r.post_id as string;
+        let forPost = reactions.get(key);
+        if (!forPost) {
+          forPost = new Map();
+          reactions.set(key, forPost);
+        }
+        const emoji = r.emoji as string;
+        const tally = forPost.get(emoji) ?? { count: 0, mine: false };
+        tally.count += 1;
+        if (r.user_id === viewer.id) tally.mine = true;
+        forPost.set(emoji, tally);
+      }
+    }
+
+    // Opening it counts as a view.
+    await supabase.rpc("board_bump_views", { thread: id });
 
     // Where they'd got to last time, before we move the marker.
     const { data: readRow } = await supabase
@@ -103,16 +183,28 @@ export async function onRequestGet(
             createdAt: thread.created_at,
             startedBy: thread.author_id ? (names.get(thread.author_id as string) ?? GONE) : GONE,
             mine: thread.author_id === viewer.id,
+            // +1 because the bump above hasn't landed in this row yet.
+            viewCount: (thread.view_count ?? 0) + 1,
+            replyCount: Math.max(0, (thread.post_count ?? 0) - 1),
             category: category ? { slug: category.slug, name: category.name } : null,
           },
-          posts: list.map((p) => ({
-            id: p.id,
-            author: p.author_id ? (names.get(p.author_id as string) ?? GONE) : GONE,
-            body: p.body,
-            createdAt: p.created_at,
-            editedAt: p.edited_at,
-            mine: p.author_id === viewer.id,
-          })),
+          posts: list.map((p) => {
+            const forPost = reactions.get(p.id as string);
+            return {
+              id: p.id,
+              author: p.author_id ? (names.get(p.author_id as string) ?? GONE) : GONE,
+              panel: p.author_id ? (panels.get(p.author_id as string) ?? GONE_PANEL) : GONE_PANEL,
+              body: p.body,
+              createdAt: p.created_at,
+              editedAt: p.edited_at,
+              mine: p.author_id === viewer.id,
+              reactions: forPost
+                ? [...forPost.entries()]
+                    .map(([emoji, t]) => ({ emoji, count: t.count, mine: t.mine }))
+                    .sort((a, b) => b.count - a.count)
+                : [],
+            };
+          }),
           previouslyReadAt,
           // Only the person who started it, and only while nobody has
           // answered, may remove the whole thread. After that it's a

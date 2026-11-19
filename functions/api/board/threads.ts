@@ -30,6 +30,7 @@ interface ThreadRow {
   created_at: string;
   last_post_at: string;
   post_count: number;
+  view_count: number;
 }
 
 /** Anyone whose account is gone shows up as this, not as a blank. */
@@ -59,7 +60,7 @@ export async function onRequestGet(
 
     const { data: threads, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, title, author_id, pinned, locked, created_at, last_post_at, post_count")
+      .select("id, title, author_id, pinned, locked, created_at, last_post_at, post_count, view_count")
       .eq("category_id", category.id)
       .order("pinned", { ascending: false })
       .order("last_post_at", { ascending: false });
@@ -122,6 +123,7 @@ export async function onRequestGet(
               createdAt: t.created_at,
               lastPostAt: t.last_post_at,
               replyCount: Math.max(0, (t.post_count ?? 0) - 1),
+              viewCount: t.view_count ?? 0,
               unread: seen === undefined || new Date(t.last_post_at).getTime() > seen,
               mine: t.author_id === viewer.id,
             };

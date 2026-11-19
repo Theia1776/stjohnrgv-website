@@ -1,16 +1,16 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import "../../styles/board.css";
 ---
 
 <Layout
   title="Parish Board"
   description="Somewhere for the parish to talk — the book club, the kitchen, Scripture and the faith."
 >
-  <main class="max-w-3xl mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold mb-2">Parish Board</h1>
-    <p class="text-text-secondary mb-8">
-      Pick a category and see what people are talking about. Anything new since
-      you last looked shows in bold.
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold mb-1">Parish Board</h1>
+    <p class="text-text-secondary text-sm mb-4">
+      Pick a room and see what people are talking about.
     </p>
 
     <div id="loading" class="text-sm text-text-secondary">Loading…</div>
@@ -23,24 +23,55 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <div id="content" class="hidden">
-      <ul id="categories" class="space-y-3"></ul>
+      <div class="bb-layout">
+        <div>
+          <table class="bb-table">
+            <thead>
+              <tr>
+                <th colspan="2">Forum</th>
+                <th class="bb-num bb-hide-small">Topics</th>
+                <th class="bb-num bb-hide-small">Posts</th>
+                <th class="bb-last">Last Post</th>
+              </tr>
+            </thead>
+            <tbody id="categories"></tbody>
+          </table>
 
-      <p id="empty-state" class="hidden text-center text-text-secondary italic mt-8">
-        No categories yet.
-      </p>
+          <p id="empty-state" class="hidden text-center text-text-secondary italic mt-8">
+            No categories yet.
+          </p>
 
-      <!-- Admin: arrange the headings -->
-      <section id="admin-tools" class="hidden mt-12 border-t border-border-soft pt-6">
-        <h2 class="text-sm font-semibold uppercase tracking-widest text-text-secondary mb-3">
-          Categories
-        </h2>
-        <p class="text-sm text-text-secondary mb-4">
-          Yours to arrange. Hiding a category takes it off the board for everyone
-          else without deleting anything in it.
-        </p>
+          <div id="stats" class="bb-stats"></div>
+        </div>
 
-        <form id="new-category" class="flex flex-wrap gap-2 items-end mb-6">
-          <label class="flex-1 min-w-[12rem]">
+        <!-- Your own corner, the way a board always had one. -->
+        <aside class="bb-panel" id="you-panel">
+          <h2>Your Account</h2>
+          <div class="bb-panel-body">
+            <span class="bb-panel-you" id="you-name">—</span>
+            <span id="you-rank"></span>
+            <div id="you-unread" class="mt-2"></div>
+          </div>
+          <div class="bb-panel-links">
+            <a href="/account/">My Account</a>
+            <a href="/directory/">Parish Directory</a>
+            <a href="/learn/library/">Parish Library</a>
+            <a href="#" id="mark-all-read">Mark all topics read</a>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Admin: arrange the rooms -->
+      <section id="admin-tools" class="hidden mt-10">
+        <table class="bb-table">
+          <thead>
+            <tr><th colspan="2">Manage Categories</th></tr>
+          </thead>
+          <tbody id="admin-categories"></tbody>
+        </table>
+
+        <form id="new-category" class="flex flex-wrap gap-2 items-end mt-3">
+          <label class="flex-1 min-w-[10rem]">
             <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
               New category
             </span>
@@ -52,9 +83,9 @@ import Layout from "../../layouts/Layout.astro";
               class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"
             />
           </label>
-          <label class="flex-1 min-w-[14rem]">
+          <label class="flex-1 min-w-[12rem]">
             <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
-              Description <span class="normal-case tracking-normal">(optional)</span>
+              Description
             </span>
             <input
               id="cat-description"
@@ -64,10 +95,8 @@ import Layout from "../../layouts/Layout.astro";
               class="block w-full border border-border-soft bg-cream-bg px-3 py-2 text-sm"
             />
           </label>
-          <button type="submit" class="btn btn-primary">Add</button>
+          <button type="submit" class="bb-btn bb-btn-strong">Add</button>
         </form>
-
-        <ul id="admin-categories" class="space-y-2 text-sm"></ul>
       </section>
     </div>
   </main>
@@ -86,13 +115,15 @@ import Layout from "../../layouts/Layout.astro";
     postCount: number;
     unreadThreads: number;
     lastPostAt: string | null;
+    lastPostBy: string | null;
   };
 
   const loading = document.getElementById("loading") as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
   const banner = document.getElementById("error-banner") as HTMLElement;
-  const list = document.getElementById("categories") as HTMLElement;
+  const body = document.getElementById("categories") as HTMLElement;
   const emptyState = document.getElementById("empty-state") as HTMLElement;
+  const statsEl = document.getElementById("stats") as HTMLElement;
   const adminTools = document.getElementById("admin-tools") as HTMLElement;
   const adminList = document.getElementById("admin-categories") as HTMLElement;
 
@@ -106,41 +137,35 @@ import Layout from "../../layouts/Layout.astro";
 
   function renderCategories(categories: Category[]) {
     if (!categories.length) {
-      list.innerHTML = "";
+      body.innerHTML = "";
       emptyState.classList.remove("hidden");
       return;
     }
     emptyState.classList.add("hidden");
 
-    list.innerHTML = categories
+    body.innerHTML = categories
       .map((c) => {
         const unread = c.unreadThreads > 0;
-        const activity = c.lastPostAt
-          ? `<span title="${escapeHtml(exactly(c.lastPostAt))}">Last post ${escapeHtml(when(c.lastPostAt))}</span>`
+        // The folder glyph: full when there's something new in it.
+        const icon = unread ? "📬" : "📭";
+        const last = c.lastPostAt
+          ? `<span title="${escapeHtml(exactly(c.lastPostAt))}">${escapeHtml(when(c.lastPostAt))}</span>` +
+            `<br /><span>by ${escapeHtml(c.lastPostBy ?? "")}</span>`
           : "<span>No posts yet</span>";
-        const threads = `${c.threadCount} ${c.threadCount === 1 ? "thread" : "threads"}`;
-        const newBadge = unread
-          ? `<span class="shrink-0 bg-brand-blue text-cream-card text-xs px-2 py-0.5">${c.unreadThreads} new</span>`
-          : "";
-        const hiddenNote = c.hidden
-          ? '<span class="shrink-0 border border-border-soft text-xs px-2 py-0.5 text-text-secondary">Hidden</span>'
-          : "";
 
         return `
-          <li>
-            <a href="/board/category/?c=${encodeURIComponent(c.slug)}"
-               class="block border border-border-soft bg-cream-card p-4 no-underline hover:bg-brand-blue-pale/40">
-              <span class="flex items-start justify-between gap-3">
-                <span class="${unread ? "font-bold" : "font-semibold"} text-text-primary">
-                  ${escapeHtml(c.name)}
-                </span>
-                <span class="flex items-center gap-2">${newBadge}${hiddenNote}</span>
-              </span>
-              ${c.description ? `<span class="block text-sm text-text-secondary mt-1">${escapeHtml(c.description)}</span>` : ""}
-              <span class="block text-xs text-text-secondary mt-2">${threads} &middot; ${activity}</span>
-            </a>
-          </li>
-        `;
+          <tr class="${unread ? "bb-unread" : ""}">
+            <td class="bb-icon">${icon}</td>
+            <td>
+              <a class="bb-title" href="/board/category/?c=${encodeURIComponent(c.slug)}">${escapeHtml(c.name)}</a>
+              ${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}
+              ${c.description ? `<span class="bb-desc">${escapeHtml(c.description)}</span>` : ""}
+              ${unread ? `<span class="bb-desc">${c.unreadThreads} new ${c.unreadThreads === 1 ? "topic" : "topics"}</span>` : ""}
+            </td>
+            <td class="bb-num bb-hide-small">${c.threadCount}</td>
+            <td class="bb-num bb-hide-small">${c.postCount}</td>
+            <td class="bb-last">${last}</td>
+          </tr>`;
       })
       .join("");
   }
@@ -149,19 +174,16 @@ import Layout from "../../layouts/Layout.astro";
     adminList.innerHTML = categories
       .map(
         (c) => `
-        <li class="flex flex-wrap items-center gap-2 border border-border-soft bg-cream-card px-3 py-2"
-            data-slug="${escapeHtml(c.slug)}">
-          <span class="flex-1 min-w-[8rem] ${c.hidden ? "text-text-secondary italic" : ""}">
-            ${escapeHtml(c.name)}${c.hidden ? " (hidden)" : ""}
-          </span>
-          <button type="button" class="btn btn-secondary text-xs cat-up">Up</button>
-          <button type="button" class="btn btn-secondary text-xs cat-down">Down</button>
-          <button type="button" class="btn btn-secondary text-xs cat-rename">Rename</button>
-          <button type="button" class="btn btn-secondary text-xs cat-hide">
-            ${c.hidden ? "Show" : "Hide"}
-          </button>
-          <button type="button" class="btn btn-secondary text-xs cat-delete">Delete</button>
-        </li>`,
+        <tr data-slug="${escapeHtml(c.slug)}">
+          <td>${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}</td>
+          <td style="width: 20rem; white-space: nowrap;">
+            <button type="button" class="bb-btn cat-up">Up</button>
+            <button type="button" class="bb-btn cat-down">Down</button>
+            <button type="button" class="bb-btn cat-rename">Rename</button>
+            <button type="button" class="bb-btn cat-hide">${c.hidden ? "Show" : "Hide"}</button>
+            <button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>
+          </td>
+        </tr>`,
       )
       .join("");
   }
@@ -180,8 +202,7 @@ import Layout from "../../layouts/Layout.astro";
     return true;
   }
 
-  // Reordering works on the list as shown: swapping two neighbours'
-  // positions, rather than asking anybody to think in numbers.
+  // Reordering swaps two neighbours, so nobody has to think in numbers.
   async function move(slug: string, direction: -1 | 1, categories: Category[]) {
     const index = categories.findIndex((c) => c.slug === slug);
     const swapWith = index + direction;
@@ -200,8 +221,6 @@ import Layout from "../../layouts/Layout.astro";
     const res = await boardFetch("/api/board");
     if (!res) return;
 
-    // A catechumen-and-above page reached by an inquirer: say why,
-    // plainly, rather than showing them an error code.
     if (res.status === 403) {
       showError(
         (await errorDetail(res)) ||
@@ -219,6 +238,22 @@ import Layout from "../../layouts/Layout.astro";
     isAdmin = !!data.viewer?.isAdmin;
 
     renderCategories(categories);
+
+    (document.getElementById("you-name") as HTMLElement).textContent =
+      data.viewer?.displayName ?? "";
+    (document.getElementById("you-rank") as HTMLElement).textContent = data.viewer?.rank ?? "";
+    (document.getElementById("you-unread") as HTMLElement).innerHTML =
+      data.unreadTotal > 0
+        ? `<strong>${data.unreadTotal}</strong> ${data.unreadTotal === 1 ? "topic has" : "topics have"} something new.`
+        : "You're caught up.";
+
+    const s = data.stats ?? {};
+    statsEl.innerHTML =
+      `<strong>${s.posts ?? 0}</strong> ${s.posts === 1 ? "post" : "posts"} in ` +
+      `<strong>${s.topics ?? 0}</strong> ${s.topics === 1 ? "topic" : "topics"} &middot; ` +
+      `<strong>${s.members ?? 0}</strong> ${s.members === 1 ? "person" : "people"} can post here` +
+      (s.newestMember ? ` &middot; newest is <strong>${escapeHtml(s.newestMember)}</strong>` : "");
+
     if (isAdmin) {
       adminTools.classList.remove("hidden");
       renderAdminList(categories);
@@ -227,7 +262,7 @@ import Layout from "../../layouts/Layout.astro";
     adminList.onclick = async (event) => {
       const button = (event.target as HTMLElement).closest("button");
       if (!button) return;
-      const slug = button.closest("li")?.dataset.slug;
+      const slug = (button.closest("tr") as HTMLElement | null)?.dataset.slug;
       if (!slug) return;
       const category = categories.find((c) => c.slug === slug);
       if (!category) return;
@@ -241,15 +276,14 @@ import Layout from "../../layouts/Layout.astro";
       }
 
       if (button.classList.contains("cat-rename")) {
-        // Renaming happens in place. A browser prompt() freezes the
-        // whole page the way confirm() did, and we took those out.
-        const row = button.closest("li") as HTMLElement;
-        row.innerHTML = `
+        // In place. A browser prompt() freezes the page the way
+        // confirm() did, and we took those out.
+        const row = button.closest("tr") as HTMLElement;
+        const cell = row.firstElementChild as HTMLElement;
+        cell.innerHTML = `
           <input type="text" maxlength="80" value="${escapeHtml(category.name)}"
-                 class="flex-1 min-w-[8rem] border border-border-soft bg-cream-bg px-2 py-1" />
-          <button type="button" class="btn btn-primary text-xs rename-save">Save</button>
-          <button type="button" class="btn btn-secondary text-xs rename-cancel">Cancel</button>`;
-        const input = row.querySelector("input") as HTMLInputElement;
+                 class="w-full border border-border-soft bg-cream-bg px-2 py-1 text-sm" />`;
+        const input = cell.querySelector("input") as HTMLInputElement;
         input.focus();
         input.select();
 
@@ -258,11 +292,10 @@ import Layout from "../../layouts/Layout.astro";
           if (!name) return;
           if (await patchCategory(slug, { name })) await load();
         };
-        (row.querySelector(".rename-save") as HTMLElement).onclick = save;
-        (row.querySelector(".rename-cancel") as HTMLElement).onclick = () => load();
+        input.onblur = save;
         input.onkeydown = (e) => {
-          if (e.key === "Enter") { e.preventDefault(); save(); }
-          if (e.key === "Escape") load();
+          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+          if (e.key === "Escape") { input.onblur = null; load(); }
         };
         return;
       }
@@ -272,7 +305,7 @@ import Layout from "../../layouts/Layout.astro";
           message:
             category.threadCount > 0
               ? `Delete "${category.name}"? It holds ${category.threadCount} ` +
-                `${category.threadCount === 1 ? "thread" : "threads"}, and they go with it ` +
+                `${category.threadCount === 1 ? "topic" : "topics"}, and they go with it ` +
                 `along with every reply. Hide it instead if you only want it off the board.`
               : `Delete "${category.name}"? It's empty, so nothing written is lost.`,
           confirmLabel: "Delete it",
@@ -298,6 +331,21 @@ import Layout from "../../layouts/Layout.astro";
     banner.classList.add("hidden");
     content.classList.remove("hidden");
   }
+
+  // "Mark all topics read" — opens nothing, just moves every marker to now.
+  (document.getElementById("mark-all-read") as HTMLAnchorElement).addEventListener(
+    "click",
+    async (event) => {
+      event.preventDefault();
+      const res = await boardFetch("/api/board/read", { method: "POST" });
+      if (!res) return;
+      if (!res.ok) {
+        showError((await errorDetail(res)) || `Couldn't do that (${res.status}).`);
+        return;
+      }
+      await load();
+    },
+  );
 
   (document.getElementById("new-category") as HTMLFormElement)?.addEventListener(
     "submit",
