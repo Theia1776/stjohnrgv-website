@@ -67,7 +67,15 @@ export async function onRequestGet(
       .order("last_post_at", { ascending: false });
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
 
-    const rows = (threads ?? []) as ThreadRow[];
+    // Pinned topics keep to the order they were created in, so the
+    // welcome stays above the "introduce yourself" thread however busy
+    // that one gets. Everything else stays newest-activity first, which
+    // is the order the query already returned (and sort() is stable).
+    const rows = ((threads ?? []) as ThreadRow[]).sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      if (!a.pinned) return 0;
+      return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0;
+    });
     const threadIds = rows.map((t) => t.id);
 
     // Who wrote the newest post in each thread.
