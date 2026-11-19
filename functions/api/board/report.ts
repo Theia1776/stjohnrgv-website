@@ -105,13 +105,13 @@ export async function onRequestPost(
         });
         const { data: note } = await supabase
           .from("board_threads")
-          .insert({ category_id: room.id, title: `Conversation reported, ${date}`, author_id: null })
+          .insert({ category_id: room.id, title: `Conversation reported, ${date}`, author_id: viewer.id })
           .select("id")
           .single();
         if (note) {
           await supabase.from("board_posts").insert({
             thread_id: note.id,
-            author_id: null,
+            author_id: viewer.id,
             body:
               `${viewer.displayName} reported a private conversation.\n\n` +
               `Read it on the Review page, where each opening is logged:\n${origin}/board/review/\n\n` +

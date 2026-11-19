@@ -120,14 +120,14 @@ export async function onRequestPost(
           .insert({
             category_id: room2.id,
             title: `Help requested: ${topicTitle}`.slice(0, 160),
-            author_id: null,
+            author_id: viewer.id,
           })
           .select("id")
           .single();
         if (note) {
           await supabase.from("board_posts").insert({
             thread_id: note.id,
-            author_id: null,
+            author_id: viewer.id,
             body:
               `${viewer.displayName} asked the moderators for help with their topic "${topicTitle}"` +
               `${room ? ` in ${room.name}` : ""}.\n\n` +

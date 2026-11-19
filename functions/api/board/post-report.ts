@@ -82,7 +82,7 @@ export async function onRequestPost(
         if (noteId) {
           await supabase.from("board_posts").insert({
             thread_id: noteId,
-            author_id: null,
+            author_id: viewer.id,
             body: `${viewer.displayName} also reported this post.\n\nReason: ${reason}`,
           });
         } else {
@@ -96,14 +96,14 @@ export async function onRequestPost(
           });
           const { data: note } = await supabase
             .from("board_threads")
-            .insert({ category_id: room.id, title: `Post reported, ${date}`, author_id: null })
+            .insert({ category_id: room.id, title: `Post reported, ${date}`, author_id: viewer.id })
             .select("id")
             .single();
           if (note) {
             noteId = note.id as string;
             await supabase.from("board_posts").insert({
               thread_id: noteId,
-              author_id: null,
+              author_id: viewer.id,
               body:
                 `${viewer.displayName} reported a post by ${author} in "${thread.title}"` +
                 `${thread.board_categories ? ` (${thread.board_categories.name})` : ""}.\n\n` +
