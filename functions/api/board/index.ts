@@ -160,6 +160,7 @@ export async function onRequestGet(
         description: c.description,
         hidden: c.hidden,
         audience: c.audience,
+        position: c.position,
         threadCount: list.length,
         postCount: list.reduce((sum, t) => sum + (t.post_count ?? 0), 0),
         unreadThreads: unread,

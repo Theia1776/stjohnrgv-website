@@ -1101,3 +1101,22 @@ mark {
 .bb-landed td {
   box-shadow: inset 0 0 0 2px var(--bb-gold);
 }
+
+/* The handle on a room in the admin list: grab it and drag the row. */
+.bb-grip {
+  width: 2rem;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: -0.15em;
+  color: var(--bb-ink);
+}
+.bb-dragging {
+  opacity: 0.6;
+  outline: 2px solid var(--bb-gold);
+}
+.bb-dragging .bb-grip {
+  cursor: grabbing;
+}

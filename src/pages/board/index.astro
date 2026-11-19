@@ -146,17 +146,22 @@ import "../../styles/board.css";
       </section>
 
       <section id="mod-tools" class="hidden mt-10">
-        <table class="bb-table mb-6">
-          <thead>
-            <tr>
-              <th>Board members (<span id="member-count">0</span>)</th>
-              <th>Is</th>
-              <th class="bb-hide-small">Joined</th>
-              <th class="bb-num">Posts</th>
-            </tr>
-          </thead>
-          <tbody id="member-list"></tbody>
-        </table>
+        <details class="mb-6">
+          <summary class="cursor-pointer font-semibold text-lg">
+            Board members (<span id="member-count">0</span>)
+          </summary>
+          <table class="bb-table mt-2">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Is</th>
+                <th class="bb-hide-small">Joined</th>
+                <th class="bb-num">Posts</th>
+              </tr>
+            </thead>
+            <tbody id="member-list"></tbody>
+          </table>
+        </details>
 
         <table class="bb-table">
           <thead>
@@ -186,7 +191,7 @@ import "../../styles/board.css";
       <section id="admin-tools" class="hidden mt-10">
         <table class="bb-table">
           <thead>
-            <tr><th colspan="2">Manage Categories</th></tr>
+            <tr><th colspan="3">Manage Categories <span class="text-xs font-normal">(drag a row by its handle to move it)</span></th></tr>
           </thead>
           <tbody id="admin-categories"></tbody>
         </table>
@@ -236,6 +241,7 @@ import "../../styles/board.css";
     description: string | null;
     hidden: boolean;
     audience?: string;
+    position?: number;
     threadCount: number;
     postCount: number;
     unreadThreads: number;
@@ -308,18 +314,19 @@ import "../../styles/board.css";
       .join("");
   }
 
+  let adminCategories: Category[] = [];
   function renderAdminList(categories: Category[]) {
+    adminCategories = categories;
     adminList.innerHTML = categories
       .map(
         (c) => `
         <tr data-slug="${escapeHtml(c.slug)}">
+          <td class="bb-grip" title="Drag to move" aria-label="Drag to move ${escapeHtml(c.name)}">&#8942;&#8942;</td>
           <td>
             ${escapeHtml(c.name)}${c.hidden ? ' <span class="bb-react-count">(hidden)</span>' : ""}${audienceLabel(c)}
             <span class="bb-desc">${c.description ? escapeHtml(c.description) : "<em>no subtitle</em>"}</span>
           </td>
           <td style="width: 20rem; white-space: nowrap;">
-            <button type="button" class="bb-btn cat-up">Up</button>
-            <button type="button" class="bb-btn cat-down">Down</button>
             <button type="button" class="bb-btn cat-edit">Edit</button>
             <button type="button" class="bb-btn cat-hide">${c.hidden ? "Show" : "Hide"}</button>
             ${c.slug === "moderation" || c.slug === "admin" ? "" : '<button type="button" class="bb-btn bb-btn-danger cat-delete">Delete</button>'}
@@ -343,20 +350,44 @@ import "../../styles/board.css";
     return true;
   }
 
-  // Reordering swaps two neighbours, so nobody has to think in numbers.
-  async function move(slug: string, direction: -1 | 1, categories: Category[]) {
-    const index = categories.findIndex((c) => c.slug === slug);
-    const swapWith = index + direction;
-    if (index < 0 || swapWith < 0 || swapWith >= categories.length) return;
-
-    const a = categories[index];
-    const b = categories[swapWith];
-    const positionOf = (i: number) => (i + 1) * 10;
-
-    if (!(await patchCategory(a.slug, { position: positionOf(swapWith) }))) return;
-    if (!(await patchCategory(b.slug, { position: positionOf(index) }))) return;
+  // Reordering is a drag: grab a row by its handle and put it where you want
+  // it. Works with a mouse or a finger. Rows that change place get new
+  // positions, spaced ten apart so there's always room between.
+  let dragRow: HTMLElement | null = null;
+  adminList.addEventListener("pointerdown", (event) => {
+    const grip = (event.target as HTMLElement).closest(".bb-grip") as HTMLElement | null;
+    if (!grip) return;
+    dragRow = grip.closest("tr") as HTMLElement;
+    dragRow.classList.add("bb-dragging");
+    grip.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  adminList.addEventListener("pointermove", (event) => {
+    if (!dragRow) return;
+    const over = document.elementFromPoint(event.clientX, event.clientY)?.closest("tr") as HTMLElement | null;
+    if (!over || over === dragRow || over.parentElement !== adminList) return;
+    const box = over.getBoundingClientRect();
+    const after = event.clientY > box.top + box.height / 2;
+    adminList.insertBefore(dragRow, after ? over.nextSibling : over);
+  });
+  async function finishDrag() {
+    if (!dragRow) return;
+    dragRow.classList.remove("bb-dragging");
+    dragRow = null;
+    const order = [...adminList.querySelectorAll("tr")].map((r) => (r as HTMLElement).dataset.slug as string);
+    const before = adminCategories.map((c) => c.slug);
+    if (order.join("|") === before.join("|")) return;
+    for (let i = 0; i < order.length; i++) {
+      const was = adminCategories.find((c) => c.slug === order[i]);
+      const position = (i + 1) * 10;
+      if (was && was.position !== position) {
+        if (!(await patchCategory(order[i], { position }))) break;
+      }
+    }
     await load();
   }
+  adminList.addEventListener("pointerup", finishDrag);
+  adminList.addEventListener("pointercancel", finishDrag);
 
   async function load() {
     const res = await boardFetch("/api/board");
@@ -442,8 +473,6 @@ import "../../styles/board.css";
       const category = categories.find((c) => c.slug === slug);
       if (!category) return;
 
-      if (button.classList.contains("cat-up")) return move(slug, -1, categories);
-      if (button.classList.contains("cat-down")) return move(slug, 1, categories);
 
       if (button.classList.contains("cat-hide")) {
         if (await patchCategory(slug, { hidden: !category.hidden })) await load();
