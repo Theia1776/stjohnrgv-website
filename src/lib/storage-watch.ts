@@ -3,9 +3,9 @@
  *
  * Cloudflare R2 holds the library, the board's photos and the board's
  * attachments in one bucket, and the first 10 GB is free. This adds up
- * everything in the bucket and, the first time it passes 8 GB (and
- * again at 9.5 GB), emails the master admin so there is time to clear
- * space before anything is charged.
+ * everything in the bucket and, the first time it passes 9.5 GB, emails
+ * the master admin once, so there is time to clear space before
+ * anything is charged. It never repeats.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,8 +15,8 @@ import type { R2Bucket } from "./board-photos.ts";
 // Cloudflare counts a gigabyte as a billion bytes, so this does too.
 const GB = 1_000_000_000;
 export const FREE_BYTES = 10 * GB;
-/** Warn here, then once more here. */
-export const WARN_AT = [8 * GB, 9.5 * GB];
+/** Warn once, here. */
+export const WARN_AT = [9.5 * GB];
 
 export function gbLabel(bytes: number): string {
   return `${(bytes / GB).toFixed(bytes < 10 * GB ? 2 : 1)} GB`;
