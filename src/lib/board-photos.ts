@@ -22,6 +22,12 @@ export interface R2Bucket {
     options?: { httpMetadata?: { contentType?: string } },
   ): Promise<unknown>;
   delete(keys: string | string[]): Promise<void>;
+  /** Page through everything in the bucket (used to total the storage). */
+  list?(options?: { cursor?: string; limit?: number }): Promise<{
+    objects: Array<{ size: number }>;
+    truncated: boolean;
+    cursor?: string;
+  }>;
 }
 
 export const MAX_PHOTOS_PER_POST = 4;

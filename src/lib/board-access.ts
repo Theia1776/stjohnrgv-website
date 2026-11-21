@@ -24,6 +24,9 @@ export interface BoardEnv {
   SUPABASE_SERVICE_ROLE_KEY: string;
   /** Where the picture files live. Same bucket as the library. */
   LIBRARY_BUCKET?: R2Bucket;
+  /** For the storage warning email. */
+  RESEND_API_KEY?: string;
+  RESET_EMAIL_FROM?: string;
 }
 
 /** Roles that may read and post on the board. */

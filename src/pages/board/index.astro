@@ -206,6 +206,7 @@ import "../../styles/board.css";
 
       <!-- Admin: arrange the rooms -->
       <section id="admin-tools" class="hidden mt-10">
+        <p id="storage-line" class="text-sm mb-4" role="status"></p>
         <details>
         <summary class="cursor-pointer font-semibold text-lg">Manage categories</summary>
         <p class="text-xs text-text-secondary mt-1">Drag a row by its handle to move it.</p>
@@ -494,6 +495,7 @@ import "../../styles/board.css";
       loadModerators();
       loadMembers();
       loadModLog();
+      loadStorage();
     }
 
     adminList.onclick = async (event) => {
@@ -743,6 +745,20 @@ import "../../styles/board.css";
           )
           .join("")
       : '<tr><td colspan="3" class="text-text-secondary">Nothing yet.</td></tr>';
+  }
+
+  // ---- how much of the free storage is used (admins) ----
+  async function loadStorage() {
+    const line = document.getElementById("storage-line") as HTMLElement | null;
+    if (!line) return;
+    const res = await boardFetch("/api/board/storage", {}, here);
+    if (!res || !res.ok) return;
+    const s: { used: string; free: string; percent: number; warn: boolean } = await res.json();
+    line.innerHTML =
+      `<strong>File storage:</strong> ${escapeHtml(s.used)} of ${escapeHtml(s.free)} free (${s.percent}%). ` +
+      (s.warn
+        ? `<strong style="color:var(--color-liturgical-red)">Getting full. Time to clear some space.</strong>`
+        : "You'll get an email when it reaches 8 GB.");
   }
 
   // ---- the roll of board members (admins) ----

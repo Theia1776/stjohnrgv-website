@@ -31,6 +31,7 @@ import {
   purgeFiles,
   sizeLabel,
 } from "../../../src/lib/board-files.ts";
+import { bucketUsage, checkStorageAlert } from "../../../src/lib/storage-watch.ts";
 
 /** Files picked but not yet posted, per person, at any moment. */
 const MAX_PENDING = 10;
@@ -206,6 +207,14 @@ export async function onRequestPost(
     } catch (putError) {
       await purgeFiles(supabase, bucket, { fileIds: [id] });
       throw putError;
+    }
+
+    // Adding a file is the moment storage grows, so it is the moment to
+    // check the free 10 GB. Never lets a problem here fail the upload.
+    try {
+      if (bucket.list) await checkStorageAlert(supabase, context.env, (await bucketUsage(bucket)).bytes);
+    } catch {
+      /* the warning is a courtesy */
     }
 
     return wrap(jsonResponse({ id, name, bytes: bytes.byteLength, expires: keepDays !== null }, 201));
