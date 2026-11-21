@@ -12,7 +12,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendEmail } from "./email.ts";
 import type { R2Bucket } from "./board-photos.ts";
 
-const GB = 1024 * 1024 * 1024;
+// Cloudflare counts a gigabyte as a billion bytes, so this does too.
+const GB = 1_000_000_000;
 export const FREE_BYTES = 10 * GB;
 /** Warn here, then once more here. */
 export const WARN_AT = [8 * GB, 9.5 * GB];
