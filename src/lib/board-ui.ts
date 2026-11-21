@@ -20,6 +20,7 @@ export function escapeHtml(value: unknown): string {
 
      [b]bold[/b]  [i]italic[/i]  [u]underlined[/u]
      [size=large]bigger[/size]  [color=red]red[/color]
+     [url=https://example.org]a linked word[/url]
 
    The toolbar above the post box types these for you, so nobody has
    to know them. Sizes and colours come from a fixed list, and each is
@@ -50,16 +51,28 @@ const SIZE_NAMES = new Set(SIZES.map(([name]) => name));
 
 type FormatTag = { close: boolean; name: string; value: string };
 
-const FORMAT_TAG = /\[(\/?)(b|i|u|size|color)(?:=([a-z]+))?\]/gi;
+const FORMAT_TAG = /\[(\/?)(b|i|u|size|color|url)(?:=([^\]\s]*))?\]/gi;
 // Private-use characters stand in for a tag between pairing and
 // output. Anything a person types in that range is dropped first.
 const MARK_OPEN = "\uE000";
 const MARK_CLOSE = "\uE001";
 
+/**
+ * Where a link may go. Runs on text that has already been escaped, so
+ * a quote or angle bracket in it is already &quot; or &lt; and is
+ * refused here: an address can never close its own attribute. Only
+ * http, https, or a page on this site (starting with a single slash).
+ */
+function safeHref(escaped: string): boolean {
+  if (/&(?:quot|lt|gt|#39);|[\s\uE000\uE001]/.test(escaped)) return false;
+  return /^https?:\/\/[^/]/i.test(escaped) || /^\/(?![/\\])/.test(escaped);
+}
+
 function validTag(name: string, value: string, close: boolean): boolean {
   if (close) return value === "";
   if (name === "size") return SIZE_NAMES.has(value);
   if (name === "color") return COLOR_NAMES.has(value);
+  if (name === "url") return safeHref(value);
   return value === "";
 }
 
@@ -73,13 +86,21 @@ function openHtml(tag: FormatTag): string {
       return "<u>";
     case "size":
       return `<span class="bb-s-${tag.value}">`;
+    case "url": {
+      // A page on this site opens where you are; anywhere else opens
+      // in a new tab and isn't counted by search engines.
+      const own = tag.value.startsWith("/") || /^https?:\/\/(?:www\.)?stjohnrgv\.org(?:[/?#]|$)/i.test(tag.value);
+      return own
+        ? `<a href="${tag.value}">`
+        : `<a href="${tag.value}" target="_blank" rel="noopener noreferrer nofollow">`;
+    }
     default:
       return `<span class="bb-c-${tag.value}">`;
   }
 }
 
 function closeHtml(name: string): string {
-  return name === "b" ? "</strong>" : name === "i" ? "</em>" : name === "u" ? "</u>" : "</span>";
+  return name === "b" ? "</strong>" : name === "i" ? "</em>" : name === "u" ? "</u>" : name === "url" ? "</a>" : "</span>";
 }
 
 /**
@@ -96,7 +117,8 @@ function markFormatting(text: string): { marked: string; toks: FormatTag[] } {
   for (const m of clean.matchAll(FORMAT_TAG)) {
     const close = m[1] === "/";
     const name = m[2].toLowerCase();
-    const value = (m[3] ?? "").toLowerCase();
+    // An address keeps its capitals; a size or colour name doesn't need them.
+    const value = name === "url" ? (m[3] ?? "") : (m[3] ?? "").toLowerCase();
     if (!validTag(name, value, close)) continue;
     const start = m.index ?? 0;
     found.push({ start, end: start + m[0].length, tag: { close, name, value }, paired: false });
@@ -270,6 +292,90 @@ function wrapSelection(field: HTMLTextAreaElement, open: string, close: string):
 }
 
 /**
+ * "Link": ask for the words and where they go, then put
+ * [url=address]words[/url] into the box. Whatever was selected in the
+ * box becomes the words, so the usual way is to type the words, select
+ * them, press Link, and paste the address.
+ */
+async function addLink(field: HTMLTextAreaElement): Promise<void> {
+  const start = field.selectionStart ?? field.value.length;
+  const end = field.selectionEnd ?? field.value.length;
+  const chosen = field.value.slice(start, end);
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "bb-help-dialog";
+  dialog.innerHTML = `
+    <h2>Add a link</h2>
+    <label class="bb-help-label" for="link-words">The words people will see</label>
+    <input id="link-words" type="text" maxlength="200" autocomplete="off" />
+    <label class="bb-help-label" for="link-address" style="margin-top:0.8rem">Where it goes (paste the web address)</label>
+    <input id="link-address" type="text" inputmode="url" maxlength="1000" autocomplete="off" autocapitalize="off" spellcheck="false" />
+    <p class="bb-help-lead" id="link-error" role="alert" hidden style="margin:0.6rem 0 0;color:var(--color-liturgical-red)"></p>
+    <div class="bb-help-actions">
+      <button type="button" id="link-add" class="bb-btn bb-btn-strong">Add link</button>
+      <button type="button" id="link-cancel" class="bb-btn">Cancel</button>
+    </div>`;
+  document.body.appendChild(dialog);
+
+  const words = dialog.querySelector("#link-words") as HTMLInputElement;
+  const address = dialog.querySelector("#link-address") as HTMLInputElement;
+  const error = dialog.querySelector("#link-error") as HTMLElement;
+  words.value = chosen;
+
+  const close = () => {
+    dialog.close();
+    dialog.remove();
+    field.focus();
+  };
+
+  const add = () => {
+    const text = words.value.trim().replace(/[\[\]]/g, "");
+    let url = address.value.trim();
+    // "stjohnrgv.org/table/" with no https:// in front is what people paste.
+    if (url && !/^(?:https?:\/\/|\/)/i.test(url) && /^[^\s/]+\.[^\s/]+/.test(url)) url = "https://" + url;
+    if (!text) {
+      error.textContent = "Type the words you want people to click on.";
+      error.hidden = false;
+      words.focus();
+      return;
+    }
+    if (!/^https?:\/\/[^/\s\[\]"<>]/i.test(url) && !/^\/(?![/\\])[^\s\[\]"<>]*$/.test(url)) {
+      error.textContent = "That doesn't look like a web address. It usually starts with https://";
+      error.hidden = false;
+      address.focus();
+      return;
+    }
+    if (/[\s\[\]"<>]/.test(url)) {
+      error.textContent = "That address has a space or a symbol that won't work in a link.";
+      error.hidden = false;
+      address.focus();
+      return;
+    }
+    const tag = `[url=${url}]${text}[/url]`;
+    field.value = field.value.slice(0, start) + tag + field.value.slice(end);
+    const at = start + tag.length;
+    close();
+    field.setSelectionRange(at, at);
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+
+  dialog.querySelector("#link-add")?.addEventListener("click", add);
+  dialog.querySelector("#link-cancel")?.addEventListener("click", close);
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    close();
+  });
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      add();
+    }
+  });
+  dialog.showModal();
+  (chosen ? address : words).focus();
+}
+
+/**
  * Bold, italic, underline, size and colour -- plus a Preview, because
  * the box holds the little bracket tags and people want to see the
  * result before they post it. Sits above the box (above its label, if
@@ -301,6 +407,7 @@ export function attachFormatBar(field: HTMLTextAreaElement): void {
         `<button type="button" class="bb-swatch bb-sw-${v}" data-color="${v}" title="${label}" aria-label="${label}"></button>`,
     ).join("") +
     `</span></span>` +
+    `<button type="button" class="bb-btn bb-fmt-link" title="Turn words into a link" aria-label="Add a link">Link</button>` +
     `<button type="button" class="bb-btn bb-fmt-preview" aria-pressed="false">Preview</button>`;
 
   const anchor = field.closest("label") ?? field;
@@ -343,6 +450,11 @@ export function attachFormatBar(field: HTMLTextAreaElement): void {
     if (hit.closest(".bb-fmt-colorbtn")) {
       const nowHidden = swatches.classList.toggle("hidden");
       colorButton.setAttribute("aria-expanded", String(!nowHidden));
+      return;
+    }
+
+    if (hit.closest(".bb-fmt-link")) {
+      void addLink(field);
       return;
     }
 

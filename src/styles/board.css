@@ -1211,3 +1211,13 @@ html.bb-large {
   font-weight: 700;
   word-break: break-word;
 }
+
+.bb-help-dialog input[type="text"] {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-cream-bg);
+  color: var(--color-text-primary);
+  font: inherit;
+}

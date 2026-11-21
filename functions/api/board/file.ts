@@ -165,7 +165,7 @@ export async function onRequestPost(
           {
             error: viewer.isAdmin
               ? `That file is ${sizeLabel(file.size)}. The most one file can be is ${sizeLabel(limit)}.`
-              : `That file is ${sizeLabel(file.size)}. Files from members can be up to ${sizeLabel(limit)}. An admin can attach bigger ones.`,
+              : `That file is ${sizeLabel(file.size)}. Files can be up to ${sizeLabel(limit)}. A bigger one can be split into two uploads.`,
           },
           413,
         ),
