@@ -87,7 +87,15 @@ export async function purgeFiles(
   if (!ids.length) return;
 
   if (bucket) {
-    for (const group of chunks(ids, 250)) await bucket.delete(group.map(fileKey));
+    // An attachment can point at a file that lives somewhere else (a
+    // catechumen lesson, say). Taking the attachment off removes the
+    // record only; the file itself is not the board's to delete.
+    const own: string[] = [];
+    for (const group of chunks(ids)) {
+      const { data } = await supabase.from("board_files").select("id, storage_key").in("id", group);
+      for (const row of data ?? []) if (!row.storage_key) own.push(row.id as string);
+    }
+    for (const group of chunks(own, 250)) await bucket.delete(group.map(fileKey));
   }
   for (const group of chunks(ids)) {
     await supabase.from("board_files").delete().in("id", group);

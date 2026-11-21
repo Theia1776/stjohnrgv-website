@@ -78,7 +78,7 @@ export async function onRequestGet(
     const { data: file } = await supabase
       .from("board_files")
       .select(
-        "id, post_id, uploader_id, name, content_type, expires_at, " +
+        "id, post_id, uploader_id, name, content_type, expires_at, storage_key, " +
           "board_posts ( reported_hidden, board_threads ( board_categories ( hidden, audience ) ) )",
       )
       .eq("id", id)
@@ -104,7 +104,7 @@ export async function onRequestGet(
 
     if (!file.post_id && file.uploader_id !== viewer.id && !viewer.isAdmin) return gone();
 
-    const object = await bucket.get(fileKey(id));
+    const object = await bucket.get((file.storage_key as string | null) || fileKey(id));
     if (!object?.body) return gone();
 
     const type = String(file.content_type ?? "");
