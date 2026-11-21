@@ -104,14 +104,21 @@ export async function onRequestGet(
 
     if (!file.post_id && file.uploader_id !== viewer.id && !viewer.isAdmin) return gone();
 
-    const object = await bucket.get((file.storage_key as string | null) || fileKey(id));
-    if (!object?.body) return gone();
+    const storageKey = (file.storage_key as string | null) || "";
+    let body: ReadableStream | null = null;
+    if (storageKey.startsWith("sb:")) {
+      const { data: blob } = await supabase.storage.from("library").download(storageKey.slice(3));
+      body = blob ? blob.stream() : null;
+    } else {
+      body = (await bucket.get(storageKey || fileKey(id)))?.body ?? null;
+    }
+    if (!body) return gone();
 
     const type = String(file.content_type ?? "");
     const inline = INLINE.test(type);
     const name = String(file.name);
     return wrap(
-      new Response(object.body, {
+      new Response(body, {
         status: 200,
         headers: {
           "Content-Type": inline ? type : "application/octet-stream",

@@ -129,7 +129,17 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       }
 
       const key = String(l.pdf_storage_key ?? "");
-      const found = key ? await bucket.head(key).catch(() => null) : null;
+      let storageKey = key;
+      let found = key ? await bucket.head(key).catch(() => null) : null;
+      if (!found && key) {
+        // Not in the file bucket: the lesson page falls back to Supabase
+        // storage, so the attachment can point there instead ("sb:").
+        const { data: blob } = await supabase.storage.from("library").download(key);
+        if (blob) {
+          found = { size: blob.size };
+          storageKey = `sb:${key}`;
+        }
+      }
       if (!found) {
         failed.push({ title, why: "the PDF isn't in storage" });
         continue;
@@ -141,7 +151,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       if (l.lesson_date) lines.push(`[b]Date:[/b] ${longDate(l.lesson_date as string)}`);
       const readable =
         l.text_status === "ok" && typeof l.text_content === "string"
-          ? l.text_content.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\uE000\uE001]/g, "").replace(/\r\n?/g, "\n").replace(/\n{3,}/g, "\n\n").trim()
+          ? l.text_content.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\uE000\uE001]/g, "").replace(/\u241e\d+\|\d+\u241e\n?/g, "").replace(/\r\n?/g, "\n").replace(/\n{3,}/g, "\n\n").trim()
           : "";
       const pieces = readable ? chunkText(readable) : [];
       const head =
@@ -178,7 +188,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         name: `${title}.pdf`.slice(0, 200),
         content_type: "application/pdf",
         bytes: found.size,
-        storage_key: key,
+        storage_key: storageKey,
       });
       if (fileError) {
         await supabase.from("board_threads").delete().eq("id", thread.id);
