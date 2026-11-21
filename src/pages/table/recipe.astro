@@ -234,7 +234,27 @@ import Layout from "../../layouts/Layout.astro";
 
       if (recipe.notes) {
         (document.getElementById("recipe-notes-block") as HTMLElement).hidden = false;
-        setText("recipe-notes", recipe.notes);
+        // Notes are plain text, with one exception: a link to this
+        // parish's own recipe page (the "Unaltered recipe" pointer on a
+        // fasting copy) becomes a real link. Built from text nodes and
+        // an anchor, never innerHTML, so nothing typed into a note can
+        // turn into markup.
+        const notesEl = document.getElementById("recipe-notes");
+        if (notesEl) {
+          notesEl.textContent = "";
+          const own = /https:\/\/stjohnrgv\.org(\/table\/recipe\/\?slug=[A-Za-z0-9._~%-]+)/g;
+          let last = 0;
+          for (const m of recipe.notes.matchAll(own)) {
+            const at = m.index ?? 0;
+            notesEl.append(recipe.notes.slice(last, at));
+            const a = document.createElement("a");
+            a.href = m[1];
+            a.textContent = "Open the unaltered recipe";
+            notesEl.append(a);
+            last = at + m[0].length;
+          }
+          notesEl.append(recipe.notes.slice(last));
+        }
       }
 
       loadingEl.hidden = true;
