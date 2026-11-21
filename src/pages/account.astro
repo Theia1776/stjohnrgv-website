@@ -264,6 +264,15 @@ import Layout from "../layouts/Layout.astro";
             what you've written. You can change them there.
           </p>
           <p><a href="/board/profile/?id=me" class="underline">My board profile</a> &middot; <a href="/board/" class="underline">The parish board</a></p>
+          <div id="digest-box" class="hidden pt-3">
+            <label for="digest-select" class="block text-sm font-semibold">Email me what's new on the board</label>
+            <select id="digest-select" class="mt-1 border border-border-soft bg-cream-bg px-3 py-2">
+              <option value="off">No emails</option>
+              <option value="daily">A short email every evening at 7</option>
+              <option value="weekly">A short email on Sunday evenings at 7</option>
+            </select>
+            <p id="digest-status" class="mt-1 text-sm" role="status"></p>
+          </div>
         </div>
       </details>
     </section>
@@ -1235,4 +1244,42 @@ import Layout from "../layouts/Layout.astro";
       void run("");
     });
   }
+</script>
+
+<script>
+  // The board email: shown only to people who can use the board.
+  (async () => {
+    const box = document.getElementById("digest-box");
+    const select = document.getElementById("digest-select") as HTMLSelectElement | null;
+    const status = document.getElementById("digest-status");
+    if (!box || !select || !status) return;
+    try {
+      const res = await fetch("/api/board/digest-pref");
+      if (!res.ok) return;
+      const { frequency } = await res.json();
+      select.value = frequency ?? "off";
+      box.classList.remove("hidden");
+    } catch {
+      return;
+    }
+    select.addEventListener("change", async () => {
+      status.textContent = "Saving…";
+      try {
+        const res = await fetch("/api/board/digest-pref", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ frequency: select.value }),
+        });
+        if (!res.ok) throw new Error();
+        status.textContent =
+          select.value === "daily"
+            ? "Saved. You'll get a short email every evening at 7."
+            : select.value === "weekly"
+            ? "Saved. You'll get a short email on Sunday evenings at 7."
+            : "Saved. No emails.";
+      } catch {
+        status.textContent = "That didn't save. Please try again.";
+      }
+    });
+  })();
 </script>

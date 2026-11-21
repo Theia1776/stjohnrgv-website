@@ -38,6 +38,20 @@ import "../../styles/board.css";
         <ul id="announcement-list" class="mt-1 space-y-1"></ul>
       </section>
 
+      <section id="digest-ask" class="hidden bb-notice">
+        <strong>Would you like an email when there's something new?</strong>
+        <p class="mt-1 text-sm">
+          A short note listing the topics with new posts, busiest first, and telling you if a private
+          message is waiting. Nothing is sent unless you choose it, and you can change it or stop it any time.
+        </p>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button type="button" class="bb-btn bb-btn-strong digest-choice" data-d="daily">Every evening at 7</button>
+          <button type="button" class="bb-btn digest-choice" data-d="weekly">Sunday evenings at 7</button>
+          <button type="button" class="bb-btn digest-choice" data-d="off">No thanks</button>
+        </div>
+        <p id="digest-done" class="mt-2 text-sm font-semibold" role="status"></p>
+      </section>
+
       <form action="/board/search/" method="get" class="flex flex-wrap gap-2 mb-4">
         <input
           name="q"
@@ -489,6 +503,8 @@ import "../../styles/board.css";
       );
     }
 
+    offerDigest();
+
     if (isAdmin) {
       adminTools.classList.remove("hidden");
       renderAdminList(categories);
@@ -745,6 +761,40 @@ import "../../styles/board.css";
           )
           .join("")
       : '<tr><td colspan="3" class="text-text-secondary">Nothing yet.</td></tr>';
+  }
+
+  // ---- offer the email digest, once ----
+  async function offerDigest() {
+    const card = document.getElementById("digest-ask") as HTMLElement | null;
+    if (!card) return;
+    const res = await boardFetch("/api/board/digest-pref", {}, here);
+    if (!res || !res.ok) return;
+    const { frequency } = await res.json();
+    if (frequency !== null) return;
+    card.classList.remove("hidden");
+    card.onclick = async (event) => {
+      const button = (event.target as HTMLElement).closest(".digest-choice") as HTMLElement | null;
+      if (!button) return;
+      const choice = button.dataset.d ?? "off";
+      const done = document.getElementById("digest-done") as HTMLElement;
+      done.textContent = "Saving…";
+      const put = await boardFetch(
+        "/api/board/digest-pref",
+        { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ frequency: choice }) },
+        here,
+      );
+      if (!put || !put.ok) {
+        done.textContent = "That didn't save. Please try again.";
+        return;
+      }
+      card.querySelectorAll(".digest-choice").forEach((b) => b.remove());
+      done.textContent =
+        choice === "daily"
+          ? "Saved. You'll get a short email every evening at 7. You can change this any time under My Account."
+          : choice === "weekly"
+          ? "Saved. You'll get a short email on Sunday evenings at 7. You can change this any time under My Account."
+          : "No problem. You won't get any emails. If you change your mind, it's under My Account.";
+    };
   }
 
   // ---- how much of the free storage is used (admins) ----
