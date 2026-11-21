@@ -18,6 +18,7 @@ import {
 } from "../../../src/lib/board-access.ts";
 import { logAction } from "../../../src/lib/board-modlog.ts";
 import { postIdsInThreads, purgePhotos } from "../../../src/lib/board-photos.ts";
+import { purgeFiles } from "../../../src/lib/board-files.ts";
 
 const MAX_NAME = 80;
 
@@ -204,12 +205,12 @@ export async function onRequestDelete(
       .from("board_threads")
       .select("id")
       .eq("category_id", category.id);
-    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, {
-      postIds: await postIdsInThreads(
-        supabase,
-        (threadRows ?? []).map((t) => t.id as string),
-      ),
-    });
+    const roomPostIds = await postIdsInThreads(
+      supabase,
+      (threadRows ?? []).map((t) => t.id as string),
+    );
+    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, { postIds: roomPostIds });
+    await purgeFiles(supabase, context.env.LIBRARY_BUCKET, { postIds: roomPostIds });
 
     const { error } = await supabase.from("board_categories").delete().eq("id", category.id);
     if (error) return wrap(jsonResponse({ error: error.message }, 500));

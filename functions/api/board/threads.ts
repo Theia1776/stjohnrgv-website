@@ -22,6 +22,7 @@ import {
 } from "../../../src/lib/board-access.ts";
 import { recordMentions } from "../../../src/lib/board-mentions.ts";
 import { attachPhotos } from "../../../src/lib/board-photos.ts";
+import { attachFiles } from "../../../src/lib/board-files.ts";
 
 const MAX_TITLE = 160;
 const MAX_BODY = 10000;
@@ -190,7 +191,7 @@ export async function onRequestPost(
   if (blocked) return blocked;
 
   try {
-    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown; poll?: unknown };
+    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown; poll?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -265,6 +266,7 @@ export async function onRequestPost(
     }
 
     await attachPhotos(supabase, viewer.id, firstPost.id as string, body.photoIds);
+    await attachFiles(supabase, viewer.id, firstPost.id as string, body.fileIds);
     await recordMentions(supabase, firstPost.id as string, viewer.id, text);
 
     if (poll) {

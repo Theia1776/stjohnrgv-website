@@ -30,6 +30,7 @@ import {
   purgePhotos,
   postIdsInThreads,
 } from "../../../src/lib/board-photos.ts";
+import { attachFiles, fileUrl, purgeFiles, sizeLabel } from "../../../src/lib/board-files.ts";
 
 const MAX_BODY = 10000;
 const MAX_TITLE = 160;
@@ -221,6 +222,39 @@ export async function onRequestGet(
       }
     }
 
+    // The files on these posts. Ones past their 30 days are not offered,
+    // and are deleted from storage right here.
+    const filesByPost = new Map<
+      string,
+      Array<{ id: string; name: string; bytes: number; size: string; url: string; expiresAt: string | null }>
+    >();
+    if (postIds.length) {
+      const { data: fileRows } = await supabase
+        .from("board_files")
+        .select("id, post_id, name, bytes, expires_at")
+        .in("post_id", postIds)
+        .order("created_at", { ascending: true });
+      const lapsed: string[] = [];
+      for (const r of fileRows ?? []) {
+        if (r.expires_at && new Date(r.expires_at as string).getTime() < Date.now()) {
+          lapsed.push(r.id as string);
+          continue;
+        }
+        const key = r.post_id as string;
+        const list = filesByPost.get(key) ?? [];
+        list.push({
+          id: r.id as string,
+          name: r.name as string,
+          bytes: Number(r.bytes),
+          size: sizeLabel(Number(r.bytes)),
+          url: fileUrl(r.id as string),
+          expiresAt: (r.expires_at as string | null) ?? null,
+        });
+        filesByPost.set(key, list);
+      }
+      if (lapsed.length) await purgeFiles(supabase, context.env.LIBRARY_BUCKET, { fileIds: lapsed });
+    }
+
     // Opening it counts as a view.
     await supabase.rpc("board_bump_views", { thread: id });
 
@@ -387,6 +421,7 @@ export async function onRequestGet(
                 thumb: photoUrl(ph.id, "thumb"),
                 full: photoUrl(ph.id, "full"),
               })),
+              files: hiddenFor(p) ? [] : (filesByPost.get(p.id as string) ?? []),
               signature: hiddenFor(p) ? "" : p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
               createdAt: p.created_at,
               editedAt: p.edited_at,
@@ -440,7 +475,7 @@ export async function onRequestPost(
   if (blocked) return blocked;
 
   try {
-    let body: { id?: unknown; body?: unknown; photoIds?: unknown };
+    let body: { id?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -482,6 +517,7 @@ export async function onRequestPost(
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));
 
     await attachPhotos(supabase, viewer.id, post.id as string, body.photoIds);
+    await attachFiles(supabase, viewer.id, post.id as string, body.fileIds);
     await recordMentions(supabase, post.id as string, viewer.id, text);
 
     await supabase
@@ -644,9 +680,9 @@ export async function onRequestDelete(
     }
 
     // The photo files first: the rows go by cascade, the files don't.
-    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, {
-      postIds: await postIdsInThreads(supabase, [id]),
-    });
+    const threadPostIds = await postIdsInThreads(supabase, [id]);
+    await purgePhotos(supabase, context.env.LIBRARY_BUCKET, { postIds: threadPostIds });
+    await purgeFiles(supabase, context.env.LIBRARY_BUCKET, { postIds: threadPostIds });
 
     // Posts and read marks go with it — both cascade on the thread.
     const { error: deleteError } = await supabase.from("board_threads").delete().eq("id", id);

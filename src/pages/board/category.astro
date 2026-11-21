@@ -95,6 +95,7 @@ import "../../styles/board.css";
         </label>
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
+        <div id="new-files"></div>
         <div class="border border-border-soft p-3">
           <label id="rsvp-row" class="hidden flex items-center gap-2 text-sm font-semibold mb-2">
             <input id="rsvp-on" type="checkbox" class="h-4 w-4" /> Ask people to RSVP (Yes, Maybe, No, with names shown)
@@ -164,6 +165,7 @@ import "../../styles/board.css";
     attachFormatBar,
   } from "../../lib/board-ui";
   import { attachPhotoPicker } from "../../lib/board-photo-picker";
+  import { attachFilePicker } from "../../lib/board-file-picker";
   import { renderEventForm, readEventForm } from "../../lib/board-event-form";
 
   type Thread = {
@@ -424,6 +426,7 @@ import "../../styles/board.css";
   );
   attachFormatBar(document.getElementById("new-body") as HTMLTextAreaElement);
   const newPhotos = attachPhotoPicker(document.getElementById("new-photos") as HTMLElement);
+  const newFiles = attachFilePicker(document.getElementById("new-files") as HTMLElement);
 
   // In the Events room "New Topic" is "New event": a form, so nothing gets forgotten.
   const isEvents = slug === "events";
@@ -489,6 +492,7 @@ import "../../styles/board.css";
     startStatus.textContent = "";
     // Pictures picked but never posted shouldn't linger in storage.
     newPhotos.discard();
+    newFiles.discard();
   });
 
   (document.getElementById("mark-read") as HTMLAnchorElement).addEventListener(
@@ -575,8 +579,8 @@ import "../../styles/board.css";
       return;
     }
 
-    if (newPhotos.busy()) {
-      startStatus.textContent = "Hold on, a photo is still being added.";
+    if (newPhotos.busy() || newFiles.busy()) {
+      startStatus.textContent = "Hold on, a photo or file is still being added.";
       return;
     }
 
@@ -593,6 +597,7 @@ import "../../styles/board.css";
           title,
           body: text,
           photoIds: newPhotos.ids(),
+          fileIds: newFiles.ids(),
           poll: rsvpOn.checked
             ? { question: "Will you be there?", options: ["Yes, I'll be there", "Maybe", "No, I can't make it"], multiple: false, showVoters: true }
             : pollOn.checked

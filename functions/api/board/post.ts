@@ -19,6 +19,7 @@ import {
 import { logAction } from "../../../src/lib/board-modlog.ts";
 import { recordMentions } from "../../../src/lib/board-mentions.ts";
 import { attachPhotos, purgePhotos } from "../../../src/lib/board-photos.ts";
+import { attachFiles, purgeFiles } from "../../../src/lib/board-files.ts";
 
 const MAX_BODY = 10000;
 
@@ -66,7 +67,7 @@ export async function onRequestPatch(
   if (blocked) return blocked;
 
   try {
-    let body: { id?: unknown; body?: unknown; photoIds?: unknown };
+    let body: { id?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -116,6 +117,7 @@ export async function onRequestPatch(
     // Photos added while editing. Only the post's own author can hang
     // their own pictures on it; an admin editing words adds none.
     await attachPhotos(supabase, viewer.id, id, body.photoIds);
+    await attachFiles(supabase, viewer.id, id, body.fileIds);
     await recordMentions(supabase, id, (post.author_id as string | null) ?? viewer.id, text);
 
     return wrap(jsonResponse({ ok: true }, 200));
@@ -162,6 +164,7 @@ export async function onRequestDelete(
     }
 
     await purgePhotos(supabase, context.env.LIBRARY_BUCKET, { postIds: [id] });
+    await purgeFiles(supabase, context.env.LIBRARY_BUCKET, { postIds: [id] });
 
     const { error: deleteError } = await supabase.from("board_posts").delete().eq("id", id);
     if (deleteError) return wrap(jsonResponse({ error: deleteError.message }, 500));

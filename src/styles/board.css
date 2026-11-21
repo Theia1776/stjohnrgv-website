@@ -1162,3 +1162,52 @@ html.bb-large {
 .bb-event-dialog select {
   color: var(--color-text-primary);
 }
+
+/* Files attached to a post, and the "Attach a file" box. */
+.bb-files {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+.bb-files li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--color-border-soft);
+}
+.bb-file-link {
+  font-weight: 700;
+  word-break: break-word;
+}
+.bb-file-size,
+.bb-file-goes {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.bb-file-picker {
+  margin-top: 0.5rem;
+}
+.bb-file-keep {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+}
+.bb-file-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.bb-file-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+}
+.bb-file-name {
+  font-weight: 700;
+  word-break: break-word;
+}
