@@ -4,6 +4,7 @@
  * GET    ?id=<uuid>        the file itself (a download; PDFs and pictures open in the tab)
  * GET    ?limits=1         { maxBytes, isAdmin, used } for the "Attach a file" box
  * POST   multipart: file, keep ("forever" | "30")   add one; returns { id, name, bytes, expires }
+ * PATCH  { id, name }    change the name it is shown under (same people as delete)
  * DELETE ?id=<uuid>        remove one (yours, the post's author, or a moderator)
  *
  * Files are served through here, not from a public address, so only
@@ -36,6 +37,18 @@ import { bucketUsage, checkStorageAlert } from "../../../src/lib/storage-watch.t
 /** Files picked but not yet posted, per person, at any moment. */
 const MAX_PENDING = 10;
 const INLINE = /^(application\/pdf|image\/(png|jpeg|gif|webp))$/;
+const EXTENSION: Record<string, string> = {
+  "application/pdf": "pdf",
+  "application/msword": "doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "text/plain": "txt",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
 
 export async function onRequestGet(
   context: { request: Request; env: BoardEnv },
@@ -116,7 +129,10 @@ export async function onRequestGet(
 
     const type = String(file.content_type ?? "");
     const inline = INLINE.test(type);
-    const name = String(file.name);
+    // A file can be shown under any name; the download still gets the
+    // right ending so it opens in the right program.
+    let name = String(file.name);
+    if (!/\.[A-Za-z][A-Za-z0-9]{0,4}$/.test(name) && EXTENSION[type]) name += `.${EXTENSION[type]}`;
     return wrap(
       new Response(body, {
         status: 200,
@@ -225,6 +241,44 @@ export async function onRequestPost(
     }
 
     return wrap(jsonResponse({ id, name, bytes: bytes.byteLength, expires: keepDays !== null }, 201));
+  } catch (err) {
+    return wrap(
+      jsonResponse({ error: err instanceof Error ? err.message : "Unexpected error." }, 500),
+    );
+  }
+}
+
+export async function onRequestPatch(
+  context: { request: Request; env: BoardEnv },
+): Promise<Response> {
+  const gate = await requireBoardAccess(context);
+  if (gate.error) return gate.error;
+  const { supabase, viewer, wrap } = gate as Required<typeof gate>;
+  const blocked = suspensionBlock(viewer, wrap);
+  if (blocked) return blocked;
+
+  try {
+    const body = (await context.request.json().catch(() => ({}))) as { id?: unknown; name?: unknown };
+    const id = typeof body.id === "string" ? body.id : "";
+    const raw = typeof body.name === "string" ? body.name.trim() : "";
+    if (!isFileId(id)) return wrap(jsonResponse({ error: "Which file?" }, 400));
+    if (!raw) return wrap(jsonResponse({ error: "Give the file a name." }, 400));
+    const name = cleanName(raw);
+
+    const { data: file } = await supabase
+      .from("board_files")
+      .select("id, uploader_id, board_posts ( author_id )")
+      .eq("id", id)
+      .maybeSingle();
+    if (!file) return wrap(jsonResponse({ error: "That file is gone." }, 404));
+
+    const post = (file as Record<string, unknown>).board_posts as { author_id: string | null } | null;
+    const allowed = viewer.isModerator || file.uploader_id === viewer.id || post?.author_id === viewer.id;
+    if (!allowed) return wrap(jsonResponse({ error: "That isn't your file." }, 403));
+
+    const { error } = await supabase.from("board_files").update({ name }).eq("id", id);
+    if (error) return wrap(jsonResponse({ error: error.message }, 500));
+    return wrap(jsonResponse({ ok: true, name }, 200));
   } catch (err) {
     return wrap(
       jsonResponse({ error: err instanceof Error ? err.message : "Unexpected error." }, 500),

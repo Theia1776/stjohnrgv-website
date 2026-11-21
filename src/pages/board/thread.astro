@@ -221,7 +221,7 @@ import "../../styles/board.css";
     setMentionNames,
   } from "../../lib/board-ui";
   import { attachPhotoPicker } from "../../lib/board-photo-picker";
-  import { attachFilePicker } from "../../lib/board-file-picker";
+  import { attachFilePicker, askFileName } from "../../lib/board-file-picker";
   import { renderEventForm, fillEventForm, readEventForm, eventIcs } from "../../lib/board-event-form";
 
   type Reaction = { emoji: string; count: number; mine: boolean };
@@ -386,7 +386,7 @@ import "../../styles/board.css";
             <span class="bb-file-size">${escapeHtml(f.size)}</span>${goes}
             ${
               canEdit
-                ? `<button type="button" class="bb-btn bb-btn-danger file-remove" data-file-id="${escapeHtml(f.id)}">Remove file</button>`
+                ? `<button type="button" class="bb-btn file-rename" data-file-id="${escapeHtml(f.id)}" data-file-name="${escapeHtml(f.name)}">Rename</button> <button type="button" class="bb-btn bb-btn-danger file-remove" data-file-id="${escapeHtml(f.id)}">Remove file</button>`
                 : ""
             }
           </li>`;
@@ -818,6 +818,28 @@ import "../../styles/board.css";
         helpReason.value = "";
         helpDialog.showModal();
         helpReason.focus();
+        return;
+      }
+
+      // --- rename a file ---
+      if (button.classList.contains("file-rename") && button.dataset.fileId) {
+        const next = await askFileName(button.dataset.fileName ?? "");
+        if (!next) return;
+        const res = await boardFetch(
+          "/api/board/file",
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: button.dataset.fileId, name: next }),
+          },
+          here,
+        );
+        if (!res) return;
+        if (!res.ok) {
+          showError((await errorDetail(res)) || `Couldn't rename that (${res.status}).`);
+          return;
+        }
+        await load();
         return;
       }
 
