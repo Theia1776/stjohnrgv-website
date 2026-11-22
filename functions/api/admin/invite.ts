@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Function: POST /api/admin/invite
  *
- * Body: { email, firstName, lastName, role?, send? }
+ * Body: { email, firstName, lastName?, role?, send? }   (lastName can be left out; they fill it in themselves)
  *
  * Admin-only. Sets up an account for someone who would rather not sign
  * up themselves, then (when `send` is true) emails them a button. The
@@ -74,7 +74,7 @@ export async function onRequestPost(
     const send = body.send === true;
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return wrap(json({ error: "That email address isn't valid." }, 400));
-    if (!firstName || !lastName) return wrap(json({ error: "First and last name are needed." }, 400));
+    if (!firstName) return wrap(json({ error: "A first name is needed." }, 400));
 
     // Find or create.
     let userId: string;
@@ -87,7 +87,7 @@ export async function onRequestPost(
         return wrap(json({ error: "That person has already signed in. They can use Forgot password if they need a new one." }, 409));
       }
     } else {
-      const full_name = `${firstName} ${lastName}`;
+      const full_name = `${firstName} ${lastName}`.trim();
       const { data: made, error: makeErr } = await admin.auth.admin.createUser({
         email,
         password: randomHex(32),
@@ -101,7 +101,7 @@ export async function onRequestPost(
         email,
         full_name,
         first_name: firstName,
-        last_name: lastName,
+        last_name: lastName || null,
         role,
         approved: true,
       });
@@ -128,7 +128,7 @@ export async function onRequestPost(
     if (tokErr) return wrap(json({ error: tokErr.message }, 500));
 
     const origin = new URL(context.request.url).origin;
-    const { subject, text, html } = welcomeEmail(`${firstName} ${lastName}`, `${origin}/welcome/?t=${token}`, WELCOME_DAYS);
+    const { subject, text, html } = welcomeEmail(`${firstName} ${lastName}`.trim(), `${origin}/welcome/?t=${token}`, WELCOME_DAYS);
     const result = await sendEmail({
       apiKey: env.RESEND_API_KEY,
       from: env.RESET_EMAIL_FROM,
