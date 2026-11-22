@@ -1,25 +1,25 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-// Approximate drive times from the church in Bayview. Rounded on
-// purpose: traffic, the causeway and the border crossings move them.
+// Drive times from the church in Bayview, taken from Google Maps
+// (22 Nov 2026). Traffic moves them, so the page says "about".
 const driveTimes = [
-  { town: "Laguna Vista", time: "about 10 minutes" },
-  { town: "Los Fresnos", time: "about 15 minutes" },
-  { town: "Rio Hondo", time: "about 20 minutes" },
-  { town: "Port Isabel", time: "about 20 minutes" },
-  { town: "San Benito", time: "about 25 minutes" },
+  { town: "Laguna Vista", time: "about 11 minutes" },
+  { town: "Los Fresnos", time: "about 16 minutes" },
+  { town: "Rio Hondo", time: "about 18 minutes" },
+  { town: "Port Isabel", time: "about 22 minutes" },
+  { town: "San Benito", time: "about 27 minutes" },
   { town: "South Padre Island", time: "about 30 minutes" },
-  { town: "Brownsville", time: "about 30 minutes" },
-  { town: "Harlingen", time: "about 35 minutes" },
-  { town: "Weslaco", time: "about 50 minutes" },
+  { town: "Harlingen", time: "about 32 minutes" },
+  { town: "Brownsville", time: "about 37 minutes" },
+  { town: "Weslaco", time: "about 51 minutes" },
   { town: "McAllen", time: "about an hour" },
 ];
 
 const faqs = [
   {
     q: "Is there an Orthodox church near South Padre Island, Port Isabel and Los Fresnos?",
-    a: "Yes. St. John of Kronstadt Orthodox Church is in Bayview, Texas, about 15 to 30 minutes from Los Fresnos, Port Isabel and South Padre Island, and about 30 minutes from Brownsville.",
+    a: "Yes. St. John of Kronstadt Orthodox Church is in Bayview, Texas, about 16 to 30 minutes from Los Fresnos, Port Isabel and South Padre Island, and about 37 minutes from Brownsville.",
   },
   {
     q: "What time is the Orthodox Divine Liturgy?",
@@ -97,10 +97,13 @@ const faqs = [
     <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
     <address class="mt-8 text-lg not-italic leading-relaxed text-text-primary/85">
       <strong>St. John of Kronstadt Orthodox Church</strong><br />
-      39737 Palm Drive<br />
+      39737 Palm Lane Road<br />
       Bayview, TX 78566<br />
       <a href="tel:+19564346874">(956) 434-6874</a>
     </address>
+    <p class="mt-3 text-lg text-text-primary/85">
+      We are on Palm Lane Road, just off Ted Hunt Road in Bayview.
+    </p>
     <p class="mt-4">
       <a
         href="https://www.google.com/maps/dir/?api=1&amp;destination=26.1637656,-97.3846545"
