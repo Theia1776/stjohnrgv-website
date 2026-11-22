@@ -41,6 +41,9 @@ export default defineConfig({
         !page.includes('/table/recipe') &&
         !page.includes('/newsletter/issue') &&
         !page.includes('/learn/library/reader') &&
+        // Shows the sign-in page to visitors and is noindex, so it stays
+        // out of the sitemap (a noindexed URL there is a Search Console error).
+        !page.includes('/learn/catechumen') &&
         // A meta-refresh redirect to /login/?register=1 — a short thing
         // to say out loud, not a page to index.
         !page.includes('/register'),
