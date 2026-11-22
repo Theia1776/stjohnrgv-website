@@ -379,12 +379,13 @@ page. Browser cache otherwise.
   is what you see at `https://stjohnrgv.org/robots.txt`.
 - **Google Search Console:** verified via DNS (TXT record). Sitemap
   submitted. URL inspection done for the homepage.
-- **Google Business Profile:** created. Website URL updated to
-  `https://stjohnrgv.org`. **Video verification pending** as of last
-  session — needs to be filmed at the house-chapel (focus on icons /
-  iconostasis / vestments, NOT the residential parts). See conversation
-  history if useful, or just film 60 seconds of chapel space + a quick
-  shot of Fr. in cassock saying the parish name and service times.
+- **Google Business Profile:** the parish ALREADY HAD a verified listing
+  (found 21 Nov 2026; it still shows the old orthodoxtexas.com address).
+  The listing created earlier by Tina is a duplicate that was waiting on
+  video verification. Plan: Fr. Antonios claims the existing listing
+  (search the parish on Google, "Own this business?"), changes its
+  website to `https://stjohnrgv.org`, and then Tina removes her
+  duplicate. No chapel video is needed.
 - **Old domain (`orthodoxtexas.com`):** controlled by an unknown party
   via Hostinger, no one at the parish has the login. Expires
   November 7, 2026. Strategy is to wait for it to naturally lose ranking
@@ -402,7 +403,7 @@ HTTPS, sitemap, robots.txt). Outstanding items per that doc include:
 - Spanish-language `/es/` page
 - Sermon archive / blog cadence
 - More image alt-text auditing
-- Google Business Profile (in progress, pending video verification)
+- Google Business Profile: Fr. Antonios claims the existing listing and updates its website (see above)
 
 ---
 
@@ -490,8 +491,7 @@ of the file with current times. Update that, plus the homepage schema's
 
 ## Open / known items
 
-- **GBP video verification:** pending. Tina plans to film it on a Sunday
-  after liturgy when the chapel is set up.
+- **Google Business Profile:** see the GBP note above (claim the existing listing, update the website, remove the duplicate).
 - **Old domain orthodoxtexas.com:** see SEO section above. Strategy is
   patience + organic outranking, or drop-catch in Nov 2026.
 - **Outreach to parishioners:** the directory and coffee hour pages will
