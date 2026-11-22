@@ -9,9 +9,9 @@ const parishSchema = {
   "@context": "https://schema.org",
   "@type": ["Church", "LocalBusiness"],
   "name": "St. John of Kronstadt Orthodox Mission",
-  "alternateName": ["St. John RGV", "St. John of Kronstadt Orthodox Mission Texas"],
+  "alternateName": ["St. John RGV", "St. John of Kronstadt Orthodox Church", "St. John of Kronstadt Orthodox Mission Texas", "ST JOHN OF KRONSTADT INC"],
   "description":
-    "True Orthodox Christian mission church serving the Rio Grande Valley. Member of the Orthodox Metropolia and Avlona Synod USA.",
+    "Traditional Orthodox Christian church in Bayview, Texas, on the Julian (Old) Calendar, serving Brownsville, Los Fresnos, Port Isabel, South Padre Island, Harlingen and the Rio Grande Valley. Divine Liturgy Sunday 9:00 AM; Vespers Saturday 5:00 PM. Member of the Orthodox Metropolia and Avlona Synod USA.",
   "url": "https://stjohnrgv.org",
   "telephone": "+1-956-434-6874",
   "email": "parishoffice@stjohnrgv.org",
@@ -32,8 +32,8 @@ const parishSchema = {
   },
   "geo": {
     "@type": "GeoCoordinates",
-    "latitude": 26.10,
-    "longitude": -97.42,
+    "latitude": 26.1637656,
+    "longitude": -97.3846545,
   },
   "openingHoursSpecification": [
     {
@@ -49,6 +49,26 @@ const parishSchema = {
       "closes": "18:30",
     },
   ],
+  "hasMap": "https://www.google.com/maps/place/St.+John+of+Kronstadt+Orthodox+Mission/@26.1637656,-97.3846545,17z",
+  "areaServed": [
+    "Bayview TX",
+    "Rio Grande Valley",
+    "Brownsville TX",
+    "Harlingen TX",
+    "Los Fresnos TX",
+    "Rio Hondo TX",
+    "San Benito TX",
+    "Laguna Vista TX",
+    "Port Isabel TX",
+    "South Padre Island TX",
+    "Weslaco TX",
+    "McAllen TX",
+  ],
+  "employee": {
+    "@type": "Person",
+    "name": "Fr. Antonios Altermatt",
+    "jobTitle": "Pastor",
+  },
   "memberOf": [
     {
       "@type": "Organization",
@@ -88,50 +108,6 @@ const services = [
   { name: "Great Feasts", when: "Per Liturgical Calendar", note: "" },
 ];
 
-// Local-business schema with explicit areaServed + corporate name +
-// pastor name. Lives alongside the existing parishSchema so Google
-// has both the descriptive jurisdictional schema and the local-search
-// signals.
-const churchLocalSchema = {
-  "@context": "https://schema.org",
-  "@type": "Church",
-  "name": "St. John of Kronstadt Orthodox Mission",
-  "alternateName": "ST JOHN OF KRONSTADT INC",
-  "url": "https://stjohnrgv.org",
-  "telephone": "+19564346874",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "39737 Palm Drive",
-    "addressLocality": "Bayview",
-    "addressRegion": "TX",
-    "postalCode": "78566",
-    "addressCountry": "US",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 26.0869,
-    "longitude": -97.3849,
-  },
-  "areaServed": [
-    "Bayview TX",
-    "Rio Grande Valley",
-    "Brownsville TX",
-    "Harlingen TX",
-    "Los Fresnos TX",
-    "Rio Hondo TX",
-    "San Benito TX",
-    "Laguna Vista TX",
-    "Port Isabel TX",
-    "South Padre Island TX",
-    "Weslaco TX",
-    "McAllen TX",
-  ],
-  "employee": {
-    "@type": "Person",
-    "name": "Fr. Antonios Altermatt",
-    "jobTitle": "Pastor",
-  },
-};
 ---
 
 <Layout
@@ -143,12 +119,6 @@ const churchLocalSchema = {
     type="application/ld+json"
     is:inline
     set:html={JSON.stringify(parishSchema)}
-  />
-  <script
-    slot="head"
-    type="application/ld+json"
-    is:inline
-    set:html={JSON.stringify(churchLocalSchema)}
   />
 
   <!-- ==================== CURRENT SEASON BANNER ====================
@@ -224,6 +194,12 @@ const churchLocalSchema = {
         <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
         <p class="mt-6 font-display italic text-lg text-text-primary/80 md:text-xl">
           Anchored in Ancient Faith · Welcoming All Seekers
+        </p>
+        <p class="mt-4 text-base leading-relaxed text-text-primary/80 md:text-lg">
+          A traditional Orthodox church in Bayview, Texas, serving Brownsville,
+          Los Fresnos, Port Isabel, South Padre Island, Harlingen and the whole
+          Rio Grande Valley. Divine Liturgy every Sunday at 9:00 AM.
+          <a href="/visit/">Plan your visit</a>.
         </p>
         <div class="mt-8 flex flex-wrap gap-4">
           <a href="#schedule" class="btn btn-primary btn-lg">

@@ -1,0 +1,160 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// Approximate drive times from the church in Bayview. Rounded on
+// purpose: traffic, the causeway and the border crossings move them.
+const driveTimes = [
+  { town: "Laguna Vista", time: "about 10 minutes" },
+  { town: "Los Fresnos", time: "about 15 minutes" },
+  { town: "Rio Hondo", time: "about 20 minutes" },
+  { town: "Port Isabel", time: "about 20 minutes" },
+  { town: "San Benito", time: "about 25 minutes" },
+  { town: "South Padre Island", time: "about 30 minutes" },
+  { town: "Brownsville", time: "about 30 minutes" },
+  { town: "Harlingen", time: "about 35 minutes" },
+  { town: "Weslaco", time: "about 50 minutes" },
+  { town: "McAllen", time: "about an hour" },
+];
+
+const faqs = [
+  {
+    q: "Is there an Orthodox church near South Padre Island, Port Isabel and Los Fresnos?",
+    a: "Yes. St. John of Kronstadt Orthodox Church is in Bayview, Texas, about 15 to 30 minutes from Los Fresnos, Port Isabel and South Padre Island, and about 30 minutes from Brownsville.",
+  },
+  {
+    q: "What time is the Orthodox Divine Liturgy?",
+    a: "The Divine Liturgy is every Sunday at 9:00 AM. Vespers is on Saturday evening at 5:00 PM. The church is open half an hour before each service, so you are welcome to arrive early.",
+  },
+  {
+    q: "Do I have to be Orthodox to come?",
+    a: "No. Visitors and anyone who wants to learn about the Orthodox Christian faith are warmly welcome. As in every Orthodox church, Holy Communion is received by baptized Orthodox Christians who have prepared; everyone else is welcome to stand with us and pray.",
+  },
+  {
+    q: "Do you follow the Old Calendar?",
+    a: "Yes. We keep the Julian (Old) Calendar, as the Church did for centuries, so feast days fall on different civil dates than in churches that use the New Calendar. See our calendar for the day's saints and feasts.",
+  },
+  {
+    q: "How do I reach the priest?",
+    a: "Call (956) 434-6874 or send a message through our contact page. Fr. Antonios Altermatt is glad to talk with anyone who is curious about Orthodoxy.",
+  },
+];
+---
+
+<Layout
+  title="Visit | Orthodox Church near Brownsville & South Padre Island"
+  description="Visit our Orthodox church in Bayview, TX: Divine Liturgy Sunday 9 AM, Vespers Saturday 5 PM. Serving Brownsville, Los Fresnos, Port Isabel and South Padre Island."
+>
+  <section class="mx-auto max-w-3xl px-4 py-20 md:py-28">
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-tan-dark">Plan Your Visit</p>
+    <h1 class="mt-2 font-display text-3xl text-text-primary md:text-4xl">
+      Visit an Orthodox Church in the Rio Grande Valley
+    </h1>
+    <div class="mt-8 h-px w-24 bg-liturgical-current"></div>
+
+    <div class="mt-8 space-y-6 text-lg leading-relaxed text-text-primary/85">
+      <p>
+        St. John of Kronstadt Orthodox Church is in Bayview, Texas, a short
+        drive from Los Fresnos, Port Isabel, South Padre Island and
+        Brownsville, and within reach of Harlingen and the rest of the Rio
+        Grande Valley. We are a traditional Orthodox parish that keeps the
+        Julian (Old) Calendar.
+      </p>
+      <p>
+        If you are curious about the Orthodox Christian faith, or you are
+        Orthodox and looking for a parish near you, you are welcome here.
+      </p>
+    </div>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <section class="mx-auto max-w-3xl px-4 py-16 md:py-20" id="schedule">
+    <h2 class="font-display text-3xl text-text-primary md:text-4xl">Service Times</h2>
+    <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+    <dl class="mt-8 space-y-6 text-lg text-text-primary/85">
+      <div>
+        <dt class="font-display text-xl text-text-primary">Divine Liturgy</dt>
+        <dd>Every Sunday at <strong>9:00 AM</strong>. The church opens at 8:30 AM.</dd>
+      </div>
+      <div>
+        <dt class="font-display text-xl text-text-primary">Vespers</dt>
+        <dd>Saturday evening at <strong>5:00 PM</strong>. The church opens at 4:30 PM.</dd>
+      </div>
+      <div>
+        <dt class="font-display text-xl text-text-primary">Great Feasts</dt>
+        <dd>
+          Kept on the Julian (Old) Calendar. See the
+          <a href="/calendar/">Orthodox calendar</a> for the day's saints and feasts.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <section class="mx-auto max-w-3xl px-4 py-16 md:py-20">
+    <h2 class="font-display text-3xl text-text-primary md:text-4xl">Where We Are</h2>
+    <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+    <address class="mt-8 text-lg not-italic leading-relaxed text-text-primary/85">
+      <strong>St. John of Kronstadt Orthodox Church</strong><br />
+      39737 Palm Drive<br />
+      Bayview, TX 78566<br />
+      <a href="tel:+19564346874">(956) 434-6874</a>
+    </address>
+    <p class="mt-4">
+      <a
+        href="https://www.google.com/maps/dir/?api=1&amp;destination=26.1637656,-97.3846545"
+        rel="noopener external"
+        class="btn btn-primary"
+      >
+        Get Directions
+      </a>
+    </p>
+
+    <h3 class="mt-12 font-display text-2xl text-text-primary">Driving time from nearby towns</h3>
+    <p class="mt-2 text-sm text-text-secondary">
+      Approximate. Traffic and the bridges can change these.
+    </p>
+    <ul class="mt-4 grid gap-x-8 gap-y-2 text-lg text-text-primary/85 sm:grid-cols-2">
+      {driveTimes.map((d) => (
+        <li><strong>{d.town}</strong>: {d.time}</li>
+      ))}
+    </ul>
+  </section>
+
+  <hr class="mx-auto h-px w-full max-w-3xl border-0 bg-liturgical-current opacity-40" />
+
+  <section class="mx-auto max-w-3xl px-4 py-16 md:py-20">
+    <h2 class="font-display text-3xl text-text-primary md:text-4xl">Questions</h2>
+    <div class="mt-6 h-px w-24 bg-liturgical-current"></div>
+    <div class="mt-8 space-y-8">
+      {faqs.map((f) => (
+        <div>
+          <h3 class="font-display text-xl text-text-primary">{f.q}</h3>
+          <p class="mt-2 text-lg leading-relaxed text-text-primary/85">{f.a}</p>
+        </div>
+      ))}
+    </div>
+    <p class="mt-10 text-lg text-text-primary/85">
+      New to Orthodoxy? Start with
+      <a href="/learn/">What is Orthodox Christianity?</a>, read
+      <a href="/about/">about our parish</a>, or
+      <a href="/contact/">get in touch</a>.
+    </p>
+  </section>
+
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    })}
+  />
+</Layout>
