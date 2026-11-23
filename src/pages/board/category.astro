@@ -55,6 +55,7 @@ import "../../styles/board.css";
       <form id="event-form" class="hidden border border-border-soft bg-cream-card p-4 mb-4 space-y-3">
         <h2 class="font-semibold">New event</h2>
         <div id="event-fields" class="space-y-3"></div>
+        <div id="event-photos"></div>
         <div class="flex flex-wrap items-center gap-2">
           <button id="event-submit" type="submit" class="bb-btn bb-btn-strong">Post the event</button>
           <button id="event-cancel" type="button" class="bb-btn">Cancel</button>
@@ -433,6 +434,7 @@ import "../../styles/board.css";
   const eventForm = document.getElementById("event-form") as HTMLFormElement;
   const eventFields = document.getElementById("event-fields") as HTMLElement;
   const eventStatus = document.getElementById("event-status") as HTMLElement;
+  const eventPhotos = attachPhotoPicker(document.getElementById("event-photos") as HTMLElement);
   if (isEvents) {
     renderEventForm(eventFields, { rsvp: true });
     document.getElementById("start-toggle")!.textContent = "New event";
@@ -448,10 +450,16 @@ import "../../styles/board.css";
   document.getElementById("event-cancel")?.addEventListener("click", () => {
     eventForm.classList.add("hidden");
     eventStatus.textContent = "";
+    // Pictures picked but never posted shouldn't linger in storage.
+    eventPhotos.discard();
   });
   eventForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = document.getElementById("event-submit") as HTMLButtonElement;
+    if (eventPhotos.busy()) {
+      eventStatus.textContent = "Hold on, a photo is still being added.";
+      return;
+    }
     submit.disabled = true;
     eventStatus.textContent = "Posting…";
     const res = await boardFetch(
@@ -459,7 +467,7 @@ import "../../styles/board.css";
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(readEventForm(eventFields)),
+        body: JSON.stringify({ ...readEventForm(eventFields), photoIds: eventPhotos.ids() }),
       },
       here,
     );

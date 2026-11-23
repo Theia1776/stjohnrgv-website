@@ -21,6 +21,7 @@ import {
 } from "../../../src/lib/board-access.ts";
 import { eventBody, parseEvent } from "../../../src/lib/board-events.ts";
 import { recordMentions } from "../../../src/lib/board-mentions.ts";
+import { attachPhotos } from "../../../src/lib/board-photos.ts";
 import { logAction } from "../../../src/lib/board-modlog.ts";
 
 const EVENTS_ROOM = "events";
@@ -105,6 +106,8 @@ export async function onRequestPost(
       }
     }
 
+    // Photos the person added in the form (up to four, same as any post).
+    await attachPhotos(supabase, viewer.id, post.id as string, (raw as { photoIds?: unknown } | null)?.photoIds);
     await recordMentions(supabase, post.id as string, viewer.id, e.details);
     await supabase
       .from("board_reads")
