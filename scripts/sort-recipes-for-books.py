@@ -86,13 +86,16 @@ DISQUALIFY = [
         r"drumsticks?|thighs?|wings?|giblets?|liver|suet|gravy)\b",
         "meat",
     ),
+    # Fish have a backbone, so they stay out of the fasting book. Shellfish
+    # (shrimp, crab, lobster, clams, oysters, mussels, scallops, squid,
+    # octopus, crawfish) have none and ARE fasting food, so they are
+    # deliberately NOT in this list. Theia has said so many times.
     (
-        r"\b(tuna|salmon|shrimp|anchov\w*|crab|lobster|clams?|oysters?|mussels?|"
-        r"scallops?|cod|tilapia|halibut|haddock|trout|bass|snapper|catfish|"
-        r"sardines?|squid|calamari|fish|seafood|caviar|roe|"
+        r"\b(tuna|salmon|anchov\w*|cod|tilapia|halibut|haddock|trout|bass|snapper|"
+        r"catfish|sardines?|fish|seafood|caviar|roe|"
         # Mahi-Mahi is what put Fish Tacos in the fasting book.
         r"mahi(-?mahi)?|swordfish|grouper|pollock|perch|sole|flounder|monkfish|"
-        r"mackerel|herring|eel|octopus|crawfish|crayfish)\b",
+        r"mackerel|herring|eel)\b",
         "fish",
     ),
     (r"\b(broth|stock|bouillon|consomm\w*)\b", "broth — check whether it is meat"),
