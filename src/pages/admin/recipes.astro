@@ -272,12 +272,27 @@ import FileDrop from "../../components/FileDrop.astro";
                    data-field="preheat" value="${escapeHtml(r.preheat ?? "")}" />
           </label>
           <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
-            Notes
+            Intro (the line before the ingredients, optional)
             <textarea rows="2" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                      data-field="intro">${escapeHtml(r.intro ?? "")}</textarea>
+          </label>
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Ingredients (one per line)
+            <textarea rows="${Math.min(18, Math.max(5, (r.ingredients ?? []).length + 1))}" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                      data-field="ingredients" data-list="1">${escapeHtml((r.ingredients ?? []).join("\n"))}</textarea>
+          </label>
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Directions (one step per line, in order)
+            <textarea rows="${Math.min(18, Math.max(5, (r.directions ?? []).length * 3))}" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
+                      data-field="directions" data-list="1">${escapeHtml((r.directions ?? []).join("\n"))}</textarea>
+          </label>
+          <label class="sm:col-span-2 block text-xs uppercase tracking-widest text-text-secondary">
+            Notes
+            <textarea rows="3" class="edit-field mt-1 block w-full border border-border-soft bg-cream-bg px-2 py-1.5 text-sm normal-case tracking-normal text-text-primary"
                       data-field="notes">${escapeHtml(r.notes ?? "")}</textarea>
           </label>
           <div class="sm:col-span-2">
-            <button type="button" class="btn btn-secondary text-sm" data-action="save-details">Save details</button>
+            <button type="button" class="btn btn-secondary text-sm" data-action="save-details">Save changes</button>
           </div>
         </div>
       </details>
@@ -435,9 +450,12 @@ import FileDrop from "../../components/FileDrop.astro";
         await patch(id, { published: !recipe.published }, statusEl);
         break;
       case "save-details": {
-        const changes: Record<string, string> = {};
+        const changes: Record<string, string | string[]> = {};
         for (const field of article!.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(".edit-field")) {
-          changes[field.dataset.field!] = field.value.trim();
+          // Ingredients and directions are lists: one per line in the box.
+          changes[field.dataset.field!] = field.dataset.list
+            ? field.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+            : field.value.trim();
         }
         if (!changes.title) {
           if (statusEl) statusEl.textContent = "A title is needed.";
