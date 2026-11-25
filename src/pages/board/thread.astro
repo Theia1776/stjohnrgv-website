@@ -274,6 +274,8 @@ import "../../styles/board.css";
   const titleInput = document.getElementById("title-input") as HTMLInputElement;
 
   let isAdmin = false;
+  // The real admin flag. (isAdmin above is set from the moderator flag.)
+  let viewerIsAdmin = false;
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
@@ -568,7 +570,7 @@ import "../../styles/board.css";
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
                   Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
-                  ${p.editedAt ? (isAdmin ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
+                  ${p.editedAt ? (viewerIsAdmin ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
                 </span>
                 <span>${buttons}</span>
               </div>
@@ -622,6 +624,7 @@ import "../../styles/board.css";
     const posts: Post[] = data.posts ?? [];
     // Moderators and admins: edit and remove anyone's posts, reply to a closed topic.
     isAdmin = !!data.viewer?.isModerator;
+    viewerIsAdmin = !!data.viewer?.isAdmin;
     canReply = !thread.locked || isAdmin;
 
     titleEl.textContent = thread.title;
