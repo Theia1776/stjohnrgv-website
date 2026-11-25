@@ -87,11 +87,12 @@ function openHtml(tag: FormatTag): string {
     case "size":
       return `<span class="bb-s-${tag.value}">`;
     case "url": {
-      // A page on this site opens where you are; anywhere else opens
-      // in a new tab and isn't counted by search engines.
+      // Every link in a post opens in a new tab, so the board stays open
+      // behind it. Pages on this site are ours, so search engines may
+      // count them; anywhere else is not counted.
       const own = tag.value.startsWith("/") || /^https?:\/\/(?:www\.)?stjohnrgv\.org(?:[/?#]|$)/i.test(tag.value);
       return own
-        ? `<a href="${tag.value}">`
+        ? `<a href="${tag.value}" target="_blank" rel="noopener noreferrer">`
         : `<a href="${tag.value}" target="_blank" rel="noopener noreferrer nofollow">`;
     }
     default:
