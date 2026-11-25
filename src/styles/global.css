@@ -11,11 +11,11 @@
   --color-cream-card:      #FFFFFF;  /* card surfaces; pure white */
   --color-text-primary:    #2C3E50;  /* body text; deep slate, never pure black */
   --color-text-secondary:  #5C6B7A;  /* captions, meta text */
-  --color-brand-blue:      #3B7BA8;  /* Mediterranean blue; primary accent */
+  --color-brand-blue:      #32709C;  /* Mediterranean blue; primary accent (darkened from #3B7BA8 so link text passes 4.5:1 on the cream page) */
   --color-brand-blue-dark: #2A5E84;  /* hover state for blue elements */
   --color-brand-blue-pale: #E8F1F8;  /* subtle hover backgrounds, dividers */
   --color-brand-tan:       #C9A87A;  /* sandstone; secondary accent */
-  --color-brand-tan-dark:  #A88758;  /* hover for tan elements */
+  --color-brand-tan-dark:  #7D6232;  /* hover for tan elements; also the small tan labels, darkened from #A88758 so they pass 4.5:1 */
   --color-sacred-gold:     #C9A84C;  /* RESERVED — sacred elements only */
   --color-border-soft:     #E5DFD3;  /* subtle borders, dividers */
 
@@ -329,4 +329,30 @@ a[href^="tel:"] {
   );
   border-top: 3px solid var(--color-sacred-gold);
   border-bottom: 3px solid var(--color-sacred-gold);
+}
+
+
+/* ============================================================================
+   Accessibility
+   - Text size: the ADA button in the header sets one of these on <html>.
+     Everything is sized in rem, so the whole site scales together.
+   - Skip link: first thing a keyboard or screen-reader user reaches.
+   ============================================================================ */
+html.text-large { font-size: 125%; }
+html.text-xlarge { font-size: 150%; }
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--color-cream-card);
+  color: var(--color-text-primary);
+  border: 2px solid var(--liturgical-current);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 0.75rem;
 }

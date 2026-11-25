@@ -203,6 +203,52 @@ function isActive(hrefWithHash: string): boolean {
         </div>
       </div>
 
+      <!-- ADA / accessibility: larger text and read-aloud, in one place so
+           the people who need them can find them. Sits between the
+           language switcher and the light/dark toggle. -->
+      <div class="relative">
+        <button
+          id="a11y-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="a11y-panel"
+          aria-label="Accessibility options: larger text and read aloud"
+          title="Accessibility: larger text and read aloud"
+          class="flex items-center gap-1 rounded border border-current px-1.5 py-0.5 font-display text-xs font-semibold tracking-wider text-text-primary hover:text-brand-blue-dark transition-colors"
+        >
+          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="4.6" r="1.7" />
+            <path d="M5 8.2c4.6 1.3 9.4 1.3 14 0M12 9v5.2M12 14.2l-3.4 6M12 14.2l3.4 6" />
+          </svg>
+          <span>ADA</span>
+        </button>
+        <div
+          id="a11y-panel"
+          role="dialog"
+          aria-label="Accessibility options"
+          class="hidden absolute right-0 top-full z-50 mt-2 w-72 max-w-[88vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
+        >
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Text size</p>
+            <div class="flex gap-2" role="group" aria-label="Text size">
+              <button type="button" data-size="normal" aria-pressed="true" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Normal</button>
+              <button type="button" data-size="large" aria-pressed="false" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-lg text-text-primary hover:bg-brand-blue-pale">Larger</button>
+              <button type="button" data-size="xlarge" aria-pressed="false" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-xl text-text-primary hover:bg-brand-blue-pale">Largest</button>
+            </div>
+          </div>
+          <div id="a11y-listen-box">
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Read aloud</p>
+            <div class="flex gap-2">
+              <button type="button" id="a11y-listen" class="btn btn-primary flex-1 text-sm">Read this page</button>
+              <button type="button" id="a11y-stop" class="btn btn-secondary text-sm">Stop</button>
+            </div>
+            <p id="a11y-note" role="status" class="mt-2 text-xs text-text-secondary"></p>
+          </div>
+          <p class="text-xs text-text-secondary">The moon or sun button next to this one switches between light and dark.</p>
+        </div>
+      </div>
+
       <button
         type="button"
         id="theme-toggle"
@@ -658,5 +704,103 @@ function isActive(hrefWithHash: string): boolean {
       setOpen(open, false);
       open.querySelector(".nav-menu-trigger")?.focus();
     });
+  })();
+</script>
+
+<script is:inline>
+  // ADA panel: text size (saved, applied on every page before it paints,
+  // see Layout.astro) and read-aloud using the voice built into the
+  // visitor's own browser, so it costs nothing.
+  (function () {
+    const trigger = document.getElementById('a11y-trigger');
+    const panel = document.getElementById('a11y-panel');
+    if (!trigger || !panel) return;
+
+    function setOpen(open) {
+      panel.classList.toggle('hidden', !open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(panel.classList.contains('hidden'));
+    });
+    panel.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
+        setOpen(false);
+        trigger.focus();
+      }
+    });
+
+    // ---- text size ----
+    const html = document.documentElement;
+    const sizeButtons = Array.from(panel.querySelectorAll('.a11y-size'));
+    function currentSize() {
+      return html.classList.contains('text-xlarge') ? 'xlarge' : html.classList.contains('text-large') ? 'large' : 'normal';
+    }
+    function showSize() {
+      const now = currentSize();
+      sizeButtons.forEach((b) => b.setAttribute('aria-pressed', b.dataset.size === now ? 'true' : 'false'));
+      sizeButtons.forEach((b) => b.classList.toggle('bg-brand-blue-pale', b.dataset.size === now));
+    }
+    sizeButtons.forEach((b) =>
+      b.addEventListener('click', () => {
+        const size = b.dataset.size;
+        html.classList.toggle('text-large', size === 'large');
+        html.classList.toggle('text-xlarge', size === 'xlarge');
+        try { localStorage.setItem('site-text-size', size); } catch (e) {}
+        showSize();
+      }),
+    );
+    showSize();
+
+    // ---- read aloud ----
+    const listenBox = document.getElementById('a11y-listen-box');
+    const listenBtn = document.getElementById('a11y-listen');
+    const stopBtn = document.getElementById('a11y-stop');
+    const note = document.getElementById('a11y-note');
+    const synth = window.speechSynthesis;
+    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
+      if (listenBox) listenBox.innerHTML = '<p class="text-xs text-text-secondary">This browser can not read pages aloud. On an iPhone, swipe down with two fingers to hear the page. In Microsoft Edge, press Ctrl+Shift+U.</p>';
+      return;
+    }
+
+    function pageText() {
+      const main = document.querySelector('main');
+      return main ? main.innerText.replace(/\s+/g, ' ').trim() : '';
+    }
+    // Long utterances get cut off by some browsers, so read in short pieces.
+    function pieces(text) {
+      const sentences = text.match(/[^.!?]+[.!?]*\s*/g) || [text];
+      const out = [];
+      let cur = '';
+      for (const sentence of sentences) {
+        if ((cur + sentence).length > 220 && cur) { out.push(cur); cur = ''; }
+        cur += sentence;
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
+    function stop() {
+      synth.cancel();
+      if (note) note.textContent = '';
+    }
+    listenBtn.addEventListener('click', () => {
+      stop();
+      const text = pageText();
+      if (!text) { note.textContent = 'There is nothing on this page to read yet.'; return; }
+      const parts = pieces(text);
+      parts.forEach((part, i) => {
+        const u = new SpeechSynthesisUtterance(part);
+        u.lang = html.lang || 'en-US';
+        u.rate = 0.92;
+        if (i === parts.length - 1) u.onend = () => { note.textContent = ''; };
+        synth.speak(u);
+      });
+      note.textContent = 'Reading this page. Press Stop to end.';
+    });
+    stopBtn.addEventListener('click', stop);
+    window.addEventListener('pagehide', () => synth.cancel());
   })();
 </script>

@@ -51,6 +51,11 @@ const liturgicalRootStyle =
         if (saved === 'dark' || (!saved && prefersDark)) {
           document.documentElement.setAttribute('data-theme', 'dark');
         }
+        // Text size chosen with the ADA button in the header.
+        try {
+          const size = localStorage.getItem('site-text-size');
+          if (size === 'large' || size === 'xlarge') document.documentElement.classList.add('text-' + size);
+        } catch (e) {}
       })();
     </script>
 
@@ -89,12 +94,13 @@ const liturgicalRootStyle =
     <slot name="head" />
   </head>
   <body class="flex min-h-screen flex-col">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <!-- Liturgical accent stripe — sticks at the very top, visible at all
          times. The signature seasonal-color element on every page. -->
     <div class="sticky top-0 z-50 h-1 w-full bg-liturgical-current" aria-hidden="true"></div>
 
     <Header />
-    <main class="flex-1">
+    <main id="main-content" tabindex="-1" class="flex-1 focus:outline-none">
       <slot />
     </main>
     <Footer />

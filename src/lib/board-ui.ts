@@ -1005,18 +1005,21 @@ export function attachDraft(field: HTMLTextAreaElement): void {
    One button that makes everything bigger, remembered between visits,
    for the people who'd rather not squint.
    --------------------------------------------------------------- */
-const LARGE_KEY = "board-large-text";
+const LARGE_KEY = "site-text-size"; // shared with the ADA button in the site header
 
 function largeTextOn(): boolean {
   try {
-    return localStorage.getItem(LARGE_KEY) === "1";
+    const v = localStorage.getItem(LARGE_KEY);
+    return v === "large" || v === "xlarge";
   } catch {
     return false;
   }
 }
 
 function applyLargeText(): void {
-  document.documentElement.classList.toggle("bb-large", largeTextOn());
+  const v = (() => { try { return localStorage.getItem(LARGE_KEY); } catch { return null; } })();
+  document.documentElement.classList.toggle("text-large", v === "large");
+  document.documentElement.classList.toggle("text-xlarge", v === "xlarge");
 }
 
 function wireTextSize(button: HTMLElement): void {
@@ -1025,10 +1028,10 @@ function wireTextSize(button: HTMLElement): void {
   button.addEventListener("click", (event) => {
     event.preventDefault();
     try {
-      localStorage.setItem(LARGE_KEY, largeTextOn() ? "0" : "1");
+      localStorage.setItem(LARGE_KEY, largeTextOn() ? "normal" : "large");
     } catch {
       // can't remember it, but it still works for this page
-      document.documentElement.classList.toggle("bb-large");
+      document.documentElement.classList.toggle("text-large");
     }
     applyLargeText();
     button.textContent = label();
