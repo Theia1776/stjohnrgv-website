@@ -172,7 +172,7 @@ function isActive(hrefWithHash: string): boolean {
       <!-- ADA / accessibility: larger text and read-aloud, in one place so
            the people who need them can find them. Always the last
            item in the header, so it is in the top right corner on every page. -->
-      <div class="relative">
+      <div class="fixed right-6 z-50 print:hidden" style="bottom: 5.25rem;">
         <button
           id="a11y-trigger"
           type="button"
@@ -181,7 +181,7 @@ function isActive(hrefWithHash: string): boolean {
           aria-controls="a11y-panel"
           aria-label="Accessibility options: larger text and read aloud"
           title="Accessibility: larger text and read aloud"
-          class="flex items-center gap-1 rounded border border-current px-1.5 py-0.5 font-display text-xs font-semibold tracking-wider text-text-primary hover:text-brand-blue-dark transition-colors"
+          class="flex items-center gap-1.5 rounded border border-current bg-cream-card px-2.5 py-1.5 font-display text-xs font-semibold tracking-wider text-text-primary shadow-md hover:text-brand-blue-dark transition-colors"
         >
           <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="7.5" r="3.6" />
@@ -193,7 +193,7 @@ function isActive(hrefWithHash: string): boolean {
           id="a11y-panel"
           role="dialog"
           aria-label="Accessibility options"
-          class="hidden absolute right-0 top-full z-50 mt-2 w-[22rem] max-w-[92vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
+          class="hidden absolute bottom-full right-0 z-50 mb-2 w-[22rem] max-w-[92vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
         >
           <div>
             <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Text size</p>
@@ -557,7 +557,7 @@ function isActive(hrefWithHash: string): boolean {
               aria-haspopup="menu"
               aria-expanded="false"
               aria-controls="user-menu-panel"
-              class="flex items-center gap-1 font-display text-sm text-brand-blue-dark hover:text-brand-blue px-2 py-1 rounded transition-colors"
+              class="flex items-center gap-1 rounded border border-brand-blue-dark px-2.5 py-1 font-display text-sm text-brand-blue-dark hover:bg-brand-blue-pale transition-colors"
             >
               <span>${name}</span>
               <span aria-hidden="true" class="text-xs">▾</span>
@@ -797,5 +797,40 @@ function isActive(hrefWithHash: string): boolean {
     });
     stopBtn.addEventListener('click', stop);
     window.addEventListener('pagehide', () => synth.cancel());
+  })();
+</script>
+
+<script is:inline>
+  // Close a menu when the mouse moves off it. Touch and keyboard are
+  // untouched: this only reacts to a real mouse pointer leaving.
+  (function () {
+    const timers = new WeakMap();
+    function holder(el) {
+      return el.closest('.nav-menu') ||
+        (el.closest('#auth-nav') && el.closest('#auth-nav .relative')) ||
+        (el.closest('#a11y-trigger, #a11y-panel') && document.getElementById('a11y-trigger').parentElement);
+    }
+    function closeIn(box) {
+      box.querySelectorAll('[aria-expanded="true"]').forEach((t) => {
+        const id = t.getAttribute('aria-controls');
+        const panel = (id && document.getElementById(id)) || box.querySelector('.nav-menu-panel');
+        if (!panel) return;
+        panel.classList.add('hidden');
+        t.setAttribute('aria-expanded', 'false');
+      });
+    }
+    document.addEventListener('pointerout', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const box = holder(e.target);
+      if (!box) return;
+      if (e.relatedTarget && box.contains(e.relatedTarget)) return;
+      clearTimeout(timers.get(box));
+      timers.set(box, setTimeout(() => closeIn(box), 300));
+    });
+    document.addEventListener('pointerover', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const box = holder(e.target);
+      if (box) clearTimeout(timers.get(box));
+    });
   })();
 </script>
