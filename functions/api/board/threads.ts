@@ -191,7 +191,7 @@ export async function onRequestPost(
   if (blocked) return blocked;
 
   try {
-    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown; poll?: unknown };
+    let body: { category?: unknown; title?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown; poll?: unknown; isQuestion?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -249,7 +249,7 @@ export async function onRequestPost(
 
     const { data: thread, error: insertError } = await supabase
       .from("board_threads")
-      .insert({ category_id: category.id, title, author_id: viewer.id })
+      .insert({ category_id: category.id, title, author_id: viewer.id, ...(body.isQuestion === true ? { is_question: true } : {}) })
       .select("id")
       .single();
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));

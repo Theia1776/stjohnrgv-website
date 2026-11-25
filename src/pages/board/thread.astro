@@ -52,8 +52,12 @@ import "../../styles/board.css";
       </p>
 
       <form id="reply-form" class="hidden mt-4 border border-border-soft bg-cream-card p-4 space-y-3">
+        <div id="discuss-banner" class="hidden bb-notice flex flex-wrap items-center gap-2">
+          <span class="discuss-text"></span>
+          <button type="button" id="discuss-cancel" class="bb-btn">Answer the question instead</button>
+        </div>
         <label class="block">
-          <span class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
+          <span id="reply-label" class="block text-xs uppercase tracking-widest text-text-secondary mb-1">
             Post a reply
           </span>
           <textarea
@@ -242,6 +246,7 @@ import "../../styles/board.css";
     files?: Array<{ id: string; name: string; size: string; url: string; expiresAt: string | null }>;
     createdAt: string;
     editedAt: string | null;
+    replyTo?: string | null;
     mine: boolean;
     hidden?: boolean;
     authorId?: string | null;
@@ -276,6 +281,10 @@ import "../../styles/board.css";
   let isAdmin = false;
   // The real admin flag. (isAdmin above is set from the moderator flag.)
   let viewerIsAdmin = false;
+  // Question topics: answers get a discussion nested under them.
+  let isQuestion = false;
+  let discussTarget: { id: string; name: string } | null = null;
+  let lastPosts: Post[] = [];
   let canReply = false;
   let helpState = { canAsk: false, waiting: false };
   let isMod = false;
@@ -518,11 +527,40 @@ import "../../styles/board.css";
     box.classList.remove("hidden");
   }
 
+  /** In a question topic: the question, then each answer followed by the discussion under it. */
+  function orderForQuestion(posts: Post[]): Post[] {
+    if (!isQuestion || posts.length < 2) return posts;
+    const [question, ...rest] = posts;
+    const answers = rest.filter((p) => !p.replyTo);
+    const answerIds = new Set(answers.map((a) => a.id));
+    const under = new Map<string, Post[]>();
+    const stray: Post[] = [];
+    for (const p of rest) {
+      if (!p.replyTo) continue;
+      if (answerIds.has(p.replyTo)) under.set(p.replyTo, [...(under.get(p.replyTo) ?? []), p]);
+      else stray.push(p);
+    }
+    return [question, ...answers.flatMap((a) => [a, ...(under.get(a.id) ?? [])]), ...stray];
+  }
+
+  /** The reply box says what you are writing: an answer, a discussion reply, or a plain reply. */
+  function updateReplyLabel() {
+    const label = document.getElementById("reply-label");
+    const banner = document.getElementById("discuss-banner");
+    const who = discussTarget ? escapeHtml(discussTarget.name) : "";
+    if (label) label.textContent = discussTarget ? "Reply in the discussion" : isQuestion ? "Write your answer" : "Post a reply";
+    if (banner) {
+      banner.classList.toggle("hidden", !discussTarget);
+      const text = banner.querySelector(".discuss-text");
+      if (text) text.innerHTML = discussTarget ? `You are replying in the discussion under <strong>${who}</strong>&rsquo;s answer.` : "";
+    }
+  }
+
   function renderPosts(posts: Post[], previouslyReadAt: string | null) {
     const seen = previouslyReadAt ? new Date(previouslyReadAt).getTime() : null;
     let dividerDrawn = false;
 
-    postsEl.innerHTML = posts
+    postsEl.innerHTML = orderForQuestion(posts)
       .map((p, index) => {
         const isNew = seen !== null && new Date(p.createdAt).getTime() > seen;
         let divider = "";
@@ -531,6 +569,8 @@ import "../../styles/board.css";
           divider = `<tr class="bb-newline" id="first-new"><td colspan="2">New since you last looked</td></tr>`;
         }
 
+        const nested = isQuestion && index > 0 && !!p.replyTo;
+        const answerRow = isQuestion && index > 0 && !p.replyTo;
         const canEdit = p.mine || isAdmin || isMod;
         // The opening post can be edited but not deleted on its own —
         // the whole topic hangs off it.
@@ -547,6 +587,7 @@ import "../../styles/board.css";
             ? '<span class="bb-flag" title="A moderator will look at it">Help requested</span>'
             : "",
           p.hidden && isMod ? '<button type="button" class="bb-btn bb-btn-strong post-restore" title="Put this post back on the board">Restore this post</button>' : "",
+          canReply && !underReview && (answerRow || nested) ? `<button type="button" class="bb-btn bb-btn-strong post-discuss" title="Reply under this answer">${nested ? "Reply here" : "Discuss this answer"}</button>` : "",
           canReply && !underReview ? '<button type="button" class="bb-btn post-quote">Quote</button>' : "",
           p.canSuspend
             ? p.suspended
@@ -564,12 +605,12 @@ import "../../styles/board.css";
 
         return `
           ${divider}
-          <tr class="bb-post-row" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
+          <tr class="bb-post-row${nested ? " bb-nested" : ""}" data-id="${escapeHtml(p.id)}" id="p${escapeHtml(p.id)}">
             ${authorCell(p.panel, p.authorId ?? null, p.profileId ?? null, !!p.suspended)}
             <td>
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
-                  Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
+                  ${isQuestion && index === 0 ? '<span class="bb-tag bb-tag-q">Question</span> ' : answerRow ? '<span class="bb-tag">Answer</span> ' : nested ? '<span class="bb-tag bb-tag-n">Discussion</span> ' : ""}Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
                   ${p.editedAt ? (viewerIsAdmin ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
                 </span>
                 <span>${buttons}</span>
@@ -654,6 +695,10 @@ import "../../styles/board.css";
     isMod = !!data.viewer?.isModerator;
     pollData = data.poll ?? null;
     renderPoll(thread.title);
+    isQuestion = !!thread.isQuestion;
+    lastPosts = posts;
+    if (!isQuestion) discussTarget = null;
+    updateReplyLabel();
     renderPosts(posts, data.previouslyReadAt);
     document.getElementById("jump-new")?.classList.toggle("hidden", !document.getElementById("first-new"));
     if (wantedPost) {
@@ -913,6 +958,18 @@ import "../../styles/board.css";
           return;
         }
         await load();
+        return;
+      }
+
+      // --- discuss: reply under an answer ---
+      if (button.classList.contains("post-discuss")) {
+        const parentId = post.replyTo ?? post.id;
+        const parent = lastPosts.find((x) => x.id === parentId) ?? post;
+        discussTarget = { id: parentId, name: parent.panel.name };
+        updateReplyLabel();
+        replyForm.classList.remove("hidden");
+        replyBody.focus();
+        replyForm.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
@@ -1309,6 +1366,11 @@ import "../../styles/board.css";
     replyForm.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
+  document.getElementById("discuss-cancel")?.addEventListener("click", () => {
+    discussTarget = null;
+    updateReplyLabel();
+  });
+
   replyForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = document.getElementById("reply-submit") as HTMLButtonElement;
@@ -1331,7 +1393,7 @@ import "../../styles/board.css";
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: threadId, body: text, photoIds: replyPhotos.ids(), fileIds: replyFiles.ids() }),
+        body: JSON.stringify({ id: threadId, body: text, photoIds: replyPhotos.ids(), fileIds: replyFiles.ids(), ...(discussTarget ? { replyTo: discussTarget.id } : {}) }),
       },
       here,
     );
@@ -1343,12 +1405,15 @@ import "../../styles/board.css";
       return;
     }
 
+    const made = await res.json().catch(() => ({}));
     replyBody.value = "";
     replyPhotos.clear();
     replyFiles.clear();
     replyStatus.textContent = "";
+    discussTarget = null;
     await load();
-    postsEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const mine = made?.id ? document.getElementById("p" + made.id) : null;
+    (mine ?? postsEl.lastElementChild)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   load();

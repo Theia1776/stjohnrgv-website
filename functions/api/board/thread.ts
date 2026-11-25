@@ -81,7 +81,7 @@ export async function onRequestGet(
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
       .select(
-        "id, title, author_id, pinned, locked, announce, created_at, category_id, view_count, post_count, " +
+        "id, title, author_id, pinned, locked, announce, is_question, created_at, category_id, view_count, post_count, " +
           "close_requested_at, close_requested_by, " +
           "board_categories ( slug, name, hidden, audience )",
       )
@@ -99,7 +99,7 @@ export async function onRequestGet(
 
     const { data: posts, error: postError } = await supabase
       .from("board_posts")
-      .select("id, author_id, body, created_at, edited_at, reported_hidden")
+      .select("id, author_id, body, created_at, edited_at, reported_hidden, reply_to")
       .eq("thread_id", id)
       .order("created_at", { ascending: true });
     if (postError) return wrap(jsonResponse({ error: postError.message }, 500));
@@ -398,6 +398,7 @@ export async function onRequestGet(
             category: category ? { slug: category.slug, name: category.name } : null,
             closeRequested: !!thread.close_requested_at,
             announce: !!thread.announce,
+            isQuestion: !!thread.is_question,
           },
           posts: list.map((p) => {
             const forPost = reactions.get(p.id as string);
@@ -425,6 +426,7 @@ export async function onRequestGet(
               signature: hiddenFor(p) ? "" : p.author_id ? (signatures.get(p.author_id as string) ?? "") : "",
               createdAt: p.created_at,
               editedAt: p.edited_at,
+              replyTo: (p.reply_to as string | null) ?? null,
               mine: p.author_id === viewer.id,
               reactions: forPost
                 ? [...forPost.entries()]
@@ -475,7 +477,7 @@ export async function onRequestPost(
   if (blocked) return blocked;
 
   try {
-    let body: { id?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown };
+    let body: { id?: unknown; body?: unknown; photoIds?: unknown; fileIds?: unknown; replyTo?: unknown };
     try {
       body = await context.request.json();
     } catch {
@@ -484,6 +486,7 @@ export async function onRequestPost(
 
     const id = typeof body.id === "string" ? body.id.trim() : "";
     const text = typeof body.body === "string" ? body.body.trim() : "";
+    const replyTo = typeof body.replyTo === "string" ? body.replyTo.trim() : "";
     if (!id) return wrap(jsonResponse({ error: "Which thread?" }, 400));
     if (!text) return wrap(jsonResponse({ error: "Nothing to post." }, 400));
     if (text.length > MAX_BODY) {
@@ -492,7 +495,7 @@ export async function onRequestPost(
 
     const { data: thread, error: threadError } = await supabase
       .from("board_threads")
-      .select("id, locked, board_categories ( hidden, audience )")
+      .select("id, locked, is_question, board_categories ( hidden, audience )")
       .eq("id", id)
       .maybeSingle();
     if (threadError) return wrap(jsonResponse({ error: threadError.message }, 500));
@@ -509,9 +512,37 @@ export async function onRequestPost(
       return wrap(jsonResponse({ error: "This thread is closed to new replies." }, 403));
     }
 
+    // A reply under an answer (question topics only). It must point at an
+    // answer in this same topic: not the question itself, and not another
+    // reply, so the discussion stays one level deep.
+    if (replyTo) {
+      if (!thread.is_question) {
+        return wrap(jsonResponse({ error: "Only a question topic has discussions under answers." }, 400));
+      }
+      const { data: parent } = await supabase
+        .from("board_posts")
+        .select("id, reply_to, created_at")
+        .eq("id", replyTo)
+        .eq("thread_id", id)
+        .maybeSingle();
+      if (!parent || parent.reply_to) {
+        return wrap(jsonResponse({ error: "That answer isn't there to reply under." }, 400));
+      }
+      const { data: opening } = await supabase
+        .from("board_posts")
+        .select("id")
+        .eq("thread_id", id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (opening && opening.id === parent.id) {
+        return wrap(jsonResponse({ error: "Answer the question with a new reply instead." }, 400));
+      }
+    }
+
     const { data: post, error: insertError } = await supabase
       .from("board_posts")
-      .insert({ thread_id: id, author_id: viewer.id, body: text })
+      .insert({ thread_id: id, author_id: viewer.id, body: text, ...(replyTo ? { reply_to: replyTo } : {}) })
       .select("id")
       .single();
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));

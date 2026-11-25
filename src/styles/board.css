@@ -1232,3 +1232,29 @@ html.bb-large {
   font: inherit;
   font-weight: 700;
 }
+
+/* ---- question topics: the question, its answers, and the discussion under each answer ---- */
+.bb-tag {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-brand-blue-dark);
+}
+.bb-tag-q {
+  color: var(--color-brand-tan-dark);
+}
+.bb-tag-n {
+  color: var(--color-text-secondary);
+}
+.bb-nested > td:last-child {
+  border-left: 4px solid var(--color-brand-tan);
+  padding-left: 1.25rem;
+}
+.bb-nested .bb-author {
+  padding-left: 1.75rem;
+}

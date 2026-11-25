@@ -97,6 +97,13 @@ import "../../styles/board.css";
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
         <div id="new-files"></div>
+        <label class="flex items-start gap-2 text-sm">
+          <input id="question-on" type="checkbox" class="mt-1 h-4 w-4" />
+          <span>
+            <strong>This is a question.</strong>
+            People answer it with their own words, and every answer gets its own discussion underneath.
+          </span>
+        </label>
         <div class="border border-border-soft p-3">
           <label id="rsvp-row" class="hidden flex items-center gap-2 text-sm font-semibold mb-2">
             <input id="rsvp-on" type="checkbox" class="h-4 w-4" /> Ask people to RSVP (Yes, Maybe, No, with names shown)
@@ -606,6 +613,7 @@ import "../../styles/board.css";
           body: text,
           photoIds: newPhotos.ids(),
           fileIds: newFiles.ids(),
+          isQuestion: (document.getElementById("question-on") as HTMLInputElement).checked,
           poll: rsvpOn.checked
             ? { question: "Will you be there?", options: ["Yes, I'll be there", "Maybe", "No, I can't make it"], multiple: false, showVoters: true }
             : pollOn.checked
