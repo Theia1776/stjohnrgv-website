@@ -193,30 +193,30 @@ function isActive(hrefWithHash: string): boolean {
           id="a11y-panel"
           role="dialog"
           aria-label="Accessibility options"
-          class="hidden absolute right-0 top-full z-50 mt-2 w-72 max-w-[88vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
+          class="hidden absolute right-0 top-full z-50 mt-2 w-[22rem] max-w-[92vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
         >
           <div>
             <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Text size</p>
-            <div class="flex gap-2" role="group" aria-label="Text size">
-              <button type="button" data-size="normal" aria-pressed="true" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Normal</button>
-              <button type="button" data-size="large" aria-pressed="false" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-lg text-text-primary hover:bg-brand-blue-pale">Larger</button>
-              <button type="button" data-size="xlarge" aria-pressed="false" class="a11y-size flex-1 border border-border-soft px-2 py-2 text-xl text-text-primary hover:bg-brand-blue-pale">Largest</button>
+            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Text size">
+              <button type="button" data-size="normal" aria-pressed="true" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Normal</button>
+              <button type="button" data-size="large" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-base text-text-primary hover:bg-brand-blue-pale">Larger</button>
+              <button type="button" data-size="xlarge" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-lg text-text-primary hover:bg-brand-blue-pale">Largest</button>
             </div>
           </div>
           <div id="a11y-listen-box">
             <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Read aloud</p>
             <div class="flex gap-2">
               <button type="button" id="a11y-listen" class="btn btn-primary flex-1 text-sm">Read this page</button>
-              <button type="button" id="a11y-stop" class="btn btn-secondary text-sm">Stop</button>
+              <button type="button" id="a11y-stop" class="btn btn-secondary w-full text-sm">Stop</button>
             </div>
             <p id="a11y-note" role="status" class="mt-2 text-xs text-text-secondary"></p>
           </div>
           <div>
             <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Language</p>
-            <div class="flex gap-2" role="group" aria-label="Language">
-              <button data-lang="en" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">English</button>
-              <button data-lang="es" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Español</button>
-              <button data-lang="ru" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Русский</button>
+            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Language">
+              <button data-lang="en" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
+              <button data-lang="es" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
+              <button data-lang="ru" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
             </div>
           </div>
           <div>
@@ -338,14 +338,48 @@ function isActive(hrefWithHash: string): boolean {
     return out ? "?" + out : "";
   }
 
+  // Remember the visitor's choice. The translated site lives on a
+  // different address, so English is passed back as _site_lang=en and
+  // saved here when the canonical site loads.
+  const LANG_KEY = "site-lang";
+  function savedLang() {
+    try { return localStorage.getItem(LANG_KEY); } catch (e) { return null; }
+  }
+  function saveLang(l) {
+    try { localStorage.setItem(LANG_KEY, l); } catch (e) {}
+  }
+  (function applySavedLanguage() {
+    if (window.location.hostname !== ORIGINAL_HOST) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("_site_lang")) {
+      saveLang("en");
+      params.delete("_site_lang");
+      const rest = params.toString();
+      history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+      return;
+    }
+    const s = savedLang();
+    if (s === "es" || s === "ru") {
+      const cleaned = stripTranslateParams(window.location.search);
+      const sep = cleaned ? cleaned + "&" : "?";
+      window.location.replace(
+        "https://" + TRANSLATE_PROXY_HOST + window.location.pathname + sep
+        + "_x_tr_sl=en&_x_tr_tl=" + s + "&_x_tr_hl=en" + window.location.hash
+      );
+    }
+  })();
+
   function switchLanguage(target) {
     const path = window.location.pathname;
     const cleaned = stripTranslateParams(window.location.search);
     const hash = window.location.hash;
     if (target === "en") {
-      window.location.href = "https://" + ORIGINAL_HOST + path + cleaned + hash;
+      saveLang("en");
+      const sep0 = cleaned ? cleaned + "&" : "?";
+      window.location.href = "https://" + ORIGINAL_HOST + path + sep0 + "_site_lang=en" + hash;
       return;
     }
+    saveLang(target);
     const sep = cleaned ? cleaned + "&" : "?";
     window.location.href =
       "https://" + TRANSLATE_PROXY_HOST + path + sep
