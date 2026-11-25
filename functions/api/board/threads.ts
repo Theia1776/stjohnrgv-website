@@ -249,7 +249,7 @@ export async function onRequestPost(
 
     const { data: thread, error: insertError } = await supabase
       .from("board_threads")
-      .insert({ category_id: category.id, title, author_id: viewer.id, ...(body.isQuestion === true ? { is_question: true } : {}) })
+      .insert({ category_id: category.id, title, author_id: viewer.id, ...(body.isQuestion === true && viewer.isAdmin ? { is_question: true } : {}) })
       .select("id")
       .single();
     if (insertError) return wrap(jsonResponse({ error: insertError.message }, 500));

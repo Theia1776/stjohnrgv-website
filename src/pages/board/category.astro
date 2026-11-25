@@ -97,7 +97,7 @@ import "../../styles/board.css";
         <div id="new-smilies"></div>
         <div id="new-photos"></div>
         <div id="new-files"></div>
-        <label class="flex items-start gap-2 text-sm">
+        <label id="question-row" class="hidden flex items-start gap-2 text-sm">
           <input id="question-on" type="checkbox" class="mt-1 h-4 w-4" />
           <span>
             <strong>This is a question.</strong>
@@ -358,6 +358,8 @@ import "../../styles/board.css";
 
     const data = await res.json();
     isAdmin = !!data.viewer?.isModerator;
+    // The question option is for admin accounts only (Fr. Antonios asked for it).
+    document.getElementById("question-row")?.classList.toggle("hidden", !data.viewer?.isAdmin);
 
     const name = data.category?.name ?? "Parish Board";
     nameEl.textContent = name;
