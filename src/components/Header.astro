@@ -154,55 +154,6 @@ function isActive(hrefWithHash: string): boolean {
         })}
       </nav>
 
-      <!-- Language switcher (desktop). Click EN/ES/RU; ES and RU send
-           the visitor through Google's translate proxy
-           (stjohnrgv-org.translate.goog). Google maintains the
-           translated session on subsequent navigations until the user
-           switches back. -->
-      <div class="hidden md:block relative">
-        <button
-          id="lang-trigger"
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded="false"
-          aria-controls="lang-panel"
-          aria-label="Change language"
-          title="Change language · Cambiar idioma · Сменить язык"
-          class="flex items-center gap-1.5 px-2 py-1 text-xs font-display text-text-primary/80 hover:text-brand-blue-dark rounded transition-colors"
-        >
-          <!-- Somebody speaking. The globe-and-scripts version was
-               too fiddly to read at twenty pixels; a head and a speech
-               bubble is legible at any size and is what the control
-               does. -->
-          <svg
-            viewBox="0 0 24 24"
-            class="h-5 w-5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="8" cy="7" r="3.4" />
-            <path d="M2.2 20.5c0-3.3 2.6-5.8 5.8-5.8s5.8 2.5 5.8 5.8" />
-            <path d="M15.2 3h6.1A1.7 1.7 0 0 1 23 4.7v4.6a1.7 1.7 0 0 1-1.7 1.7h-2.6l-2.8 2.4v-2.4h-.7A1.7 1.7 0 0 1 13.5 9.3V4.7A1.7 1.7 0 0 1 15.2 3Z" />
-            <path d="M16.3 6h4.4M16.3 8.3h2.6" stroke-width="1.4" />
-          </svg>
-          <span aria-hidden="true" class="text-[0.6rem]">▾</span>
-        </button>
-        <div
-          id="lang-panel"
-          role="menu"
-          aria-labelledby="lang-trigger"
-          class="hidden absolute right-0 top-full mt-2 min-w-40 border border-border-soft bg-cream-card shadow-md py-1 z-50"
-        >
-          <button data-lang="en" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
-          <button data-lang="ru" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
-          <button data-lang="es" type="button" role="menuitem" class="lang-option block w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
-        </div>
-      </div>
-
       <!-- ADA / accessibility: larger text and read-aloud, in one place so
            the people who need them can find them. Sits between the
            language switcher and the light/dark toggle. -->
@@ -217,9 +168,9 @@ function isActive(hrefWithHash: string): boolean {
           title="Accessibility: larger text and read aloud"
           class="flex items-center gap-1 rounded border border-current px-1.5 py-0.5 font-display text-xs font-semibold tracking-wider text-text-primary hover:text-brand-blue-dark transition-colors"
         >
-          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="4.6" r="1.7" />
-            <path d="M5 8.2c4.6 1.3 9.4 1.3 14 0M12 9v5.2M12 14.2l-3.4 6M12 14.2l3.4 6" />
+          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="3.6" />
+            <path d="M5 21c0-3.9 3.1-6.4 7-6.4s7 2.5 7 6.4" />
           </svg>
           <span>ADA</span>
         </button>
@@ -245,19 +196,27 @@ function isActive(hrefWithHash: string): boolean {
             </div>
             <p id="a11y-note" role="status" class="mt-2 text-xs text-text-secondary"></p>
           </div>
-          <p class="text-xs text-text-secondary">The moon or sun button next to this one switches between light and dark.</p>
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Language</p>
+            <div class="flex gap-2" role="group" aria-label="Language">
+              <button data-lang="en" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">English</button>
+              <button data-lang="es" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Español</button>
+              <button data-lang="ru" type="button" class="lang-option flex-1 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale">Русский</button>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Light or dark</p>
+            <button
+              type="button"
+              id="theme-toggle"
+              class="flex w-full items-center justify-center gap-2 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale"
+            >
+              <span id="theme-icon" aria-hidden="true">🌙</span>
+              <span id="theme-label">Switch to dark mode</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <button
-        type="button"
-        id="theme-toggle"
-        aria-label="Toggle dark mode"
-        title="Toggle dark mode"
-        class="text-xl px-2 py-1 rounded hover:bg-brand-blue/20 transition-colors"
-      >
-        <span id="theme-icon">🌙</span>
-      </button>
 
       <!-- Auth nav lives furthest right by design — rendered client-side
            by the script below once /api/auth/me resolves. -->
@@ -642,9 +601,11 @@ function isActive(hrefWithHash: string): boolean {
     const icon = document.getElementById('theme-icon');
     if (!btn || !icon) return;
 
+    const label = document.getElementById('theme-label');
     function updateIcon() {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       icon.textContent = isDark ? '☀️' : '🌙';
+      if (label) label.textContent = isDark ? 'Switch to light mode' : 'Switch to dark mode';
     }
 
     updateIcon();
