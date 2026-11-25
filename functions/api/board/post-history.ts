@@ -1,5 +1,5 @@
 /**
- * Cloudflare Pages Function: GET /api/board/post-history?id=   (moderators and admins)
+ * Cloudflare Pages Function: GET /api/board/post-history?id=   (admins only)
  *
  * What a post said before it was edited, newest change first. Kept so
  * an angry post can't be quietly rewritten after someone has answered it.
@@ -19,7 +19,8 @@ export async function onRequestGet(
   const gate = await requireBoardAccess(context);
   if (gate.error) return gate.error;
   const { supabase, viewer, wrap } = gate as Required<typeof gate>;
-  if (!viewer.isModerator) return wrap(jsonResponse({ error: "Forbidden" }, 403));
+  // Admins only. Appointed moderators don't see what a post said before.
+  if (!viewer.isAdmin) return wrap(jsonResponse({ error: "Forbidden" }, 403));
 
   try {
     const id = new URL(context.request.url).searchParams.get("id") ?? "";

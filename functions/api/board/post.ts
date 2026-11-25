@@ -102,7 +102,10 @@ export async function onRequestPatch(
     if (before?.reported_hidden && !viewer.isModerator) {
       return wrap(jsonResponse({ error: "This post is under review, so it can't be edited right now." }, 403));
     }
-    if (before && before.body !== text) {
+    // An admin editing their own post leaves no trace: no history kept
+    // and no "edited" mark. Everyone else's edits are recorded.
+    const quiet = viewer.isAdmin && post.author_id === viewer.id;
+    if (!quiet && before && before.body !== text) {
       await supabase
         .from("board_post_edits")
         .insert({ post_id: id, body: before.body, edited_by: viewer.id });
@@ -110,7 +113,7 @@ export async function onRequestPatch(
 
     const { error: updateError } = await supabase
       .from("board_posts")
-      .update({ body: text, edited_at: new Date().toISOString() })
+      .update(quiet ? { body: text } : { body: text, edited_at: new Date().toISOString() })
       .eq("id", id);
     if (updateError) return wrap(jsonResponse({ error: updateError.message }, 500));
 

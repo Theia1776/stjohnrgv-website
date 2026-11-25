@@ -198,10 +198,14 @@ export async function onRequestPatch(
     if (first) {
       const body = eventBody(e, who);
       if (body !== first.body) {
-        await supabase.from("board_post_edits").insert({ post_id: first.id, body: first.body, edited_by: viewer.id });
+        // An admin editing their own event leaves no "edited" trace.
+        const quiet = viewer.isAdmin && thread.author_id === viewer.id;
+        if (!quiet) {
+          await supabase.from("board_post_edits").insert({ post_id: first.id, body: first.body, edited_by: viewer.id });
+        }
         await supabase
           .from("board_posts")
-          .update({ body, edited_at: new Date().toISOString() })
+          .update(quiet ? { body } : { body, edited_at: new Date().toISOString() })
           .eq("id", first.id);
       }
     }

@@ -568,7 +568,7 @@ import "../../styles/board.css";
               <div class="bb-posted">
                 <span title="${escapeHtml(exactly(p.createdAt))}">
                   Posted: ${escapeHtml(exactly(p.createdAt) || when(p.createdAt))}
-                  ${p.editedAt ? (isMod ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
+                  ${p.editedAt ? (isAdmin ? `<button type="button" class="post-history underline" title="See what it said before">&middot; edited</button>` : `<em title="${escapeHtml(exactly(p.editedAt))}">&middot; edited</em>`) : ""}
                 </span>
                 <span>${buttons}</span>
               </div>
