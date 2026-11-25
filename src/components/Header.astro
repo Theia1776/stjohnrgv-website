@@ -80,7 +80,7 @@ function isActive(hrefWithHash: string): boolean {
 ---
 
 <header class="sticky top-1 z-40 border-b border-border-soft bg-cream-card shadow-sm">
-  <div class="mx-auto flex max-w-6xl items-center justify-between py-3 pl-4 pr-[5.5rem] md:pl-6">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
     <a
       href="/"
       class="flex items-center gap-3 text-text-primary no-underline hover:text-brand-blue-dark transition-colors"
@@ -154,41 +154,19 @@ function isActive(hrefWithHash: string): boolean {
         })}
       </nav>
 
-      <!-- Auth nav lives furthest right by design — rendered client-side
-           by the script below once /api/auth/me resolves. -->
-      <div id="auth-nav" class="hidden md:flex items-center text-sm"></div>
-
-      <button
-        type="button"
-        id="mobile-menu-toggle"
-        class="lg:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
-        aria-controls="mobile-menu"
-        aria-expanded="false"
-        aria-label="Open menu"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-
       <!-- ADA / accessibility: larger text and read-aloud, in one place so
-           the people who need them can find them. Always the last
-           item in the header, so it is in the top right corner on every page. -->
-      <div class="absolute right-3 top-1/2 z-50 -translate-y-1/2 print:hidden">
+           the people who need them can find them. Plain text after Contact. -->
+      <div class="relative print:hidden lg:ml-2">
         <button
           id="a11y-trigger"
           type="button"
           aria-haspopup="dialog"
           aria-expanded="false"
           aria-controls="a11y-panel"
-          aria-label="Accessibility options: larger text and read aloud"
-          title="Accessibility: larger text and read aloud"
-          class="flex items-center gap-1.5 rounded border border-current bg-cream-card px-2 py-0.5 font-display text-xs font-semibold tracking-wider text-text-primary hover:text-brand-blue-dark transition-colors"
-        >
-          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="7.5" r="3.6" />
-            <path d="M5 21c0-3.9 3.1-6.4 7-6.4s7 2.5 7 6.4" />
-          </svg>
-          <span>ADA</span>
-        </button>
+          aria-label="Accessibility options: larger text, read aloud, language, light or dark"
+          title="Accessibility options"
+          class="whitespace-nowrap border-b-2 border-transparent py-1 font-display text-sm tracking-wider text-text-primary/80 hover:text-brand-blue-dark transition-colors"
+        >ADA</button>
         <div
           id="a11y-panel"
           role="dialog"
@@ -232,6 +210,22 @@ function isActive(hrefWithHash: string): boolean {
           </div>
         </div>
       </div>
+
+      <!-- Auth nav lives furthest right by design — rendered client-side
+           by the script below once /api/auth/me resolves. -->
+      <div id="auth-nav" class="hidden md:flex items-center text-sm"></div>
+
+      <button
+        type="button"
+        id="mobile-menu-toggle"
+        class="lg:hidden flex items-center justify-center rounded-sm border border-border-soft px-3 py-2 text-text-primary hover:bg-brand-blue-pale"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+        aria-label="Open menu"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
 
     </div>
   </div>
