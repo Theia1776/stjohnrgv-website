@@ -433,13 +433,18 @@ import "../../styles/board.css";
     );
   }
 
+  const ORTH_CROSS = '<svg class="orth-cross" viewBox="0 0 20 32" fill="currentColor" aria-hidden="true"><rect x="8" y="0" width="4" height="32"/><rect x="5" y="4" width="10" height="3"/><rect x="1" y="10" width="18" height="3"/><polygon points="4,20 16,24 16,27 4,23"/></svg>';
+  function emojiHtml(e: string): string {
+    return e === "☦️" || e === "☦" ? ORTH_CROSS : escapeHtml(e);
+  }
+
   function reactionStrip(post: Post): string {
     const given = post.reactions
       .map(
         (r) =>
           `<button type="button" class="bb-react ${r.mine ? "bb-react-on" : ""}" data-emoji="${escapeHtml(r.emoji)}"
                    title="${r.mine ? "You reacted. Click to take it back." : "Add yours"}">
-             <span>${escapeHtml(r.emoji)}</span><span class="bb-react-count">${r.count}</span>
+             <span>${emojiHtml(r.emoji)}</span><span class="bb-react-count">${r.count}</span>
            </button>`,
       )
       .join("");
@@ -452,7 +457,7 @@ import "../../styles/board.css";
       ? `<span class="bb-react-add">
            <button type="button" class="bb-react react-open" title="React to this post">＋</button>
            <span class="react-tray hidden">
-             ${rest.map((e) => `<button type="button" class="bb-react" data-emoji="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join("")}
+             ${rest.map((e) => `<button type="button" class="bb-react" data-emoji="${escapeHtml(e)}">${emojiHtml(e)}</button>`).join("")}
            </span>
          </span>`
       : "";

@@ -356,3 +356,12 @@ html.text-xlarge { font-size: 150%; }
 .skip-link:focus {
   top: 0.75rem;
 }
+
+/* The Orthodox three-bar cross. The slanted foot rises on the viewer's left and drops on the right. */
+.orth-cross {
+  display: inline-block;
+  height: 1em;
+  width: 0.625em;
+  vertical-align: -0.12em;
+  fill: currentColor;
+}
