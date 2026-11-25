@@ -80,7 +80,7 @@ function isActive(hrefWithHash: string): boolean {
 ---
 
 <header class="sticky top-1 z-40 border-b border-border-soft bg-cream-card shadow-sm">
-  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
+  <div class="mx-auto flex max-w-6xl items-center justify-between py-3 pl-4 pr-[5.5rem] md:pl-6">
     <a
       href="/"
       class="flex items-center gap-3 text-text-primary no-underline hover:text-brand-blue-dark transition-colors"
@@ -172,7 +172,7 @@ function isActive(hrefWithHash: string): boolean {
       <!-- ADA / accessibility: larger text and read-aloud, in one place so
            the people who need them can find them. Always the last
            item in the header, so it is in the top right corner on every page. -->
-      <div class="relative ml-2 md:ml-6 print:hidden">
+      <div class="absolute right-3 top-1/2 z-50 -translate-y-1/2 print:hidden">
         <button
           id="a11y-trigger"
           type="button"
