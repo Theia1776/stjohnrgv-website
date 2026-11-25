@@ -23,27 +23,19 @@ import "../../styles/board.css";
     </div>
 
     <div id="content" class="hidden">
-      <section id="today" class="hidden bb-notice">
+      <!-- One box: today's feast, then a permanent line pointing people at
+           the calendar and library instead of the feed. Always shown. -->
+      <section id="today" class="bb-notice">
         <strong id="today-feast"></strong>
+        <p id="home-links" class="mt-1">
+          Today's readings, saints and fasting rules are on the
+          <a href="/calendar/" class="underline" target="_blank" rel="noopener"><strong>Calendar</strong></a>.
+          Read from the
+          <a href="/learn/library/" class="underline" target="_blank" rel="noopener">Parish Library</a>
+          and cook from
+          <a href="/table/" class="underline" target="_blank" rel="noopener">An Orthodox Table</a>.
+        </p>
         <ul id="today-list" class="mt-1 space-y-1"></ul>
-      </section>
-
-      <!-- Always shown, whether or not there is a feast today: send people
-           to the calendar, library and website instead of the feed. -->
-      <section id="home-links" class="bb-notice">
-        Today's readings, saints and fasting rules are on the
-        <a href="/calendar/" class="underline" target="_blank" rel="noopener"><strong>Calendar</strong></a>.
-        Read from the
-        <a href="/learn/library/" class="underline" target="_blank" rel="noopener">Parish Library</a>,
-        cook from
-        <a href="/table/" class="underline" target="_blank" rel="noopener">An Orthodox Table</a>,
-        or see everything else on the
-        <a href="/" class="underline" target="_blank" rel="noopener">parish website</a>.
-      </section>
-
-      <section id="upcoming" class="hidden bb-notice">
-        <strong>Upcoming events</strong>
-        <ul id="upcoming-list" class="mt-1 space-y-1"></ul>
       </section>
 
       <section id="announcements" class="hidden bb-notice">
@@ -474,15 +466,6 @@ import "../../styles/board.css";
         ? `Messages <span class="bb-flag">${unreadMessages} new</span>`
         : "Messages";
 
-    const coming: Array<{ id: string; title: string; when: string; place: string }> = data.upcoming ?? [];
-    (document.getElementById("upcoming") as HTMLElement).classList.toggle("hidden", coming.length === 0);
-    (document.getElementById("upcoming-list") as HTMLElement).innerHTML = coming
-      .map(
-        (c) =>
-          `<li>📅 <a class="underline" href="/board/thread/?id=${encodeURIComponent(c.id)}">${escapeHtml(c.title)}</a> <span class="text-text-secondary">${escapeHtml(c.when)} · ${escapeHtml(c.place)}</span></li>`,
-      )
-      .join("");
-
     const notes: Array<{ id: string; title: string; room: string }> = data.announcements ?? [];
     (document.getElementById("announcements") as HTMLElement).classList.toggle("hidden", notes.length === 0);
     (document.getElementById("announcement-list") as HTMLElement).innerHTML = notes
@@ -670,7 +653,6 @@ import "../../styles/board.css";
 
   // ---- today's feast, and who has a special day ----
   async function renderToday(list: Array<{ name: string; what: string; when: string }>) {
-    const box = document.getElementById("today") as HTMLElement;
     const feast = document.getElementById("today-feast") as HTMLElement;
     const ul = document.getElementById("today-list") as HTMLElement;
 
@@ -693,7 +675,7 @@ import "../../styles/board.css";
           `<li>${c.when === "Today" ? "🎉" : "•"} <strong>${escapeHtml(c.name)}</strong> — ${escapeHtml(c.what)}${c.when === "Today" ? " today" : `, ${escapeHtml(c.when)}`}</li>`,
       )
       .join("");
-    box.classList.toggle("hidden", !feastText && list.length === 0);
+    feast.classList.toggle("hidden", !feastText);
   }
 
   // ---- my special days ----
