@@ -80,6 +80,71 @@ function isActive(hrefWithHash: string): boolean {
 ---
 
 <header class="sticky top-1 z-40 border-b border-border-soft bg-cream-card shadow-sm">
+  <div class="flex justify-end px-4 pt-1.5 md:px-6 print:hidden">
+      <!-- ADA / accessibility: larger text and read-aloud, in one place so
+           the people who need them can find them. Always the last
+           item in the header, so it is in the top right corner on every page. -->
+      <div class="relative">
+        <button
+          id="a11y-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="a11y-panel"
+          aria-label="Accessibility options: larger text and read aloud"
+          title="Accessibility: larger text and read aloud"
+          class="flex items-center gap-1.5 rounded border border-current bg-cream-card px-2 py-0.5 font-display text-xs font-semibold tracking-wider text-text-primary hover:text-brand-blue-dark transition-colors"
+        >
+          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="3.6" />
+            <path d="M5 21c0-3.9 3.1-6.4 7-6.4s7 2.5 7 6.4" />
+          </svg>
+          <span>ADA</span>
+        </button>
+        <div
+          id="a11y-panel"
+          role="dialog"
+          aria-label="Accessibility options"
+          class="hidden absolute right-0 top-full z-50 mt-1 w-[22rem] max-w-[92vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
+        >
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Text size</p>
+            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Text size">
+              <button type="button" data-size="normal" aria-pressed="true" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Normal</button>
+              <button type="button" data-size="large" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-base text-text-primary hover:bg-brand-blue-pale">Larger</button>
+              <button type="button" data-size="xlarge" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-lg text-text-primary hover:bg-brand-blue-pale">Largest</button>
+            </div>
+          </div>
+          <div id="a11y-listen-box">
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Read aloud</p>
+            <div class="flex gap-2">
+              <button type="button" id="a11y-listen" class="btn btn-primary flex-1 text-sm">Read this page</button>
+              <button type="button" id="a11y-stop" class="btn btn-secondary w-full text-sm">Stop</button>
+            </div>
+            <p id="a11y-note" role="status" class="mt-2 text-xs text-text-secondary"></p>
+          </div>
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Language</p>
+            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Language">
+              <button data-lang="en" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
+              <button data-lang="es" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
+              <button data-lang="ru" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Light or dark</p>
+            <button
+              type="button"
+              id="theme-toggle"
+              class="flex w-full items-center justify-center gap-2 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale"
+            >
+              <span id="theme-icon" aria-hidden="true">🌙</span>
+              <span id="theme-label">Switch to dark mode</span>
+            </button>
+          </div>
+        </div>
+      </div>
+  </div>
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
     <a
       href="/"
@@ -169,69 +234,6 @@ function isActive(hrefWithHash: string): boolean {
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
 
-      <!-- ADA / accessibility: larger text and read-aloud, in one place so
-           the people who need them can find them. Always the last
-           item in the header, so it is in the top right corner on every page. -->
-      <div class="fixed right-6 z-50 print:hidden" style="bottom: 5.25rem;">
-        <button
-          id="a11y-trigger"
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          aria-controls="a11y-panel"
-          aria-label="Accessibility options: larger text and read aloud"
-          title="Accessibility: larger text and read aloud"
-          class="flex items-center gap-1.5 rounded border border-current bg-cream-card px-2.5 py-1.5 font-display text-xs font-semibold tracking-wider text-text-primary shadow-md hover:text-brand-blue-dark transition-colors"
-        >
-          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="7.5" r="3.6" />
-            <path d="M5 21c0-3.9 3.1-6.4 7-6.4s7 2.5 7 6.4" />
-          </svg>
-          <span>ADA</span>
-        </button>
-        <div
-          id="a11y-panel"
-          role="dialog"
-          aria-label="Accessibility options"
-          class="hidden absolute bottom-full right-0 z-50 mb-2 w-[22rem] max-w-[92vw] space-y-4 border border-border-soft bg-cream-card p-4 text-sm shadow-md"
-        >
-          <div>
-            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Text size</p>
-            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Text size">
-              <button type="button" data-size="normal" aria-pressed="true" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Normal</button>
-              <button type="button" data-size="large" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-base text-text-primary hover:bg-brand-blue-pale">Larger</button>
-              <button type="button" data-size="xlarge" aria-pressed="false" class="a11y-size min-w-0 break-words border border-border-soft px-1 py-2 text-lg text-text-primary hover:bg-brand-blue-pale">Largest</button>
-            </div>
-          </div>
-          <div id="a11y-listen-box">
-            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Read aloud</p>
-            <div class="flex gap-2">
-              <button type="button" id="a11y-listen" class="btn btn-primary flex-1 text-sm">Read this page</button>
-              <button type="button" id="a11y-stop" class="btn btn-secondary w-full text-sm">Stop</button>
-            </div>
-            <p id="a11y-note" role="status" class="mt-2 text-xs text-text-secondary"></p>
-          </div>
-          <div>
-            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Language</p>
-            <div class="grid grid-cols-3 gap-2" role="group" aria-label="Language">
-              <button data-lang="en" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">English</button>
-              <button data-lang="es" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Español</button>
-              <button data-lang="ru" type="button" class="lang-option min-w-0 break-words border border-border-soft px-1 py-2 text-sm text-text-primary hover:bg-brand-blue-pale">Русский</button>
-            </div>
-          </div>
-          <div>
-            <p class="mb-2 font-display text-xs uppercase tracking-widest text-text-secondary">Light or dark</p>
-            <button
-              type="button"
-              id="theme-toggle"
-              class="flex w-full items-center justify-center gap-2 border border-border-soft px-2 py-2 text-text-primary hover:bg-brand-blue-pale"
-            >
-              <span id="theme-icon" aria-hidden="true">🌙</span>
-              <span id="theme-label">Switch to dark mode</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
