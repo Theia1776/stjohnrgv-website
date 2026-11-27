@@ -397,7 +397,7 @@ import Layout from "../../layouts/Layout.astro";
           <td colspan="6" class="p-3">
             <div class="text-xs text-text-secondary mb-2">What was sent, exactly as written:</div>
             <div class="whitespace-pre-wrap text-sm mb-3">${escapeHtml(r.body ?? "(No text was saved for this one.)")}</div>
-            <button type="button" data-reuse="${escapeHtml(r.id)}" class="border border-border-soft px-3 py-1 rounded bg-white">Use this message again</button>
+            <button type="button" data-reuse="${escapeHtml(r.id)}" class="btn btn-secondary text-sm" style="display:inline-block">Use this message again</button>
             <span class="text-xs text-text-secondary ml-2">Fills the form above with this subject and text. Nothing is sent until you press Send.</span>
           </td>
         </tr>`;
