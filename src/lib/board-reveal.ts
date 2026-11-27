@@ -31,7 +31,7 @@
  * Midnight on the 29th, parish time. Bayview is US Central, which is
  * UTC-6 in November, so that's 06:00 UTC.
  */
-export const BOARD_OPENS_AT = "2026-11-29T06:00:00Z";
+export const BOARD_OPENS_AT = "2026-11-27T00:00:00Z";
 
 /**
  * Accounts let in before the board opens, for testing. Just Theia's test

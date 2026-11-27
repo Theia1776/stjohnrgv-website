@@ -529,7 +529,7 @@ function isActive(hrefWithHash: string): boolean {
         // 29 Nov 2026. Until then only admins see the link; after it,
         // everyone does, without anything needing to be redeployed.
         // Checked here at page load, so it turns itself on.
-        const boardOpen = Date.now() >= Date.parse("2026-11-29T06:00:00Z");
+        const boardOpen = Date.now() >= Date.parse("2026-11-27T00:00:00Z");
         const boardItem = (boardOpen || isAdmin)
           ? `<a href="/board/" role="menuitem" class="block px-4 py-2 text-sm text-text-primary no-underline hover:bg-brand-blue-pale">Parish Board</a>`
           : "";
