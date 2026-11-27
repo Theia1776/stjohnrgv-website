@@ -222,6 +222,7 @@ import Layout from "../../layouts/Layout.astro";
                 <th class="p-2">Sent as</th>
                 <th class="p-2">Sent by</th>
                 <th class="p-2">When</th>
+                <th class="p-2"></th>
               </tr>
             </thead>
             <tbody id="recent-tbody"></tbody>
@@ -264,6 +265,7 @@ import Layout from "../../layouts/Layout.astro";
   type SentRecord = {
     id: string;
     subject: string;
+    body?: string | null;
     audience: string;
     sent_as: string | null;
     recipient_count: number;
@@ -389,10 +391,41 @@ import Layout from "../../layouts/Layout.astro";
           <td class="p-2 whitespace-nowrap">${escapeHtml(senderLabel(r.sent_as))}</td>
           <td class="p-2">${escapeHtml(r.sent_by_name ?? "—")}</td>
           <td class="p-2 whitespace-nowrap">${escapeHtml(whenText)}</td>
+          <td class="p-2 whitespace-nowrap"><button type="button" data-view="${escapeHtml(r.id)}" class="underline text-brand-blue-dark">Show message</button></td>
+        </tr>
+        <tr id="msg-${escapeHtml(r.id)}" class="hidden border-b border-border-soft bg-cream-card">
+          <td colspan="6" class="p-3">
+            <div class="text-xs text-text-secondary mb-2">What was sent, exactly as written:</div>
+            <div class="whitespace-pre-wrap text-sm mb-3">${escapeHtml(r.body ?? "(No text was saved for this one.)")}</div>
+            <button type="button" data-reuse="${escapeHtml(r.id)}" class="border border-border-soft px-3 py-1 rounded bg-white">Use this message again</button>
+            <span class="text-xs text-text-secondary ml-2">Fills the form above with this subject and text. Nothing is sent until you press Send.</span>
+          </td>
         </tr>`;
       })
       .join("");
   }
+
+  // Show a past message, or put it back in the form to send again.
+  document.getElementById("recent-tbody")?.addEventListener("click", (ev) => {
+    const t = ev.target as HTMLElement;
+    const viewId = t.getAttribute("data-view");
+    if (viewId) {
+      document.getElementById("msg-" + viewId)?.classList.toggle("hidden");
+      return;
+    }
+    const reuseId = t.getAttribute("data-reuse");
+    if (reuseId) {
+      const r = recent.find((x) => x.id === reuseId);
+      if (!r) return;
+      const subj = document.getElementById("subject") as HTMLInputElement | null;
+      const body = document.getElementById("body") as HTMLTextAreaElement | null;
+      const sender = document.getElementById("sender") as HTMLSelectElement | null;
+      if (subj) subj.value = r.subject;
+      if (body) body.value = r.body ?? "";
+      if (sender && r.sent_as) sender.value = r.sent_as;
+      subj?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
 
   // ============ LOAD ============
   async function load() {

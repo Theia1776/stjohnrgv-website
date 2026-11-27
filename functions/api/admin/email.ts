@@ -251,7 +251,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     const { data: recent } = await supabase
       .from("parish_emails")
-      .select("id, subject, audience, sent_as, recipient_count, attempted_count, error, sent_by_name, created_at")
+      .select("id, subject, body, audience, sent_as, recipient_count, attempted_count, error, sent_by_name, created_at")
       .order("created_at", { ascending: false })
       .limit(20);
 
